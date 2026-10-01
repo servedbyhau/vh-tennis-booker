@@ -1,0 +1,12 @@
+# Mặc định: mọi file văn bản dùng LF (chuẩn chung của dự án Python, GitHub, Linux, macOS)
+* text=auto eol=lf
+
+# File chạy trên Windows bắt buộc dùng CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# File nhị phân: Git không được động vào
+*.png binary
+*.jpg binary
+*.zip binary
