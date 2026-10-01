@@ -46,7 +46,8 @@ def main(argv: list[str] | None = None) -> int:
         d(**booker.sel_home).wait(timeout=cfg.timeout * 2)
 
     target = date.today() + timedelta(days=cfg.days_ahead)
-    log(f"Ngày đặt: {target:%d/%m/%Y} | Giờ: {', '.join(cfg.slots)}" + ("  [DRY-RUN]" if args.dry_run else ""))
+    mode = "  [DRY-RUN]" if args.dry_run else ""
+    log(f"Ngày đặt: {target:%d/%m/%Y} | Giờ: {', '.join(cfg.slots)}{mode}")
 
     results = []
     for n, slot in enumerate(cfg.slots, 1):
