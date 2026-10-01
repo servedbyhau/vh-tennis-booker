@@ -1,0 +1,22 @@
+# Sao chép file này thành config.toml rồi sửa. Mục nào bỏ trống sẽ dùng giá trị mặc định.
+
+device = "127.0.0.1:7555"          # địa chỉ ADB của MuMu
+package = "com.vinhomes.resident"
+days_ahead = 2                      # đặt trước bao nhiêu ngày
+slots = ["18:00 - 19:00", "19:00 - 20:00"]   # mỗi khung giờ = 1 lượt
+court = "S10 - Sân tennis"
+venue_keyword = "Origami"           # màn chọn khu (chỉ bấm nếu app có hiện)
+timeout = 10                        # giây chờ tối đa cho mỗi nút
+max_swipes = 6                      # số lần kéo tối đa để tìm khung giờ
+
+# Chữ trong app. App đổi chữ hoặc ngôn ngữ thì chỉ cần sửa ở đây.
+[labels]
+home = "Tiện ích"
+utility = "Sân Tennis"
+continue = "Tiếp tục"
+confirm = "Xác nhận"
+confirm_page = "Xác nhận đăng ký"
+prev_month = "Tháng trước"
+next_month = "Tháng sau"
+agree = "Tôi đã hiểu"
+full = "Hết chỗ"

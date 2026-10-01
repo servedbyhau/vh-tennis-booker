@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Cấu hình cá nhân và dữ liệu chụp từ thiết bị (có thể chứa thông tin cá nhân)
+config.toml
+dump.xml
+*.xml.bak
+tick_nodes.txt
+screenshots/
+*.png
+!docs/img/*.png
