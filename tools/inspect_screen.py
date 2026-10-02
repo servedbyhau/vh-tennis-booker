@@ -1,49 +1,63 @@
-"""Lưu cấu trúc màn hình hiện tại và liệt kê các phần tử quanh một dòng chữ.
+"""Dump the current UI hierarchy and list the nodes level with a given text.
 
-    python tools/inspect_screen.py                       # chỉ lưu dump.xml
-    python tools/inspect_screen.py --near "Tôi đã hiểu"  # liệt kê phần tử ngang hàng dòng chữ
+Usage:
+    python tools/inspect_screen.py
+    python tools/inspect_screen.py --near "Tôi đã hiểu"
 """
+
+from __future__ import annotations
+
 import argparse
 import re
 import xml.etree.ElementTree as ET
 
-import uiautomator2 as u2
+import uiautomator2
 
 
-def bounds(n):
-    v = re.findall(r"-?\d+", n.get("bounds", ""))
-    return tuple(map(int, v)) if len(v) == 4 else None
+def parse_bounds(text: str) -> tuple[int, int, int, int] | None:
+    nums = [int(n) for n in re.findall(r"-?\d+", text or "")]
+    return (nums[0], nums[1], nums[2], nums[3]) if len(nums) == 4 else None
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--device", default="127.0.0.1:7555")
-    ap.add_argument("--near", help="chữ cần tìm, ví dụ 'Tôi đã hiểu'")
-    ap.add_argument("--out", default="dump.xml")
-    args = ap.parse_args()
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--device", default="127.0.0.1:7555")
+    parser.add_argument("--near", help="text whose row should be listed")
+    parser.add_argument("--out", default="dump.xml")
+    args = parser.parse_args()
 
-    d = u2.connect(args.device)
-    xml = d.dump_hierarchy(compressed=False)
-    with open(args.out, "w", encoding="utf-8") as f:
-        f.write(xml)
-    print(f"Đã lưu {args.out} | màn hình {d.window_size()}")
+    device = uiautomator2.connect(args.device)
+    xml = device.dump_hierarchy(compressed=False)
+    with open(args.out, "w", encoding="utf-8") as file:
+        file.write(xml)
+    print(f"Saved {args.out} (screen {device.window_size()})")
     if not args.near:
         return
 
     nodes = list(ET.fromstring(xml).iter("node"))
-    label = next((n for n in nodes if args.near in n.get("content-desc", "") + n.get("text", "")), None)
+    label = next(
+        (n for n in nodes if args.near in n.get("content-desc", "") + n.get("text", "")),
+        None,
+    )
     if label is None:
-        print(f"KHÔNG thấy chữ '{args.near}'")
+        print(f"Text not found: {args.near!r}")
         return
-    _, ly1, _, ly2 = bounds(label)
-    print(f"Dòng chữ: bounds={label.get('bounds')} clickable={label.get('clickable')}\n" + "-" * 70)
-    for n in nodes:
-        b = bounds(n)
-        if not b or b[3] < ly1 - 50 or b[1] > ly2 + 50:
+    label_box = parse_bounds(label.get("bounds", ""))
+    assert label_box is not None
+    _, top, _, bottom = label_box
+
+    print(f"Label bounds={label.get('bounds')} clickable={label.get('clickable')}")
+    print("-" * 72)
+    for node in nodes:
+        box = parse_bounds(node.get("bounds", ""))
+        if not box or box[3] < top - 50 or box[1] > bottom + 50:
             continue
-        desc = (n.get("content-desc", "") or n.get("text", "")).replace("\n", " ")[:40]
-        print(f"{n.get('bounds'):<26} {n.get('class', '').split('.')[-1]:<14} "
-              f"click={n.get('clickable'):<5} check={n.get('checkable'):<5} '{desc}'")
+        text = (node.get("content-desc", "") or node.get("text", "")).replace("\n", " ")[:40]
+        kind = node.get("class", "").rsplit(".", 1)[-1]
+        print(
+            f"{node.get('bounds'):<26} {kind:<14} "
+            f"clickable={node.get('clickable'):<5} checkable={node.get('checkable'):<5} {text!r}"
+        )
 
 
 if __name__ == "__main__":

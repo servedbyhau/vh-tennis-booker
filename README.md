@@ -1,113 +1,114 @@
 # vh-tennis-booker
 
-[![CI](https://github.com/<your-username>/vh-tennis-booker/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/vh-tennis-booker/actions/workflows/ci.yml)
+[![CI](https://github.com/servedbyhau/vh-tennis-booker/actions/workflows/ci.yml/badge.svg)](https://github.com/servedbyhau/vh-tennis-booker/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-
-> 🇻🇳 [Đọc bằng tiếng Việt](README.vi.md)
+![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-261230)
 
 A UI-automation case study: driving the tennis-court booking flow of a third-party
-**Flutter** Android app (Vinhomes Resident) with **Python + uiautomator2** on the
-MuMu Player emulator — with no access to the app's source code or API, only its UI.
+**Flutter** Android app (Vinhomes Resident) with **Python** and **uiautomator2** on the
+MuMu Player emulator, using only the app's user interface.
 
 > [!IMPORTANT]
-> **Educational project.** Not affiliated with or endorsed by Vinhomes.
-> The app detects Android developer mode (required by ADB), so it is intentionally
-> not usable for real bookings. This repository documents the automation techniques;
-> it does not include, and will not include, any way to bypass that check.
-> Respect the app's terms of use and other residents.
+> This is an educational project, not affiliated with or endorsed by Vinhomes.
+> The app refuses to operate while Android developer mode is enabled, which ADB requires,
+> so this project cannot be used for real bookings and does not attempt to bypass that check.
 
-## Highlights
+## Features
 
-- **No hard-coded coordinates.** Every button is located at runtime by its
-  accessibility label (Flutter exposes text through `content-desc`), so the script
-  works at any screen resolution.
-- **Label-anchored lookup for unlabeled widgets.** The consent checkbox has no label;
-  it is found as the small clickable node *beside and level with* its caption, and
-  nothing else is ever tapped.
-- **Lag-tolerant navigation.** Each step taps as soon as the button appears, then waits
-  for the *next* screen; a tap swallowed by a lagging app is retried.
-- **Scroll-into-view.** Time slots below the fold are scrolled to until fully visible
-  and not covered by the sticky bottom button.
-- **Verified outcomes.** A booking is reported as successful only after the app leaves
-  the confirmation screen.
-- **Step timing.** Every log line carries milliseconds and the time since the previous
-  step, to separate script overhead from app latency.
-- **All UI text in config.** If the app renames a button or switches language, edit
-  `config.toml`; no code changes.
+- **Label-based element lookup.** Buttons are located at runtime by their accessibility
+  labels, so the automation works at any screen resolution.
+- **Unlabeled widgets.** The consent checkbox is identified as the small clickable node
+  level with its caption; no other node is ever tapped.
+- **Lag tolerance.** Each step taps as soon as the button appears and retries if the next
+  screen does not load.
+- **Scroll into view.** Time slots below the fold are scrolled to until fully visible and
+  clear of the sticky bottom button.
+- **Verified results.** A round succeeds only after the app leaves the confirmation screen.
+- **Step timing.** Each log line shows the time elapsed since the previous step.
+- **Configurable labels.** All app strings live in `config.toml`.
 
-## Flow
+## How it works
 
 ```mermaid
 flowchart LR
-    A[Home] -->|Tiện ích| B[Utilities list]
+    A[Home] -->|Tiện ích| B[Utilities]
     B -->|Sân Tennis| C[Calendar]
-    C -->|pick date + slot, Tiếp tục| D[Court list]
-    D -->|S10| E[Booking info]
-    E -->|Tiếp tục| F[Confirm]
-    F -->|tick + Xác nhận| G[Ticket]
+    C -->|date, slot, Tiếp tục| D[Courts]
+    D -->|S10| E[Booking details]
+    E -->|Tiếp tục| F[Confirmation]
+    F -->|accept, Xác nhận| G[Ticket]
     G -->|Back| B
 ```
 
-Each configured slot is one round; round 2 starts from the utilities list.
+Each configured slot is booked in its own round. See [docs/how-it-works.md](docs/how-it-works.md)
+for design notes.
 
-## Quick start
+## Requirements
 
-Requirements: Windows, [MuMu Player](https://www.mumuplayer.com/) with ADB at
-`127.0.0.1:7555`, Python 3.9+.
+- Windows with [MuMu Player](https://www.mumuplayer.com/), ADB reachable at `127.0.0.1:7555`
+- Python 3.9 or later
+
+## Installation
 
 ```bash
-git clone https://github.com/HauPham-Wts/vh-tennis-booker.git
+git clone https://github.com/servedbyhau/vh-tennis-booker.git
 cd vh-tennis-booker
 pip install -e .
-copy config.example.toml config.toml   # optional: edit slots, court, labels
+cp config.example.toml config.toml
 ```
 
-Open the app on its home screen, then:
+## Usage
+
+Open the app on its home screen, then run:
 
 ```bash
-court-booker --dry-run                                   # stops before the final "Xác nhận"
-court-booker --slots "18:00 - 19:00" "19:00 - 20:00"     # override slots
-court-booker --days 2 --device 127.0.0.1:7555
+court-booker --dry-run          # stop before the final confirmation
+court-booker                    # book the slots from config.toml
+court-booker --slots "18:00 - 19:00" "19:00 - 20:00" --days 2
+court-booker --verbose          # include retries and element positions
 ```
 
-Example output:
+If `court-booker` is not on `PATH`, use `python -m court_booker` instead.
 
+Sample output:
+
+```text
+11:12:05.231 +0.42s INFO    Tapped 'Sân Tennis'
+11:12:06.010 +0.78s INFO    Selected date 2026-10-03
+11:12:07.402 +1.39s INFO    Selected slot 14:00 - 15:00 (2 swipe(s))
+11:12:09.118 +1.72s INFO    Accepted terms
 ```
-[11:12:05.231 +0.42s] OK  Sân Tennis
-[11:12:06.010 +0.78s] OK  Chọn ngày 03/10/2026
-[11:12:07.402 +1.39s] OK  Chọn khung giờ 14:00 - 15:00 (đã kéo 2 lần)
-```
 
-## Inspecting a screen
-
-When a widget cannot be found, dump the UI tree of the current screen:
+To inspect a screen whose elements cannot be found:
 
 ```bash
 python tools/inspect_screen.py --near "Tôi đã hiểu"
 ```
 
-## Project layout
+## Project structure
 
-```
+```text
 src/court_booker/
-  cli.py        command-line entry point
-  config.py     defaults + config.toml loading
-  flow.py       one method per app screen (Booker)
-  geometry.py   pure helpers: bounds, alignment, date patterns
-  log.py        step logger with millisecond timing
-tools/inspect_screen.py   UI-tree dump / widget finder
-tests/                    unit tests with a fake device (no emulator needed)
-docs/how-it-works.md      design notes and lessons learned
+├── cli.py              command-line entry point
+├── config.py           defaults and config.toml loading
+├── errors.py           exception hierarchy
+├── flow.py             booking flow, one method per screen
+├── geometry.py         pure helpers for bounds and dates
+└── logging_setup.py    console logging with step timing
+tools/inspect_screen.py UI hierarchy dump
+tests/                  unit tests with a fake device
 ```
 
 ## Development
 
 ```bash
 pip install -e ".[dev]"
-ruff check .
+pre-commit install
 pytest
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and the release process.
 
 ## License
 

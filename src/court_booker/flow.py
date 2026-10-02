@@ -1,250 +1,283 @@
-"""Luồng đặt sân: mỗi hàm tương ứng một màn hình trong app.
+"""Booking flow, one method per app screen.
 
-Mọi nút được tìm theo chữ (content-desc) tại thời điểm chạy; không dùng tọa độ cố định.
-`d` là đối tượng thiết bị của uiautomator2 (hoặc đối tượng giả trong kiểm thử).
+All elements are located by accessibility label at the time of the tap; no
+coordinates are stored. ``device`` is a :class:`uiautomator2.Device` or a test
+double with the same interface.
 """
+
 from __future__ import annotations
 
+import logging
 import time
 import xml.etree.ElementTree as ET
 from datetime import date
+from typing import Any
 
-from .config import Config
-from .geometry import (
-    DAY_RE,
-    SLOT_ANY_RE,
+from court_booker.config import Config
+from court_booker.errors import ElementNotFoundError, NavigationError, SlotUnavailableError
+from court_booker.geometry import (
+    ANY_SLOT_PATTERN,
+    DAY_PATTERN,
     box_from_info,
     center,
     day_pattern,
     is_checkbox_beside,
-    month_from_desc,
     month_index,
+    month_index_from_label,
     parse_bounds,
 )
 
+logger = logging.getLogger(__name__)
 
-class BookingError(RuntimeError):
-    """Lỗi trong một lượt đặt; lượt sau vẫn chạy tiếp."""
+Selector = dict[str, Any]
+
+_POLL_INTERVAL = 0.05
+_NEXT_SCREEN_TIMEOUT = 2.0
+_TAP_RETRIES = 5
+_BACK_PRESSES = 8
+_HEADER_RATIO = 0.10
 
 
 class Booker:
-    def __init__(self, d, cfg: Config, log=print) -> None:
-        self.d = d
-        self.cfg = cfg
-        self.log = log
-        self._wh: tuple[int, int] | None = None
-        lb = cfg.labels
-        self.sel_home = dict(description=lb.home, clickable=True)
-        self.sel_utility = dict(description=lb.utility, clickable=True)
-        self.sel_calendar = [
-            dict(description=lb.prev_month),
-            dict(descriptionContains=lb.next_month),
-            dict(descriptionMatches=DAY_RE),
+    """Drive one booking round per call to :meth:`book`."""
+
+    def __init__(self, device: Any, config: Config) -> None:
+        self.device = device
+        self.config = config
+        self._screen_size: tuple[int, int] | None = None
+
+        labels = config.labels
+        self.home = {"description": labels.home, "clickable": True}
+        self.utility = {"description": labels.utility, "clickable": True}
+        self.calendar = [
+            {"description": labels.prev_month},
+            {"descriptionContains": labels.next_month},
+            {"descriptionMatches": DAY_PATTERN},
         ]
-        self.sel_continue = dict(description=lb.continue_, clickable=True)
-        self.sel_venue = dict(descriptionContains=cfg.venue_keyword)
-        self.sel_court = dict(description=cfg.court, clickable=True)
-        self.sel_confirm_page = dict(description=lb.confirm_page)
+        self.continue_button = {"description": labels.continue_, "clickable": True}
+        self.venue = {"descriptionContains": config.venue_keyword}
+        self.court = {"description": config.court, "clickable": True}
+        self.confirm_page = {"description": labels.confirm_page}
 
-    # ------------------------------------------------------------------ chung
-    def screen_size(self) -> tuple[int, int]:
-        if self._wh is None:
-            self._wh = self.d.window_size()
-        return self._wh
+    # Public API -------------------------------------------------------------
 
-    def wait_any(self, sels: list[dict], timeout: float) -> dict | None:
-        """Chờ tới khi một trong các selector xuất hiện."""
-        end = time.time() + timeout
+    def book(self, slot: str, target: date, dry_run: bool = False) -> None:
+        """Book ``slot`` on ``target``, starting from the home or utilities screen."""
+        labels = self.config.labels
+        self.return_to_utilities()
+        self.tap_and_advance(self.utility, labels.utility, self.calendar)
+        self.select_date(target)
+        self.select_slot(slot)
+        self.tap_and_advance(self.continue_button, labels.continue_, [self.venue, self.court])
+        if self._exists(self.venue):
+            self.tap_and_advance(self.venue, self.config.venue_keyword, [self.court])
+        self.tap_and_advance(self.court, self.config.court, [self.continue_button])
+        self.tap_and_advance(self.continue_button, labels.continue_, [self.confirm_page])
+        self.accept_and_confirm(dry_run)
+
+    def return_to_utilities(self) -> None:
+        """Navigate to the utilities list from the home, ticket or any inner screen."""
+        for _ in range(_BACK_PRESSES):
+            if self._exists(self.utility):
+                return
+            if self._exists(self.home):
+                self.tap_and_advance(self.home, self.config.labels.home, [self.utility])
+                return
+            self.device.press("back")
+            self.wait_for_any([self.utility, self.home], _NEXT_SCREEN_TIMEOUT)
+        raise NavigationError("Could not return to the utilities list")
+
+    # Navigation -------------------------------------------------------------
+
+    def tap_and_advance(self, target: Selector, name: str, next_screen: list[Selector]) -> None:
+        """Tap ``target`` as soon as it appears and wait for ``next_screen``.
+
+        A tap swallowed by a lagging app is retried.
+        """
+        if not self.device(**target).wait(timeout=self.config.timeout):
+            raise ElementNotFoundError(f"Button not found: {name!r}")
+        for attempt in range(_TAP_RETRIES):
+            if attempt == 0 or self._exists(target):
+                self.device(**target).click()
+            if self.wait_for_any(next_screen, _NEXT_SCREEN_TIMEOUT):
+                logger.info("Tapped %r", name)
+                return
+            logger.debug("Retrying tap on %r (attempt %d)", name, attempt + 2)
+        raise NavigationError(f"Tapped {name!r} but the next screen did not appear")
+
+    def wait_for_any(self, selectors: list[Selector], timeout: float) -> Selector | None:
+        """Return the first selector that appears within ``timeout``, else ``None``."""
+        deadline = time.monotonic() + timeout
         while True:
-            for s in sels:
-                if self.d(**s).exists(timeout=0):
-                    return s
-            if time.time() >= end:
+            for selector in selectors:
+                if self._exists(selector):
+                    return selector
+            if time.monotonic() >= deadline:
                 return None
-            time.sleep(0.05)
+            time.sleep(_POLL_INTERVAL)
 
-    def go(self, label: str, sel: dict, next_label: str, next_sels: list[dict], tries: int = 5) -> None:
-        """Chờ nút -> bấm ngay -> chờ màn kế tiếp; app lag làm bấm hụt thì bấm lại."""
-        if not self.d(**sel).wait(timeout=self.cfg.timeout):
-            raise BookingError(f"Không thấy nút '{label}'")
-        for i in range(tries):
-            if i == 0 or self.d(**sel).exists(timeout=0):
-                self.d(**sel).click()
-            if self.wait_any(next_sels, 2):
-                self.log(f"OK  {label}")
-                return
-        raise BookingError(f"Đã bấm '{label}' nhưng không sang được màn '{next_label}'")
+    # Calendar screen --------------------------------------------------------
 
-    def scroll(self, down: bool = True) -> None:
-        """Kéo nhẹ màn hình (vuốt chậm để không trôi quá đà)."""
-        w, h = self.screen_size()
-        y1, y2 = (0.62, 0.38) if down else (0.38, 0.62)
-        self.d.swipe(w * 0.5, h * y1, w * 0.5, h * y2, 0.25)
-        time.sleep(0.15)
-
-    def where_on_screen(self, el) -> str:
-        """'ok' nếu phần tử nằm trọn trong vùng bấm được, 'below' / 'above' nếu bị khuất
-        (kể cả bị nút 'Tiếp tục' cố định ở đáy che)."""
-        _, h = self.screen_size()
-        b = el.info["bounds"]
-        bottom_limit = h
-        cont = self.d(description=self.cfg.labels.continue_)
-        if cont.exists(timeout=0):
-            bottom_limit = min(bottom_limit, cont.info["bounds"]["top"])
-        if b["bottom"] > bottom_limit - 4:
-            return "below"
-        if b["top"] < int(h * 0.10):
-            return "above"
-        return "ok"
-
-    # --------------------------------------------------------- màn lịch
-    def _shown_month(self) -> int | None:
-        el = self.d(descriptionMatches=DAY_RE)
-        if not el.exists(timeout=0):
-            return None
-        return month_from_desc(el.info.get("contentDescription", ""))
-
-    def _click_month(self, forward: bool) -> None:
-        lb = self.cfg.labels
-        if forward:
-            btn, xy = self.d(descriptionContains=lb.next_month), self.cfg.next_month_xy
-        else:
-            btn, xy = self.d(description=lb.prev_month), self.cfg.prev_month_xy
-        if btn.exists(timeout=0):
-            btn.click()
-        else:
-            self.d.click(*xy)
-        self.log("... Sang tháng sau" if forward else "... Về tháng trước")
-
-    def pick_date(self, target: date) -> None:
-        """Chọn ngày; lịch đang ở tháng khác thì tự bấm < hoặc >."""
+    def select_date(self, target: date) -> None:
+        """Tap ``target`` in the calendar, switching month if needed."""
         pattern = day_pattern(target)
-        target_m = month_index(target.year, target.month)
-        for i in range(5):
-            el = self.d(descriptionMatches=pattern)
-            if el.wait(timeout=1.5 if i == 0 else 0.8):
-                el.click()
-                self.log(f"OK  Chọn ngày {target:%d/%m/%Y}")
+        target_month = month_index(target.year, target.month)
+        for attempt in range(5):
+            day = self.device(descriptionMatches=pattern)
+            if day.wait(timeout=1.5 if attempt == 0 else 0.8):
+                day.click()
+                logger.info("Selected date %s", target.isoformat())
                 return
-            cur = self._shown_month()
-            self._click_month((i % 2 == 0) if cur is None else (cur < target_m))
-        raise BookingError(f"Không thấy ngày {target:%d/%m/%Y} (có thể chưa mở đặt)")
+            shown = self._shown_month()
+            forward = attempt % 2 == 0 if shown is None else shown < target_month
+            self._switch_month(forward)
+        raise ElementNotFoundError(f"Date {target.isoformat()} is not bookable")
 
-    def pick_slot(self, slot: str) -> None:
-        """Chọn khung giờ; khuất dưới thì tự kéo, chỉ bấm khi hiện trọn."""
-        end = time.time() + self.cfg.timeout
+    def select_slot(self, slot: str) -> None:
+        """Tap ``slot``, scrolling until it is fully visible."""
+        deadline = time.monotonic() + self.config.timeout
         swipes = 0
-        while time.time() < end:
-            el = self.d(descriptionStartsWith=slot)
-            if el.exists(timeout=0):
-                if self.cfg.labels.full in (el.info.get("contentDescription") or ""):
-                    raise BookingError(f"Khung giờ {slot} đã HẾT CHỖ")
-                pos = self.where_on_screen(el)
-                if pos == "ok":
-                    el.click()
-                    self.log(f"OK  Chọn khung giờ {slot}" + (f" (đã kéo {swipes} lần)" if swipes else ""))
+        while time.monotonic() < deadline:
+            element = self.device(descriptionStartsWith=slot)
+            if element.exists(timeout=0):
+                label = element.info.get("contentDescription") or ""
+                if self.config.labels.fully_booked in label:
+                    raise SlotUnavailableError(f"Slot {slot} is fully booked")
+                position = self._visibility(element)
+                if position == "visible":
+                    element.click()
+                    logger.info("Selected slot %s (%d swipe(s))", slot, swipes)
                     return
-                down = pos == "below"
-            elif self.d(descriptionMatches=SLOT_ANY_RE).exists(timeout=0):
-                down = True  # danh sách giờ đã hiện nhưng chưa thấy khung này
+                scroll_down = position == "below"
+            elif self.device(descriptionMatches=ANY_SLOT_PATTERN).exists(timeout=0):
+                scroll_down = True
             else:
-                time.sleep(0.2)  # danh sách giờ chưa load xong
+                time.sleep(0.2)
                 continue
-            if swipes >= self.cfg.max_swipes:
+            if swipes >= self.config.max_swipes:
                 break
-            self.scroll(down)
+            self._scroll(down=scroll_down)
             swipes += 1
-        raise BookingError(f"Không thấy khung giờ {slot} (đã kéo {swipes} lần)")
+        raise ElementNotFoundError(f"Slot {slot} not found after {swipes} swipe(s)")
 
-    # ------------------------------------------------- màn xác nhận đăng ký
-    def find_checkbox(self) -> tuple[str | None, tuple[int, int] | None]:
-        """Ô tick = phần tử nhỏ bên trái, ngang hàng dòng chữ 'Tôi đã hiểu...'.
-        Không bao giờ trả về phần tử không ngang hàng -> không bấm nhầm nút khác."""
-        label_el = self.d(descriptionContains=self.cfg.labels.agree)
-        if not label_el.exists(timeout=0):
-            return None, None
-        label = box_from_info(label_el.info["bounds"])
-        w, _ = self.screen_size()
+    # Confirmation screen ----------------------------------------------------
 
-        # Cách 1 (nhanh): phần tử bấm được gần nhất bên trái dòng chữ
+    def locate_checkbox(self) -> tuple[int, int] | None:
+        """Return the tap point of the consent checkbox, or ``None`` if not rendered.
+
+        The checkbox has no label; it is the small node beside its caption.
+        Nodes that are not level with the caption are never returned.
+        """
+        caption = self.device(descriptionContains=self.config.labels.agree)
+        if not caption.exists(timeout=0):
+            return None
+        label_box = box_from_info(caption.info["bounds"])
+        width, _ = self._get_screen_size()
+
         try:
-            box_el = label_el.left(clickable=True)
-        except Exception:
-            box_el = None
-        if box_el is not None and box_el.exists(timeout=0):
-            box = box_from_info(box_el.info["bounds"])
-            if is_checkbox_beside(box, label, w):
-                return f"phần tử ô tick {list(box)}", center(box)
+            sibling = caption.left(clickable=True)
+        except Exception:  # uiautomator2 raises on missing neighbours
+            sibling = None
+        if sibling is not None and sibling.exists(timeout=0):
+            box = box_from_info(sibling.info["bounds"])
+            if is_checkbox_beside(box, label_box, width):
+                logger.debug("Checkbox found beside caption at %s", box)
+                return center(box)
 
-        # Cách 2 (dự phòng): quét toàn bộ cấu trúc màn hình
-        root = ET.fromstring(self.d.dump_hierarchy(compressed=False))
-        cands = []
-        for n in root.iter("node"):
-            b = parse_bounds(n.get("bounds", ""))
-            if b and is_checkbox_beside(b, label, w):
-                score = (0 if n.get("clickable") == "true" else 1, (b[2] - b[0]) * (b[3] - b[1]))
-                cands.append((score, b))
-        if cands:
-            b = min(cands)[1]
-            return f"quét màn hình {list(b)}", center(b)
-        return None, None
+        root = ET.fromstring(self.device.dump_hierarchy(compressed=False))
+        candidates = []
+        for node in root.iter("node"):
+            box = parse_bounds(node.get("bounds", ""))
+            if box and is_checkbox_beside(box, label_box, width):
+                not_clickable = node.get("clickable") != "true"
+                area = (box[2] - box[0]) * (box[3] - box[1])
+                candidates.append(((not_clickable, area), box))
+        if not candidates:
+            return None
+        box = min(candidates)[1]
+        logger.debug("Checkbox found by hierarchy scan at %s", box)
+        return center(box)
 
-    def tick_and_confirm(self, dry_run: bool) -> None:
-        """Tick ô đồng ý (nhớ vị trí khi bấm lại), chỉ coi là xong khi nút Xác nhận sáng."""
-        lb = self.cfg.labels
-        confirm = self.d(description=lb.confirm, clickable=True)
-        self.d(description=lb.confirm).wait(timeout=self.cfg.timeout)
+    def accept_and_confirm(self, dry_run: bool) -> None:
+        """Tick the consent checkbox and submit the booking."""
+        labels = self.config.labels
+        confirm = self.device(description=labels.confirm, clickable=True)
+        self.device(description=labels.confirm).wait(timeout=self.config.timeout)
 
-        end = time.time() + self.cfg.timeout
-        xy = None
-        while time.time() < end:
-            if xy is None:
-                way, xy = self.find_checkbox()
-                if xy is None:
+        deadline = time.monotonic() + self.config.timeout
+        point = None
+        while time.monotonic() < deadline:
+            if point is None:
+                point = self.locate_checkbox()
+                if point is None:
                     time.sleep(0.2)
                     continue
-                self.log(f"... Ô tick: {way} -> bấm {xy}")
-            self.d.click(*xy)
+            self.device.click(*point)
             if confirm.wait(timeout=0.8):
                 break
         else:
-            if xy is None:
-                raise BookingError("Không tìm thấy ô tick trên màn hình (không bấm gì)")
-            raise BookingError("Đã bấm ô tick nhưng nút Xác nhận vẫn mờ")
-        self.log("OK  Đã tick đồng ý")
+            if point is None:
+                raise ElementNotFoundError("Consent checkbox not found")
+            raise NavigationError("Checkbox tapped but the confirm button stayed disabled")
+        logger.info("Accepted terms")
+
         if dry_run:
-            self.log("--  DRY-RUN: dừng, KHÔNG bấm 'Xác nhận'")
+            logger.info("Dry run: skipping final confirmation")
             return
         confirm.click()
-        self.log("OK  Bấm Xác nhận")
-        # Chờ sang màn vé: chắc chắn app đã nhận đặt chỗ, không Back cắt ngang
-        if not self.d(**self.sel_confirm_page).wait_gone(timeout=self.cfg.timeout):
-            raise BookingError("Đã bấm Xác nhận nhưng app chưa chuyển sang màn vé")
-        self.log("OK  Đã sang màn vé")
+        if not self.device(**self.confirm_page).wait_gone(timeout=self.config.timeout):
+            raise NavigationError("Confirmation submitted but the ticket screen did not appear")
+        logger.info("Booking confirmed")
 
-    # ------------------------------------------------------------- điều hướng
-    def back_to_utilities(self) -> None:
-        """Về 'Danh sách tiện ích' (thấy 'Sân Tennis'): từ màn vé chỉ cần Back 1 lần,
-        ở màn hình đầu thì bấm 'Tiện ích'."""
-        for _ in range(8):
-            if self.d(**self.sel_utility).exists(timeout=0):
-                return
-            if self.d(**self.sel_home).exists(timeout=0):
-                self.go(self.cfg.labels.home, self.sel_home, "Danh sách tiện ích", [self.sel_utility])
-                return
-            self.d.press("back")
-            self.wait_any([self.sel_utility, self.sel_home], 1.5)
-        raise BookingError("Không quay về được màn 'Danh sách tiện ích'")
+    # Helpers ----------------------------------------------------------------
 
-    def run_round(self, slot: str, target: date, dry_run: bool) -> None:
-        cfg = self.cfg
-        self.back_to_utilities()
-        self.go(cfg.labels.utility, self.sel_utility, "Đăng ký tiện ích (lịch)", self.sel_calendar)
-        self.pick_date(target)
-        self.pick_slot(slot)
-        self.go(cfg.labels.continue_, self.sel_continue, "chọn sân", [self.sel_venue, self.sel_court])
-        if self.d(**self.sel_venue).exists(timeout=0):  # màn "Origami_ Sân tennis" (nếu có)
-            self.go(cfg.venue_keyword, self.sel_venue, "chọn sân", [self.sel_court])
-        self.go(cfg.court, self.sel_court, "thông tin đặt chỗ", [self.sel_continue])
-        self.go(cfg.labels.continue_, self.sel_continue, "Xác nhận đăng ký", [self.sel_confirm_page])
-        self.tick_and_confirm(dry_run)
+    def _exists(self, selector: Selector) -> bool:
+        return bool(self.device(**selector).exists(timeout=0))
+
+    def _get_screen_size(self) -> tuple[int, int]:
+        if self._screen_size is None:
+            self._screen_size = self.device.window_size()
+        return self._screen_size
+
+    def _scroll(self, down: bool) -> None:
+        width, height = self._get_screen_size()
+        start, end = (0.62, 0.38) if down else (0.38, 0.62)
+        self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, 0.25)
+        time.sleep(0.15)
+
+    def _visibility(self, element: Any) -> str:
+        """Return ``visible``, ``below`` or ``above`` relative to the tappable area.
+
+        The sticky bottom button counts as hidden area.
+        """
+        _, height = self._get_screen_size()
+        bounds = element.info["bounds"]
+        bottom_limit = height
+        button = self.device(description=self.config.labels.continue_)
+        if button.exists(timeout=0):
+            bottom_limit = min(bottom_limit, button.info["bounds"]["top"])
+        if bounds["bottom"] > bottom_limit - 4:
+            return "below"
+        if bounds["top"] < int(height * _HEADER_RATIO):
+            return "above"
+        return "visible"
+
+    def _shown_month(self) -> int | None:
+        day = self.device(descriptionMatches=DAY_PATTERN)
+        if not day.exists(timeout=0):
+            return None
+        return month_index_from_label(day.info.get("contentDescription", ""))
+
+    def _switch_month(self, forward: bool) -> None:
+        labels = self.config.labels
+        if forward:
+            button = self.device(descriptionContains=labels.next_month)
+            fallback = self.config.next_month_xy
+        else:
+            button = self.device(description=labels.prev_month)
+            fallback = self.config.prev_month_xy
+        if button.exists(timeout=0):
+            button.click()
+        else:
+            self.device.click(*fallback)
+        logger.debug("Switched to %s month", "next" if forward else "previous")

@@ -1,61 +1,75 @@
-"""Hàm thuần (không cần thiết bị): đọc khung bao, kiểm tra vị trí, mẫu ngày tháng.
+"""Pure helpers for element bounds and date matching.
 
-Tách riêng để kiểm thử được mà không cần MuMu.
+Kept free of device access so they can be unit-tested without an emulator.
 """
+
 from __future__ import annotations
 
 import re
 from datetime import date
 
-Box = tuple[int, int, int, int]  # (x1, y1, x2, y2)
+Box = tuple[int, int, int, int]
+"""Element bounds as ``(left, top, right, bottom)`` in pixels."""
 
-# Mô tả 1 ô ngày còn bấm được, ví dụ: "2, Thứ Sáu, 2 tháng 10, 2026"
-DAY_RE = r"\d{1,2}, .*, \d{1,2} tháng \d{1,2}, \d{4}"
-# Mô tả bất kỳ khung giờ nào, còn trống ("09:00 - 10:00") hoặc hết ("...\nHết chỗ")
-SLOT_ANY_RE = r"(?s)\d{2}:\d{2} - \d{2}:\d{2}.*"
+DAY_PATTERN = r"\d{1,2}, .*, \d{1,2} tháng \d{1,2}, \d{4}"
+"""Accessibility label of a selectable calendar day, e.g. ``2, Thứ Sáu, 2 tháng 10, 2026``."""
+
+ANY_SLOT_PATTERN = r"(?s)\d{2}:\d{2} - \d{2}:\d{2}.*"
+"""Accessibility label of any time slot, available or fully booked."""
+
+_CHECKBOX_MAX_SIZE_RATIO = 0.2
+_CHECKBOX_GAP_RATIO = 0.02
 
 
 def parse_bounds(text: str) -> Box | None:
-    """'[x1,y1][x2,y2]' -> (x1, y1, x2, y2)."""
-    nums = re.findall(r"-?\d+", text or "")
-    return tuple(map(int, nums)) if len(nums) == 4 else None  # type: ignore[return-value]
+    """Parse a uiautomator ``bounds`` attribute such as ``[35,740][79,784]``."""
+    nums = [int(n) for n in re.findall(r"-?\d+", text or "")]
+    if len(nums) != 4:
+        return None
+    return nums[0], nums[1], nums[2], nums[3]
 
 
-def box_from_info(b: dict) -> Box:
-    """Khung bao dạng dict của uiautomator2 -> tuple."""
-    return b["left"], b["top"], b["right"], b["bottom"]
+def box_from_info(bounds: dict[str, int]) -> Box:
+    """Convert uiautomator2 ``info["bounds"]`` to a :data:`Box`."""
+    return bounds["left"], bounds["top"], bounds["right"], bounds["bottom"]
 
 
 def center(box: Box) -> tuple[int, int]:
-    x1, y1, x2, y2 = box
-    return (x1 + x2) // 2, (y1 + y2) // 2
+    """Return the center point of ``box``."""
+    left, top, right, bottom = box
+    return (left + right) // 2, (top + bottom) // 2
 
 
-def is_checkbox_beside(box: Box, label: Box, screen_w: int) -> bool:
-    """Ô tick hợp lệ: nhỏ, nằm bên trái dòng chữ và ngang hàng với nó.
+def is_checkbox_beside(box: Box, label: Box, screen_width: int) -> bool:
+    """Return whether ``box`` is a plausible checkbox for the caption ``label``.
 
-    Ngưỡng tính theo chiều rộng màn hình nên đúng ở mọi độ phân giải.
+    A checkbox must be small, sit to the left of the caption and overlap it
+    vertically. Thresholds scale with the screen width.
     """
-    x1, y1, x2, y2 = box
-    lx1, ly1, lx2, ly2 = label
-    max_size = screen_w * 0.2
-    gap = screen_w * 0.02
-    small = 0 < x2 - x1 <= max_size and 0 < y2 - y1 <= max_size
-    left_of = x2 <= lx1 + gap
-    same_row = y1 < ly2 and y2 > ly1
-    return small and left_of and same_row
+    left, top, right, bottom = box
+    label_left, label_top, _, label_bottom = label
+    max_size = screen_width * _CHECKBOX_MAX_SIZE_RATIO
+    gap = screen_width * _CHECKBOX_GAP_RATIO
+
+    is_small = 0 < right - left <= max_size and 0 < bottom - top <= max_size
+    is_left_of_label = right <= label_left + gap
+    is_same_row = top < label_bottom and bottom > label_top
+    return is_small and is_left_of_label and is_same_row
 
 
 def day_pattern(target: date) -> str:
-    """Biểu thức khớp đúng mô tả ô ngày `target`."""
+    """Return a regex matching the accessibility label of ``target`` only."""
     return f"{target.day}, .*, {target.day} tháng {target.month}, {target.year}"
 
 
 def month_index(year: int, month: int) -> int:
+    """Return a monotonically increasing index for a calendar month."""
     return year * 12 + month
 
 
-def month_from_desc(desc: str) -> int | None:
-    """Đọc tháng/năm từ mô tả ô ngày -> chỉ số tháng, hoặc None."""
-    m = re.search(r"tháng (\d{1,2}), (\d{4})", desc or "")
-    return month_index(int(m.group(2)), int(m.group(1))) if m else None
+def month_index_from_label(label: str) -> int | None:
+    """Extract the month index from a calendar-day accessibility label."""
+    match = re.search(r"tháng (\d{1,2}), (\d{4})", label or "")
+    if match is None:
+        return None
+    return month_index(int(match.group(2)), int(match.group(1)))

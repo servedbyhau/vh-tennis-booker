@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/) and the project
 uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Project text, logs and errors are now in English.
+- Logging uses the standard `logging` module; added `--verbose`.
+- Errors are raised as `BookingError` subclasses.
+- Config label `full` renamed to `fully_booked`.
+
+### Added
+- Pre-commit hooks, EditorConfig, Dependabot, issue and pull request templates,
+  contribution guide; CI runs lint and format checks separately from tests.
+
 ## [0.1.0] - 2026-10-02
 
 First release.

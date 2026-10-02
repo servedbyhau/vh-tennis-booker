@@ -1,3 +1,3 @@
-"""Tự động đặt sân tennis trong app Vinhomes Resident qua UI (uiautomator2)."""
+"""UI automation of the tennis-court booking flow in the Vinhomes Resident app."""
 
 __version__ = "0.1.0"

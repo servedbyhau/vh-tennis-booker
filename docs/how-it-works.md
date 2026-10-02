@@ -10,7 +10,7 @@ publishes a *semantics* tree to accessibility services, where visible text appea
 Two consequences shaped the design:
 
 1. **Only on-screen widgets exist.** Flutter builds lazily, so a time slot below the
-   fold is absent from the tree until scrolled into view. `Booker.pick_slot` scrolls in
+   fold is absent from the tree until scrolled into view. `Booker.select_slot` scrolls in
    small, slow swipes and taps only when the slot is fully visible and not covered by
    the sticky bottom button.
 2. **Unlabeled widgets.** The consent checkbox is a plain clickable `View` with no
@@ -33,7 +33,7 @@ anyway to know the button has appeared.
 
 ## Navigation
 
-`Booker.go()` waits for a button, taps immediately, then waits for any selector of the
+`Booker.tap_and_advance()` waits for a button, taps immediately, then waits for any selector of the
 next screen. If the next screen does not appear within 2 s (tap swallowed by lag), it
 taps again, up to 5 times.
 
@@ -45,4 +45,4 @@ utilities list, where the next round begins.
 
 - The first coordinate-based version failed because the emulator ran at **540×960**,
   not the assumed 900×1600. Label-based lookup removed the whole class of bugs.
-- Measure before optimizing: every log line shows `+N.NNs` since the previous step.
+- Measure before optimizing: every log line shows the time elapsed since the previous step.

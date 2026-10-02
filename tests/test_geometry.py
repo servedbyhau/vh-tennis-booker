@@ -4,47 +4,53 @@ from datetime import date
 from court_booker.geometry import (
     day_pattern,
     is_checkbox_beside,
-    month_from_desc,
     month_index,
+    month_index_from_label,
     parse_bounds,
 )
 
-W = 540  # MuMu 540x960
-LABEL = (79, 739, 313, 772)  # "Tôi đã hiểu và đồng ý với " (dữ liệu thật)
+SCREEN_WIDTH = 540
+CAPTION = (79, 739, 313, 772)  # captured from the device at 540x960
+CHECKBOX = (35, 740, 79, 784)
 
 
 def test_parse_bounds():
-    assert parse_bounds("[35,740][79,784]") == (35, 740, 79, 784)
+    assert parse_bounds("[35,740][79,784]") == CHECKBOX
     assert parse_bounds("") is None
 
 
-def test_checkbox_real_layout_is_accepted():
-    assert is_checkbox_beside((35, 740, 79, 784), LABEL, W)
+def test_checkbox_beside_caption_is_accepted():
+    assert is_checkbox_beside(CHECKBOX, CAPTION, SCREEN_WIDTH)
 
 
-def test_back_button_and_frames_are_rejected():
-    assert not is_checkbox_beside((0, 40, 60, 100), LABEL, W)     # nút Back góc trên
-    assert not is_checkbox_beside((0, 721, 540, 869), LABEL, W)   # khung lớn bao quanh
-    assert not is_checkbox_beside((0, 0, 540, 960), LABEL, W)     # toàn màn hình
+def test_unrelated_nodes_are_rejected():
+    back_button = (0, 40, 60, 100)
+    container = (0, 721, 540, 869)
+    full_screen = (0, 0, 540, 960)
+    for box in (back_button, container, full_screen):
+        assert not is_checkbox_beside(box, CAPTION, SCREEN_WIDTH)
 
 
-def test_checkbox_scales_with_resolution():
-    k = 1440 / 540
-    scaled = lambda b: tuple(int(v * k) for v in b)  # noqa: E731
-    assert is_checkbox_beside(scaled((35, 740, 79, 784)), scaled(LABEL), 1440)
+def test_checkbox_detection_scales_with_resolution():
+    factor = 1440 / SCREEN_WIDTH
+
+    def scale(box):
+        return tuple(int(v * factor) for v in box)
+
+    assert is_checkbox_beside(scale(CHECKBOX), scale(CAPTION), 1440)
 
 
 def test_day_pattern_matches_exact_day_only():
-    p = day_pattern(date(2026, 10, 3))
-    assert re.fullmatch(p, "3, Thứ Bảy, 3 tháng 10, 2026")
-    assert not re.fullmatch(p, "13, Thứ Ba, 13 tháng 10, 2026")
+    pattern = day_pattern(date(2026, 10, 3))
+    assert re.fullmatch(pattern, "3, Thứ Bảy, 3 tháng 10, 2026")
+    assert not re.fullmatch(pattern, "13, Thứ Ba, 13 tháng 10, 2026")
 
 
-def test_day_pattern_month_and_year_rollover():
+def test_day_pattern_across_month_and_year():
     assert re.fullmatch(day_pattern(date(2026, 11, 1)), "1, Chủ Nhật, 1 tháng 11, 2026")
     assert re.fullmatch(day_pattern(date(2027, 1, 1)), "1, Thứ Sáu, 1 tháng 1, 2027")
 
 
-def test_month_from_desc():
-    assert month_from_desc("2, Thứ Sáu, 2 tháng 10, 2026") == month_index(2026, 10)
-    assert month_from_desc("không có ngày") is None
+def test_month_index_from_label():
+    assert month_index_from_label("2, Thứ Sáu, 2 tháng 10, 2026") == month_index(2026, 10)
+    assert month_index_from_label("no date") is None

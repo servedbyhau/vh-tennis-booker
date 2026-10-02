@@ -1,9 +1,11 @@
-"""Cấu hình: giá trị mặc định, có thể ghi đè bằng file config.toml."""
+"""Runtime configuration with defaults and optional TOML overrides."""
+
 from __future__ import annotations
 
 import sys
 from dataclasses import dataclass, field, fields
 from pathlib import Path
+from typing import Any
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -13,7 +15,11 @@ else:  # pragma: no cover
 
 @dataclass
 class Labels:
-    """Chữ hiển thị trong app. App đổi chữ/ngôn ngữ thì chỉ cần sửa ở đây."""
+    """Accessibility labels shown by the app.
+
+    These are UI strings of the target app, not project text, and therefore
+    stay in the app's language.
+    """
 
     home: str = "Tiện ích"
     utility: str = "Sân Tennis"
@@ -23,11 +29,13 @@ class Labels:
     prev_month: str = "Tháng trước"
     next_month: str = "Tháng sau"
     agree: str = "Tôi đã hiểu"
-    full: str = "Hết chỗ"
+    fully_booked: str = "Hết chỗ"
 
 
 @dataclass
 class Config:
+    """Booking settings."""
+
     device: str = "127.0.0.1:7555"
     package: str = "com.vinhomes.resident"
     days_ahead: int = 2
@@ -36,31 +44,39 @@ class Config:
     venue_keyword: str = "Origami"
     timeout: float = 10.0
     max_swipes: int = 6
-    # Dự phòng khi nút tháng bị mờ (không có mô tả): tỉ lệ màn hình
     next_month_xy: tuple[float, float] = (0.953, 0.122)
+    """Fallback tap position (screen ratio) when the next-month button has no label."""
     prev_month_xy: tuple[float, float] = (0.873, 0.122)
+    """Fallback tap position (screen ratio) when the previous-month button has no label."""
     labels: Labels = field(default_factory=Labels)
 
 
+class ConfigError(ValueError):
+    """The configuration file contains an unknown key."""
+
+
 def load_config(path: str | Path | None) -> Config:
-    """Đọc config.toml (nếu có) và ghi đè lên giá trị mặc định."""
-    cfg = Config()
-    if path is None:
-        return cfg
-    path = Path(path)
-    if not path.exists():
-        return cfg
-    data = tomllib.loads(path.read_text(encoding="utf-8"))
-    known = {f.name for f in fields(Config)} - {"labels"}
+    """Return the default configuration overridden by ``path`` if it exists."""
+    config = Config()
+    if path is None or not Path(path).exists():
+        return config
+
+    data: dict[str, Any] = tomllib.loads(Path(path).read_text(encoding="utf-8"))
+    known_keys = {f.name for f in fields(Config)} - {"labels"}
+
     for key, value in data.items():
         if key == "labels":
-            for lk, lv in value.items():
-                attr = "continue_" if lk == "continue" else lk
-                if not hasattr(cfg.labels, attr):
-                    raise ValueError(f"config: không có nhãn '{lk}'")
-                setattr(cfg.labels, attr, lv)
-        elif key in known:
-            setattr(cfg, key, tuple(value) if key.endswith("_xy") else value)
+            _apply_labels(config.labels, value)
+        elif key in known_keys:
+            setattr(config, key, tuple(value) if key.endswith("_xy") else value)
         else:
-            raise ValueError(f"config: không có mục '{key}'")
-    return cfg
+            raise ConfigError(f"Unknown configuration key: {key!r}")
+    return config
+
+
+def _apply_labels(labels: Labels, values: dict[str, str]) -> None:
+    for key, value in values.items():
+        attr = "continue_" if key == "continue" else key
+        if not hasattr(labels, attr):
+            raise ConfigError(f"Unknown label: {key!r}")
+        setattr(labels, attr, value)
