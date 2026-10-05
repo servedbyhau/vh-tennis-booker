@@ -1,6 +1,23 @@
 # CLAUDE.md
 
-Context for AI assistants working on vh-tennis-booker. Last updated: 2026-10-02.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Last updated: 2026-10-05.
+
+## Commands
+
+The Python `Scripts` folder is not on PATH on the dev machine, so prefix tools with `python -m`.
+
+```bash
+python -m pip install -e ".[dev]"                    # install package + pytest, ruff, pre-commit
+python -m pytest                                     # all tests (no emulator needed)
+python -m pytest tests/test_flow.py -k slot          # single file / single test
+python -m ruff check . && python -m ruff format .    # CI runs `ruff format --check .`
+python -m court_booker --dry-run --verbose           # real run against the emulator
+python tools/inspect_screen.py --near "Tôi đã hiểu"  # dump nodes level with a label
+```
+
+Run `--dry-run` against the emulator whenever the booking flow changes; CI cannot.
 
 ## Goal
 
@@ -19,9 +36,6 @@ same reason.
 
 - Repo: `github.com/servedbyhau/vh-tennis-booker` (private), local path `D:\VH-Booker\vh-tennis-booker`
 - Python package `court_booker` (src layout), CLI `court-booker` / `python -m court_booker`
-- Modules: `cli.py`, `config.py` (dataclasses + `config.toml`), `errors.py` (`BookingError`
-  hierarchy), `flow.py` (`Booker`, one method per screen), `geometry.py` (pure helpers),
-  `logging_setup.py` (logging with per-step elapsed time)
 - `tools/inspect_screen.py`: dumps the UI hierarchy and lists nodes level with a text
 - 11 pytest tests with a fake device; CI on GitHub Actions: `lint` (ruff check + format)
   and `test` (Python 3.9, 3.11, 3.12, 3.13); all green
@@ -29,6 +43,26 @@ same reason.
   Dependabot, PR and issue templates, `CONTRIBUTING.md`, `CHANGELOG.md` (Keep a Changelog)
 - `CHANGELOG.md` has an "Unreleased" section (English translation, tooling, label `full`
   renamed to `fully_booked`); next release should be 0.2.0
+
+## Code architecture
+
+- `cli.py` parses args, applies overrides onto `Config`, connects with `uiautomator2.connect`
+  (imported lazily so tests don't need it), then calls `Booker.book()` once per slot. Each slot
+  is one round; a `BookingError` (or any exception) fails that round only and later rounds run.
+- `flow.Booker` holds selectors as plain dicts (`Selector = dict[str, Any]`) built from
+  `config.labels` in `__init__`, passed as `device(**selector)`. Every screen transition goes
+  through `tap_and_advance(target, name, next_screen)`: wait for target, tap, poll
+  (`wait_for_any`) for any of the next screen's selectors, retry the tap if the app lagged.
+  `return_to_utilities()` presses Back until the utilities list or home appears, so a round can
+  start from any screen.
+- `geometry.py` is pure (bounds parsing, day/slot regexes, checkbox-beside check) and is where
+  logic that can be unit-tested without a device belongs.
+- `config.load_config` rejects unknown keys (`ConfigError`); the TOML key `continue` maps to
+  `Labels.continue_`; keys ending in `_xy` become tuples. New config fields must be added to
+  the dataclass and `config.example.toml`.
+- Tests use hand-written fake devices (`tests/test_flow.py`: `FakeDevice`/`FakeElement`
+  mimicking the uiautomator2 selector API) and monkeypatch `flow.time.sleep` to run instantly.
+  `tests/conftest.py` puts `src/` on `sys.path`.
 
 ## Booking flow (app screens)
 
@@ -95,4 +129,5 @@ adb on PATH (0.2.0) / bundled Google adb (0.5.0); then auto-detect emulator port
 ## Next step
 
 Start 0.2.0: enable branch protection on `main`, create the first feature branch,
-then implement the core upgrades.
+then implement the core upgrades. The detailed 0.2.0 design (error hierarchy, `dates.py`,
+`events.py`, `cancel.py`, `runner.py`, `adb.py` interfaces) is in `SPEC.md`; follow it.
