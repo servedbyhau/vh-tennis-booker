@@ -7,6 +7,7 @@ import socket
 import struct
 import time
 from datetime import datetime, timedelta
+from datetime import time as time_of_day
 from typing import Callable
 
 from court_booker.errors import RequestError
@@ -32,22 +33,23 @@ def resolve_start(text: str, now: datetime, grace: timedelta = LATE_START_GRACE)
     A time passed by less than ``grace`` is returned as is (the wait then ends at
     once); a later one raises ``RequestError``.
     """
-    for fmt in _TIME_FORMATS:
-        try:
-            parsed = datetime.strptime(text, fmt).time()
-            break
-        except ValueError:
-            continue
-    else:
-        raise RequestError(f"Invalid start time {text!r}; use HH:MM or HH:MM:SS")
-
-    start = datetime.combine(now.date(), parsed)
+    start = datetime.combine(now.date(), parse_time(text, "start time"))
     if start < now:
         late = now - start
         if late > grace:
             raise RequestError(f"Start time {start:%H:%M:%S} has already passed today")
         logger.warning("Started %.0f s after %s; booking now", late.total_seconds(), text)
     return start
+
+
+def parse_time(text: str, name: str) -> time_of_day:
+    """Return ``HH:MM`` or ``HH:MM:SS`` as a time; ``name`` labels the error."""
+    for fmt in _TIME_FORMATS:
+        try:
+            return datetime.strptime(text, fmt).time()
+        except ValueError:
+            continue
+    raise RequestError(f"Invalid {name} {text!r}; use HH:MM or HH:MM:SS")
 
 
 def ntp_offset(server: str, timeout: float = _NTP_TIMEOUT) -> float | None:

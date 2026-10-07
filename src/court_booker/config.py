@@ -60,6 +60,8 @@ class Config:
     """Stop and start the app before booking instead of reusing its current screen."""
     start_at: str = "06:00"
     """Booking opening time (HH:MM or HH:MM:SS), used by ``--scheduled``."""
+    wake_at: str = "05:45"
+    """When the scheduled task wakes the PC and starts preparing; before ``start_at``."""
     ntp_server: str = "time.google.com"
     """Time server used to correct the PC clock before a timed start; empty disables."""
     open_retry_seconds: float = 60.0
