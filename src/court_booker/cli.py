@@ -12,6 +12,7 @@ from court_booker.clock import ntp_offset, resolve_start
 from court_booker.config import Config, load_config
 from court_booker.errors import AppNotReadyError, CourtBookerError, DeviceError, RequestError
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
+from court_booker.notify import format_summary, send_telegram
 from court_booker.power import keep_awake
 from court_booker.runner import RoundResult, connect_device, run_booking
 
@@ -84,6 +85,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose)
     results: list[RoundResult] = []
+    config: Config | None = None
+    error: str | None = None
     try:
         config = apply_overrides(load_config(args.config), args)
         if config.log_dir:
@@ -107,13 +110,19 @@ def main(argv: list[str] | None = None) -> int:
                 offset=offset,
                 results=results,
             )
+        code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:
         logger.warning("Interrupted")
-        print_summary(results)
-        return EXIT_INTERRUPTED
+        error, code = "interrupted", EXIT_INTERRUPTED
     except CourtBookerError as exc:
         logger.error("%s", exc)
-        print_summary(results)
-        return exit_code(exc)
+        error, code = str(exc), exit_code(exc)
+    except Exception as exc:  # an unattended run must still log and report
+        logger.exception("Unexpected error")
+        error, code = repr(exc), EXIT_ROUND_FAILED
+
     print_summary(results)
-    return EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
+    if config is not None and config.telegram_token and config.telegram_chat_id:
+        text = format_summary(results, error, dry_run=args.dry_run)
+        send_telegram(config.telegram_token, config.telegram_chat_id, text)
+    return code

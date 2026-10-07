@@ -82,3 +82,17 @@ class FixedDatetime(datetime):
     @classmethod
     def now(cls, tz=None):
         return datetime(2026, 10, 8, 5, 45)
+
+
+def test_summary_is_sent_to_telegram_even_on_device_error(monkeypatch, tmp_path):
+    path = tmp_path / "config.toml"
+    path.write_text('telegram_token = "t"\ntelegram_chat_id = "42"\n', encoding="utf-8")
+    sent = []
+    monkeypatch.setattr(cli, "send_telegram", lambda token, chat, text: sent.append(text))
+
+    def connect(config):
+        raise EmulatorError("MuMu did not start")
+
+    monkeypatch.setattr(cli, "connect_device", connect)
+    assert cli.main(["--config", str(path)]) == cli.EXIT_DEVICE
+    assert sent == ["court-booker: 0/0 ok\nError: MuMu did not start"]
