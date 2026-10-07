@@ -101,8 +101,8 @@ the next round starts.
 ## Environment
 
 - Windows 11, Python 3.14, Git; Python `Scripts` folder not on PATH (use `python -m ...`)
-- MuMu Player, ADB at `127.0.0.1:7555`, ADB from Google `platform-tools` (user must
-  currently run `adb connect` manually)
+- MuMu Player (instance 0 serves ADB on `127.0.0.1:16384`); adb is found and connected
+  automatically (`device = "auto"`)
 
 ## Product goal and decisions (2026-10-07)
 
