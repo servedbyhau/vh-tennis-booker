@@ -69,3 +69,7 @@ class DeviceConnectionError(DeviceError):
 
 class AppNotReadyError(CourtBookerError):
     """The app did not reach its home or utilities screen, e.g. after a logout."""
+
+
+class ScheduleError(CourtBookerError):
+    """``schtasks`` could not create, delete or query the scheduled task."""
