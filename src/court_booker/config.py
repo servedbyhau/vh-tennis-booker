@@ -40,7 +40,10 @@ class Labels:
 class Config:
     """Booking settings."""
 
-    device: str = "127.0.0.1:7555"
+    device: str = "auto"
+    """ADB serial, or ``auto`` to use the emulator's own serial or scan for one."""
+    adb_path: str = ""
+    """adb executable; empty searches PATH, then the emulator folder."""
     package: str = "com.vinhomes.resident"
     days_ahead: int = 2
     slots: list[str] = field(default_factory=lambda: ["11:00 - 12:00", "14:00 - 15:00"])
