@@ -9,6 +9,9 @@ class FakeBooker:
     def __init__(self, device, config):
         self.booked = []
 
+    def prepare(self):
+        pass
+
     def book(self, slot, target, dry_run=False):
         if slot == "18:00 - 19:00":
             raise SlotUnavailableError("Slot 18:00 - 19:00 is fully booked")

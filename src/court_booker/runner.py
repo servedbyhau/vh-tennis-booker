@@ -63,11 +63,7 @@ def run_booking(
     """
     results = [] if results is None else results
     booker = Booker(device, config)
-
-    if device.app_current().get("package") != config.package:
-        logger.info("Launching %s", config.package)
-        device.app_start(config.package)
-        device(**booker.home).wait(timeout=config.timeout * 2)
+    booker.prepare()
 
     target = date.today() + timedelta(days=config.days_ahead)
     logger.info(
