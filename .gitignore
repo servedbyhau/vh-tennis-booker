@@ -9,11 +9,9 @@ dist/
 .pytest_cache/
 .ruff_cache/
 
-# Cấu hình cá nhân và dữ liệu chụp từ thiết bị (có thể chứa thông tin cá nhân)
+# Personal config and device captures (may contain personal data)
 config.toml
 dump.xml
-*.xml.bak
-tick_nodes.txt
 screenshots/
 logs/
 *.png
