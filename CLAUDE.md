@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Last updated: 2026-10-05.
+Last updated: 2026-10-07.
 
 ## Commands
 
@@ -21,8 +21,7 @@ Run `--dry-run` against the emulator whenever the booking flow changes; CI canno
 
 ## Goal
 
-A learning project to build a realistic, CV-worthy product: a Windows desktop app where a user
-picks a court, a date and time slots in a UI, and Python code underneath drives the
+A learning project to build a realistic, CV-worthy product: Python code on Windows that drives the
 **Vinhomes Resident** Android app (Flutter) inside the **MuMu Player** emulator to book a
 tennis court. Personal use only; not published commercially.
 
@@ -92,30 +91,32 @@ the next round starts.
 - MuMu Player, ADB at `127.0.0.1:7555`, ADB from Google `platform-tools` (user must
   currently run `adb connect` manually)
 
-## Decided architecture (target)
+## Product goal and decisions (2026-10-07)
 
-| Layer | Technology |
-|---|---|
-| UI | React (web, not React Native) + TypeScript, built with Vite |
-| Desktop shell | Tauri (WebView2), backend launched as a sidecar |
-| Backend | Python FastAPI + Pydantic, WebSocket for live progress, localhost only |
-| Core | Existing `court_booker` + uiautomator2 |
+The only goal is to win the booking race: the app opens bookings at **06:00 every day** and the
+user must not need to be awake. Priority is unattended, scheduled, fastest-possible booking.
 
-Monorepo target layout: `backend/`, `frontend/`, `src-tauri/`, `docs/`, `.github/`.
+- Target date is always today + `days_ahead` (default 2); no specific `--date`.
+- No stop button / cancellation token; Ctrl+C prints the summary instead.
+- UI, backend and desktop packaging are **deferred** until unattended booking works.
+- Each run waits on the utilities list ("Sân Tennis", screen 2) before the start time, so only
+  the booking taps happen after 06:00.
+- Open blocker: confirm whether "Xác nhận" can submit with developer mode on (see `SPEC.md`).
 
 **ADB strategy:** reuse a running ADB server if present → user-configured adb path →
-adb on PATH (0.2.0) / bundled Google adb (0.5.0); then auto-detect emulator ports
-(MuMu 7555 and 16384+, LDPlayer/BlueStacks 5555+, Nox 62001).
+adb on PATH; then auto-detect emulator ports (MuMu 7555 and 16384+, LDPlayer/BlueStacks 5555+,
+Nox 62001). MuMu is started with `C:/Program Files/Netease/MuMuPlayer/nx_main/MuMuManager.exe`
+(`info -v 0` reports `is_android_started`).
 
 ## Roadmap
 
 | Version | Scope |
 |---|---|
-| 0.2.0 Core | Specific `--date`; structured progress events; cancellation; ADB discovery and auto-connect; tests |
-| 0.3.0 Backend | Move Python to `backend/`; FastAPI endpoints (`/device`, `/device/connect`, `/options`, `/runs`, `/runs/{id}/stop`, `WS /runs/{id}/events`); single active run; log to file; API tests |
-| 0.4.0 Web UI | React + TS: device status, court select, date picker limited to bookable dates, slot checkboxes, dry-run toggle, start/stop, live step progress, remembered choices, settings; Vitest; CI for both |
-| 0.5.0 Desktop | PyInstaller `backend.exe`; Tauri sidecar on a random port; first-run system check (MuMu, ADB, emulator, Vinhomes app); auto-update; installer |
-| 0.6.0 Release | CI builds installer on tag and attaches to Release; version sync; README demo GIF, architecture diagram, system requirements, troubleshooting (SmartScreen, antivirus) |
+| 0.2.0 Unattended | Start MuMu; ADB auto-connect; prepare app on screen 2; `--at` timed start with NTP offset; opening retry; keep awake; log file; Telegram summary; Task Scheduler install with wake; tests |
+| 0.3.0 Hardening | Based on real 06:00 runs: timing measurements, faster taps, failure handling, health check before the start time |
+
+Deferred (previous plan, revisit after 0.3.0): FastAPI backend with WebSocket progress, React +
+TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and release automation.
 
 ## Working conventions
 
@@ -128,6 +129,7 @@ adb on PATH (0.2.0) / bundled Google adb (0.5.0); then auto-detect emulator port
 
 ## Next step
 
-Start 0.2.0: enable branch protection on `main`, create the first feature branch,
-then implement the core upgrades. The detailed 0.2.0 design (error hierarchy, `dates.py`,
-`events.py`, `cancel.py`, `runner.py`, `adb.py` interfaces) is in `SPEC.md`; follow it.
+Resolve the developer-mode blocker, enable branch protection on `main`, then implement 0.2.0
+one feature branch at a time. The detailed design (errors, `emulator.py`, `adb.py`, `clock.py`,
+`power.py`, `runner.py`, `notify.py`, `schedule.py`, config keys, exit codes) is in `SPEC.md`;
+follow it.
