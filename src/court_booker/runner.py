@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
+from court_booker.adb import Adb, find_adb, resolve_device
 from court_booker.config import Config
 from court_booker.emulator import MuMu
 from court_booker.errors import BookingError, DeviceConnectionError
@@ -31,14 +32,21 @@ def connect_device(config: Config) -> Any:
     """Start the emulator if configured and return a uiautomator2 device."""
     import uiautomator2  # deferred so tests do not require the dependency
 
+    preferred = None
+    extra_dirs = []
     if config.mumu_manager:
-        MuMu(Path(config.mumu_manager), config.mumu_index).ensure_started(config.boot_timeout)
+        mumu = MuMu(Path(config.mumu_manager), config.mumu_index)
+        mumu.ensure_started(config.boot_timeout)
+        preferred = mumu.adb_serial()
+        extra_dirs.append(mumu.manager.parent)
 
-    logger.info("Connecting to %s", config.device)
+    adb = Adb(find_adb(config.adb_path, extra_dirs))
+    serial = resolve_device(adb, config.device, preferred)
+    logger.info("Connecting to %s", serial)
     try:
-        return uiautomator2.connect(config.device)
+        return uiautomator2.connect(serial)
     except Exception as exc:  # uiautomator2 raises several unrelated types
-        raise DeviceConnectionError(f"Could not connect to {config.device}: {exc}") from exc
+        raise DeviceConnectionError(f"Could not connect to {serial}: {exc}") from exc
 
 
 def run_booking(

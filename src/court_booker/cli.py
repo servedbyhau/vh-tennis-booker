@@ -32,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true", help="stop before the final confirmation")
     parser.add_argument("--days", type=int, help="days ahead of today to book")
     parser.add_argument("--slots", nargs="+", metavar="SLOT", help='e.g. "18:00 - 19:00"')
-    parser.add_argument("--device", help="ADB serial, e.g. 127.0.0.1:7555")
+    parser.add_argument("--device", help='ADB serial, e.g. 127.0.0.1:16384, or "auto"')
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug output")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser

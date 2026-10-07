@@ -1,6 +1,7 @@
 # Copy to config.toml and adjust. Omitted keys fall back to built-in defaults.
 
-device = "127.0.0.1:7555"           # ADB serial of the emulator
+device = "auto"                     # ADB serial, or "auto" to find the emulator
+adb_path = ""                       # adb.exe; empty searches PATH, then the MuMu folder
 package = "com.vinhomes.resident"
 days_ahead = 2                      # book this many days after today
 slots = ["18:00 - 19:00", "19:00 - 20:00"]  # one booking round per slot
