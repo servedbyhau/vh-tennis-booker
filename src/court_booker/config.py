@@ -14,6 +14,8 @@ if sys.version_info >= (3, 11):
 else:  # pragma: no cover
     import tomli as tomllib
 
+DEFAULT_MUMU_MANAGER = "C:/Program Files/Netease/MuMuPlayer/nx_main/MuMuManager.exe"
+
 
 @dataclass
 class Labels:
@@ -46,6 +48,11 @@ class Config:
     venue_keyword: str = "Origami"
     timeout: float = 10.0
     max_swipes: int = 6
+    mumu_manager: str = DEFAULT_MUMU_MANAGER
+    """MuMuManager.exe used to start the emulator; empty skips starting it."""
+    mumu_index: int = 0
+    boot_timeout: float = 180.0
+    """Seconds to wait for the emulator to boot and for the app to open."""
     next_month_xy: tuple[float, float] = (0.953, 0.122)
     """Fallback tap position (screen ratio) when the next-month button has no label."""
     prev_month_xy: tuple[float, float] = (0.873, 0.122)
