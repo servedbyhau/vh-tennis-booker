@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import argparse
 import logging
+from datetime import datetime
 
 from court_booker import __version__
+from court_booker.clock import ntp_offset, resolve_start
 from court_booker.config import Config, load_config
 from court_booker.errors import AppNotReadyError, CourtBookerError, DeviceError, RequestError
 from court_booker.logging_setup import LOGGER_NAME, configure_logging
+from court_booker.power import keep_awake
 from court_booker.runner import RoundResult, connect_device, run_booking
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -33,6 +36,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--days", type=int, help="days ahead of today to book")
     parser.add_argument("--slots", nargs="+", metavar="SLOT", help='e.g. "18:00 - 19:00"')
     parser.add_argument("--device", help='ADB serial, e.g. 127.0.0.1:16384, or "auto"')
+    timing = parser.add_mutually_exclusive_group()
+    timing.add_argument(
+        "--at", metavar="HH:MM[:SS]", help="prepare now, start booking at this time today"
+    )
+    timing.add_argument(
+        "--scheduled", action="store_true", help="like --at, using start_at from the config"
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug output")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
@@ -76,8 +86,22 @@ def main(argv: list[str] | None = None) -> int:
     try:
         config = apply_overrides(load_config(args.config), args)
         logger.info("court-booker %s", __version__)
-        device = connect_device(config)
-        run_booking(device, config, dry_run=args.dry_run, results=results)
+        start_text = config.start_at if args.scheduled else args.at
+        start = resolve_start(start_text, datetime.now()) if start_text else None
+        with keep_awake():
+            offset = 0.0
+            if start is not None and config.ntp_server:
+                offset = ntp_offset(config.ntp_server) or 0.0
+                logger.info("Clock offset %+.3f s", offset)
+            device = connect_device(config)
+            run_booking(
+                device,
+                config,
+                dry_run=args.dry_run,
+                start=start,
+                offset=offset,
+                results=results,
+            )
     except KeyboardInterrupt:
         logger.warning("Interrupted")
         print_summary(results)

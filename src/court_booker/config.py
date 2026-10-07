@@ -58,6 +58,10 @@ class Config:
     """Seconds to wait for the emulator to boot and for the app to open."""
     restart_app: bool = True
     """Stop and start the app before booking instead of reusing its current screen."""
+    start_at: str = "06:00"
+    """Booking opening time (HH:MM or HH:MM:SS), used by ``--scheduled``."""
+    ntp_server: str = "time.google.com"
+    """Time server used to correct the PC clock before a timed start; empty disables."""
     next_month_xy: tuple[float, float] = (0.953, 0.122)
     """Fallback tap position (screen ratio) when the next-month button has no label."""
     prev_month_xy: tuple[float, float] = (0.873, 0.122)

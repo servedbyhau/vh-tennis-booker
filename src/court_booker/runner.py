@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from court_booker.adb import Adb, find_adb, resolve_device
+from court_booker.clock import wait_until
 from court_booker.config import Config
 from court_booker.emulator import MuMu
 from court_booker.errors import BookingError, DeviceConnectionError
@@ -54,18 +55,23 @@ def run_booking(
     config: Config,
     *,
     dry_run: bool = False,
+    start: datetime | None = None,
+    offset: float = 0.0,
     results: list[RoundResult] | None = None,
 ) -> list[RoundResult]:
-    """Book every slot in ``config.slots``, one round each, and return the results.
+    """Prepare the app, wait for ``start`` if given, then book every configured slot.
 
-    Results are appended to ``results`` as rounds finish, so a caller that is
-    interrupted still sees the rounds already done.
+    ``offset`` corrects the local clock (see :func:`clock.ntp_offset`). The target
+    date is ``days_ahead`` after the start date. Results are appended to
+    ``results`` as rounds finish, so an interrupted caller still sees them.
     """
     results = [] if results is None else results
     booker = Booker(device, config)
     booker.prepare()
 
-    target = date.today() + timedelta(days=config.days_ahead)
+    if start is not None:
+        wait_until(start, offset)
+    target = (start or datetime.now()).date() + timedelta(days=config.days_ahead)
     logger.info(
         "Target date %s, slots: %s%s",
         target.isoformat(),
