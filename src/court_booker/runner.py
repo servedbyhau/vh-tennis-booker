@@ -6,9 +6,11 @@ import logging
 import time
 from dataclasses import dataclass
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
 
 from court_booker.config import Config
+from court_booker.emulator import MuMu
 from court_booker.errors import BookingError, DeviceConnectionError
 from court_booker.flow import Booker
 
@@ -26,8 +28,11 @@ class RoundResult:
 
 
 def connect_device(config: Config) -> Any:
-    """Return a uiautomator2 device for ``config.device``."""
+    """Start the emulator if configured and return a uiautomator2 device."""
     import uiautomator2  # deferred so tests do not require the dependency
+
+    if config.mumu_manager:
+        MuMu(Path(config.mumu_manager), config.mumu_index).ensure_started(config.boot_timeout)
 
     logger.info("Connecting to %s", config.device)
     try:
