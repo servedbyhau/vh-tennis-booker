@@ -29,6 +29,10 @@ class SlotUnavailableError(BookingError):
     """The requested time slot is fully booked."""
 
 
+class BookingNotOpenError(BookingError):
+    """The date or slot did not appear before the retry window ended."""
+
+
 class RequestError(CourtBookerError):
     """Invalid arguments or configuration; nothing was sent to the device."""
 
