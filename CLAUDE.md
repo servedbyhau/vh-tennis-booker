@@ -101,12 +101,15 @@ user must not need to be awake. Priority is unattended, scheduled, fastest-possi
 - UI, backend and desktop packaging are **deferred** until unattended booking works.
 - Each run waits on the utilities list ("Sân Tennis", screen 2) before the start time, so only
   the booking taps happen after 06:00.
-- Open blocker: confirm whether "Xác nhận" can submit with developer mode on (see `SPEC.md`).
+- Trigger is Windows Task Scheduler at 05:45 (time-based, not logon). The script itself starts
+  MuMu, connects ADB and restarts the app. MuMu and the app are left open after the run.
+- Developer mode is assumed to allow booking for 0.2.0; not discussed further.
 
 **ADB strategy:** reuse a running ADB server if present → user-configured adb path →
 adb on PATH; then auto-detect emulator ports (MuMu 7555 and 16384+, LDPlayer/BlueStacks 5555+,
-Nox 62001). MuMu is started with `C:/Program Files/Netease/MuMuPlayer/nx_main/MuMuManager.exe`
-(`info -v 0` reports `is_android_started`).
+Nox 62001). MuMu is started with `C:/Program Files/Netease/MuMuPlayer/nx_main/MuMuManager.exe`:
+`info -v 0` returns JSON with `is_android_started`, `adb_host_ip`, `adb_port` (16384 for
+instance 0); `control -v 0 launch` starts it. MuMu ships its own `adb.exe` in the same folder.
 
 ## Roadmap
 
@@ -129,7 +132,5 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
 
 ## Next step
 
-Resolve the developer-mode blocker, enable branch protection on `main`, then implement 0.2.0
-one feature branch at a time. The detailed design (errors, `emulator.py`, `adb.py`, `clock.py`,
-`power.py`, `runner.py`, `notify.py`, `schedule.py`, config keys, exit codes) is in `SPEC.md`;
-follow it.
+Implement 0.2.0 following the step table in `SPEC.md` (one stacked branch per step), then
+let the user verify on the emulator and with the scheduled task.

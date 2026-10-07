@@ -2,136 +2,105 @@
 
 ## Goal
 Book a court at the moment the app opens bookings (06:00 every day) without anyone at the
-computer. Windows Task Scheduler wakes the PC; `court-booker` starts MuMu, connects ADB, opens
-the Vinhomes app, waits on the utilities list ("Sân Tennis"), and at the exact start time books
-the configured slots for today + `days_ahead` (default 2). Speed at the start time is the only
-performance goal: everything slow happens before it.
+computer. Windows Task Scheduler starts `court-booker` at 05:45; it starts MuMu, connects ADB,
+restarts the Vinhomes app, waits on the utilities list ("Sân Tennis"), and at the exact start
+time books the configured slots for today + `days_ahead` (default 2). Speed at the start time is
+the only performance goal: everything slow happens before it. After the run, MuMu and the app
+are left open.
 
-## Blocking precondition (open)
-The Vinhomes app rejects use while developer mode is on, and ADB needs developer mode. Before
-implementing, the user checks manually what happens when "Xác nhận" is tapped with developer
-mode on. If the booking cannot be submitted, this spec cannot reach its goal and is re-planned.
-Bypassing the check stays out of scope.
-
-## In scope
-1. **Emulator start:** launch MuMu instance `mumu_index` with `MuMuManager.exe` and wait until
-   Android has booted.
-2. **ADB discovery and auto-connect:** reuse a running server, else start one; explicit serial or
-   `auto` port scan.
-3. **App preparation:** start the Vinhomes app and navigate to the utilities list before the
-   start time; fail early if the app is not usable (e.g. logged out).
-4. **Timed start:** `--at HH:MM[:SS]` waits until that local time, corrected by an NTP offset,
-   then starts the first round.
-5. **Opening retry:** if the target date or slot is not yet bookable at the start time, leave the
-   calendar and re-enter until `open_retry_seconds` have passed.
-6. **Keep awake:** prevent Windows from going back to sleep while a run is in progress.
-7. **Run report:** log to a daily file; optional Telegram message with the summary.
-8. **Scheduler setup:** `court-booker schedule install|remove|status` manages a Task Scheduler
-   task that wakes the PC and runs the booking.
-9. **Ctrl+C** prints the summary of finished rounds before exiting.
-10. **Tests** for all of the above, using fakes only.
+## Flow of one scheduled run
+1. **Start-up:** load config, add a daily log file, keep Windows awake, resolve the start time,
+   measure the clock offset (NTP).
+2. **Emulator:** `MuMuManager.exe info -v <index>`; if `is_android_started` is false, run
+   `control -v <index> launch` and poll until true (`boot_timeout`).
+3. **ADB:** find `adb`, reuse or start the server, connect to the serial MuMu reports
+   (`adb_host_ip:adb_port`) or to `device` from config.
+4. **App:** stop and start `com.vinhomes.resident`; wait for "Tiện ích" or "Sân Tennis".
+5. **Wait:** go to the utilities list and wait until the corrected clock reaches the start time.
+6. **Book:** one round per slot (the 0.1.0 flow); if the date or slot is not open yet, re-enter
+   the calendar until `open_retry_seconds` have passed.
+7. **Report:** summary to console, log file and optional Telegram message; exit code.
 
 ## Out of scope
-Specific `--date` (the target is always today + `days_ahead`), a stop button or cancellation
-token, structured progress events, FastAPI, any UI, waking from shutdown (only Sleep), automating
-login or OTP, emulators other than MuMu for the start step (ADB discovery still covers them),
-bypassing the developer-mode check, tests against a real emulator or network in CI.
+Specific `--date`, cancellation or a stop button, structured progress events, any API or UI,
+closing MuMu or the app after the run, waking from shutdown, automating login or OTP, starting
+emulators other than MuMu, bypassing the developer-mode check (assumed to work for this
+release), tests against a real emulator, Task Scheduler or network in CI.
 
 ## Interfaces
-- **Errors** (`errors.py`): new base `CourtBookerError`. Under it: `BookingError` (existing,
-  aborts one round); `RequestError` (bad arguments or config, e.g. start time already passed);
-  `DeviceError` → `AdbNotFoundError`, `NoDeviceError`, `MultipleDevicesError(serials)`,
-  `DeviceConnectionError`, `EmulatorError` (MuMu not found, launch failed, boot timeout);
-  `AppNotReadyError` (neither the home nor the utilities screen appeared after launch).
-- **Emulator** (`emulator.py`): `MuMu(manager: Path, index: int, run=subprocess.run)` with
-  `is_started() -> bool` (from `MuMuManager.exe info -v <index>`, field
-  `is_android_started`), `launch()` (`control -v <index> launch`), `wait_until_started(timeout)`
-  and `shutdown()` (`control -v <index> shutdown`). Already started means no launch. Exact
-  `MuMuManager` arguments are confirmed on the dev machine before coding.
-- **ADB** (`adb.py`): `find_adb(adb_path) -> Path` (config `adb_path`, then `PATH`);
-  `ensure_server(adb)` (reuse port 5037 if it answers, else `adb start-server`);
-  `discover(adb) -> list[str]` (attached devices plus `adb connect` to open ports: MuMu 7555 and
-  16384+, LDPlayer/BlueStacks 5555+, Nox 62001); `resolve_device(config) -> str`. Config
-  `device` defaults to `"auto"`; an explicit serial is connected alone, with no scan. Subprocess
-  runner and port probe are injectable.
-- **Clock** (`clock.py`): `parse_start_time(text, now) -> datetime` (today at that time; past
-  raises `RequestError`); `ntp_offset(server, timeout) -> float | None` (seconds to add to the
-  local clock; `None` on failure, logged as a warning); `wait_until(target, *, now, sleep)`
-  sleeps coarsely, then in short steps for the last second. Clock and sleep are injectable.
-- **Power** (`power.py`): `keep_awake()` context manager using `SetThreadExecutionState`
-  (`ES_CONTINUOUS | ES_SYSTEM_REQUIRED`); a no-op off Windows.
-- **Flow** (`flow.py`): `Booker.prepare()` launches the app if needed and returns on the
-  utilities list (raises `AppNotReadyError`). `Booker.book()` gains opening retry: if the date or
-  slot is absent (not "Hết chỗ"), press Back to the utilities list and re-enter, until
-  `open_retry_seconds`. "Hết chỗ" still fails the round at once.
-- **Runner** (`runner.py`): `run_booking(device, config, *, start_at=None, dry_run=False)
-  -> list[RoundResult]`: prepare, wait for `start_at` if given, compute the target date from the
-  start time, run one round per slot. The CLI calls it inside `keep_awake()`.
-- **Notify** (`notify.py`): `send_telegram(token, chat_id, text, post=...)`; failures are logged,
-  never raised. Skipped when the token is empty.
-- **Scheduler** (`schedule.py`): builds Task Scheduler XML (daily trigger, `WakeToRun`, run only
-  when the user is logged on, working directory = config folder) and calls
-  `schtasks /Create /XML`, `/Delete`, `/Query`. The command line runs
-  `<python> -m court_booker --at <start_at> --config <absolute path>`. XML building is pure and
-  tested; `schtasks` calls are injectable.
-- **Config** (new keys, added to the dataclass and `config.example.toml`): `device = "auto"`,
-  `adb_path = ""`, `mumu_manager = "C:/Program Files/Netease/MuMuPlayer/nx_main/MuMuManager.exe"`,
-  `mumu_index = 0`, `boot_timeout = 180`, `close_emulator_after = false`, `start_at = "06:00:00"`,
-  `wake_at = "05:45"`, `ntp_server = "pool.ntp.org"` (empty disables), `open_retry_seconds = 60`,
-  `log_dir = "logs"`, `telegram_token = ""`, `telegram_chat_id = ""`.
-- **CLI:** `court-booker [--at HH:MM[:SS]] [--dry-run] ...` runs now, or at the given time.
-  `court-booker schedule install|remove|status` is dispatched when the first argument is
-  `schedule`. Exit codes: 0 all rounds ok · 1 a round failed · 2 bad arguments or config ·
-  3 device or emulator error · 4 app not ready · 130 Ctrl+C.
+- **Errors** (`errors.py`): base `CourtBookerError`. `BookingError` (aborts one round; adds
+  `BookingNotOpenError`); `RequestError` (bad arguments or config; `ConfigError` derives from
+  it); `DeviceError` → `EmulatorError`, `AdbNotFoundError`, `NoDeviceError`,
+  `MultipleDevicesError(serials)`, `DeviceConnectionError`; `AppNotReadyError`.
+- **Runner** (`runner.py`): `RoundResult`; `connect_device(config)` (emulator, ADB,
+  uiautomator2); `run_booking(device, config, *, dry_run, start=None, offset=0.0, results)`
+  prepares the app, waits for `start`, books every slot and appends to `results`, so the CLI
+  can print finished rounds after Ctrl+C.
+- **Emulator** (`emulator.py`): `MuMu(manager, index, run=..., clock=..., sleep=...)` with
+  `info()`, `is_started()`, `adb_serial()`, `launch()`, `ensure_started(timeout)`. Accepts both
+  the single-object and the index-keyed JSON of `info`. Missing manager or boot timeout raises
+  `EmulatorError`. `mumu_manager = ""` skips this step.
+- **ADB** (`adb.py`): `find_adb(adb_path, extra_dirs)` (config `adb_path`, then `PATH`, then
+  MuMu's own `adb.exe`); `Adb(path, run, probe)` with `ensure_server()` (reuse port 5037 if it
+  answers, else `start-server`), `devices()`, `connect(serial)`, `discover(ports)`;
+  `resolve_device(adb, device, preferred, timeout)`. `device = "auto"` uses MuMu's serial if
+  known, else attached devices, else a port scan (7555, 16384, 16416, 16448, 5555, 5557, 5559,
+  62001; closed ports are skipped). An explicit serial is connected alone and retried until
+  `timeout`.
+- **Flow** (`flow.py`): `Booker.prepare(restart)` stops and starts the app (or starts it only if
+  not in front), waits for home or utilities, ends on the utilities list, raises
+  `AppNotReadyError`. `Booker.open_slot(slot, target)` re-enters the calendar while the date or
+  slot is missing, until `open_retry_seconds`; "Hết chỗ" fails at once.
+- **Clock** (`clock.py`): `resolve_start(text, now, grace)` (today at `HH:MM[:SS]`; up to
+  `grace` late starts now with a warning; later raises `RequestError`); `ntp_offset(server)`
+  (`None` on failure); `wait_until(target, offset, now, sleep)` sleeps coarsely, then in
+  millisecond steps.
+- **Power** (`power.py`): `keep_awake()` uses `SetThreadExecutionState`; no-op off Windows.
+- **Logging** (`logging_setup.py`): `add_file_handler(log_dir)` writes
+  `court-booker-YYYY-MM-DD.log`; the console handler is skipped when there is no console
+  (`pythonw.exe`).
+- **Notify** (`notify.py`): `send_telegram(token, chat_id, text, post=...)`, never raises.
+- **Schedule** (`schedule.py`): `build_task_xml(...)` (daily trigger at `wake_at`, `WakeToRun`,
+  interactive user, runs `pythonw.exe -m court_booker --config <abs> --scheduled`);
+  `install`, `remove`, `status` call `schtasks`.
+- **Config** (new keys, in the dataclass and `config.example.toml`): `device = "auto"`,
+  `adb_path = ""`, `mumu_manager`, `mumu_index = 0`, `boot_timeout = 180`,
+  `restart_app = true`, `start_at = "06:00"`, `wake_at = "05:45"`,
+  `ntp_server = "pool.ntp.org"`, `open_retry_seconds = 60`, `log_dir = "logs"`,
+  `telegram_token = ""`, `telegram_chat_id = ""`. Relative paths resolve against the config
+  file's folder.
+- **CLI:** `court-booker [--at HH:MM[:SS] | --scheduled] [--dry-run] ...`; without either flag
+  it books immediately. `court-booker schedule install|remove|status [--config]`. Exit codes:
+  0 all rounds ok · 1 a round failed · 2 bad arguments or config · 3 emulator or ADB error ·
+  4 app not ready · 130 Ctrl+C (summary still printed).
 
-## Done criteria
+## Implementation steps
+Each step is a branch stacked on the previous one, with tests, green `pytest` and `ruff`.
 
-### 1. Emulator start
-- [ ] MuMu already started: no launch call. Not started: launch, then poll until started.
-- [ ] Boot not finished within `boot_timeout`, or `MuMuManager.exe` missing: `EmulatorError`, exit 3.
-- [ ] `close_emulator_after = true` shuts the instance down after the run, whatever the outcome.
-
-### 2. ADB discovery and auto-connect
-- [ ] A running server is reused and `start-server` is not called.
-- [ ] With no server, `adb` from `adb_path`, else `PATH`, runs `start-server`; if neither exists, `AdbNotFoundError` says how to fix it.
-- [ ] An explicit serial is connected alone; failure raises `DeviceConnectionError`.
-- [ ] `auto`: one device is returned; zero raises `NoDeviceError`; several raise `MultipleDevicesError` listing all serials.
-- [ ] Closed ports are skipped without calling `adb connect`.
-
-### 3. App preparation
-- [ ] The app is started when not in the foreground and the run continues on the utilities list.
-- [ ] If neither home nor utilities appears within `boot_timeout`, `AppNotReadyError`, exit 4, and the notification says the app needs attention.
-
-### 4. Timed start
-- [ ] `--at 06:00` started at 05:45 taps "Sân Tennis" no earlier than 06:00:00.000 and, with fake clocks, within 50 ms after it.
-- [ ] A start time already passed today exits 2 before any device call.
-- [ ] The NTP offset is applied when available; an NTP failure logs a warning and the local clock is used.
-- [ ] The target date is the start date + `days_ahead`.
-
-### 5. Opening retry
-- [ ] Date or slot missing at the start time: re-enter until it appears, then book; give up after `open_retry_seconds` with a `BookingError`.
-- [ ] A "Hết chỗ" slot fails the round without retry.
-
-### 6. Keep awake, report, scheduler, Ctrl+C
-- [ ] `keep_awake()` sets and clears the execution state (tested with a fake `SetThreadExecutionState`).
-- [ ] Each run appends to `logs/court-booker-YYYY-MM-DD.log`; a Telegram message with the summary is sent when configured, and its failure does not change the exit code.
-- [ ] `schedule install` produces XML with the daily trigger at `wake_at`, `WakeToRun`, and the `--at` command; `remove` and `status` call `schtasks` correctly.
-- [ ] Ctrl+C prints the summary of finished rounds and exits 130.
-
-### 7. Tests and quality
-- [ ] New tests: `test_emulator.py`, `test_adb.py`, `test_clock.py`, `test_power.py`, `test_notify.py`, `test_schedule.py`, extended `test_flow.py` and runner tests.
-- [ ] The 11 existing tests still pass; no test needs an emulator, real adb, Task Scheduler or network.
-- [ ] `ruff check` and `ruff format --check` pass; CI green on Python 3.9, 3.11, 3.12 and 3.13.
-- [ ] `CHANGELOG.md` "Unreleased" lists the new features; README documents the one-time Windows setup.
-
-## One-time Windows setup (documented in README)
-PC left in Sleep, not shut down; plugged in; "Allow wake timers" enabled; Windows stays signed in
-(MuMu needs an interactive session); Windows Update active hours cover the early morning; the
-Vinhomes app stays logged in inside MuMu.
+| # | Branch | Commit |
+|---|---|---|
+| 1 | `refactor/error-hierarchy` | `refactor: add CourtBookerError base and run-level errors` |
+| 2 | `refactor/runner` | `refactor: move the booking run into runner.py with exit codes` |
+| 3 | `feat/mumu-start` | `feat: start the MuMu emulator and wait for Android` |
+| 4 | `feat/adb-autoconnect` | `feat: find adb and connect to the emulator automatically` |
+| 5 | `feat/app-prepare` | `feat: restart the app and wait on the utilities list` |
+| 6 | `feat/timed-start` | `feat: start booking at an exact time with --at and --scheduled` |
+| 7 | `feat/open-retry` | `feat: re-enter the calendar until the booking window opens` |
+| 8 | `feat/log-file` | `feat: write a daily log file` |
+| 9 | `feat/telegram` | `feat: send the run summary to Telegram` |
+| 10 | `feat/task-scheduler` | `feat: install the daily Windows scheduled task` |
+| 11 | `docs/v0.2.0` | `docs: document unattended booking` |
 
 ## Verification
-- `python -m pytest -q` with fakes only (fake device, runner, port probe, clock, `schtasks`, HTTP).
+- `python -m pytest -q` with fakes only (device, subprocess runner, port probe, clock, HTTP).
 - `python -m ruff check .` and `python -m ruff format --check .`
-- Manual, by the user: `court-booker --at <now + 3 min> --dry-run` with MuMu closed; then the
-  scheduled task with `--dry-run` from Sleep; before 06:00 once, dump the calendar with
-  `tools/inspect_screen.py` to see how a not-yet-open date or slot looks.
+- Manual, by the user, after steps 3–6: `court-booker --dry-run` with MuMu closed; then
+  `court-booker --at <now + 3 min> --dry-run`; after step 10, `court-booker schedule install`
+  and one scheduled `--dry-run` morning.
+- Before one 06:00 opening, dump the calendar with `tools/inspect_screen.py` to see how a
+  not-yet-open date or slot looks; tune step 7 in 0.3.0 if needed.
+
+## Windows setup (documented in README)
+PC on or in Sleep (not shut down); plugged in; "Allow wake timers" enabled; Windows stays
+signed in (screen may be off or locked; MuMu needs the session); the Vinhomes app stays logged
+in inside MuMu.
