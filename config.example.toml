@@ -16,6 +16,10 @@ mumu_index = 0                      # MuMu instance number (0 = first)
 boot_timeout = 180                  # seconds to wait for Android and for the app
 restart_app = true                  # restart the app for a clean state before booking
 
+# Timed start (court-booker --scheduled waits for start_at).
+start_at = "06:00"                  # when the app opens bookings, HH:MM or HH:MM:SS
+ntp_server = "time.google.com"      # corrects the PC clock; "" uses the PC clock as is
+
 # Accessibility labels of the target app. They stay in the app's language;
 # update them here if the app changes its wording.
 [labels]

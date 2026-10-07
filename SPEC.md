@@ -66,7 +66,7 @@ release), tests against a real emulator, Task Scheduler or network in CI.
 - **Config** (new keys, in the dataclass and `config.example.toml`): `device = "auto"`,
   `adb_path = ""`, `mumu_manager`, `mumu_index = 0`, `boot_timeout = 180`,
   `restart_app = true`, `start_at = "06:00"`, `wake_at = "05:45"`,
-  `ntp_server = "pool.ntp.org"`, `open_retry_seconds = 60`, `log_dir = "logs"`,
+  `ntp_server = "time.google.com"`, `open_retry_seconds = 60`, `log_dir = "logs"`,
   `telegram_token = ""`, `telegram_chat_id = ""`. Relative paths resolve against the config
   file's folder.
 - **CLI:** `court-booker [--at HH:MM[:SS] | --scheduled] [--dry-run] ...`; without either flag
