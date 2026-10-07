@@ -7,6 +7,8 @@ from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any
 
+from court_booker.errors import RequestError
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:  # pragma: no cover
@@ -51,8 +53,8 @@ class Config:
     labels: Labels = field(default_factory=Labels)
 
 
-class ConfigError(ValueError):
-    """The configuration file contains an unknown key."""
+class ConfigError(RequestError, ValueError):
+    """The configuration file contains an unknown key or an invalid value."""
 
 
 def load_config(path: str | Path | None) -> Config:
