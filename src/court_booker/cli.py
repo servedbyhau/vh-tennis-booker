@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from court_booker import __version__
 from court_booker.clock import ntp_offset, resolve_start
 from court_booker.config import Config, load_config
 from court_booker.errors import AppNotReadyError, CourtBookerError, DeviceError, RequestError
-from court_booker.logging_setup import LOGGER_NAME, configure_logging
+from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
 from court_booker.power import keep_awake
 from court_booker.runner import RoundResult, connect_device, run_booking
 
@@ -85,6 +86,10 @@ def main(argv: list[str] | None = None) -> int:
     results: list[RoundResult] = []
     try:
         config = apply_overrides(load_config(args.config), args)
+        if config.log_dir:
+            # Relative to the config file, since a scheduled task may start elsewhere.
+            log_dir = Path(args.config).resolve().parent / config.log_dir
+            logger.debug("Logging to %s", add_file_handler(log_dir))
         logger.info("court-booker %s", __version__)
         start_text = config.start_at if args.scheduled else args.at
         start = resolve_start(start_text, datetime.now()) if start_text else None

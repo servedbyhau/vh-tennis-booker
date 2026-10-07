@@ -15,5 +15,6 @@ dump.xml
 *.xml.bak
 tick_nodes.txt
 screenshots/
+logs/
 *.png
 !docs/img/*.png
