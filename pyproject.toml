@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vh-tennis-booker"
-version = "0.1.0"
+dynamic = ["version"]
 description = "UI automation case study: booking a tennis court in a Flutter app with uiautomator2"
 readme = "README.md"
 license = { text = "MIT" }
@@ -29,6 +29,9 @@ court-booker = "court_booker.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "court_booker.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
