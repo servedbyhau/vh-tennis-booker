@@ -64,6 +64,8 @@ class Config:
     """Time server used to correct the PC clock before a timed start; empty disables."""
     open_retry_seconds: float = 60.0
     """How long to keep reloading the calendar while the date or slot is not open yet."""
+    log_dir: str = "logs"
+    """Folder for daily log files, relative to the config file; empty disables them."""
     next_month_xy: tuple[float, float] = (0.953, 0.122)
     """Fallback tap position (screen ratio) when the next-month button has no label."""
     prev_month_xy: tuple[float, float] = (0.873, 0.122)
