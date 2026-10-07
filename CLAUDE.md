@@ -42,9 +42,10 @@ same reason.
   CI on GitHub Actions: `lint` (ruff check + format) and `test` (Python 3.9, 3.11, 3.12, 3.13)
 - Tooling: pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF),
   Dependabot, PR and issue templates, `CONTRIBUTING.md`, `CHANGELOG.md` (Keep a Changelog)
-- 0.2.0 was built as stacked branches (see the `SPEC.md` step table); `CHANGELOG.md`
-  "Unreleased" lists it. Pending: user verification on the emulator and with the scheduled
-  task, then PRs, version bump to 0.2.0 and tag.
+- 0.2.0 was built one commit per step on `release/0.2.0` (see
+  `docs/specs/0.2.0-unattended.md`); `CHANGELOG.md` "Unreleased" lists it. Pending: user
+  verification on the emulator and with the scheduled task, then PRs, version bump to 0.2.0
+  and tag.
 
 ## Code architecture
 
@@ -145,5 +146,6 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
 ## Next step
 
 User verifies 0.2.0: `court-booker --dry-run` with MuMu closed, `--at <now + 3 min> --dry-run`,
-then `court-booker schedule install` and one scheduled dry-run morning. Then push the stacked
-branches, open PRs in order, bump the version to 0.2.0 and tag. Then 0.3.0 hardening.
+then `court-booker schedule install` and one scheduled dry-run morning. Then merge
+`release/0.2.0` into `main` by pull request, bump the version to 0.2.0 and tag. Then 0.3.0
+hardening.

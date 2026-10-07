@@ -37,7 +37,7 @@ If the booking flow changed, also run `court-booker --dry-run --verbose` against
 
 ## Releasing
 
-1. Update __version__ in src/court_booker/__init__.py (pyproject.toml reads it from there).
+1. Update `__version__` in `src/court_booker/__init__.py` (`pyproject.toml` reads it from there).
 2. Move "Unreleased" entries in `CHANGELOG.md` to a new version section.
 3. Commit with `chore: release vX.Y.Z`, then tag and push:
    ```bash
