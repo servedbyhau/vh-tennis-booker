@@ -14,6 +14,8 @@ python -m pytest                                     # all tests (no emulator ne
 python -m pytest tests/test_flow.py -k slot          # single file / single test
 python -m ruff check . && python -m ruff format .    # CI runs `ruff format --check .`
 python -m court_booker --dry-run --verbose           # real run against the emulator
+python -m court_booker --at 06:00 --dry-run          # timed run
+python -m court_booker schedule install              # daily task (status, remove)
 python tools/inspect_screen.py --near "Tôi đã hiểu"  # dump nodes level with a label
 ```
 
@@ -31,37 +33,47 @@ step (`--dry-run` works end to end). Bypassing that check is out of scope and wi
 On-device automation (an Android app using AccessibilityService) is also out of scope for the
 same reason.
 
-## Current state: v0.1.0 (released on GitHub)
+## Current state: 0.2.0 implemented, not yet released
 
 - Repo: `github.com/servedbyhau/vh-tennis-booker` (private), local path `D:\VH-Booker\vh-tennis-booker`
 - Python package `court_booker` (src layout), CLI `court-booker` / `python -m court_booker`
 - `tools/inspect_screen.py`: dumps the UI hierarchy and lists nodes level with a text
-- 11 pytest tests with a fake device; CI on GitHub Actions: `lint` (ruff check + format)
-  and `test` (Python 3.9, 3.11, 3.12, 3.13); all green
+- pytest suite with fakes only (device, subprocess, port probe, clock, HTTP, schtasks);
+  CI on GitHub Actions: `lint` (ruff check + format) and `test` (Python 3.9, 3.11, 3.12, 3.13)
 - Tooling: pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF),
   Dependabot, PR and issue templates, `CONTRIBUTING.md`, `CHANGELOG.md` (Keep a Changelog)
-- `CHANGELOG.md` has an "Unreleased" section (English translation, tooling, label `full`
-  renamed to `fully_booked`); next release should be 0.2.0
+- 0.2.0 was built as stacked branches (see the `SPEC.md` step table); `CHANGELOG.md`
+  "Unreleased" lists it. Pending: user verification on the emulator and with the scheduled
+  task, then PRs, version bump to 0.2.0 and tag.
 
 ## Code architecture
 
-- `cli.py` parses args, applies overrides onto `Config`, connects with `uiautomator2.connect`
-  (imported lazily so tests don't need it), then calls `Booker.book()` once per slot. Each slot
-  is one round; a `BookingError` (or any exception) fails that round only and later rounds run.
+- `cli.py` parses args (or dispatches `schedule ...` to `schedule.main`), applies overrides onto
+  `Config`, adds the log file, resolves the start time, measures the NTP offset, and inside
+  `power.keep_awake()` calls `runner.connect_device` then `runner.run_booking`. Errors map to
+  exit codes (`RequestError` 2, `DeviceError` 3, `AppNotReadyError` 4, Ctrl+C 130); the summary
+  is logged and optionally sent with `notify.send_telegram` on every path.
+- `runner.connect_device`: `emulator.MuMu.ensure_started` (MuMuManager `info`/`control launch`),
+  `adb.find_adb` + `adb.resolve_device` (prefers the serial MuMu reports), `uiautomator2.connect`
+  (imported lazily so tests do not need it). `runner.run_booking`: `Booker.prepare()`,
+  `clock.wait_until(start, offset)`, then one round per slot; a `BookingError` (or any
+  exception) fails that round only. Results are appended to a caller-owned list.
 - `flow.Booker` holds selectors as plain dicts (`Selector = dict[str, Any]`) built from
   `config.labels` in `__init__`, passed as `device(**selector)`. Every screen transition goes
   through `tap_and_advance(target, name, next_screen)`: wait for target, tap, poll
   (`wait_for_any`) for any of the next screen's selectors, retry the tap if the app lagged.
   `return_to_utilities()` presses Back until the utilities list or home appears, so a round can
-  start from any screen.
-- `geometry.py` is pure (bounds parsing, day/slot regexes, checkbox-beside check) and is where
-  logic that can be unit-tested without a device belongs.
+  start from any screen. `prepare()` restarts the app and ends on the utilities list.
+  `open_slot()` re-enters the calendar while the date or slot is missing.
+- `geometry.py` and most of `clock.py` are pure; logic testable without a device belongs there.
+- External effects are injectable (`run`, `probe`, `clock`, `sleep`, `post`, `set_state`), so
+  nothing in the test suite touches a device, adb, the network or Task Scheduler.
 - `config.load_config` rejects unknown keys (`ConfigError`); the TOML key `continue` maps to
   `Labels.continue_`; keys ending in `_xy` become tuples. New config fields must be added to
-  the dataclass and `config.example.toml`.
-- Tests use hand-written fake devices (`tests/test_flow.py`: `FakeDevice`/`FakeElement`
-  mimicking the uiautomator2 selector API) and monkeypatch `flow.time.sleep` to run instantly.
-  `tests/conftest.py` puts `src/` on `sys.path`.
+  the dataclass and `config.example.toml`. A relative `log_dir` resolves against the config file.
+- Tests use hand-written fakes (`tests/test_flow.py`: `FakeDevice`/`FakeElement`, `AppDevice`,
+  `OpeningBooker`) and monkeypatch `flow.time` to run instantly. `tests/conftest.py` puts
+  `src/` on `sys.path`.
 
 ## Booking flow (app screens)
 
@@ -132,5 +144,6 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
 
 ## Next step
 
-Implement 0.2.0 following the step table in `SPEC.md` (one stacked branch per step), then
-let the user verify on the emulator and with the scheduled task.
+User verifies 0.2.0: `court-booker --dry-run` with MuMu closed, `--at <now + 3 min> --dry-run`,
+then `court-booker schedule install` and one scheduled dry-run morning. Then push the stacked
+branches, open PRs in order, bump the version to 0.2.0 and tag. Then 0.3.0 hardening.
