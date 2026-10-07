@@ -14,7 +14,13 @@ from datetime import date
 from typing import Any
 
 from court_booker.config import Config
-from court_booker.errors import ElementNotFoundError, NavigationError, SlotUnavailableError
+from court_booker.errors import (
+    AppNotReadyError,
+    BookingNotOpenError,
+    ElementNotFoundError,
+    NavigationError,
+    SlotUnavailableError,
+)
 from court_booker.geometry import (
     ANY_SLOT_PATTERN,
     DAY_PATTERN,
@@ -61,19 +67,68 @@ class Booker:
 
     # Public API -------------------------------------------------------------
 
+    def prepare(self) -> None:
+        """Open the app and stop on the utilities list, ready for the first round.
+
+        With ``restart_app`` the app is stopped first, so a stale screen, popup or
+        expired session from the previous day cannot get in the way.
+        """
+        package = self.config.package
+        if self.config.restart_app:
+            logger.info("Restarting %s", package)
+            self.device.app_stop(package)
+            self.device.app_start(package)
+        elif self.device.app_current().get("package") != package:
+            logger.info("Starting %s", package)
+            self.device.app_start(package)
+
+        if not self.wait_for_any([self.home, self.utility], self.config.boot_timeout):
+            raise AppNotReadyError(
+                f"The app did not show {self.config.labels.home!r} or "
+                f"{self.config.labels.utility!r} in {self.config.boot_timeout:.0f} s; "
+                "check that it is logged in"
+            )
+        try:
+            self.return_to_utilities()
+        except NavigationError as exc:
+            raise AppNotReadyError(str(exc)) from exc
+        logger.info("Ready on the utilities list")
+
     def book(self, slot: str, target: date, dry_run: bool = False) -> None:
         """Book ``slot`` on ``target``, starting from the home or utilities screen."""
         labels = self.config.labels
         self.return_to_utilities()
-        self.tap_and_advance(self.utility, labels.utility, self.calendar)
-        self.select_date(target)
-        self.select_slot(slot)
+        self.open_slot(slot, target)
         self.tap_and_advance(self.continue_button, labels.continue_, [self.venue, self.court])
         if self._exists(self.venue):
             self.tap_and_advance(self.venue, self.config.venue_keyword, [self.court])
         self.tap_and_advance(self.court, self.config.court, [self.continue_button])
         self.tap_and_advance(self.continue_button, labels.continue_, [self.confirm_page])
         self.accept_and_confirm(dry_run)
+
+    def open_slot(self, slot: str, target: date) -> None:
+        """Open the calendar and select ``target`` and ``slot``.
+
+        Right at the opening time the server may not list the new date or slot
+        yet, so the calendar is left and re-entered to reload it until
+        ``open_retry_seconds`` have passed. A fully booked slot fails at once.
+        """
+        deadline = time.monotonic() + self.config.open_retry_seconds
+        attempt = 1
+        while True:
+            self.tap_and_advance(self.utility, self.config.labels.utility, self.calendar)
+            try:
+                self.select_date(target)
+                self.select_slot(slot)
+                return
+            except ElementNotFoundError as exc:
+                if time.monotonic() >= deadline:
+                    raise BookingNotOpenError(
+                        f"{target.isoformat()} {slot} not open after {attempt} attempt(s): {exc}"
+                    ) from exc
+                logger.info("Not open yet (%s); reloading the calendar", exc)
+            self.return_to_utilities()
+            attempt += 1
 
     def return_to_utilities(self) -> None:
         """Navigate to the utilities list from the home, ticket or any inner screen."""

@@ -11,8 +11,24 @@ uses [Semantic Versioning](https://semver.org/).
 - Logging uses the standard `logging` module; added `--verbose`.
 - Errors are raised as `BookingError` subclasses.
 - Config label `full` renamed to `fully_booked`.
+- Default `device` is now `"auto"`.
+- The summary is logged instead of printed, so it also reaches the log file.
 
 ### Added
+- Unattended booking: `court-booker schedule install` registers a daily Windows scheduled
+  task (default 05:45) that wakes the PC and runs `court-booker --scheduled`.
+- Emulator start: MuMu is launched through `MuMuManager.exe` when Android is not running.
+- ADB auto-connect: adb is found on `adb_path`, `PATH` or in the MuMu folder, a running server
+  is reused, and the emulator's own serial is connected; no manual `adb connect`.
+- App preparation: the app is restarted (`restart_app`) and the run waits on the utilities
+  list; a logged-out app fails early with exit code 4.
+- Timed start: `--at HH:MM[:SS]` and `--scheduled` (`start_at`, default 06:00) wait for the
+  exact time, corrected against an NTP server, and keep Windows awake during the run.
+- Opening retry: the calendar is reloaded for up to `open_retry_seconds` while the new date
+  or slot is not listed yet.
+- Daily log file in `logs/`; optional Telegram summary (`telegram_token`, `telegram_chat_id`).
+- Exit codes: 1 round failed, 2 bad arguments or config, 3 emulator or ADB error, 4 app not
+  ready, 130 interrupted (finished rounds are still summarized).
 - Pre-commit hooks, EditorConfig, Dependabot, issue and pull request templates,
   contribution guide; CI runs lint and format checks separately from tests.
 

@@ -4,25 +4,27 @@ from __future__ import annotations
 
 import argparse
 import logging
-import time
-from dataclasses import dataclass
-from datetime import date, timedelta
+import sys
+from datetime import datetime
+from pathlib import Path
 
-from court_booker import __version__
+from court_booker import __version__, schedule
+from court_booker.clock import ntp_offset, resolve_start
 from court_booker.config import Config, load_config
-from court_booker.errors import BookingError
-from court_booker.flow import Booker
-from court_booker.logging_setup import LOGGER_NAME, configure_logging
+from court_booker.errors import AppNotReadyError, CourtBookerError, DeviceError, RequestError
+from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
+from court_booker.notify import format_summary, send_telegram
+from court_booker.power import keep_awake
+from court_booker.runner import RoundResult, connect_device, run_booking
 
 logger = logging.getLogger(LOGGER_NAME)
 
-
-@dataclass
-class RoundResult:
-    slot: str
-    ok: bool
-    detail: str
-    seconds: float
+EXIT_OK = 0
+EXIT_ROUND_FAILED = 1
+EXIT_BAD_REQUEST = 2
+EXIT_DEVICE = 3
+EXIT_APP_NOT_READY = 4
+EXIT_INTERRUPTED = 130
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,7 +38,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true", help="stop before the final confirmation")
     parser.add_argument("--days", type=int, help="days ahead of today to book")
     parser.add_argument("--slots", nargs="+", metavar="SLOT", help='e.g. "18:00 - 19:00"')
-    parser.add_argument("--device", help="ADB serial, e.g. 127.0.0.1:7555")
+    parser.add_argument("--device", help='ADB serial, e.g. 127.0.0.1:16384, or "auto"')
+    timing = parser.add_mutually_exclusive_group()
+    timing.add_argument(
+        "--at", metavar="HH:MM[:SS]", help="prepare now, start booking at this time today"
+    )
+    timing.add_argument(
+        "--scheduled", action="store_true", help="like --at, using start_at from the config"
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug output")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser
@@ -52,58 +61,72 @@ def apply_overrides(config: Config, args: argparse.Namespace) -> Config:
     return config
 
 
-def run(config: Config, dry_run: bool) -> list[RoundResult]:
-    import uiautomator2  # deferred so tests do not require the dependency
-
-    logger.info("court-booker %s, connecting to %s", __version__, config.device)
-    device = uiautomator2.connect(config.device)
-    booker = Booker(device, config)
-
-    if device.app_current().get("package") != config.package:
-        logger.info("Launching %s", config.package)
-        device.app_start(config.package)
-        device(**booker.home).wait(timeout=config.timeout * 2)
-
-    target = date.today() + timedelta(days=config.days_ahead)
-    logger.info(
-        "Target date %s, slots: %s%s",
-        target.isoformat(),
-        ", ".join(config.slots),
-        " (dry run)" if dry_run else "",
-    )
-
-    results = []
-    for index, slot in enumerate(config.slots, start=1):
-        logger.info("Round %d/%d: %s", index, len(config.slots), slot)
-        started = time.perf_counter()
-        try:
-            booker.book(slot, target, dry_run=dry_run)
-        except BookingError as exc:
-            logger.error("%s", exc)
-            results.append(RoundResult(slot, False, str(exc), time.perf_counter() - started))
-        except Exception as exc:  # keep later rounds running on device glitches
-            logger.exception("Unexpected error")
-            results.append(RoundResult(slot, False, repr(exc), time.perf_counter() - started))
-        else:
-            detail = "dry run passed" if dry_run else "booked"
-            results.append(RoundResult(slot, True, detail, time.perf_counter() - started))
-    return results
-
-
 def print_summary(results: list[RoundResult]) -> None:
-    print("\nSummary")
+    """Log one line per finished round."""
+    if not results:
+        return
+    logger.info("Summary")
     for result in results:
         status = "OK  " if result.ok else "FAIL"
-        print(f"  {status} {result.slot}  {result.detail}  ({result.seconds:.1f}s)")
+        logger.info("  %s %s  %s  (%.1fs)", status, result.slot, result.detail, result.seconds)
+
+
+def exit_code(error: CourtBookerError) -> int:
+    """Map a run-level error to the process exit code."""
+    if isinstance(error, RequestError):
+        return EXIT_BAD_REQUEST
+    if isinstance(error, DeviceError):
+        return EXIT_DEVICE
+    if isinstance(error, AppNotReadyError):
+        return EXIT_APP_NOT_READY
+    return EXIT_ROUND_FAILED
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["schedule"]:
+        return schedule.main(argv[1:])
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose)
-    config = apply_overrides(load_config(args.config), args)
+    results: list[RoundResult] = []
+    config: Config | None = None
+    error: str | None = None
     try:
-        results = run(config, dry_run=args.dry_run)
+        config = apply_overrides(load_config(args.config), args)
+        if config.log_dir:
+            # Relative to the config file, since a scheduled task may start elsewhere.
+            log_dir = Path(args.config).resolve().parent / config.log_dir
+            logger.debug("Logging to %s", add_file_handler(log_dir))
+        logger.info("court-booker %s", __version__)
+        start_text = config.start_at if args.scheduled else args.at
+        start = resolve_start(start_text, datetime.now()) if start_text else None
+        with keep_awake():
+            offset = 0.0
+            if start is not None and config.ntp_server:
+                offset = ntp_offset(config.ntp_server) or 0.0
+                logger.info("Clock offset %+.3f s", offset)
+            device = connect_device(config)
+            run_booking(
+                device,
+                config,
+                dry_run=args.dry_run,
+                start=start,
+                offset=offset,
+                results=results,
+            )
+        code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:
-        return 130
+        logger.warning("Interrupted")
+        error, code = "interrupted", EXIT_INTERRUPTED
+    except CourtBookerError as exc:
+        logger.error("%s", exc)
+        error, code = str(exc), exit_code(exc)
+    except Exception as exc:  # an unattended run must still log and report
+        logger.exception("Unexpected error")
+        error, code = repr(exc), EXIT_ROUND_FAILED
+
     print_summary(results)
-    return 0 if all(result.ok for result in results) else 1
+    if config is not None and config.telegram_token and config.telegram_chat_id:
+        text = format_summary(results, error, dry_run=args.dry_run)
+        send_telegram(config.telegram_token, config.telegram_chat_id, text)
+    return code
