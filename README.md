@@ -27,6 +27,12 @@ MuMu Player emulator, using only the app's user interface.
 - **Verified results.** A round succeeds only after the app leaves the confirmation screen.
 - **Step timing.** Each log line shows the time elapsed since the previous step.
 - **Configurable labels.** All app strings live in `config.toml`.
+- **Unattended.** A daily scheduled task wakes the PC, starts the emulator, connects ADB,
+  restarts the app and books at the exact opening time.
+- **Precise start.** The PC clock is corrected against an NTP server; the first tap lands
+  within about a millisecond of the start time, and the calendar is reloaded until the new
+  date is listed.
+- **Reporting.** Daily log files, exit codes per failure type and an optional Telegram summary.
 
 ## How it works
 
@@ -46,7 +52,8 @@ for design notes.
 
 ## Requirements
 
-- Windows with [MuMu Player](https://www.mumuplayer.com/), ADB reachable at `127.0.0.1:7555`
+- Windows with [MuMu Player](https://www.mumuplayer.com/) and the Vinhomes app logged in
+- ADB: Google platform-tools on `PATH`, or the `adb.exe` that ships with MuMu
 - Python 3.9 or later
 
 ## Installation
@@ -60,14 +67,46 @@ cp config.example.toml config.toml
 
 ## Usage
 
-Open the app on its home screen, then run:
+The emulator and the app are started automatically. Run:
 
 ```bash
 court-booker --dry-run          # stop before the final confirmation
-court-booker                    # book the slots from config.toml
+court-booker                    # book the slots from config.toml now
+court-booker --at 06:00         # prepare now, start booking at 06:00:00
+court-booker --scheduled        # same, using start_at from config.toml
 court-booker --slots "18:00 - 19:00" "19:00 - 20:00" --days 2
 court-booker --verbose          # include retries and element positions
 ```
+
+Slots are booked one after another, so list the most wanted slot first.
+
+### Unattended daily booking
+
+```bash
+court-booker schedule install   # daily task at wake_at (05:45) running --scheduled
+court-booker schedule status    # show the task, its last and next run
+court-booker schedule remove    # delete the task
+```
+
+One-time Windows setup:
+
+- Leave the PC on or in **Sleep**; a shut-down PC cannot be woken.
+- Keep it plugged in and enable *Power Options → Sleep → Allow wake timers*.
+- Stay signed in to Windows (a locked screen is fine); MuMu needs the desktop session.
+- Keep the Vinhomes app logged in inside MuMu.
+
+Test the whole chain first with `court-booker --at <in 3 minutes> --dry-run` and MuMu
+closed. Each run is logged to `logs/court-booker-YYYY-MM-DD.log`; set `telegram_token` and
+`telegram_chat_id` to receive the summary on your phone.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | every round succeeded |
+| 1 | a round failed |
+| 2 | bad arguments or config, or the start time has passed |
+| 3 | emulator or ADB error |
+| 4 | the app did not reach its home screen (e.g. logged out) |
+| 130 | interrupted with Ctrl+C |
 
 If `court-booker` is not on `PATH`, use `python -m court_booker` instead.
 
@@ -90,14 +129,21 @@ python tools/inspect_screen.py --near "Tôi đã hiểu"
 
 ```text
 src/court_booker/
-├── cli.py              command-line entry point
+├── cli.py              command-line entry point and exit codes
+├── runner.py           one run: connect, prepare, wait, book every slot
+├── emulator.py         start MuMu through MuMuManager.exe
+├── adb.py              find adb and connect the emulator
+├── flow.py             booking flow, one method per screen
+├── clock.py            start time, NTP offset, precise wait
+├── power.py            keep Windows awake during a run
+├── notify.py           Telegram summary
+├── schedule.py         Windows scheduled task
 ├── config.py           defaults and config.toml loading
 ├── errors.py           exception hierarchy
-├── flow.py             booking flow, one method per screen
 ├── geometry.py         pure helpers for bounds and dates
-└── logging_setup.py    console logging with step timing
+└── logging_setup.py    console and file logging with step timing
 tools/inspect_screen.py UI hierarchy dump
-tests/                  unit tests with a fake device
+tests/                  unit tests with fake devices, adb, clocks and schtasks
 ```
 
 ## Development
