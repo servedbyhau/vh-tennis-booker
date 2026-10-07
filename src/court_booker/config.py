@@ -56,6 +56,8 @@ class Config:
     mumu_index: int = 0
     boot_timeout: float = 180.0
     """Seconds to wait for the emulator to boot and for the app to open."""
+    restart_app: bool = True
+    """Stop and start the app before booking instead of reusing its current screen."""
     next_month_xy: tuple[float, float] = (0.953, 0.122)
     """Fallback tap position (screen ratio) when the next-month button has no label."""
     prev_month_xy: tuple[float, float] = (0.873, 0.122)
