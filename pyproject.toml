@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6", "pre-commit>=3.7"]
+dev = ["pytest>=8", "ruff==0.16.10", "pre-commit>=3.7"]
 
 [project.scripts]
 court-booker = "court_booker.cli:main"
