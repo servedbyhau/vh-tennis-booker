@@ -7,7 +7,8 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
-`pre-commit` runs Ruff (lint and format) and basic file checks on every commit.
+`pre-commit` runs Ruff (lint and format) and basic file checks on every commit, and
+rejects commit messages with an AI co-author trailer.
 
 ## Before opening a pull request
 
