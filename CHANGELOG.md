@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-08
+
 ### Changed
 - Project text, logs and errors are now in English.
 - Logging uses the standard `logging` module; added `--verbose`.
