@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Last updated: 2026-10-07.
+Last updated: 2026-10-08.
 
 ## Commands
 
@@ -27,13 +27,12 @@ A learning project to build a realistic, CV-worthy product: Python code on Windo
 **Vinhomes Resident** Android app (Flutter) inside the **MuMu Player** emulator to book a
 tennis court. Personal use only; not published commercially.
 
-**Known limitation (accepted):** the Vinhomes app refuses to work while Android developer
-mode is on, which ADB requires. The automation therefore runs up to the final confirmation
-step (`--dry-run` works end to end). Bypassing that check is out of scope and will not be done.
-On-device automation (an Android app using AccessibilityService) is also out of scope for the
-same reason.
+**Developer mode:** ADB requires Android developer mode. In the MuMu setup the app accepted
+real bookings with it on (verified 2026-10-08). Bypassing any app check is out of scope and
+will not be done. On-device automation (an Android app using AccessibilityService) is also
+out of scope.
 
-## Current state: 0.2.0 implemented, not yet released
+## Current state: 0.2.0 released
 
 - Repo: `github.com/servedbyhau/vh-tennis-booker` (private), local path `D:\VH-Booker\vh-tennis-booker`
 - Python package `court_booker` (src layout), CLI `court-booker` / `python -m court_booker`
@@ -42,10 +41,11 @@ same reason.
   CI on GitHub Actions: `lint` (ruff check + format) and `test` (Python 3.9, 3.11, 3.12, 3.13)
 - Tooling: pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF),
   Dependabot, PR and issue templates, `CONTRIBUTING.md`, `CHANGELOG.md` (Keep a Changelog)
-- 0.2.0 was built one commit per step on `release/0.2.0` (see
-  `docs/specs/0.2.0-unattended.md`); `CHANGELOG.md` "Unreleased" lists it. Pending: user
-  verification on the emulator and with the scheduled task, then PRs, version bump to 0.2.0
-  and tag.
+- 0.2.0 (spec: `docs/specs/0.2.0-unattended.md`) was verified on 2026-10-08: dry run with
+  MuMu closed, `--at` timed run, and a scheduled task run that woke the PC and booked two
+  real slots (rounds took 6-9 s; the PC clock was 0.87 s slow, corrected by NTP).
+- The scheduled task has no `--dry-run`; it books for real. For a scheduled test, add
+  `--dry-run` to the task arguments by hand (`schedule install` overwrites it).
 
 ## Code architecture
 
@@ -116,7 +116,6 @@ user must not need to be awake. Priority is unattended, scheduled, fastest-possi
   the booking taps happen after 06:00.
 - Trigger is Windows Task Scheduler at 05:45 (time-based, not logon). The script itself starts
   MuMu, connects ADB and restarts the app. MuMu and the app are left open after the run.
-- Developer mode is assumed to allow booking for 0.2.0; not discussed further.
 
 **ADB strategy:** reuse a running ADB server if present → user-configured adb path →
 adb on PATH; then auto-detect emulator ports (MuMu 7555 and 16384+, LDPlayer/BlueStacks 5555+,
@@ -145,7 +144,6 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
 
 ## Next step
 
-User verifies 0.2.0: `court-booker --dry-run` with MuMu closed, `--at <now + 3 min> --dry-run`,
-then `court-booker schedule install` and one scheduled dry-run morning. Then merge
-`release/0.2.0` into `main` by pull request, bump the version to 0.2.0 and tag. Then 0.3.0
-hardening.
+0.3.0 hardening, driven by the logs of real 06:00 runs. Candidates: a `schedule install
+--dry-run` option, faster slot selection (1-2 s per round now), a health check before the
+start time, and handling a slot taken by someone else.
