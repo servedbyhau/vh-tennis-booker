@@ -11,8 +11,6 @@ MuMu Player emulator, using only the app's user interface.
 
 > [!IMPORTANT]
 > This is an educational project, not affiliated with or endorsed by Vinhomes.
-> The app refuses to operate while Android developer mode is enabled, which ADB requires,
-> so this project cannot be used for real bookings and does not attempt to bypass that check.
 
 ## Features
 

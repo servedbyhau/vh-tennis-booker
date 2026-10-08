@@ -1,7 +1,6 @@
 {
   "permissions": {
     "deny": [
-      "Read(./config.toml)",
       "Bash(adb:*)",
       "Bash(court-booker:*)"
     ]
