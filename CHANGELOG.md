@@ -6,9 +6,6 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
-- A `commit-msg` hook rejects commit messages with an AI co-author trailer.
-
 ## [0.2.0] - 2026-10-08
 
 ### Changed
