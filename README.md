@@ -92,6 +92,10 @@ One-time Windows setup:
 - Keep it plugged in and enable *Power Options → Sleep → Allow wake timers*.
 - Stay signed in to Windows (a locked screen is fine); MuMu needs the desktop session.
 - Keep the Vinhomes app logged in inside MuMu.
+- Give MuMu a custom resolution of **540x1600** (220 DPI), so the whole slot list fits
+  without scrolling (*Settings → Display*, or
+  `MuMuManager.exe setting -v 0 -k resolution_mode -val custom -k resolution_width.custom -val 540 -k resolution_height.custom -val 1600 -k resolution_dpi.custom -val 220`,
+  then restart MuMu).
 
 Test the whole chain first with `court-booker --at <in 3 minutes> --dry-run` and MuMu
 closed. Each run is logged to `logs/court-booker-YYYY-MM-DD.log`; set `telegram_token` and
