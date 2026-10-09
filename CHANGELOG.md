@@ -11,6 +11,8 @@ uses [Semantic Versioning](https://semver.org/).
   elements is the same read, and taps use the coordinates from it. A round now costs about
   16 device commands instead of about 50; a timed dry run reached the accepted terms in
   5.9 s instead of 8.7 s.
+- The utilities list is read again two seconds before the start time, so the first
+  command at the start time is the tap on the utility.
 - Waits poll from the client every 20 ms; no device-side waits or fixed sleeps.
 - A slot is scrolled to only when it is not shown; the recommended MuMu resolution of
   540x1600 shows the whole slot list.

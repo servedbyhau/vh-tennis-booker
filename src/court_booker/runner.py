@@ -18,6 +18,9 @@ from court_booker.flow import Booker
 
 logger = logging.getLogger(__name__)
 
+LOCATE_AHEAD = timedelta(seconds=2)
+"""How long before the start time the utilities entry is read again."""
+
 
 @dataclass
 class RoundResult:
@@ -70,6 +73,8 @@ def run_booking(
     booker.prepare()
 
     if start is not None:
+        wait_until(start - LOCATE_AHEAD, offset)
+        booker.locate_entry()
         wait_until(start, offset)
     target = (start or datetime.now()).date() + timedelta(days=config.days_ahead)
     logger.info(
