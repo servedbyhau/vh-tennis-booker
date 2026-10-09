@@ -60,7 +60,6 @@ class Booker:
         self.device = device
         self.config = config
         self.last_screen = Screen([])
-        self._screen_size: tuple[int, int] | None = None
 
         labels = config.labels
         self.home = Match(desc=labels.home, clickable=True)
@@ -277,7 +276,7 @@ class Booker:
         caption = screen.find(self.agree)
         if caption is None:
             return None
-        width, _ = self._get_screen_size()
+        width, _ = screen.size
         candidates = [
             node for node in screen.nodes if is_checkbox_beside(node.box, caption.box, width)
         ]
@@ -352,18 +351,13 @@ class Booker:
             return screen.find(self.venue)
         return court
 
-    def _get_screen_size(self) -> tuple[int, int]:
-        if self._screen_size is None:
-            self._screen_size = self.device.window_size()
-        return self._screen_size
-
     def _visibility(self, screen: Screen, node: Node) -> str:
         """Return ``visible``, ``below`` or ``above`` relative to the tappable area.
 
         Dump bounds are clipped to what is shown, so a partly hidden slot is
         shorter than a full one. The sticky bottom button counts as hidden area.
         """
-        _, height = self._get_screen_size()
+        _, height = screen.size
         button = screen.find(Match(desc=self.config.labels.continue_))
         bottom_limit = button.box[1] if button is not None else height
         full_height = max(n.height for n in screen.find_all(self.any_slot))
@@ -372,7 +366,7 @@ class Booker:
         return "below" if node.center[1] > height / 2 else "above"
 
     def _scroll(self, screen: Screen, down: bool) -> None:
-        width, height = self._get_screen_size()
+        width, height = screen.size
         start, end = (0.62, 0.38) if down else (0.38, 0.62)
         self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, _SWIPE_SECONDS)
 
@@ -398,7 +392,7 @@ class Booker:
             self.tap(button)
         else:
             x_ratio, y_ratio = self.config.next_month_xy if forward else self.config.prev_month_xy
-            width, height = self._get_screen_size()
+            width, height = screen.size
             self.tap_point(width * x_ratio, height * y_ratio)
         logger.debug("Switched to %s month", "next" if forward else "previous")
 

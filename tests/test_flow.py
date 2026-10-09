@@ -66,6 +66,7 @@ class FakeApp:
         self.taps = []
         self.calls = []
         self.swipes = 0
+        self.swipe_args = []
 
     def go(self, target):
         name, delay = (target, 0) if isinstance(target, str) else target
@@ -116,10 +117,12 @@ class FakeApp:
             self.go(target)
 
     def window_size(self):
-        return WIDTH, HEIGHT
+        # MuMu's tablet resolution reports the landscape size while the app is portrait.
+        return HEIGHT, WIDTH
 
     def swipe(self, *args):
         self.swipes += 1
+        self.swipe_args.append(args)
         if self.on_swipe is not None:
             self.on_swipe(self)
 
@@ -277,6 +280,8 @@ def test_select_slot_scrolls_until_slot_is_shown():
 
     assert app.swipes == 2
     assert app.ops[-1] == ("click", "11:00 - 12:00")
+    # Swipes run down the middle of the portrait screen read from the dump.
+    assert app.swipe_args[0][:4] == (270.0, 992.0, 270.0, 608.0)
 
 
 def test_locate_checkbox_picks_small_node_level_with_caption():

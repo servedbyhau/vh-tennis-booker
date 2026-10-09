@@ -15,6 +15,10 @@ uses [Semantic Versioning](https://semver.org/).
 - A slot is scrolled to only when it is not shown; the recommended MuMu resolution of
   540x1600 shows the whole slot list.
 
+### Fixed
+- The screen size is read from the hierarchy dump; `window_size()` reported (960, 540)
+  when MuMu ran a tablet resolution, which made scrolling use a 540 px tall screen.
+
 ## [0.2.0] - 2026-10-08
 
 ### Changed
