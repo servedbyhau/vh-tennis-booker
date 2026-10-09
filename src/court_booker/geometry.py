@@ -29,11 +29,6 @@ def parse_bounds(text: str) -> Box | None:
     return nums[0], nums[1], nums[2], nums[3]
 
 
-def box_from_info(bounds: dict[str, int]) -> Box:
-    """Convert uiautomator2 ``info["bounds"]`` to a :data:`Box`."""
-    return bounds["left"], bounds["top"], bounds["right"], bounds["bottom"]
-
-
 def center(box: Box) -> tuple[int, int]:
     """Return the center point of ``box``."""
     left, top, right, bottom = box
