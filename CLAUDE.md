@@ -32,18 +32,21 @@ real bookings with it on (verified 2026-10-08). Bypassing any app check is out o
 will not be done. On-device automation (an Android app using AccessibilityService) is also
 out of scope.
 
-## Current state: 0.2.0 released
+## Current state: 0.3.0 released
 
 - Repo: `github.com/servedbyhau/vh-tennis-booker` (private), local path `D:\VH-Booker\vh-tennis-booker`
 - Python package `court_booker` (src layout), CLI `court-booker` / `python -m court_booker`
 - `tools/inspect_screen.py`: dumps the UI hierarchy and lists nodes level with a text
 - pytest suite with fakes only (device, subprocess, port probe, clock, HTTP, schtasks);
-  CI on GitHub Actions: `lint` (ruff check + format) and `test` (Python 3.9, 3.11, 3.12, 3.13)
+  CI on GitHub Actions: `lint` (ruff check + format) and `test` (Python 3.9, 3.11, 3.12, 3.13, 3.14)
 - Tooling: pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF),
   Dependabot, PR and issue templates, `CONTRIBUTING.md`, `CHANGELOG.md` (Keep a Changelog)
 - 0.2.0 (spec: `docs/specs/0.2.0-unattended.md`) was verified on 2026-10-08: dry run with
   MuMu closed, `--at` timed run, and a scheduled task run that woke the PC and booked two
   real slots (rounds took 6-9 s; the PC clock was 0.87 s slow, corrected by NTP).
+- 0.3.0 (spec: `docs/specs/0.3.0-fast-rounds.md`) was released on 2026-10-09 after a timed
+  dry run on MuMu at 540x1600: round 1 reached the accepted terms in 5.9 s (8.7 s with 0.2.0).
+  The final "Xác nhận" tap of the new flow is first exercised by the 06:00 run on 2026-10-10.
 - The scheduled task has no `--dry-run`; it books for real. For a scheduled test, add
   `--dry-run` to the task arguments by hand (`schedule install` overwrites it).
 
@@ -149,7 +152,8 @@ instance 0); `control -v 0 launch` starts it. MuMu ships its own `adb.exe` in th
 | Version | Scope |
 |---|---|
 | 0.2.0 Unattended | Start MuMu; ADB auto-connect; prepare app on screen 2; `--at` timed start with NTP offset; opening retry; keep awake; log file; Telegram summary; Task Scheduler install with wake; tests |
-| 0.3.0 Fast rounds | Spec `docs/specs/0.3.0-fast-rounds.md`: MuMu 540x1600; one dump per screen, taps by coordinates, entry located before the start, command count (PRs `feat/screen-dump`, `refactor/flow-dump-taps`, `feat/locate-entry`); then health check before the start time and `schedule install --dry-run` |
+| 0.3.0 Fast rounds | MuMu 540x1600; one dump per screen, taps by coordinates, entry located before the start, command count (released 2026-10-09) |
+| 0.4.0 Hardening | Based on real 06:00 runs with 0.3.0: health check before the start time, `schedule install --dry-run`, failure handling |
 | later | Several MuMu instances with separate accounts in parallel (one account cannot log in twice) |
 
 Deferred (previous plan, revisit after 0.3.0): FastAPI backend with WebSocket progress, React +
@@ -166,7 +170,7 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
 
 ## Next step
 
-Finish 0.3.0: merge the fast-rounds PRs after a real 06:00 run, then a health check before the
-start time and `schedule install --dry-run`. Ruled out on 2026-10-09: opening the calendar
+Read the first 06:00 run with 0.3.0 (`logs/court-booker-2026-10-10.log`: round times, device
+commands per round, the final confirmation), then start 0.4.0 Hardening. Ruled out on 2026-10-09: opening the calendar
 before 06:00, two slots in one booking, pre-recorded coordinates (no faster than reading the
 screen, which is needed anyway to know it appeared).
