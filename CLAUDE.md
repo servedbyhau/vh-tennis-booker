@@ -57,23 +57,31 @@ out of scope.
 - `runner.connect_device`: `emulator.MuMu.ensure_started` (MuMuManager `info`/`control launch`),
   `adb.find_adb` + `adb.resolve_device` (prefers the serial MuMu reports), `uiautomator2.connect`
   (imported lazily so tests do not need it). `runner.run_booking`: `Booker.prepare()`,
-  `clock.wait_until(start, offset)`, then one round per slot; a `BookingError` (or any
-  exception) fails that round only. Results are appended to a caller-owned list.
-- `flow.Booker` holds selectors as plain dicts (`Selector = dict[str, Any]`) built from
-  `config.labels` in `__init__`, passed as `device(**selector)`. Every screen transition goes
-  through `tap_and_advance(target, name, next_screen)`: wait for target, tap, poll
-  (`wait_for_any`) for any of the next screen's selectors, retry the tap if the app lagged.
-  `return_to_utilities()` presses Back until the utilities list or home appears, so a round can
-  start from any screen. `prepare()` restarts the app and ends on the utilities list.
+  `wait_until(start - LOCATE_AHEAD)`, `Booker.locate_entry()`, `wait_until(start)`, then one
+  round per slot; a `BookingError` (or any exception) fails that round only. Results are
+  appended to a caller-owned list; the debug log counts device commands per round.
+- `screen.Screen` parses one `dump_hierarchy` into `Node`s (label, visible bounds, clickable);
+  `screen.Match` (desc / prefix / contains / full-match pattern / clickable) is applied locally.
+- `flow.Booker` builds `Match`es from `config.labels` in `__init__`. The device is only used
+  through `snapshot()` (one dump), `tap()`/`tap_point()` (`device.click(x, y)`), `press_back()`
+  and `_scroll()`; each increments `commands`. `wait_for(find, timeout, screen=None)` reads the
+  screen every 20 ms until a finder returns something; the found node carries the coordinates
+  to tap. Every transition goes through `tap_and_advance(screen, target, name, find_next)`:
+  tap `target` from `screen`, wait for `find_next`, re-tap while `target` is still shown.
+  `return_to_utilities()` presses Back until the utilities list or home appears and returns
+  that screen. `prepare()` restarts the app and ends on the utilities list; `locate_entry()`
+  reads it again just before the start, so the first command at the start is the tap.
   `open_slot()` re-enters the calendar while the date or slot is missing.
-- `geometry.py` and most of `clock.py` are pure; logic testable without a device belongs there.
+- `geometry.py`, `screen.py` and most of `clock.py` are pure; logic testable without a device
+  belongs there.
 - External effects are injectable (`run`, `probe`, `clock`, `sleep`, `post`, `set_state`), so
   nothing in the test suite touches a device, adb, the network or Task Scheduler.
 - `config.load_config` rejects unknown keys (`ConfigError`); the TOML key `continue` maps to
   `Labels.continue_`; keys ending in `_xy` become tuples. New config fields must be added to
   the dataclass and `config.example.toml`. A relative `log_dir` resolves against the config file.
-- Tests use hand-written fakes (`tests/test_flow.py`: `FakeDevice`/`FakeElement`, `AppDevice`,
-  `OpeningBooker`) and monkeypatch `flow.time` to run instantly. `tests/conftest.py` puts
+- Tests use hand-written fakes (`tests/test_flow.py`: `FakeApp`, a scripted app that serves
+  hierarchy XML per screen and switches screens on taps and Back; `OpeningBooker`) and a fake
+  `flow.time` clock so timeouts pass instantly. A full round must cost 16 commands. `tests/conftest.py` puts
   `src/` on `sys.path`.
 
 ## Booking flow (app screens)
@@ -87,15 +95,28 @@ the next round starts.
 ## Technical findings
 
 - Flutter exposes text via `content-desc`, not `text`; select with `description=...`.
-- Emulator screen is **540x960** (not 900x1600). Never use hard-coded coordinates.
+- Emulator screen: MuMu custom resolution **540x1600**, 220 DPI (since 2026-10-09; was the
+  tablet mode 960x540 shown as 540x960 portrait, where `window_size()` wrongly returned
+  (960, 540)). Never use hard-coded coordinates; the screen size comes from the dump.
+- Command cost on MuMu: `dump_hierarchy` 69 ms (whole screen), `exists` 41 ms, `info` 60 ms,
+  regex `info_list` 105-177 ms, `window_size` 125 ms. uiautomator2 `click()` on a selector
+  is wait + info + click.
+- App/server time: calendar 0.14 s after "Sân Tennis", slot list ~2.1 s after the date tap,
+  court list 1.5-2.0 s, details 0.5 s, confirmation 0.14 s.
 - Day label format: `"2, Thứ Sáu, 2 tháng 10, 2026"`. Slot: `"09:00 - 10:00"`;
   full slot: `"18:00 - 19:00\nHết chỗ"`. Bookable range: today to today + 2.
 - Consent checkbox has no label and `checkable=false`: it is the clickable View
   `[35,740][79,784]` left of caption `"Tôi đã hiểu và đồng ý với "` `[79,739][313,772]`.
   Located via `caption.left(clickable=True)` plus a same-row check; fallback hierarchy scan.
 - "Xác nhận" is disabled until the checkbox is ticked; used to verify the tick.
-- Flutter builds lazily: off-screen slots are absent from the tree, so the code scrolls until
-  the slot is fully visible and not covered by the sticky "Tiếp tục" button.
+- Flutter builds lazily: off-screen slots are absent from the tree and dump bounds are clipped
+  to what is shown. 13 slots (06-12, 14-21); at 540x1600 all fit without scrolling. On shorter
+  screens the code swipes until the slot is mostly visible above the sticky "Tiếp tục" button.
+- Slot selection is not exposed in the tree (no `selected`/`checked`); "Tiếp tục" is always
+  clickable. Courts can be "Hết chỗ" (e.g. "S9 - Sân tennis
+Hết chỗ").
+- Consent checkbox at 540x1600: `[35,1323][79,1367]` (seen shifted to x=43 once), so it is
+  located per run, never stored.
 - Success is verified by waiting for the confirmation screen to disappear.
 
 ## Environment
