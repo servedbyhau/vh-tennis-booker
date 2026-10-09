@@ -1,6 +1,6 @@
-"""Tests for parsing hierarchy dumps."""
+"""Tests for parsing hierarchy dumps and matching labels."""
 
-from court_booker.screen import Screen
+from court_booker.screen import Match, Node, Screen
 
 DUMP = """<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
 <hierarchy rotation="0">
@@ -25,3 +25,22 @@ def test_parse_keeps_labels_bounds_and_clickable():
 def test_size_is_read_from_the_dump():
     assert Screen.parse(DUMP).size == (540, 1600)
     assert Screen([]).size == (0, 0)
+
+
+def test_match_criteria():
+    slot = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
+
+    assert Match(prefix="18:00 - 19:00")(slot)
+    assert Match(contains="Hết chỗ")(slot)
+    assert Match(pattern=r"\d{2}:\d{2} - \d{2}:\d{2}.*")(slot)
+    assert not Match(pattern=r"\d{2}:\d{2}")(slot)
+    assert not Match(desc="18:00 - 19:00")(slot)
+    assert not Match(prefix="18:00 - 19:00", clickable=False)(slot)
+
+
+def test_find_respects_clickable():
+    screen = Screen.parse(DUMP)
+
+    assert screen.find(Match(desc="Xác nhận", clickable=True)) is None
+    assert screen.find(Match(desc="Tiếp tục")).center == (270, 1537)
+    assert len(screen.find_all(Match(prefix="18:00"))) == 1
