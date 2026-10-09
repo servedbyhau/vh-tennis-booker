@@ -71,6 +71,7 @@ class Booker:
         self.continue_button = Match(desc=labels.continue_, clickable=True)
         self.venue = Match(contains=config.venue_keyword) if config.venue_keyword else None
         self.court = Match(desc=config.court, clickable=True)
+        self.any_court = Match(prefix=config.court, clickable=True)
         self.agree = Match(contains=labels.agree)
         self.confirm_button = Match(desc=labels.confirm, clickable=True)
         self.confirm_page = Match(desc=labels.confirm_page)
@@ -112,10 +113,12 @@ class Booker:
         court, screen = self.tap_and_advance(
             screen, self.continue_button, labels.continue_, self._find_court
         )
-        if self.venue is not None and not self.court(court):
+        if self.venue is not None and not self.any_court(court):
             court, screen = self.tap_and_advance(
                 screen, self.venue, self.config.venue_keyword, self._find_court
             )
+        if labels.fully_booked in court.desc:
+            raise SlotUnavailableError(f"Court {self.config.court} is fully booked")
         _, screen = self.tap_and_advance(
             screen, self.court, self.config.court, self._finder(self.continue_button)
         )
@@ -346,7 +349,7 @@ class Booker:
         )
 
     def _find_court(self, screen: Screen) -> Node | None:
-        court = screen.find(self.court)
+        court = screen.find(self.any_court)
         if court is None and self.venue is not None:
             return screen.find(self.venue)
         return court

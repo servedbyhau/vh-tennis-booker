@@ -235,6 +235,13 @@ def test_book_taps_venue_screen_when_shown():
     assert app.screen == "ticket"
 
 
+def test_fully_booked_court_fails_the_round():
+    app = booking_app(courts=[node("S10 - Sân tennis\nHết chỗ", (35, 1024, 505, 1144))])
+
+    with pytest.raises(SlotUnavailableError, match="Court S10"):
+        Booker(app, Config()).book("11:00 - 12:00", TARGET)
+
+
 def test_fully_booked_slot_fails_the_round():
     app = booking_app()
 
