@@ -207,6 +207,9 @@ def test_book_reads_each_screen_once_and_taps_by_coordinates():
 
     assert app.taps == FULL_ROUND
     assert app.screen == "ticket"
+    # 8 taps plus one read per screen: start, calendar, slots, courts, details,
+    # confirmation, enabled confirm button, ticket.
+    assert booker.commands == 16
 
 
 def test_book_waits_for_slow_slot_list():
@@ -257,6 +260,17 @@ def test_swallowed_tap_is_retried():
 
     assert app.taps.count("Sân Tennis") == 2
     assert app.screen == "ticket"
+
+
+def test_located_entry_makes_the_first_command_a_tap():
+    app = booking_app()
+    booker = Booker(app, Config())
+
+    booker.locate_entry()
+    app.ops.clear()
+    booker.book("11:00 - 12:00", TARGET)
+
+    assert app.ops[0] == ("click", "Sân Tennis")
 
 
 def test_return_to_utilities_presses_back_from_ticket():
