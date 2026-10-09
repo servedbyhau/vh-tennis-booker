@@ -16,12 +16,15 @@ MuMu Player emulator, using only the app's user interface.
 
 - **Label-based element lookup.** Buttons are located at runtime by their accessibility
   labels, so the automation works at any screen resolution.
+- **One read per screen.** Each screen is read with a single hierarchy dump that returns
+  every element; waiting for a screen and locating its buttons is the same read, and taps
+  go to the coordinates from that read. A round costs about 16 device commands.
 - **Unlabeled widgets.** The consent checkbox is identified as the small clickable node
   level with its caption; no other node is ever tapped.
 - **Lag tolerance.** Each step taps as soon as the button appears and retries if the next
   screen does not load.
-- **Scroll into view.** Time slots below the fold are scrolled to until fully visible and
-  clear of the sticky bottom button.
+- **Scroll into view.** On screens too short for the whole slot list, a slot is scrolled
+  to until it is shown clear of the sticky bottom button.
 - **Verified results.** A round succeeds only after the app leaves the confirmation screen.
 - **Step timing.** Each log line shows the time elapsed since the previous step.
 - **Configurable labels.** All app strings live in `config.toml`.
@@ -117,7 +120,7 @@ Sample output:
 ```text
 11:12:05.231 +0.42s INFO    Tapped 'Sân Tennis'
 11:12:06.010 +0.78s INFO    Selected date 2026-10-03
-11:12:07.402 +1.39s INFO    Selected slot 14:00 - 15:00 (2 swipe(s))
+11:12:07.402 +1.39s INFO    Selected slot 14:00 - 15:00 (0 swipe(s))
 11:12:09.118 +1.72s INFO    Accepted terms
 ```
 
@@ -136,6 +139,7 @@ src/court_booker/
 ├── emulator.py         start MuMu through MuMuManager.exe
 ├── adb.py              find adb and connect the emulator
 ├── flow.py             booking flow, one method per screen
+├── screen.py           parsed hierarchy dump and label matching
 ├── clock.py            start time, NTP offset, precise wait
 ├── power.py            keep Windows awake during a run
 ├── notify.py           Telegram summary

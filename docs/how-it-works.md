@@ -4,21 +4,27 @@
 
 uiautomator2 reads Android's accessibility tree. Flutter renders its own widgets, but
 publishes a *semantics* tree to accessibility services, where visible text appears in
-`content-desc` (not `text`). Every selector in this project therefore uses
-`description=...` / `descriptionContains=...`.
+`content-desc` (not `text`). Every element is therefore matched by its `content-desc`
+label (`screen.Match`).
 
-Two consequences shaped the design:
+Each screen is read with **one hierarchy dump**, which returns every element with its
+visible bounds in about 70 ms, no slower than a query for a single element. Elements are
+then matched locally (`screen.Screen`), so a screen costs one device command however many
+elements the step needs.
+
+Two consequences of Flutter shaped the design:
 
 1. **Only on-screen widgets exist.** Flutter builds lazily, so a time slot below the
-   fold is absent from the tree until scrolled into view. `Booker.select_slot` scrolls in
-   small, slow swipes and taps only when the slot is fully visible and not covered by
-   the sticky bottom button.
+   fold is absent from the tree until scrolled into view, and dump bounds are clipped to
+   what is shown. At 540x1600 the whole slot list fits; on shorter screens
+   `Booker.select_slot` swipes until the slot is mostly visible above the sticky bottom
+   button, reading the screen until the list stops moving.
 2. **Unlabeled widgets.** The consent checkbox is a plain clickable `View` with no
    label and `checkable=false`. It is located relative to its caption:
 
    ```
-   [35,740][79,784]   View  clickable=true      <- checkbox
-   [79,739][313,772]  View  "Tôi đã hiểu và đồng ý với "
+   [35,1323][79,1367]   View  clickable=true      <- checkbox
+   [79,1322][313,1355]  View  "Tôi đã hiểu và đồng ý với "
    ```
 
    A candidate is accepted only if it is small, left of the caption and on the same
@@ -27,22 +33,31 @@ Two consequences shaped the design:
 ## "Coordinates" vs. elements
 
 Every tap on Android is ultimately a touch at (x, y). The difference is where the point
-comes from: here it is computed from the element's live bounds at the moment of the
-tap, never stored. The cost is the query to the device (~50–200 ms), which is needed
-anyway to know the button has appeared.
+comes from: here it is taken from the latest dump of the screen, never stored across
+screens. Waiting for the next screen and locating the next element are the same read, so
+pre-recorded coordinates would not save a command: the screen must be read anyway to know
+it has appeared.
 
 ## Navigation
 
-`Booker.tap_and_advance()` waits for a button, taps immediately, then waits for any selector of the
-next screen. If the next screen does not appear within 2 s (tap swallowed by lag), it
-taps again, up to 5 times.
+`Booker.tap_and_advance()` taps an element of the current dump, then reads the screen every
+20 ms until a finder returns what the next step needs (for example the target day). If the
+next screen does not appear within 2 s (tap swallowed by lag), it taps again while the
+element is still shown, up to 5 times. Two seconds before the start time the utilities
+list is read once more, so the first command at the start time is the tap itself.
 
 After confirming, the script waits until the confirmation screen is gone (the ticket
-screen is shown) before pressing Back. From the ticket screen, one Back returns to the
-utilities list, where the next round begins.
+screen is shown). From the ticket screen, one Back returns to the utilities list, where
+the next round begins.
 
 ## Lessons learned
 
 - The first coordinate-based version failed because the emulator ran at **540×960**,
   not the assumed 900×1600. Label-based lookup removed the whole class of bugs.
-- Measure before optimizing: every log line shows the time elapsed since the previous step.
+- Count round trips, not lines of code. uiautomator2's `click()` on a selector waits for
+  the element and reads its bounds before tapping; together with an explicit `wait()` a
+  tap cost four commands. Reading a whole screen once is as cheap as one of them.
+- `window_size()` reported (960, 540) while MuMu ran a tablet resolution with the app in
+  portrait; the screen size is now taken from the dump.
+- Measure before optimizing: every log line shows the time elapsed since the previous step,
+  and the debug log counts device commands per round.
