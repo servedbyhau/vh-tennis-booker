@@ -59,7 +59,10 @@ class Booker:
     def __init__(self, device: Any, config: Config) -> None:
         self.device = device
         self.config = config
+        self.commands = 0
+        """Device commands sent so far; each is a round trip to the emulator."""
         self.last_screen = Screen([])
+        self._entry: Screen | None = None
 
         labels = config.labels
         self.home = Match(desc=labels.home, clickable=True)
@@ -106,6 +109,15 @@ class Booker:
             raise AppNotReadyError(str(exc)) from exc
         logger.info("Ready on the utilities list")
 
+    def locate_entry(self) -> None:
+        """Read the utilities list just before the start time.
+
+        The first round then taps the utility with a single command at the start
+        time, and the read wakes the device connection after the long wait.
+        """
+        self._entry = self.return_to_utilities()
+        logger.debug("Located %r ahead of the start time", self.config.labels.utility)
+
     def book(self, slot: str, target: date, dry_run: bool = False) -> None:
         """Book ``slot`` on ``target``, starting from the home or utilities screen."""
         labels = self.config.labels
@@ -139,7 +151,8 @@ class Booker:
         deadline = time.monotonic() + self.config.open_retry_seconds
         attempt = 1
         while True:
-            screen = self.return_to_utilities()
+            screen = self._entry if self._entry is not None else self.return_to_utilities()
+            self._entry = None
             _, screen = self.tap_and_advance(
                 screen, self.utility, self.config.labels.utility, self._find_calendar
             )
@@ -318,6 +331,7 @@ class Booker:
 
     def snapshot(self) -> Screen:
         """Read every element of the current screen with one command."""
+        self.commands += 1
         self.last_screen = Screen.parse(self.device.dump_hierarchy(compressed=False))
         return self.last_screen
 
@@ -325,9 +339,11 @@ class Booker:
         self.tap_point(*node.center)
 
     def tap_point(self, x: float, y: float) -> None:
+        self.commands += 1
         self.device.click(x, y)
 
     def press_back(self) -> None:
+        self.commands += 1
         self.device.press("back")
 
     # Helpers ----------------------------------------------------------------
@@ -371,6 +387,7 @@ class Booker:
     def _scroll(self, screen: Screen, down: bool) -> None:
         width, height = screen.size
         start, end = (0.62, 0.38) if down else (0.38, 0.62)
+        self.commands += 1
         self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, _SWIPE_SECONDS)
 
     def _settled_screen(self) -> Screen:

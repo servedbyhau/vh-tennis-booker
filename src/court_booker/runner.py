@@ -18,6 +18,9 @@ from court_booker.flow import Booker
 
 logger = logging.getLogger(__name__)
 
+LOCATE_AHEAD = timedelta(seconds=2)
+"""How long before the start time the utilities entry is read again."""
+
 
 @dataclass
 class RoundResult:
@@ -70,6 +73,8 @@ def run_booking(
     booker.prepare()
 
     if start is not None:
+        wait_until(start - LOCATE_AHEAD, offset)
+        booker.locate_entry()
         wait_until(start, offset)
     target = (start or datetime.now()).date() + timedelta(days=config.days_ahead)
     logger.info(
@@ -82,6 +87,7 @@ def run_booking(
     for index, slot in enumerate(config.slots, start=1):
         logger.info("Round %d/%d: %s", index, len(config.slots), slot)
         started = time.perf_counter()
+        commands = booker.commands
         try:
             booker.book(slot, target, dry_run=dry_run)
         except BookingError as exc:
@@ -93,4 +99,5 @@ def run_booking(
         else:
             detail = "dry run passed" if dry_run else "booked"
             results.append(RoundResult(slot, True, detail, time.perf_counter() - started))
+        logger.debug("Round %d used %d device commands", index, booker.commands - commands)
     return results
