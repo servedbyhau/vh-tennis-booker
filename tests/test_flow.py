@@ -262,6 +262,17 @@ def test_swallowed_tap_is_retried():
     assert app.screen == "ticket"
 
 
+def test_located_entry_makes_the_first_command_a_tap():
+    app = booking_app()
+    booker = Booker(app, Config())
+
+    booker.locate_entry()
+    app.ops.clear()
+    booker.book("11:00 - 12:00", TARGET)
+
+    assert app.ops[0] == ("click", "Sân Tennis")
+
+
 def test_return_to_utilities_presses_back_from_ticket():
     app = booking_app(screen="ticket")
 

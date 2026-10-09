@@ -62,6 +62,7 @@ class Booker:
         self.commands = 0
         """Device commands sent so far; each is a round trip to the emulator."""
         self.last_screen = Screen([])
+        self._entry: Screen | None = None
 
         labels = config.labels
         self.home = Match(desc=labels.home, clickable=True)
@@ -108,6 +109,15 @@ class Booker:
             raise AppNotReadyError(str(exc)) from exc
         logger.info("Ready on the utilities list")
 
+    def locate_entry(self) -> None:
+        """Read the utilities list just before the start time.
+
+        The first round then taps the utility with a single command at the start
+        time, and the read wakes the device connection after the long wait.
+        """
+        self._entry = self.return_to_utilities()
+        logger.debug("Located %r ahead of the start time", self.config.labels.utility)
+
     def book(self, slot: str, target: date, dry_run: bool = False) -> None:
         """Book ``slot`` on ``target``, starting from the home or utilities screen."""
         labels = self.config.labels
@@ -141,7 +151,8 @@ class Booker:
         deadline = time.monotonic() + self.config.open_retry_seconds
         attempt = 1
         while True:
-            screen = self.return_to_utilities()
+            screen = self._entry if self._entry is not None else self.return_to_utilities()
+            self._entry = None
             _, screen = self.tap_and_advance(
                 screen, self.utility, self.config.labels.utility, self._find_calendar
             )
