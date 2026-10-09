@@ -166,11 +166,17 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
   module loggers, `BookingError` subclasses, named constants, Ruff line length 100.
 - From 0.2.0: one branch per feature (`feat/...`, `fix/...`), Pull Request, green CI, merge,
   update CHANGELOG; Conventional Commits; Semantic Versioning; protect `main`.
+- From 0.3.1: each version lives on `release/X.Y.Z` cut from `main`; feature branches are cut
+  from it and PR'd into it (merge commit, never squash), one PR at a time, not stacked. One
+  PR `release/X.Y.Z` → `main` when stable, then tag `vX.Y.Z` (see `CONTRIBUTING.md`). The
+  user opens and merges PRs on GitHub (no `gh` CLI): give a compare link, title and description.
+- The scheduled task runs the checked-out code (editable install): leave the working tree on
+  a tested branch overnight.
 - Never commit `config.toml`, screenshots or UI dumps (may contain personal data).
 
 ## Next step
 
-Read the first 06:00 run with 0.3.0 (`logs/court-booker-2026-10-10.log`: round times, device
+Work happens on `release/0.3.1`. Read the first 06:00 run with 0.3.0 (`logs/court-booker-2026-10-10.log`: round times, device
 commands per round, the final confirmation), then start 0.4.0 Hardening. Ruled out on 2026-10-09: opening the calendar
 before 06:00, two slots in one booking, pre-recorded coordinates (no faster than reading the
 screen, which is needed anyway to know it appeared).

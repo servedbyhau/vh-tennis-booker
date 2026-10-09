@@ -30,18 +30,34 @@ If the booking flow changed, also run `court-booker --dry-run --verbose` against
   for the final summary in the CLI.
 - **Commits:** follow [Conventional Commits](https://www.conventionalcommits.org/),
   e.g. `feat: add retry when a slot is not yet open`, `fix: wait for ticket screen`.
-- **Branches:** `feat/<topic>`, `fix/<topic>`, `docs/<topic>`; merge into `main` via pull request.
+- **Branches:** each version is prepared on `release/X.Y.Z`, cut from `main`. Work happens
+  on `feat/<topic>`, `fix/<topic>` or `docs/<topic>` branches cut from the release branch
+  and merged back into it via pull request, one PR per branch. `main` only receives the
+  release branch when everything in it is stable.
+- **Merging:** use "Create a merge commit"; do not squash or rebase, so commits keep their
+  identity across branches.
 - **Versioning:** [Semantic Versioning](https://semver.org/). Record changes in
   `CHANGELOG.md` under "Unreleased" and move them to a version section when releasing.
 - **Privacy:** never commit screenshots, UI dumps or `config.toml`.
 
 ## Releasing
 
-1. Update `__version__` in `src/court_booker/__init__.py` (`pyproject.toml` reads it from there).
-2. Move "Unreleased" entries in `CHANGELOG.md` to a new version section.
-3. Commit with `chore: release vX.Y.Z`, then tag and push:
+1. Start the version from `main`:
    ```bash
-   git tag -a vX.Y.Z -m "vX.Y.Z"
-   git push origin main vX.Y.Z
+   git switch -c release/X.Y.Z main
+   git push -u origin release/X.Y.Z
    ```
-4. Create a GitHub release from the tag using the changelog entry.
+2. For each change, branch from `release/X.Y.Z` and open a pull request into it.
+3. When the release branch is stable, on a branch from it update `__version__` in
+   `src/court_booker/__init__.py` (`pyproject.toml` reads it from there), move the
+   "Unreleased" entries in `CHANGELOG.md` to a new version section, and commit with
+   `chore: release vX.Y.Z`; merge it into the release branch.
+4. Open one pull request `release/X.Y.Z` → `main` and merge it with a merge commit.
+5. Tag the merge commit on `main` and push the tag:
+   ```bash
+   git switch main && git pull
+   git tag -a vX.Y.Z -m "vX.Y.Z"
+   git push origin vX.Y.Z
+   ```
+6. Create a GitHub release from the tag using the changelog entry, then delete the
+   release branch.
