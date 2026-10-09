@@ -1,6 +1,7 @@
-"""Flow tests against a fake device; no emulator required."""
+"""Flow tests against a scripted fake app; no emulator required."""
 
 from datetime import date
+from xml.sax.saxutils import quoteattr
 
 import pytest
 
@@ -13,146 +14,305 @@ from court_booker.errors import (
     SlotUnavailableError,
 )
 from court_booker.flow import Booker
+from court_booker.screen import Screen
 
-CONTINUE_BOUNDS = {"left": 20, "top": 890, "right": 520, "bottom": 945}
-# Slot bounds after 0, 1 and 2 swipes: off-screen, hidden by the bottom button, fully visible.
-SLOT_BOUNDS_AFTER_SWIPES = {0: None, 1: (870, 905), 2: (700, 735)}
-
-
-class FakeElement:
-    def __init__(self, device, selector):
-        self.device = device
-        self.selector = selector
-
-    def _is_continue_button(self):
-        return self.selector.get("description") == "Tiếp tục"
-
-    def exists(self, timeout=0):
-        if self._is_continue_button() or "descriptionMatches" in self.selector:
-            return True
-        return self.device.slot_bounds() is not None
-
-    @property
-    def info(self):
-        if self._is_continue_button():
-            return {"bounds": CONTINUE_BOUNDS}
-        top, bottom = self.device.slot_bounds()
-        return {
-            "contentDescription": "14:00 - 15:00",
-            "bounds": {"left": 200, "top": top, "right": 330, "bottom": bottom},
-        }
-
-    def click(self):
-        self.device.tapped = self.device.slot_bounds()
+WIDTH, HEIGHT = 540, 1600
+TARGET = date(2026, 10, 11)
+DAY_10 = "10, Thứ Bảy, 10 tháng 10, 2026"
+DAY_11 = "11, Chủ Nhật, 11 tháng 10, 2026"
+CHECKBOX = (35, 1323, 79, 1367)
 
 
-class FakeDevice:
-    """Device whose time slot moves into view as the screen is scrolled."""
+def node(desc, box, clickable=True):
+    return desc, box, clickable
 
-    def __init__(self):
+
+CONTINUE = node("Tiếp tục", (35, 1490, 505, 1584))
+DAYS = [node(DAY_10, (381, 344, 455, 402)), node(DAY_11, (455, 344, 529, 402))]
+SLOTS = [
+    node("11:00 - 12:00", (277, 884, 502, 968)),
+    node("14:00 - 15:00\nHết chỗ", (38, 982, 263, 1066)),
+]
+COURTS = [
+    node("S10 - Sân tennis", (35, 1024, 505, 1144)),
+    node("S9 - Sân tennis\nHết chỗ", (35, 1157, 505, 1277)),
+]
+CONFIRM_PAGE = [
+    node("Xác nhận đăng ký", (145, 52, 395, 89), False),
+    node("", (0, 1292, 540, 1465)),
+    node("", CHECKBOX),
+    node("Tôi đã hiểu và đồng ý với ", (79, 1322, 313, 1355), False),
+]
+
+
+class FakeApp:
+    """Scripted app: each screen is a list of nodes; taps and Back switch screens.
+
+    A switch takes effect at once, like a tap the app handles before the next
+    one, or after ``delay`` dumps, like a screen that is still loading.
+    """
+
+    def __init__(self, screens, taps_to, backs_to, screen, launches_to=None, current=""):
+        self.screens = screens
+        self.taps_to = taps_to
+        self.backs_to = backs_to
+        self.screen = screen
+        self.launches_to = launches_to
+        self.current = current
+        self.pending = None
+        self.swallow = {}
+        self.on_swipe = None
+        self.ops = []
+        self.taps = []
+        self.calls = []
         self.swipes = 0
-        self.tapped = None
 
-    def slot_bounds(self):
-        return SLOT_BOUNDS_AFTER_SWIPES[min(self.swipes, 2)]
+    def go(self, target):
+        name, delay = (target, 0) if isinstance(target, str) else target
+        if delay == 0:
+            self.screen, self.pending = name, None
+        else:
+            self.pending = [name, delay]
 
-    def __call__(self, **selector):
-        return FakeElement(self, selector)
+    def dump_hierarchy(self, compressed=False):
+        self.ops.append("dump")
+        if self.pending is not None:
+            self.pending[1] -= 1
+            if self.pending[1] <= 0:
+                self.screen, self.pending = self.pending[0], None
+        children = "".join(
+            f"<node content-desc={quoteattr(desc, {chr(10): '&#10;'})} "
+            f'bounds="[{box[0]},{box[1]}][{box[2]},{box[3]}]" '
+            f'clickable="{"true" if clickable else "false"}" />'
+            for desc, box, clickable in self.screens[self.screen]
+        )
+        root = f'<node content-desc="" bounds="[0,0][{WIDTH},{HEIGHT}]" clickable="false">'
+        return f"<hierarchy>{root}{children}</node></hierarchy>"
+
+    def click(self, x, y):
+        hits = [
+            (desc, box)
+            for desc, box, _ in self.screens[self.screen]
+            if box[0] <= x <= box[2] and box[1] <= y <= box[3]
+        ]
+        if not hits:
+            self.ops.append(("click", None))
+            return
+        desc, box = min(hits, key=lambda hit: (hit[1][2] - hit[1][0]) * (hit[1][3] - hit[1][1]))
+        key = desc or box
+        self.ops.append(("click", key))
+        self.taps.append(key)
+        if self.swallow.get(key, 0) > 0:
+            self.swallow[key] -= 1
+            return
+        target = self.taps_to.get((self.screen, key))
+        if target is not None:
+            self.go(target)
+
+    def press(self, key):
+        self.calls.append(key)
+        target = self.backs_to.get(self.screen)
+        if target is not None:
+            self.go(target)
 
     def window_size(self):
-        return 540, 960
+        return WIDTH, HEIGHT
 
     def swipe(self, *args):
         self.swipes += 1
-
-
-def test_select_slot_scrolls_until_fully_visible(monkeypatch):
-    monkeypatch.setattr(flow.time, "sleep", lambda seconds: None)
-    device = FakeDevice()
-
-    Booker(device, Config()).select_slot("14:00 - 15:00")
-
-    assert device.swipes == 2
-    assert device.tapped == (700, 735)
-
-
-class ScreenElement:
-    def __init__(self, device, selector):
-        self.device = device
-        self.selector = selector
-
-    def exists(self, timeout=0):
-        return self.selector.get("description") in self.device.visible()
-
-    def wait(self, timeout=0):
-        return self.exists()
-
-    def click(self):
-        self.device.taps.append(self.selector.get("description"))
-        if self.selector.get("description") == "Tiện ích":
-            self.device.screen = "utilities"
-
-
-APP_SCREENS = {"home": {"Tiện ích"}, "utilities": {"Sân Tennis"}, "loading": set()}
-
-
-class AppDevice:
-    """Device whose app reaches its home screen once started, unless logged out."""
-
-    def __init__(self, logged_in=True, current="other.app"):
-        self.screen = "loading"
-        self.logged_in = logged_in
-        self.current = current
-        self.calls = []
-        self.taps = []
-
-    def visible(self):
-        if self.screen == "loading" and self.logged_in and "app_start" in self.calls:
-            self.screen = "home"
-        return APP_SCREENS[self.screen]
-
-    def __call__(self, **selector):
-        return ScreenElement(self, selector)
+        if self.on_swipe is not None:
+            self.on_swipe(self)
 
     def app_stop(self, package):
         self.calls.append("app_stop")
 
     def app_start(self, package):
         self.calls.append("app_start")
+        if self.launches_to is not None:
+            self.go(self.launches_to)
 
     def app_current(self):
         return {"package": self.current}
 
 
-def test_prepare_restarts_app_and_stops_on_utilities(monkeypatch):
-    monkeypatch.setattr(flow.time, "sleep", lambda seconds: None)
-    device = AppDevice()
+def booking_app(screen="utilities", courts=COURTS, via_venue=False, slot_delay=0):
+    screens = {
+        "loading": [],
+        "home": [node("Tiện ích", (200, 1500, 340, 1580))],
+        "utilities": [node("Sân Tennis", (35, 300, 505, 360))],
+        "calendar": [*DAYS, CONTINUE],
+        "calendar_slots": DAYS + SLOTS + [CONTINUE],
+        "calendar_selected": DAYS + SLOTS + [CONTINUE],
+        "venue": [node("Origami Grand Park", (35, 600, 505, 700))],
+        "courts": courts,
+        "details": [node("S10 - Sân tennis", (116, 975, 274, 1004), False), CONTINUE],
+        "confirm": [*CONFIRM_PAGE, node("Xác nhận", (35, 1490, 505, 1584), False)],
+        "confirm_ticked": [*CONFIRM_PAGE, node("Xác nhận", (35, 1490, 505, 1584))],
+        "ticket": [node("Đăng ký thành công", (35, 200, 505, 260), False)],
+    }
+    taps_to = {
+        ("home", "Tiện ích"): "utilities",
+        ("utilities", "Sân Tennis"): "calendar",
+        ("calendar", DAY_11): ("calendar_slots", slot_delay),
+        ("calendar_slots", "11:00 - 12:00"): "calendar_selected",
+        ("calendar_selected", "Tiếp tục"): "venue" if via_venue else "courts",
+        ("venue", "Origami Grand Park"): "courts",
+        ("courts", "S10 - Sân tennis"): "details",
+        ("details", "Tiếp tục"): "confirm",
+        ("confirm", CHECKBOX): "confirm_ticked",
+        ("confirm_ticked", "Xác nhận"): "ticket",
+    }
+    backs_to = {
+        "ticket": "utilities",
+        "confirm": "details",
+        "confirm_ticked": "details",
+        "details": "courts",
+        "courts": "calendar_selected",
+        "calendar": "utilities",
+        "calendar_slots": "utilities",
+        "calendar_selected": "utilities",
+    }
+    return FakeApp(screens, taps_to, backs_to, screen, launches_to="home")
 
-    Booker(device, Config()).prepare()
 
-    assert device.calls == ["app_stop", "app_start"]
-    assert device.taps == ["Tiện ích"]
-    assert device.screen == "utilities"
-
-
-def test_prepare_keeps_running_app_without_restart(monkeypatch):
-    monkeypatch.setattr(flow.time, "sleep", lambda seconds: None)
-    device = AppDevice(current="com.vinhomes.resident")
-    device.screen = "utilities"
-
-    Booker(device, Config(restart_app=False)).prepare()
-
-    assert device.calls == []
-    assert device.taps == []
+@pytest.fixture(autouse=True)
+def fake_time(monkeypatch):
+    """Make sleeps advance a fake monotonic clock, so timeouts pass instantly."""
+    now = [0.0]
+    monkeypatch.setattr(flow.time, "monotonic", lambda: now[0])
+    monkeypatch.setattr(flow.time, "sleep", lambda seconds: now.__setitem__(0, now[0] + seconds))
+    return now
 
 
-def test_prepare_reports_logged_out_app(monkeypatch):
-    clock = iter(range(0, 10_000, 5))
-    monkeypatch.setattr(flow.time, "sleep", lambda seconds: None)
-    monkeypatch.setattr(flow.time, "monotonic", lambda: next(clock))
+FULL_ROUND = [
+    "Sân Tennis",
+    DAY_11,
+    "11:00 - 12:00",
+    "Tiếp tục",
+    "S10 - Sân tennis",
+    "Tiếp tục",
+    CHECKBOX,
+    "Xác nhận",
+]
+
+
+def test_book_reads_each_screen_once_and_taps_by_coordinates():
+    app = booking_app()
+    booker = Booker(app, Config())
+
+    booker.book("11:00 - 12:00", TARGET)
+
+    assert app.taps == FULL_ROUND
+    assert app.screen == "ticket"
+
+
+def test_book_waits_for_slow_slot_list():
+    app = booking_app(slot_delay=5)
+
+    Booker(app, Config()).book("11:00 - 12:00", TARGET)
+
+    assert app.taps == FULL_ROUND
+
+
+def test_dry_run_stops_before_final_confirmation():
+    app = booking_app()
+
+    Booker(app, Config()).book("11:00 - 12:00", TARGET, dry_run=True)
+
+    assert app.taps == FULL_ROUND[:-1]
+    assert app.screen == "confirm_ticked"
+
+
+def test_book_taps_venue_screen_when_shown():
+    app = booking_app(via_venue=True)
+
+    Booker(app, Config()).book("11:00 - 12:00", TARGET)
+
+    assert app.taps[4] == "Origami Grand Park"
+    assert app.screen == "ticket"
+
+
+def test_fully_booked_slot_fails_the_round():
+    app = booking_app()
+
+    with pytest.raises(SlotUnavailableError, match="14:00 - 15:00 is fully booked"):
+        Booker(app, Config()).book("14:00 - 15:00", TARGET)
+
+
+def test_swallowed_tap_is_retried():
+    app = booking_app()
+    app.swallow = {"Sân Tennis": 1}
+
+    Booker(app, Config()).book("11:00 - 12:00", TARGET)
+
+    assert app.taps.count("Sân Tennis") == 2
+    assert app.screen == "ticket"
+
+
+def test_return_to_utilities_presses_back_from_ticket():
+    app = booking_app(screen="ticket")
+
+    Booker(app, Config()).return_to_utilities()
+
+    assert app.calls == ["back"]
+    assert app.screen == "utilities"
+
+
+def test_select_slot_scrolls_until_slot_is_shown():
+    # Small screen: the slot is not built at first, then clipped above the button.
+    stages = [
+        [node("10:00 - 11:00", (38, 780, 263, 860))],
+        [node("10:00 - 11:00", (38, 700, 263, 780)), node("11:00 - 12:00", (277, 860, 502, 879))],
+        [node("10:00 - 11:00", (38, 620, 263, 700)), node("11:00 - 12:00", (277, 700, 502, 780))],
+    ]
+    small_continue = node("Tiếp tục", (35, 885, 505, 951))
+    app = FakeApp({"calendar": stages[0] + [small_continue]}, {}, {}, "calendar")
+
+    def advance(app):
+        app.screens["calendar"] = stages[min(app.swipes, 2)] + [small_continue]
+
+    app.on_swipe = advance
+
+    Booker(app, Config()).select_slot("11:00 - 12:00")
+
+    assert app.swipes == 2
+    assert app.ops[-1] == ("click", "11:00 - 12:00")
+
+
+def test_locate_checkbox_picks_small_node_level_with_caption():
+    nodes = [*CONFIRM_PAGE, node("", (35, 1200, 79, 1244))]
+    app = FakeApp({"confirm": nodes}, {}, {}, "confirm")
+    screen = Screen.parse(app.dump_hierarchy())
+
+    assert Booker(app, Config()).locate_checkbox(screen) == (57, 1345)
+
+
+def test_prepare_restarts_app_and_stops_on_utilities():
+    app = booking_app(screen="loading")
+
+    Booker(app, Config()).prepare()
+
+    assert app.calls == ["app_stop", "app_start"]
+    assert app.taps == ["Tiện ích"]
+    assert app.screen == "utilities"
+
+
+def test_prepare_keeps_running_app_without_restart():
+    app = booking_app(screen="utilities")
+    app.current = "com.vinhomes.resident"
+
+    Booker(app, Config(restart_app=False)).prepare()
+
+    assert app.calls == []
+    assert app.taps == []
+
+
+def test_prepare_reports_logged_out_app():
+    app = booking_app(screen="loading")
+    app.launches_to = None
 
     with pytest.raises(AppNotReadyError, match="logged in"):
-        Booker(AppDevice(logged_in=False), Config()).prepare()
+        Booker(app, Config(boot_timeout=1)).prepare()
 
 
 class OpeningBooker(Booker):
@@ -165,19 +325,22 @@ class OpeningBooker(Booker):
         self.entries = 0
         self.backs = 0
 
-    def tap_and_advance(self, target, name, next_screen):
+    def tap_and_advance(self, screen, target, name, find_next):
         self.entries += 1
+        return None, Screen([])
 
-    def select_date(self, target):
+    def select_date(self, screen, target):
         if self.entries < self.opens_on:
             raise ElementNotFoundError(f"Date {target.isoformat()} is not bookable")
 
     def select_slot(self, slot):
         if self.fully_booked:
             raise SlotUnavailableError(f"Slot {slot} is fully booked")
+        return Screen([])
 
-    def return_to_utilities(self):
+    def return_to_utilities(self, screen=None):
         self.backs += 1
+        return Screen([])
 
 
 def fake_monotonic(monkeypatch, step):
@@ -192,7 +355,7 @@ def test_open_slot_reloads_until_open(monkeypatch):
     booker.open_slot("18:00 - 19:00", date(2026, 10, 10))
 
     assert booker.entries == 3
-    assert booker.backs == 2
+    assert booker.backs == 3
 
 
 def test_open_slot_gives_up_after_retry_window(monkeypatch):

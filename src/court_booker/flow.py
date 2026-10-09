@@ -1,17 +1,20 @@
 """Booking flow, one method per app screen.
 
-All elements are located by accessibility label at the time of the tap; no
-coordinates are stored. ``device`` is a :class:`uiautomator2.Device` or a test
-double with the same interface.
+Each screen is read with one hierarchy dump (:class:`~court_booker.screen.Screen`),
+which lists every element with its bounds in about the time of a single element
+query. Elements are found by accessibility label in that dump and tapped at their
+coordinates, so waiting for the next screen and locating the next element are the
+same query: a step costs one dump per poll plus one tap. No coordinates are kept
+across screens. ``device`` is a :class:`uiautomator2.Device` or a test double with
+``dump_hierarchy``, ``click``, ``press``, ``swipe`` and the app calls.
 """
 
 from __future__ import annotations
 
 import logging
 import time
-import xml.etree.ElementTree as ET
 from datetime import date
-from typing import Any
+from typing import Any, Callable, Optional, TypeVar
 
 from court_booker.config import Config
 from court_booker.errors import (
@@ -24,24 +27,30 @@ from court_booker.errors import (
 from court_booker.geometry import (
     ANY_SLOT_PATTERN,
     DAY_PATTERN,
-    box_from_info,
-    center,
     day_pattern,
     is_checkbox_beside,
     month_index,
     month_index_from_label,
-    parse_bounds,
 )
+from court_booker.screen import Match, Node, Screen
 
 logger = logging.getLogger(__name__)
 
-Selector = dict[str, Any]
+T = TypeVar("T")
+Finder = Callable[[Screen], Optional[T]]
+"""Return what to act on in a screen, or ``None`` while it is not shown yet."""
 
-_POLL_INTERVAL = 0.05
+_POLL_INTERVAL = 0.02
 _NEXT_SCREEN_TIMEOUT = 2.0
 _TAP_RETRIES = 5
 _BACK_PRESSES = 8
-_HEADER_RATIO = 0.10
+_FIRST_DATE_WAIT = 1.5
+_NEXT_DATE_WAIT = 0.8
+_CHECKBOX_TIMEOUT = 0.8
+_SETTLE_TIMEOUT = 1.0
+_SWIPE_SECONDS = 0.25
+_MIN_VISIBLE_RATIO = 0.6
+"""A slot clipped to less than this share of a full slot's height is scrolled into view."""
 
 
 class Booker:
@@ -50,20 +59,22 @@ class Booker:
     def __init__(self, device: Any, config: Config) -> None:
         self.device = device
         self.config = config
+        self.last_screen = Screen([])
         self._screen_size: tuple[int, int] | None = None
 
         labels = config.labels
-        self.home = {"description": labels.home, "clickable": True}
-        self.utility = {"description": labels.utility, "clickable": True}
-        self.calendar = [
-            {"description": labels.prev_month},
-            {"descriptionContains": labels.next_month},
-            {"descriptionMatches": DAY_PATTERN},
-        ]
-        self.continue_button = {"description": labels.continue_, "clickable": True}
-        self.venue = {"descriptionContains": config.venue_keyword}
-        self.court = {"description": config.court, "clickable": True}
-        self.confirm_page = {"description": labels.confirm_page}
+        self.home = Match(desc=labels.home, clickable=True)
+        self.utility = Match(desc=labels.utility, clickable=True)
+        self.any_day = Match(pattern=DAY_PATTERN)
+        self.any_slot = Match(pattern=ANY_SLOT_PATTERN)
+        self.prev_month = Match(desc=labels.prev_month)
+        self.next_month = Match(contains=labels.next_month)
+        self.continue_button = Match(desc=labels.continue_, clickable=True)
+        self.venue = Match(contains=config.venue_keyword) if config.venue_keyword else None
+        self.court = Match(desc=config.court, clickable=True)
+        self.agree = Match(contains=labels.agree)
+        self.confirm_button = Match(desc=labels.confirm, clickable=True)
+        self.confirm_page = Match(desc=labels.confirm_page)
 
     # Public API -------------------------------------------------------------
 
@@ -82,14 +93,15 @@ class Booker:
             logger.info("Starting %s", package)
             self.device.app_start(package)
 
-        if not self.wait_for_any([self.home, self.utility], self.config.boot_timeout):
+        found = self.wait_for(self._either(self.home, self.utility), self.config.boot_timeout)
+        if found is None:
             raise AppNotReadyError(
                 f"The app did not show {self.config.labels.home!r} or "
                 f"{self.config.labels.utility!r} in {self.config.boot_timeout:.0f} s; "
                 "check that it is logged in"
             )
         try:
-            self.return_to_utilities()
+            self.return_to_utilities(found[1])
         except NavigationError as exc:
             raise AppNotReadyError(str(exc)) from exc
         logger.info("Ready on the utilities list")
@@ -97,242 +109,300 @@ class Booker:
     def book(self, slot: str, target: date, dry_run: bool = False) -> None:
         """Book ``slot`` on ``target``, starting from the home or utilities screen."""
         labels = self.config.labels
-        self.return_to_utilities()
-        self.open_slot(slot, target)
-        self.tap_and_advance(self.continue_button, labels.continue_, [self.venue, self.court])
-        if self._exists(self.venue):
-            self.tap_and_advance(self.venue, self.config.venue_keyword, [self.court])
-        self.tap_and_advance(self.court, self.config.court, [self.continue_button])
-        self.tap_and_advance(self.continue_button, labels.continue_, [self.confirm_page])
-        self.accept_and_confirm(dry_run)
+        screen = self.open_slot(slot, target)
+        court, screen = self.tap_and_advance(
+            screen, self.continue_button, labels.continue_, self._find_court
+        )
+        if self.venue is not None and not self.court(court):
+            court, screen = self.tap_and_advance(
+                screen, self.venue, self.config.venue_keyword, self._find_court
+            )
+        _, screen = self.tap_and_advance(
+            screen, self.court, self.config.court, self._finder(self.continue_button)
+        )
+        point, _ = self.tap_and_advance(
+            screen, self.continue_button, labels.continue_, self.locate_checkbox
+        )
+        self.accept_and_confirm(point, dry_run)
 
-    def open_slot(self, slot: str, target: date) -> None:
+    def open_slot(self, slot: str, target: date) -> Screen:
         """Open the calendar and select ``target`` and ``slot``.
 
-        Right at the opening time the server may not list the new date or slot
-        yet, so the calendar is left and re-entered to reload it until
-        ``open_retry_seconds`` have passed. A fully booked slot fails at once.
+        Returns the calendar screen read before the slot was tapped, which also
+        holds the continue button. Right at the opening time the server may not
+        list the new date or slot yet, so the calendar is left and re-entered to
+        reload it until ``open_retry_seconds`` have passed. A fully booked slot
+        fails at once.
         """
         deadline = time.monotonic() + self.config.open_retry_seconds
         attempt = 1
         while True:
-            self.tap_and_advance(self.utility, self.config.labels.utility, self.calendar)
+            screen = self.return_to_utilities()
+            _, screen = self.tap_and_advance(
+                screen, self.utility, self.config.labels.utility, self._find_calendar
+            )
             try:
-                self.select_date(target)
-                self.select_slot(slot)
-                return
+                self.select_date(screen, target)
+                return self.select_slot(slot)
             except ElementNotFoundError as exc:
                 if time.monotonic() >= deadline:
                     raise BookingNotOpenError(
                         f"{target.isoformat()} {slot} not open after {attempt} attempt(s): {exc}"
                     ) from exc
                 logger.info("Not open yet (%s); reloading the calendar", exc)
-            self.return_to_utilities()
             attempt += 1
 
-    def return_to_utilities(self) -> None:
+    def return_to_utilities(self, screen: Screen | None = None) -> Screen:
         """Navigate to the utilities list from the home, ticket or any inner screen."""
+        if screen is None:
+            screen = self.snapshot()
         for _ in range(_BACK_PRESSES):
-            if self._exists(self.utility):
-                return
-            if self._exists(self.home):
-                self.tap_and_advance(self.home, self.config.labels.home, [self.utility])
-                return
-            self.device.press("back")
-            self.wait_for_any([self.utility, self.home], _NEXT_SCREEN_TIMEOUT)
+            if screen.find(self.utility):
+                return screen
+            if screen.find(self.home):
+                _, screen = self.tap_and_advance(
+                    screen, self.home, self.config.labels.home, self._finder(self.utility)
+                )
+                return screen
+            self.press_back()
+            found = self.wait_for(self._either(self.utility, self.home), _NEXT_SCREEN_TIMEOUT)
+            screen = found[1] if found is not None else self.last_screen
         raise NavigationError("Could not return to the utilities list")
 
     # Navigation -------------------------------------------------------------
 
-    def tap_and_advance(self, target: Selector, name: str, next_screen: list[Selector]) -> None:
-        """Tap ``target`` as soon as it appears and wait for ``next_screen``.
+    def tap_and_advance(
+        self, screen: Screen, target: Match, name: str, find_next: Finder[T]
+    ) -> tuple[T, Screen]:
+        """Tap ``target`` on ``screen`` and return what ``find_next`` finds on the next one.
 
-        A tap swallowed by a lagging app is retried.
+        A tap swallowed by a lagging app is retried while ``target`` is still shown.
         """
-        if not self.device(**target).wait(timeout=self.config.timeout):
+        node = screen.find(target)
+        if node is None:
             raise ElementNotFoundError(f"Button not found: {name!r}")
         for attempt in range(_TAP_RETRIES):
-            if attempt == 0 or self._exists(target):
-                self.device(**target).click()
-            if self.wait_for_any(next_screen, _NEXT_SCREEN_TIMEOUT):
+            if node is not None:
+                self.tap(node)
+            found = self.wait_for(find_next, _NEXT_SCREEN_TIMEOUT)
+            if found is not None:
                 logger.info("Tapped %r", name)
-                return
-            logger.debug("Retrying tap on %r (attempt %d)", name, attempt + 2)
+                return found
+            node = self.last_screen.find(target)
+            logger.debug("Next screen missing after %r (attempt %d)", name, attempt + 2)
         raise NavigationError(f"Tapped {name!r} but the next screen did not appear")
 
-    def wait_for_any(self, selectors: list[Selector], timeout: float) -> Selector | None:
-        """Return the first selector that appears within ``timeout``, else ``None``."""
+    def wait_for(
+        self, find: Finder[T], timeout: float, screen: Screen | None = None
+    ) -> tuple[T, Screen] | None:
+        """Read the screen until ``find`` returns a value; ``None`` after ``timeout``.
+
+        ``screen``, if given, is checked first without reading the device again.
+        """
         deadline = time.monotonic() + timeout
         while True:
-            for selector in selectors:
-                if self._exists(selector):
-                    return selector
+            if screen is None:
+                screen = self.snapshot()
+            found = find(screen)
+            if found is not None:
+                return found, screen
             if time.monotonic() >= deadline:
                 return None
             time.sleep(_POLL_INTERVAL)
+            screen = None
 
     # Calendar screen --------------------------------------------------------
 
-    def select_date(self, target: date) -> None:
-        """Tap ``target`` in the calendar, switching month if needed."""
-        pattern = day_pattern(target)
+    def select_date(self, screen: Screen, target: date) -> None:
+        """Tap ``target`` in the calendar shown on ``screen``, switching month if needed."""
+        match = Match(pattern=day_pattern(target))
         target_month = month_index(target.year, target.month)
+        current: Screen | None = screen
         for attempt in range(5):
-            day = self.device(descriptionMatches=pattern)
-            if day.wait(timeout=1.5 if attempt == 0 else 0.8):
-                day.click()
+            wait = _FIRST_DATE_WAIT if attempt == 0 else _NEXT_DATE_WAIT
+            found = self.wait_for(self._finder(match), wait, current)
+            if found is not None:
+                self.tap(found[0])
                 logger.info("Selected date %s", target.isoformat())
                 return
-            shown = self._shown_month()
+            shown = self._shown_month(self.last_screen)
             forward = attempt % 2 == 0 if shown is None else shown < target_month
-            self._switch_month(forward)
+            self._switch_month(self.last_screen, forward)
+            current = None
         raise ElementNotFoundError(f"Date {target.isoformat()} is not bookable")
 
-    def select_slot(self, slot: str) -> None:
-        """Tap ``slot``, scrolling until it is fully visible."""
+    def select_slot(self, slot: str) -> Screen:
+        """Tap ``slot`` once the list shows it, scrolling only while it is hidden.
+
+        Returns the screen read before the tap.
+        """
+        match = Match(prefix=slot)
         deadline = time.monotonic() + self.config.timeout
         swipes = 0
-        while time.monotonic() < deadline:
-            element = self.device(descriptionStartsWith=slot)
-            if element.exists(timeout=0):
-                label = element.info.get("contentDescription") or ""
-                if self.config.labels.fully_booked in label:
-                    raise SlotUnavailableError(f"Slot {slot} is fully booked")
-                position = self._visibility(element)
-                if position == "visible":
-                    element.click()
-                    logger.info("Selected slot %s (%d swipe(s))", slot, swipes)
-                    return
-                scroll_down = position == "below"
-            elif self.device(descriptionMatches=ANY_SLOT_PATTERN).exists(timeout=0):
-                scroll_down = True
-            else:
-                time.sleep(0.2)
-                continue
-            if swipes >= self.config.max_swipes:
+        screen: Screen | None = None
+        while True:
+            remaining = max(0.0, deadline - time.monotonic())
+            found = self.wait_for(self._finder(self.any_slot), remaining, screen)
+            if found is None:
                 break
-            self._scroll(down=scroll_down)
+            screen = found[1]
+            node = screen.find(match)
+            if node is None:
+                down = True
+            else:
+                if self.config.labels.fully_booked in node.desc:
+                    raise SlotUnavailableError(f"Slot {slot} is fully booked")
+                position = self._visibility(screen, node)
+                if position == "visible":
+                    self.tap(node)
+                    logger.info("Selected slot %s (%d swipe(s))", slot, swipes)
+                    return screen
+                down = position == "below"
+            if swipes >= self.config.max_swipes or time.monotonic() >= deadline:
+                break
+            self._scroll(screen, down)
             swipes += 1
+            screen = self._settled_screen()
         raise ElementNotFoundError(f"Slot {slot} not found after {swipes} swipe(s)")
 
     # Confirmation screen ----------------------------------------------------
 
-    def locate_checkbox(self) -> tuple[int, int] | None:
+    def locate_checkbox(self, screen: Screen) -> tuple[int, int] | None:
         """Return the tap point of the consent checkbox, or ``None`` if not rendered.
 
-        The checkbox has no label; it is the small node beside its caption.
-        Nodes that are not level with the caption are never returned.
+        The checkbox has no label; it is the small node beside its caption,
+        preferring clickable and smaller nodes. Nodes that are not level with the
+        caption are never returned.
         """
-        caption = self.device(descriptionContains=self.config.labels.agree)
-        if not caption.exists(timeout=0):
+        caption = screen.find(self.agree)
+        if caption is None:
             return None
-        label_box = box_from_info(caption.info["bounds"])
         width, _ = self._get_screen_size()
-
-        try:
-            sibling = caption.left(clickable=True)
-        except Exception:  # uiautomator2 raises on missing neighbours
-            sibling = None
-        if sibling is not None and sibling.exists(timeout=0):
-            box = box_from_info(sibling.info["bounds"])
-            if is_checkbox_beside(box, label_box, width):
-                logger.debug("Checkbox found beside caption at %s", box)
-                return center(box)
-
-        root = ET.fromstring(self.device.dump_hierarchy(compressed=False))
-        candidates = []
-        for node in root.iter("node"):
-            box = parse_bounds(node.get("bounds", ""))
-            if box and is_checkbox_beside(box, label_box, width):
-                not_clickable = node.get("clickable") != "true"
-                area = (box[2] - box[0]) * (box[3] - box[1])
-                candidates.append(((not_clickable, area), box))
+        candidates = [
+            node for node in screen.nodes if is_checkbox_beside(node.box, caption.box, width)
+        ]
         if not candidates:
             return None
-        box = min(candidates)[1]
-        logger.debug("Checkbox found by hierarchy scan at %s", box)
-        return center(box)
+        node = min(candidates, key=lambda n: (not n.clickable, _area(n)))
+        logger.debug("Checkbox found beside caption at %s", node.box)
+        return node.center
 
-    def accept_and_confirm(self, dry_run: bool) -> None:
-        """Tick the consent checkbox and submit the booking."""
-        labels = self.config.labels
-        confirm = self.device(description=labels.confirm, clickable=True)
-        self.device(description=labels.confirm).wait(timeout=self.config.timeout)
+    def accept_and_confirm(self, point: tuple[int, int], dry_run: bool) -> None:
+        """Tick the consent checkbox at ``point`` and submit the booking.
 
+        The confirm button only becomes clickable once the box is ticked, which
+        verifies the tick.
+        """
         deadline = time.monotonic() + self.config.timeout
-        point = None
-        while time.monotonic() < deadline:
-            if point is None:
-                point = self.locate_checkbox()
-                if point is None:
-                    time.sleep(0.2)
-                    continue
-            self.device.click(*point)
-            if confirm.wait(timeout=0.8):
+        while True:
+            self.tap_point(*point)
+            found = self.wait_for(self._finder(self.confirm_button), _CHECKBOX_TIMEOUT)
+            if found is not None:
                 break
-        else:
-            if point is None:
-                raise ElementNotFoundError("Consent checkbox not found")
-            raise NavigationError("Checkbox tapped but the confirm button stayed disabled")
+            if time.monotonic() >= deadline:
+                raise NavigationError("Checkbox tapped but the confirm button stayed disabled")
+            point = self.locate_checkbox(self.last_screen) or point
         logger.info("Accepted terms")
 
         if dry_run:
             logger.info("Dry run: skipping final confirmation")
             return
-        confirm.click()
-        if not self.device(**self.confirm_page).wait_gone(timeout=self.config.timeout):
+        self.tap(found[0])
+        if self.wait_for(self._absent(self.confirm_page), self.config.timeout) is None:
             raise NavigationError("Confirmation submitted but the ticket screen did not appear")
         logger.info("Booking confirmed")
 
+    # Device commands --------------------------------------------------------
+
+    def snapshot(self) -> Screen:
+        """Read every element of the current screen with one command."""
+        self.last_screen = Screen.parse(self.device.dump_hierarchy(compressed=False))
+        return self.last_screen
+
+    def tap(self, node: Node) -> None:
+        self.tap_point(*node.center)
+
+    def tap_point(self, x: float, y: float) -> None:
+        self.device.click(x, y)
+
+    def press_back(self) -> None:
+        self.device.press("back")
+
     # Helpers ----------------------------------------------------------------
 
-    def _exists(self, selector: Selector) -> bool:
-        return bool(self.device(**selector).exists(timeout=0))
+    def _finder(self, match: Match) -> Finder[Node]:
+        return lambda screen: screen.find(match)
+
+    def _either(self, first: Match, second: Match) -> Finder[Node]:
+        return lambda screen: screen.find(first) or screen.find(second)
+
+    def _absent(self, match: Match) -> Finder[bool]:
+        return lambda screen: True if screen.find(match) is None else None
+
+    def _find_calendar(self, screen: Screen) -> Node | None:
+        return (
+            screen.find(self.any_day)
+            or screen.find(self.prev_month)
+            or screen.find(self.next_month)
+        )
+
+    def _find_court(self, screen: Screen) -> Node | None:
+        court = screen.find(self.court)
+        if court is None and self.venue is not None:
+            return screen.find(self.venue)
+        return court
 
     def _get_screen_size(self) -> tuple[int, int]:
         if self._screen_size is None:
             self._screen_size = self.device.window_size()
         return self._screen_size
 
-    def _scroll(self, down: bool) -> None:
-        width, height = self._get_screen_size()
-        start, end = (0.62, 0.38) if down else (0.38, 0.62)
-        self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, 0.25)
-        time.sleep(0.15)
-
-    def _visibility(self, element: Any) -> str:
+    def _visibility(self, screen: Screen, node: Node) -> str:
         """Return ``visible``, ``below`` or ``above`` relative to the tappable area.
 
-        The sticky bottom button counts as hidden area.
+        Dump bounds are clipped to what is shown, so a partly hidden slot is
+        shorter than a full one. The sticky bottom button counts as hidden area.
         """
         _, height = self._get_screen_size()
-        bounds = element.info["bounds"]
-        bottom_limit = height
-        button = self.device(description=self.config.labels.continue_)
-        if button.exists(timeout=0):
-            bottom_limit = min(bottom_limit, button.info["bounds"]["top"])
-        if bounds["bottom"] > bottom_limit - 4:
-            return "below"
-        if bounds["top"] < int(height * _HEADER_RATIO):
-            return "above"
-        return "visible"
+        button = screen.find(Match(desc=self.config.labels.continue_))
+        bottom_limit = button.box[1] if button is not None else height
+        full_height = max(n.height for n in screen.find_all(self.any_slot))
+        if node.box[3] <= bottom_limit and node.height >= full_height * _MIN_VISIBLE_RATIO:
+            return "visible"
+        return "below" if node.center[1] > height / 2 else "above"
 
-    def _shown_month(self) -> int | None:
-        day = self.device(descriptionMatches=DAY_PATTERN)
-        if not day.exists(timeout=0):
-            return None
-        return month_index_from_label(day.info.get("contentDescription", ""))
+    def _scroll(self, screen: Screen, down: bool) -> None:
+        width, height = self._get_screen_size()
+        start, end = (0.62, 0.38) if down else (0.38, 0.62)
+        self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, _SWIPE_SECONDS)
 
-    def _switch_month(self, forward: bool) -> None:
-        labels = self.config.labels
-        if forward:
-            button = self.device(descriptionContains=labels.next_month)
-            fallback = self.config.next_month_xy
+    def _settled_screen(self) -> Screen:
+        """Read the screen until the slot list stops moving after a swipe."""
+        deadline = time.monotonic() + _SETTLE_TIMEOUT
+        previous = None
+        while True:
+            screen = self.snapshot()
+            boxes = [node.box for node in screen.find_all(self.any_slot)]
+            if boxes == previous or time.monotonic() >= deadline:
+                return screen
+            previous = boxes
+            time.sleep(_POLL_INTERVAL)
+
+    def _shown_month(self, screen: Screen) -> int | None:
+        day = screen.find(self.any_day)
+        return None if day is None else month_index_from_label(day.desc)
+
+    def _switch_month(self, screen: Screen, forward: bool) -> None:
+        button = screen.find(self.next_month if forward else self.prev_month)
+        if button is not None:
+            self.tap(button)
         else:
-            button = self.device(description=labels.prev_month)
-            fallback = self.config.prev_month_xy
-        if button.exists(timeout=0):
-            button.click()
-        else:
-            self.device.click(*fallback)
+            x_ratio, y_ratio = self.config.next_month_xy if forward else self.config.prev_month_xy
+            width, height = self._get_screen_size()
+            self.tap_point(width * x_ratio, height * y_ratio)
         logger.debug("Switched to %s month", "next" if forward else "previous")
+
+
+def _area(node: Node) -> int:
+    left, top, right, bottom = node.box
+    return (right - left) * (bottom - top)
