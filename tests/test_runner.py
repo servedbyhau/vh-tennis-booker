@@ -8,6 +8,7 @@ from court_booker.errors import SlotUnavailableError
 class FakeBooker:
     def __init__(self, device, config):
         self.booked = []
+        self.commands = 0
 
     def prepare(self):
         pass

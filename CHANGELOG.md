@@ -17,6 +17,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - A court labelled as fully booked fails the round with a clear message.
+- The debug log counts device commands per round.
 
 ### Fixed
 - The screen size is read from the hierarchy dump; `window_size()` reported (960, 540)

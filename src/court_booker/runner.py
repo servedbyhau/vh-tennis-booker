@@ -82,6 +82,7 @@ def run_booking(
     for index, slot in enumerate(config.slots, start=1):
         logger.info("Round %d/%d: %s", index, len(config.slots), slot)
         started = time.perf_counter()
+        commands = booker.commands
         try:
             booker.book(slot, target, dry_run=dry_run)
         except BookingError as exc:
@@ -93,4 +94,5 @@ def run_booking(
         else:
             detail = "dry run passed" if dry_run else "booked"
             results.append(RoundResult(slot, True, detail, time.perf_counter() - started))
+        logger.debug("Round %d used %d device commands", index, booker.commands - commands)
     return results

@@ -59,6 +59,8 @@ class Booker:
     def __init__(self, device: Any, config: Config) -> None:
         self.device = device
         self.config = config
+        self.commands = 0
+        """Device commands sent so far; each is a round trip to the emulator."""
         self.last_screen = Screen([])
 
         labels = config.labels
@@ -318,6 +320,7 @@ class Booker:
 
     def snapshot(self) -> Screen:
         """Read every element of the current screen with one command."""
+        self.commands += 1
         self.last_screen = Screen.parse(self.device.dump_hierarchy(compressed=False))
         return self.last_screen
 
@@ -325,9 +328,11 @@ class Booker:
         self.tap_point(*node.center)
 
     def tap_point(self, x: float, y: float) -> None:
+        self.commands += 1
         self.device.click(x, y)
 
     def press_back(self) -> None:
+        self.commands += 1
         self.device.press("back")
 
     # Helpers ----------------------------------------------------------------
@@ -371,6 +376,7 @@ class Booker:
     def _scroll(self, screen: Screen, down: bool) -> None:
         width, height = screen.size
         start, end = (0.62, 0.38) if down else (0.38, 0.62)
+        self.commands += 1
         self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, _SWIPE_SECONDS)
 
     def _settled_screen(self) -> Screen:

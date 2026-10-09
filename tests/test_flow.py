@@ -207,6 +207,9 @@ def test_book_reads_each_screen_once_and_taps_by_coordinates():
 
     assert app.taps == FULL_ROUND
     assert app.screen == "ticket"
+    # 8 taps plus one read per screen: start, calendar, slots, courts, details,
+    # confirmation, enabled confirm button, ticket.
+    assert booker.commands == 16
 
 
 def test_book_waits_for_slow_slot_list():
