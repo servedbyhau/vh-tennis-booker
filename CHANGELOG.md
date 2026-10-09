@@ -6,6 +6,22 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Each screen is read with one hierarchy dump; waiting for a screen and locating its
+  elements is the same read, and taps use the coordinates from it. A round now costs about
+  16 device commands instead of about 50; a timed dry run reached the accepted terms in
+  5.9 s instead of 8.7 s.
+- Waits poll from the client every 20 ms; no device-side waits or fixed sleeps.
+- A slot is scrolled to only when it is not shown; the recommended MuMu resolution of
+  540x1600 shows the whole slot list.
+
+### Added
+- A court labelled as fully booked fails the round with a clear message.
+
+### Fixed
+- The screen size is read from the hierarchy dump; `window_size()` reported (960, 540)
+  when MuMu ran a tablet resolution, which made scrolling use a 540 px tall screen.
+
 ## [0.2.0] - 2026-10-08
 
 ### Changed
