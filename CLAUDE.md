@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Last updated: 2026-10-08.
+Last updated: 2026-10-09.
 
 ## Commands
 
@@ -128,7 +128,8 @@ instance 0); `control -v 0 launch` starts it. MuMu ships its own `adb.exe` in th
 | Version | Scope |
 |---|---|
 | 0.2.0 Unattended | Start MuMu; ADB auto-connect; prepare app on screen 2; `--at` timed start with NTP offset; opening retry; keep awake; log file; Telegram summary; Task Scheduler install with wake; tests |
-| 0.3.0 Hardening | Based on real 06:00 runs: timing measurements, faster taps, failure handling, health check before the start time |
+| 0.3.0 Fast rounds | Spec `docs/specs/0.3.0-fast-rounds.md`: MuMu 540x1600; one dump per screen, taps by coordinates, entry located before the start, command count (PRs `feat/screen-dump`, `refactor/flow-dump-taps`, `feat/locate-entry`); then health check before the start time and `schedule install --dry-run` |
+| later | Several MuMu instances with separate accounts in parallel (one account cannot log in twice) |
 
 Deferred (previous plan, revisit after 0.3.0): FastAPI backend with WebSocket progress, React +
 TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and release automation.
@@ -144,6 +145,7 @@ TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and relea
 
 ## Next step
 
-0.3.0 hardening, driven by the logs of real 06:00 runs. Candidates: a `schedule install
---dry-run` option, faster slot selection (1-2 s per round now), a health check before the
-start time, and handling a slot taken by someone else.
+Finish 0.3.0: merge the fast-rounds PRs after a real 06:00 run, then a health check before the
+start time and `schedule install --dry-run`. Ruled out on 2026-10-09: opening the calendar
+before 06:00, two slots in one booking, pre-recorded coordinates (no faster than reading the
+screen, which is needed anyway to know it appeared).
