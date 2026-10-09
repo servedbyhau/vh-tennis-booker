@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-09
+
 ### Changed
 - Each screen is read with one hierarchy dump; waiting for a screen and locating its
   elements is the same read, and taps use the coordinates from it. A round now costs about
