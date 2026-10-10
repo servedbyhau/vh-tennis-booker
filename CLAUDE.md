@@ -211,8 +211,9 @@ Telegram setup (the optional code stays) and no run history file until the app s
 
 ## Next step
 
-Work happens on `release/0.4.0`. Start 0.4.0 with the situations that matter most; proposed
-order: Telegram for every result and failure, a health check at about 05:58 (logged in, right
-screen, MuMu at 540x1600), then fallback slots and courts. Ruled out on 2026-10-09: opening the calendar
-before 06:00, two slots in one booking, pre-recorded coordinates (no faster than reading the
-screen, which is needed anyway to know it appeared).
+Work happens on `release/0.4.0`. Read the log after each 06:00 run and fix what fails, one
+branch per problem. Make sure a failure leaves enough in the log to fix it from one run: the
+next-month case only occurs twice a month (first on 2026-10-30). Ruled out on 2026-10-09:
+opening the calendar before 06:00, two slots in one booking, pre-recorded coordinates (no
+faster than reading the screen, which is needed anyway to know it appeared). Ruled out on
+2026-10-10: health check, fallback slots and courts, Telegram setup, run history file.
