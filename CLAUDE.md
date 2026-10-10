@@ -125,6 +125,10 @@ the next round starts.
 - Outside 06:00-21:00, tapping "Sân Tennis" opens a dialog "Thông báo": "Ban quản lý BQL Grand
   Park chỉ nhận đăng ký Sân Tennis từ 06:00 đến 21:00 mỗi ngày" with a "Đóng" button; it hides
   the utilities list. The 06:00:00.0 tap of 0.3.0 did not trigger it on 2026-10-10.
+- Each apartment may book 8 slots per month (1 hour = 1 slot). Once they are used, tapping
+  "Tiếp tục" on the calendar opens a dialog "Thông báo": "Căn hộ đã hết hạn mức đăng ký tiện
+  ích cho phép." with a "Đóng" button (seen 2026-10-10); the round then fails after the
+  re-taps with "Tapped 'Tiếp tục' but the next screen did not appear".
 - The MuMu clock follows the PC clock (+15 ms measured); the NTP offset of the PC varies
   (+0.035 to +0.144 s).
 
