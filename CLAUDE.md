@@ -64,9 +64,12 @@ out of scope.
   (imported lazily so tests do not need it). `runner.run_booking`: `Booker.prepare()`,
   `wait_until(start - LOCATE_AHEAD)`, `Booker.locate_entry()`, `wait_until(start)`, then one
   round per slot; a `BookingError` (or any exception) fails that round only. Results are
-  appended to a caller-owned list; the debug log counts device commands per round.
+  appended to a caller-owned list; the debug log counts device commands per round. When a
+  round, `prepare()` or `locate_entry()` fails, `log_last_screen` writes `Booker.last_screen`
+  to the debug log, so a failure seen once at 06:00 can be fixed from the log alone.
 - `screen.Screen` parses one `dump_hierarchy` into `Node`s (label, visible bounds, clickable);
   `screen.Match` (desc / prefix / contains / full-match pattern / clickable) is applied locally.
+  `Screen.describe()` gives one log line per labelled or clickable node (bounds, label).
 - `flow.Booker` builds `Match`es from `config.labels` in `__init__`. The device is only used
   through `snapshot()` (one dump), `tap()`/`tap_point()` (`device.click(x, y)`), `press_back()`
   and `_scroll()`; each increments `commands`. `wait_for(find, timeout, screen=None)` reads the
@@ -108,6 +111,10 @@ the next round starts.
   is wait + info + click.
 - App/server time: calendar 0.14 s after "Sân Tennis", slot list ~2.1 s after the date tap,
   court list 1.5-2.0 s, details 0.5 s, confirmation 0.14 s.
+- Calendar at 540x1600 (failure log, 2026-10-10): two non-clickable nodes labelled
+  `"Chọn năm"` at `[22,160][170,229]` and `[177,160][285,229]`, then a day grid from y=344;
+  no node labelled "Tháng sau"/"Tháng trước" and no clickable unlabelled node near the
+  `next_month_xy` fallback point. How the app shows next-month days is unknown until 30/10.
 - Day label format: `"2, Thứ Sáu, 2 tháng 10, 2026"`. Slot: `"09:00 - 10:00"`;
   full slot: `"18:00 - 19:00\nHết chỗ"`. Bookable range: today to today + 2.
 - Consent checkbox has no label and `checkable=false`: it is the clickable View left of the
