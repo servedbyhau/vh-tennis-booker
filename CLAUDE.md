@@ -125,6 +125,10 @@ the next round starts.
 - Outside 06:00-21:00, tapping "Sân Tennis" opens a dialog "Thông báo": "Ban quản lý BQL Grand
   Park chỉ nhận đăng ký Sân Tennis từ 06:00 đến 21:00 mỗi ngày" with a "Đóng" button; it hides
   the utilities list. The 06:00:00.0 tap of 0.3.0 did not trigger it on 2026-10-10.
+- Each apartment may book 8 slots per month (1 hour = 1 slot). Once they are used, tapping
+  "Tiếp tục" on the calendar opens a dialog "Thông báo": "Căn hộ đã hết hạn mức đăng ký tiện
+  ích cho phép." with a "Đóng" button (seen 2026-10-10); the round then fails after the
+  re-taps with "Tapped 'Tiếp tục' but the next screen did not appear".
 - The MuMu clock follows the PC clock (+15 ms measured); the NTP offset of the PC varies
   (+0.035 to +0.144 s).
 
@@ -187,7 +191,7 @@ Telegram setup (the optional code stays) and no run history file until the app s
 | Booking | Court fully booked | Round fails; no fallback court (by decision) |
 | Booking | Slot taken by someone else at "Xác nhận" | Not handled |
 | Booking | Target date in the next month | Code exists; untested since 0.3.0. Only testable on the last two days of a month (30/10 → 1/11, 31/10 → 2/11): the calendar does not switch to a month without bookable days |
-| Booking | Booking limit per account | Unknown whether the app has one |
+| Booking | Booking limit per account | 8 slots per apartment per month; not handled by decision (users track their own quota), the log shows the dialog |
 | Device | MuMu not running / frozen | Started automatically / not handled |
 | Device | ADB lost during a run | Not handled |
 | Device | Wrong MuMu resolution | Works but scrolls; no warning |
