@@ -64,9 +64,12 @@ out of scope.
   (imported lazily so tests do not need it). `runner.run_booking`: `Booker.prepare()`,
   `wait_until(start - LOCATE_AHEAD)`, `Booker.locate_entry()`, `wait_until(start)`, then one
   round per slot; a `BookingError` (or any exception) fails that round only. Results are
-  appended to a caller-owned list; the debug log counts device commands per round.
+  appended to a caller-owned list; the debug log counts device commands per round. When a
+  round, `prepare()` or `locate_entry()` fails, `log_last_screen` writes `Booker.last_screen`
+  to the debug log, so a failure seen once at 06:00 can be fixed from the log alone.
 - `screen.Screen` parses one `dump_hierarchy` into `Node`s (label, visible bounds, clickable);
   `screen.Match` (desc / prefix / contains / full-match pattern / clickable) is applied locally.
+  `Screen.describe()` gives one log line per labelled or clickable node (bounds, label).
 - `flow.Booker` builds `Match`es from `config.labels` in `__init__`. The device is only used
   through `snapshot()` (one dump), `tap()`/`tap_point()` (`device.click(x, y)`), `press_back()`
   and `_scroll()`; each increments `commands`. `wait_for(find, timeout, screen=None)` reads the
