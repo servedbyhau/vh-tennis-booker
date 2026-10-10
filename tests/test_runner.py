@@ -3,9 +3,11 @@
 import logging
 from datetime import datetime
 
+import pytest
+
 import court_booker.runner as runner
 from court_booker.config import Config
-from court_booker.errors import SlotUnavailableError
+from court_booker.errors import AppNotReadyError, SlotUnavailableError
 from court_booker.screen import Node, Screen
 
 FULL_SLOT = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
@@ -79,3 +81,17 @@ def test_failed_round_logs_the_last_screen(monkeypatch, caplog):
         "  [38,1178][263,1262] clickable '18:00 - 19:00\\nHết chỗ'",
     ]
     assert messages.count("Last screen read (1 elements):") == 1
+
+
+def test_failed_preparation_logs_the_last_screen(monkeypatch, caplog):
+    class LoggedOutBooker(FakeBooker):
+        def prepare(self):
+            raise AppNotReadyError("The app did not show 'Tiện ích'")
+
+    monkeypatch.setattr(runner, "Booker", LoggedOutBooker)
+    caplog.set_level(logging.DEBUG, logger="court_booker")
+
+    with pytest.raises(AppNotReadyError):
+        runner.run_booking(FakeDevice(), Config(slots=["19:00 - 20:00"]))
+
+    assert "Last screen read (1 elements):" in caplog.text

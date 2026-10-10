@@ -82,12 +82,15 @@ def run_booking(
     """
     results = [] if results is None else results
     booker = Booker(device, config)
-    booker.prepare()
-
-    if start is not None:
-        wait_until(start - LOCATE_AHEAD, offset)
-        booker.locate_entry()
-        wait_until(start, offset)
+    try:
+        booker.prepare()
+        if start is not None:
+            wait_until(start - LOCATE_AHEAD, offset)
+            booker.locate_entry()
+            wait_until(start, offset)
+    except Exception:  # the caller logs the error itself
+        log_last_screen(booker)
+        raise
     target = (start or datetime.now()).date() + timedelta(days=config.days_ahead)
     logger.info(
         "Target date %s, slots: %s%s",
