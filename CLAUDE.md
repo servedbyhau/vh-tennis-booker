@@ -167,8 +167,8 @@ it decides the 06:00 race. There is no 0.3.1: its candidate fixes were judged to
 | 1 Runs | 0.2.0 Unattended | Start MuMu, ADB auto-connect, timed start with NTP offset, opening retry, keep awake, log file, Telegram summary, Task Scheduler with wake (released) |
 | 3 Fast | 0.3.0 Fast rounds | MuMu 540x1600, one dump per screen, taps by coordinates, entry located before the start, command count (released 2026-10-09, verified at 06:00 on 2026-10-10) |
 | 2 Every situation | **0.4.0 Hardening** | The situations below |
-| 3 Fast | 0.5.0 | Tuning from run history; several MuMu instances with separate accounts in parallel (one account cannot log in twice) |
-| 4 UI | 0.6.0+ | FastAPI backend with WebSocket progress, React + TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and release automation |
+| 3 Fast | 0.5.0 | Tuning from the log files; several MuMu instances with separate accounts in parallel (one account cannot log in twice) |
+| 4 UI | 0.6.0+ | FastAPI backend with WebSocket progress, run history stored by the app, React + TypeScript UI, Tauri desktop shell with PyInstaller sidecar, installer and release automation |
 
 0.4.0 situations ("done" = handled, or at least reported clearly in the log file). Decided on
 2026-10-10: 0.4.0 fixes failures as they show up in the log; no health check before 06:00,
