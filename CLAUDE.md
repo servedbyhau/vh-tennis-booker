@@ -111,6 +111,10 @@ the next round starts.
   is wait + info + click.
 - App/server time: calendar 0.14 s after "Sân Tennis", slot list ~2.1 s after the date tap,
   court list 1.5-2.0 s, details 0.5 s, confirmation 0.14 s.
+- Calendar at 540x1600 (failure log, 2026-10-10): two non-clickable nodes labelled
+  `"Chọn năm"` at `[22,160][170,229]` and `[177,160][285,229]`, then a day grid from y=344;
+  no node labelled "Tháng sau"/"Tháng trước" and no clickable unlabelled node near the
+  `next_month_xy` fallback point. How the app shows next-month days is unknown until 30/10.
 - Day label format: `"2, Thứ Sáu, 2 tháng 10, 2026"`. Slot: `"09:00 - 10:00"`;
   full slot: `"18:00 - 19:00\nHết chỗ"`. Bookable range: today to today + 2.
 - Consent checkbox has no label and `checkable=false`: it is the clickable View left of the
