@@ -23,7 +23,7 @@ def task(monkeypatch, context):
     """A fake Task Scheduler with the task off, and the time set to the evening."""
     state = {"installed": False, "calls": []}
 
-    def install(config_path, wake_at, run=None, python=None, user=None, today=None):
+    def install(config_path, wake_at, run=None, engine=None, user=None, today=None):
         state["calls"].append(("install", config_path, wake_at))
         state["installed"] = True
 

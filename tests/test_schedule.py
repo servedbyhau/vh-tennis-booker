@@ -12,13 +12,14 @@ from court_booker.errors import ScheduleError
 
 NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 PYTHON = Path("C:/Python/pythonw.exe")
+APP = Path("C:/Users/Hau/AppData/Local/Court Booker/court-booker.exe")
 CONFIG = Path("D:/VH-Booker/vh-tennis-booker/config.toml")
 
 
 def build(**overrides):
     kwargs = {
         "wake_at": "05:45",
-        "python": PYTHON,
+        "engine": [str(PYTHON), "-m", "court_booker"],
         "config_path": CONFIG,
         "user": r"PC\Hau",
         "today": date(2026, 10, 8),
@@ -51,6 +52,25 @@ def test_task_runs_scheduled_booking_with_absolute_config():
     assert Path(text(root, ".//t:Exec/t:WorkingDirectory")) == CONFIG.parent
 
 
+def test_the_packaged_app_runs_itself_without_python_arguments():
+    root = build(engine=[str(APP)])
+    assert Path(text(root, ".//t:Exec/t:Command")) == APP
+    assert text(root, ".//t:Exec/t:Arguments") == f'--config "{CONFIG}" --scheduled'
+
+
+def test_install_uses_the_windowless_engine_by_default(monkeypatch):
+    monkeypatch.setattr(schedule, "engine_command", lambda *, windowless: [f"w={windowless}"])
+    calls = []
+
+    def run(argv):
+        calls.append(Path(argv[argv.index("/XML") + 1]).read_text(encoding="utf-16"))
+        return subprocess.CompletedProcess(argv, 0, stdout="SUCCESS", stderr="")
+
+    schedule.install(CONFIG, "05:45", run=run, user=r"PC\Hau")
+
+    assert "<Command>w=True</Command>" in calls[0]
+
+
 def test_special_characters_are_escaped():
     root = build(user=r"R&D\Hau")
     assert text(root, ".//t:UserId") == r"R&D\Hau"
@@ -64,7 +84,7 @@ def test_install_passes_utf16_xml_to_schtasks():
         calls.append((argv, xml_path.read_text(encoding="utf-16")))
         return subprocess.CompletedProcess(argv, 0, stdout="SUCCESS", stderr="")
 
-    schedule.install(CONFIG, "05:45", run=run, python=PYTHON, user=r"PC\Hau")
+    schedule.install(CONFIG, "05:45", run=run, engine=[str(PYTHON)], user=r"PC\Hau")
 
     argv, xml = calls[0]
     assert argv[:4] == ["schtasks", "/Create", "/TN", "court-booker"]
