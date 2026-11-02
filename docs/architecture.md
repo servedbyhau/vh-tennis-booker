@@ -148,6 +148,10 @@ Details live in the docstrings; this page says where things are and what must st
 ## Backend (`court_booker.api`)
 
 `create_app(AppContext)`; `court-booker serve` listens on 127.0.0.1:8765, docs at `/api/docs`.
+With a built UI in `court_booker/ui` beside the code, as in the packaged app, it serves that too
+(`api/ui.py`), so the window has one origin and needs no CORS: `/api` and the live feed win, and
+any other address that is no file answers `index.html`. In development the folder is absent and
+Vite serves the UI.
 `cli.serve` imports it lazily, so a run never loads FastAPI. Route modules skip
 `from __future__ import annotations` and use `Optional` (Python 3.9 evaluates them).
 `CourtBookerError`s become `Problem` JSON with an `error` code (409 `lock_held`, 400

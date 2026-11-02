@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
@@ -21,6 +22,7 @@ from court_booker.api import (
 )
 from court_booker.api.context import AppContext
 from court_booker.api.errors import Problem, add_error_handlers
+from court_booker.api.ui import ui_router
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     422: {"model": Problem, "description": "Invalid request values, one line per value"},
@@ -36,8 +38,11 @@ class Health(BaseModel):
     version: str
 
 
-def create_app(context: AppContext) -> FastAPI:
-    """Return the backend for ``context``; its OpenAPI schema is at ``/api/openapi.json``."""
+def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
+    """Return the backend for ``context``; its OpenAPI schema is at ``/api/openapi.json``.
+
+    With ``ui_folder``, a built UI, it serves that UI too; without it only ``/api``.
+    """
     app = FastAPI(
         title="Court Booker",
         version=__version__,
@@ -56,4 +61,6 @@ def create_app(context: AppContext) -> FastAPI:
     for module in (history, settings, accounts, notifications, setup, schedule, runs, status):
         app.include_router(module.router, responses=ERROR_RESPONSES)
     app.include_router(live.router)
+    if ui_folder is not None:
+        app.include_router(ui_router(ui_folder))  # last: it answers every other address
     return app

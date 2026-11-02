@@ -17,6 +17,8 @@ logger = logging.getLogger(LOGGER_NAME)
 HOST = "127.0.0.1"
 """Only this PC can reach the backend; it has no login."""
 DEFAULT_PORT = 8765
+UI_FOLDER = Path(__file__).resolve().parent.parent / "ui"
+"""The built UI, beside the code in the packaged app; absent from the sources."""
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,6 +33,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="show debug output")
     return parser
+
+
+def built_ui(folder: Path) -> Path | None:
+    """Return ``folder`` if it holds a built UI: in development Vite serves the UI instead."""
+    return folder if (folder / "index.html").is_file() else None
 
 
 def main(argv: list[str]) -> int:
@@ -49,7 +56,7 @@ def main(argv: list[str]) -> int:
         "Backend on http://%s:%d, config %s, data %s", HOST, args.port, config_path, data.root
     )
     uvicorn.run(
-        create_app(AppContext(config_path, data)),
+        create_app(AppContext(config_path, data), ui_folder=built_ui(UI_FOLDER)),
         host=HOST,
         port=args.port,
         log_level="info" if args.verbose else "warning",
