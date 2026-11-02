@@ -269,7 +269,7 @@ export interface paths {
          *     Switching on needs a passed dry run (409 ``dry_run_required``) and a wake time before
          *     the start time (400 ``bad_request``). It installs the task again each time, so a new
          *     wake time applies, and allows wake timers; ``wake_blocked`` in the Overview tells when
-         *     Windows still keeps them off. The task runs the Python of this backend; in development, the
+         *     Windows still keeps them off. The task runs the engine of this backend; in development, the
          *     runner folder keeps its task through ``tools/setup_runner.py`` instead.
          */
         put: operations["switch_schedule_api_schedule_put"];
