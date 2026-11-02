@@ -13,6 +13,10 @@ dist/
 node_modules/
 *.tsbuildinfo
 
+# Desktop shell (Rust)
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+
 # Personal config and device captures (may contain personal data)
 config.toml
 dump.xml

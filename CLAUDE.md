@@ -88,7 +88,7 @@ npm run api:types                                    # src/api/schema.d.ts from 
 - Never commit `config.toml`, UI dumps, or screenshots of the Vinhomes app or of real data
   (they may hold personal data; the repo is public). The only images in the repo are the
   README's screenshots of this project's UI with made-up data, in `docs/img/` (English
-  UI, 1280 wide, under 200 KB each).
+  UI, 1280 wide, under 200 KB each), and the app's icon (`tools/build_icon.py`).
 - All code, comments, logs, commits and docs in English; app labels stay in the app's
   language (Vietnamese in the config, English built into `app_language.py`). Docs are
   written for a newcomer (CONTRIBUTING, "Writing"). Type hints, short imperative
@@ -146,6 +146,9 @@ npm run api:types                                    # src/api/schema.d.ts from 
 - `api/`: FastAPI backend (`court-booker serve`, 127.0.0.1:8765); errors become `Problem`
   JSON with an `error` code. `api/ui.py` serves the built UI in the packaged app.
 
+`desktop/` (Tauri 2, Rust): the window. It starts the packaged backend, or uses one that already
+answers, and shows the page the backend serves; `packaging/` holds the PyInstaller spec.
+
 `ui/src` (React 19, strict TypeScript, Vite): `pages/`, `components/`, `styles/` (tokens),
 `i18n/` (Vietnamese default, English), `api/` (generated types, client, React Query hooks,
 live feed), `booking.ts` (slots, and the choices read from the generated `catalog.json`).
@@ -191,7 +194,8 @@ Utilities list. Details, labels and their dates are in `docs/field-notes.md`.
 - CI (GitHub Actions): `lint` (ruff check + format), `test` (Python 3.9, 3.11, 3.12, 3.13,
   3.14), `driver` (build the Android sources with JDK 21 and SDK 35), and `ui` (Node 22:
   `npm ci`, generated API type check, typecheck, lint, format check, test, build); the `Tag`
-  workflow tags each push to `main` with its version. Ruff's version is pinned once, in
+  workflow tags each push to `main` with its version; the `Desktop` workflow builds the NSIS
+  installer on Windows for `main` and `feat/desktop-*`. Ruff's version is pinned once, in
   `pyproject.toml` (CI reads it; pre-commit runs the installed Ruff, a test checks). Tooling:
   pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF), Dependabot, PR and
   issue templates.

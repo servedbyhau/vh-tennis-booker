@@ -145,6 +145,15 @@ Details live in the docstrings; this page says where things are and what must st
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the
   engine of whatever installed it: the runner folder's Python, or the packaged app.
 
+## Desktop window (`desktop/`)
+
+A Tauri shell around the backend, built by the `Desktop` workflow; the PyInstaller folder
+(`packaging/court-booker.spec`, `tools/build_app.py`) is one of its resources. It shows a waiting
+page, starts `court-booker.exe serve` without a window, waits for `/api/health` and moves on to the
+backend's page. A backend that already answers is used as it is, and only a backend started here
+is stopped on leaving. It must stay true that nothing about a booking runs in the window: the daily
+task runs `court-booker.exe` alone, with the window closed.
+
 ## Backend (`court_booker.api`)
 
 `create_app(AppContext)`; `court-booker serve` listens on 127.0.0.1:8765, docs at `/api/docs`.
