@@ -17,6 +17,15 @@ Build the installer, install it as a resident would, and let the task it sets bo
 **0.19.0**. Packaging order and open points: the [spec](../specs/0.5.0-desktop-app.md),
 "Packaging".
 
+### State
+
+The four branches below are pushed, stacked in that order, and not merged: `feat/engine-command`,
+`feat/serve-built-ui`, `feat/pyinstaller-build`, `feat/desktop-shell`. The PyInstaller folder is
+proven without Python: `--version`, `serve`, the UI in a browser, and dry runs from the UI's route
+with both drivers, which met the closed-hours notice and showed the notification. What is left
+starts at the rehearsal. The `Desktop` workflow builds the installer from `feat/desktop-shell`:
+`gh run download <run> -n court-booker-installer`.
+
 ### What shapes the plan
 
 - **The app is closed from 21:00 to 06:00**, so no dry run or booking can pass tonight. The
@@ -70,7 +79,9 @@ If the shell is not building by 03:30, drop it for tonight: a shortcut to the Py
 1. Stop any development backend: the port is fixed.
 2. Install from the downloaded installer; open the app from the Start menu.
 3. Choose the same slots, subdivision, sport and court as the development `config.toml`, on the
-   ticket, then compare the data folder's `config.toml` with it.
+   ticket, then compare the data folder's `config.toml` with it. Two keys differ and the UI sets
+   neither, so set them by hand: `wake_at = "05:50"` (the default is 05:45) and
+   `notification_language = "en"`.
 4. Run a dry run from the UI. It must start MuMu and the driver, tap the utility and meet the
    closed-hours notice, then fail as "not open yet"; the live steps, History and the log must
    show it, with no console window. Shut MuMu down afterwards.
