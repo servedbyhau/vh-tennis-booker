@@ -129,6 +129,8 @@ npm run api:types                                    # src/api/schema.d.ts from 
   `--instance N` process.
 - `runner.py` connects the device (`emulator.py`, `adb.py`, `driver.py` with uiautomator2 as
   fallback) and runs the rounds; `watchdog.py` limits every device call to 60 s.
+- `engine.py` says how to start the engine (the packaged exe alone, else `python -m`); the
+  dry run, a second instance and the daily task all use it.
 - `driver.py` talks to the instrumentation APK built from `android/` by
   `tools/build_driver.py` (committed in `src/court_booker/assets/`).
 - `flow.py` `Booker`: the booking flow; device use only through `snapshot()`, `tap()`,
