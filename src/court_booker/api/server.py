@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sys
 from pathlib import Path
+from typing import Any
 
 from court_booker.api.app import create_app
 from court_booker.api.context import AppContext
@@ -55,10 +57,17 @@ def main(argv: list[str]) -> int:
     logger.info(
         "Backend on http://%s:%d, config %s, data %s", HOST, args.port, config_path, data.root
     )
+    log_config: dict[str, Any] | None = uvicorn.config.LOGGING_CONFIG
+    if sys.stdout is None:
+        # The packaged app has no console: uvicorn's formatter would fail on it, and only the
+        # log file can show the backend's errors.
+        log_config = None
+        logging.getLogger("uvicorn").handlers[:] = logger.handlers
     uvicorn.run(
         create_app(AppContext(config_path, data), ui_folder=built_ui(UI_FOLDER)),
         host=HOST,
         port=args.port,
         log_level="info" if args.verbose else "warning",
+        log_config=log_config,
     )
     return 0

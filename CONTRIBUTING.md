@@ -159,6 +159,22 @@ a week.
    python tools/setup_runner.py vX.Y.Z
    ```
 
+## Packaged app
+
+`tools/build_app.py` builds the UI, then `packaging/court-booker.spec` the PyInstaller folder
+`dist/court-booker`: the app without Python. Build it in a virtual environment of its own, so
+nothing else on the PC ends up in the folder:
+
+```bash
+python -m venv <folder>
+<folder>/Scripts/python -m pip install -e ".[app,build]"
+<folder>/Scripts/python tools/build_app.py
+```
+
+The app has no console, so its output shows only when redirected
+(`dist/court-booker/court-booker.exe --version > version.txt`); the rest goes to the log file.
+Try it with Python off the `PATH` and with `COURT_BOOKER_HOME` set to a scratch folder.
+
 ## Runner folder
 
 The daily scheduled task books for real, so it never runs the development checkout. It runs
