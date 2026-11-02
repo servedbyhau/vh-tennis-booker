@@ -17,6 +17,8 @@ uses [Semantic Versioning](https://semver.org/).
   address that is no file opens the UI; development without a build serves `/api` alone.
 - `tools/build_app.py` builds the UI, then `packaging/court-booker.spec` the PyInstaller folder
   that runs without Python, with no console: then the backend logs to its file.
+- `desktop/` is the app's window (Tauri): it starts the packaged backend, or uses one that already
+  answers, and shows its page. The `Desktop` workflow builds the per-user NSIS installer.
 
 ### Changed
 - The roadmap and field notes record real BS and two-instance bookings on 2026-11-01, and

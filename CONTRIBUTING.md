@@ -175,6 +175,12 @@ The app has no console, so its output shows only when redirected
 (`dist/court-booker/court-booker.exe --version > version.txt`); the rest goes to the log file.
 Try it with Python off the `PATH` and with `COURT_BOOKER_HOME` set to a scratch folder.
 
+The window lives in `desktop/` (Tauri, Rust). The `Desktop` workflow builds the NSIS installer on
+a Windows runner, which has Rust and the MSVC tools, for `main` and `feat/desktop-*`; fetch it with
+`gh run download <run> -n court-booker-installer`. Building it locally needs both, and the
+PyInstaller folder first: `npm ci`, then `npx tauri build` in `desktop/`. The icon is committed;
+`tools/build_icon.py` draws it again.
+
 ## Runner folder
 
 The daily scheduled task books for real, so it never runs the development checkout. It runs

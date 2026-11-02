@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Court Booker</title>
+    <style>
+      body {
+        align-items: center;
+        background: #e7e6e1;
+        color: #1c1b19;
+        display: flex;
+        font-family: "Segoe UI", sans-serif;
+        font-size: 18px;
+        height: 100vh;
+        justify-content: center;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="status">Đang mở Court Booker…</p>
+    <script>
+      // Called by the window when the backend does not start.
+      function showFailure() {
+        document.getElementById("status").textContent =
+          "Không mở được Court Booker. Hãy đóng cửa sổ này và mở lại.";
+      }
+    </script>
+  </body>
+</html>

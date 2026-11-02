@@ -45,6 +45,8 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - The runner stays until the desktop app exists, and moves only at a release. Packaging the
   desktop app is the last step before 1.0.0.
 - Choosing days of the week: later, not decided.
+- The app is one PyInstaller folder inside a per-user NSIS installer, and the backend serves the
+  built UI. The installer is built by the `Desktop` workflow, as this PC has no Rust.
 - No GitHub Release pages. Releases go ahead without asking again.
 - Accounts, quotas, re-logins and adding instances to `config.toml` are the user's job.
 - Test tickets booked during development are cancelled by the user.
