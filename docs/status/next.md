@@ -22,9 +22,13 @@ Build the installer, install it as a resident would, and let the task it sets bo
 The four branches below are pushed, stacked in that order, and not merged: `feat/engine-command`,
 `feat/serve-built-ui`, `feat/pyinstaller-build`, `feat/desktop-shell`. The PyInstaller folder is
 proven without Python: `--version`, `serve`, the UI in a browser, and dry runs from the UI's route
-with both drivers, which met the closed-hours notice and showed the notification. What is left
-starts at the rehearsal. The `Desktop` workflow builds the installer from `feat/desktop-shell`:
-`gh run download <run> -n court-booker-installer`.
+with both drivers, which met the closed-hours notice and showed the notification. The installed
+window, in a scratch folder, was proven too: it starts the backend, moves to its page, a second
+start brings the same window back, leaving stops only a backend it started, and the uninstaller
+leaves the data folder alone. The real task was not touched and still runs the runner. What is
+left starts at the rehearsal, with the installer in `D:\VH-Booker\dev-tools\installer\final\`. The
+`Desktop` workflow builds it from `feat/desktop-shell`: `gh run download <run> -n
+court-booker-installer`.
 
 ### What shapes the plan
 
