@@ -3,7 +3,7 @@
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
 use std::os::windows::process::CommandExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use std::thread;
@@ -27,7 +27,7 @@ pub struct Backend(Mutex<Option<Child>>);
 impl Backend {
     /// Start `engine serve` without a window; a backend found running stays out of this.
     pub fn start(&self, engine: &Path) -> std::io::Result<()> {
-        let child = Command::new(engine)
+        let child = Command::new(plain_path(engine))
             .arg("serve")
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -70,6 +70,14 @@ impl Backend {
     }
 }
 
+/// Return `path` without Windows' `\\?\` prefix, which Tauri's resource folder carries.
+///
+/// The backend reads its own path from how it was started, and writes it into the daily task.
+fn plain_path(path: &Path) -> PathBuf {
+    let text = path.to_string_lossy();
+    PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text))
+}
+
 /// Return whether `answer` is the response of a healthy backend.
 fn is_healthy(answer: &str) -> bool {
     answer.starts_with("HTTP/1.1 200") && answer.contains(r#""status":"ok""#)
@@ -108,6 +116,14 @@ mod tests {
             stream.write_all(answer.as_bytes()).expect("write");
         });
         address
+    }
+
+    #[test]
+    fn the_backend_starts_from_a_plain_path() {
+        let long = Path::new(r"\\?\C:\Users\Hau\court-booker\court-booker.exe");
+        let plain = Path::new(r"C:\Users\Hau\court-booker\court-booker.exe");
+        assert_eq!(plain_path(long), plain);
+        assert_eq!(plain_path(plain), plain);
     }
 
     #[test]

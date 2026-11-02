@@ -151,8 +151,9 @@ A Tauri shell around the backend, built by the `Desktop` workflow; the PyInstall
 (`packaging/court-booker.spec`, `tools/build_app.py`) is one of its resources. It shows a waiting
 page, starts `court-booker.exe serve` without a window, waits for `/api/health` and moves on to the
 backend's page. A backend that already answers is used as it is, and only a backend started here
-is stopped on leaving. It must stay true that nothing about a booking runs in the window: the daily
-task runs `court-booker.exe` alone, with the window closed.
+is stopped on leaving. The backend starts from a plain path, without Tauri's `\\?\` prefix, as it
+writes its own path into the daily task. It must stay true that nothing about a booking runs in the
+window: the daily task runs `court-booker.exe` alone, with the window closed.
 
 ## Backend (`court_booker.api`)
 
