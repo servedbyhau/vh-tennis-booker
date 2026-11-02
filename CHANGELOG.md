@@ -15,6 +15,8 @@ uses [Semantic Versioning](https://semver.org/).
   instance and the daily task also start from a packaged app, which has no `python -m`.
 - The backend serves the built UI when it sits beside the code, as in the packaged app, and an
   address that is no file opens the UI; development without a build serves `/api` alone.
+- `tools/build_app.py` builds the UI, then `packaging/court-booker.spec` the PyInstaller folder
+  that runs without Python, with no console: then the backend logs to its file.
 
 ### Changed
 - The roadmap and field notes record real BS and two-instance bookings on 2026-11-01, and

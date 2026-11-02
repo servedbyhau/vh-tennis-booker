@@ -44,6 +44,7 @@ python tools/setup_runner.py vX.Y.Z --schedule       # runner folder + daily tas
 python -m court_booker schedule status               # task details (install, remove)
 python -m court_booker setup                         # device setup checks (--auto fixes)
 python -m court_booker serve --config config.toml    # backend on 127.0.0.1:8765 (/api/docs)
+python tools/build_app.py                            # UI, then dist/court-booker (CONTRIBUTING)
 python tools/inspect_screen.py --near "Tôi đã hiểu"  # dump nodes level with a label
 ```
 
@@ -143,7 +144,7 @@ npm run api:types                                    # src/api/schema.d.ts from 
   folder `%LOCALAPPDATA%\CourtBooker`, `COURT_BOOKER_HOME`), `device_setup.py`,
   `schedule.py` (Task Scheduler), `power.py`, `notify.py`.
 - `api/`: FastAPI backend (`court-booker serve`, 127.0.0.1:8765); errors become `Problem`
-  JSON with an `error` code.
+  JSON with an `error` code. `api/ui.py` serves the built UI in the packaged app.
 
 `ui/src` (React 19, strict TypeScript, Vite): `pages/`, `components/`, `styles/` (tokens),
 `i18n/` (Vietnamese default, English), `api/` (generated types, client, React Query hooks,

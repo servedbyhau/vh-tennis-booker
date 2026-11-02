@@ -1,5 +1,8 @@
 """Tests for ``court-booker serve`` with uvicorn replaced."""
 
+import logging
+import sys
+
 import pytest
 import uvicorn
 from fastapi.testclient import TestClient
@@ -47,6 +50,27 @@ def test_development_without_a_build_serves_the_api_only(served, monkeypatch, tm
     with TestClient(app) as client:
         assert client.get("/").status_code == 404
         assert client.get("/api/health").status_code == 200
+
+
+def test_the_console_keeps_uvicorn_s_logging(served, tmp_path):
+    server.main(["--config", str(tmp_path / "config.toml")])
+
+    ((_, options),) = served
+    assert options["log_config"] is uvicorn.config.LOGGING_CONFIG
+
+
+def test_without_a_console_the_backend_logs_to_its_file(served, monkeypatch, tmp_path):
+    monkeypatch.setattr(sys, "stdout", None)
+    log = logging.getLogger("uvicorn")
+    monkeypatch.setattr(log, "handlers", [])
+
+    server.main(["--config", str(tmp_path / "config.toml")])
+    log.error("The backend failed")
+    logging.shutdown()
+
+    ((_, options),) = served
+    assert options["log_config"] is None
+    assert "The backend failed" in next((tmp_path / "logs").glob("*.log")).read_text("utf-8")
 
 
 def test_the_data_folder_config_is_created_when_none_is_given(served, data_home):
