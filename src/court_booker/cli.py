@@ -17,6 +17,7 @@ from court_booker.clock import NtpClock, ntp_offset, resolve_start
 from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
 from court_booker.emulator import MuMu
+from court_booker.engine import engine_command
 from court_booker.errors import (
     AppNotReadyError,
     CourtBookerError,
@@ -144,7 +145,7 @@ def start_instances(
             logger.warning("Skipping the [[instances]] entry with mumu_index = %r", index)
             continue
         taken.add(index)
-        command = [sys.executable, "-m", "court_booker", *instance_argv(args, index)]
+        command = [*engine_command(), *instance_argv(args, index)]
         try:
             process = subprocess.Popen(command, stdout=subprocess.DEVNULL)
         except OSError as exc:

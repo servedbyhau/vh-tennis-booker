@@ -18,6 +18,7 @@ from court_booker import device_setup, processes
 from court_booker.cli import close_emulator
 from court_booker.config import Config
 from court_booker.device_setup import Check, Status
+from court_booker.engine import engine_command
 from court_booker.errors import AppNotReadyError, DeviceNotRespondingError, EmulatorError
 from court_booker.history import History as HistoryStore
 from court_booker.history import HistoryHandler
@@ -497,9 +498,7 @@ def test_a_run_starts_a_process_for_each_other_instance(
 
     (process,) = spawned
     assert process.command == [
-        sys.executable,
-        "-m",
-        "court_booker",
+        *engine_command(),
         *["--config", str(path.resolve()), "--instance", "1", "--driver", "auto"],
         *["--dry-run", "--at", "05:50"],  # its own slots, not the ones given here
     ]

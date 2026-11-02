@@ -2,13 +2,13 @@
 
 import json
 import subprocess
-import sys
 from datetime import datetime
 
 import pytest
 
 from court_booker import processes
 from court_booker.api import runs
+from court_booker.engine import engine_command
 from court_booker.lock import Holder
 
 
@@ -105,9 +105,7 @@ def test_launch_starts_the_dry_run_command(monkeypatch, tmp_path):
 
     ((argv, options),) = started
     assert argv == [
-        sys.executable,
-        "-m",
-        "court_booker",
+        *engine_command(),
         "--dry-run",
         "--config",
         str(tmp_path / "config.toml"),

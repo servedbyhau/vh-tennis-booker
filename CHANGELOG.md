@@ -11,6 +11,8 @@ uses [Semantic Versioning](https://semver.org/).
   after checking the version and the branch, and prints the pull requests to open.
 - The `Tag` workflow tags each push to `main` `vX.Y.Z` from its version; tags by hand only
   when it fails.
+- One function, `engine_command`, says how to start the engine, so the dry run, a second
+  instance and the daily task also start from a packaged app, which has no `python -m`.
 
 ### Changed
 - The roadmap and field notes record real BS and two-instance bookings on 2026-11-01, and

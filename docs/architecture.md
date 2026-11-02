@@ -1,6 +1,7 @@
 # Architecture
 
-Three parts: the **engine** (`python -m court_booker`) books a court in a run of its own; the
+Three parts: the **engine** (`engine.py` says how to start it: `python -m court_booker`, or the
+packaged app's own exe) books a court in a run of its own; the
 **backend** (`court_booker.api`, FastAPI) serves the app's screens; the **UI** (`ui/`, React)
 is those screens. The 06:00 task runs the engine alone. How the flow reads the app:
 [how-it-works.md](how-it-works.md); facts about the app and MuMu: [field-notes.md](field-notes.md);
@@ -142,7 +143,7 @@ Details live in the docstrings; this page says where things are and what must st
   another screen is only logged, never restarted before the start); `schedule install` and
   `PUT /api/schedule` call `ensure_wake_timers` (`powercfg`).
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the
-  runner folder's Python.
+  engine of whatever installed it: the runner folder's Python, or the packaged app.
 
 ## Backend (`court_booker.api`)
 
