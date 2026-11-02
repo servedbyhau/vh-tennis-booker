@@ -32,7 +32,8 @@ jobs:
         shell: bash
         run: |
           version=$(python -c "import court_booker; print(court_booker.__version__)")
-          TAURI_CONFIG="{\"version\": \"$version\"}" npx tauri build
+          echo "{\"version\": \"$version\"}" > version.json
+          npx tauri build --config version.json
       - uses: actions/upload-artifact@v7
         with:
           name: court-booker-installer
