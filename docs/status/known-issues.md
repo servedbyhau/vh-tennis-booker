@@ -4,7 +4,7 @@ Open bugs, by severity: **1** may cost the 06:00 run, **2** reports wrongly or t
 **3** UI or docs. Remove an issue once it is fixed and confirmed (`CHANGELOG.md` keeps the
 history). Ideas the user ruled out are listed last, so they are not proposed again.
 
-Last updated: 2026-11-01.
+Last updated: 2026-11-02.
 
 No confirmed open bugs. The next-month day tap was confirmed by real bookings for 2026-11-01
 after the fix on 2026-10-30 and by the 2026-10-31 06:00 run for 2026-11-02.
@@ -12,8 +12,7 @@ after the fix on 2026-10-30 and by the 2026-10-31 06:00 run for 2026-11-02.
 ## Unhandled situations
 
 See the roadmap's "Situations": an update or unknown dialog, a network error, the app
-crashing mid-round, ADB lost mid-run, MuMu at the wrong resolution (the run still works but
-must scroll, without a warning). Fixed when a log shows one.
+crashing mid-round, ADB lost mid-run. Fixed when a log shows one.
 
 ## Ruled out by the user
 

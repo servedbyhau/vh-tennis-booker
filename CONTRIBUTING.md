@@ -7,8 +7,9 @@ pip install -e ".[dev,app]"
 pre-commit install
 ```
 
-`pre-commit` runs Ruff (lint and format) and basic file checks on every commit. The `app`
-extra (FastAPI, Uvicorn) is the backend of the web UI; without it the backend tests are
+`pre-commit` runs Ruff (lint and format) and basic file checks on every commit. It uses the
+installed Ruff, so run the `pip install` again when the pin in `pyproject.toml` changes. The
+`app` extra (FastAPI, Uvicorn) is the backend of the web UI; without it the backend tests are
 skipped. The runner folder installs the package without it.
 
 The app's screens live in `ui/` (React, TypeScript, Vite) and need Node.js 22.12 or later:

@@ -1,4 +1,4 @@
-"""The Ruff version: pinned once in pyproject.toml, the same in pre-commit and CI."""
+"""The Ruff version: pinned once in pyproject.toml, used by pre-commit and CI."""
 
 import re
 import sys
@@ -12,21 +12,20 @@ else:
 REPO = Path(__file__).resolve().parents[1]
 
 
-def pinned_ruff() -> str:
-    """Return the Ruff version the dev extra pins in pyproject.toml."""
+def test_pyproject_pins_ruff_once():
     data = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
     pins = [pin for pin in data["project"]["optional-dependencies"]["dev"] if "ruff" in pin]
+
     assert len(pins) == 1 and pins[0].startswith("ruff=="), pins
-    return pins[0].removeprefix("ruff==")
 
 
-def test_pre_commit_runs_the_pinned_ruff():
+def test_pre_commit_runs_the_installed_ruff():
     text = (REPO / ".pre-commit-config.yaml").read_text(encoding="utf-8")
-    found = re.search(r"astral-sh/ruff-pre-commit\s+rev:\s*v?(\S+)", text)
 
-    assert found is not None
-    # Dependabot bumps pyproject.toml only: set the hook's rev to the same version.
-    assert found.group(1) == pinned_ruff()
+    # A hook repo would pin a second version, which Dependabot does not bump.
+    assert "ruff-pre-commit" not in text
+    assert "python -m ruff check" in text
+    assert "python -m ruff format" in text
 
 
 def test_ci_installs_ruff_from_pyproject():

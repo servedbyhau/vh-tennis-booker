@@ -24,8 +24,8 @@ uses [Semantic Versioning](https://semver.org/).
   shorter; CONTRIBUTING asks docs to be written for someone new to the project.
 - The status notes (current state, next task, known issues) move into the repo, in English,
   as `docs/status/`; the local Android lab branch is gone, so CLAUDE.md no longer names it.
-- Ruff has one version, the one `pyproject.toml` pins (0.17.1): CI installs that pin instead
-  of its own (0.16.10), pre-commit runs it (was 0.17.0), and a test fails when they differ.
+- Ruff has one version, the one `pyproject.toml` pins (0.17.3): CI installs that pin instead
+  of its own, and pre-commit runs the installed Ruff, so a Dependabot bump needs no second edit.
 
 ## [0.18.1] - 2026-10-30
 
