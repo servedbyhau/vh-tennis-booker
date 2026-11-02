@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 It is also the shared project guidance for Codex, whose entry point is `AGENTS.md`.
 
-Last updated: 2026-10-30.
+Last updated: 2026-11-02.
 
 ## Project
 
@@ -189,7 +189,7 @@ Utilities list. Details, labels and their dates are in `docs/field-notes.md`.
   3.14), `driver` (build the Android sources with JDK 21 and SDK 35), and `ui` (Node 22:
   `npm ci`, generated API type check, typecheck, lint, format check, test, build); the `Tag`
   workflow tags each push to `main` with its version. Ruff's version is pinned once, in
-  `pyproject.toml` (CI reads it; pre-commit must match, a test checks). Tooling:
+  `pyproject.toml` (CI reads it; pre-commit runs the installed Ruff, a test checks). Tooling:
   pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF), Dependabot, PR and
   issue templates.
 - Node.js 22.19, npm 10.9 for `ui/`. Node 22.22 would allow jsdom 30 and React Router 8,

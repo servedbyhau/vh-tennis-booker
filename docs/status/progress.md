@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-01.
+Last updated: 2026-11-02.
 
 ## Release and runner
 
@@ -26,6 +26,7 @@ Last updated: 2026-11-01.
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-02 | 0.18.1 | 2/2 (6.6 s, 3.9 s) |
 | 2026-11-01 | 0.18.1 | Both instances 2/2: Origami (4.5 s, 3.6 s), BS (4.8 s, 3.5 s); real BS and parallel bookings confirmed |
 | 2026-10-31 | 0.18.1 | 2/2 (5.9 s, 3.8 s); both rounds switched to November and selected 2026-11-02 within 0.4 s |
 | 2026-10-30 | 0.18.0 | 0/2 at 06:00: the day tap landed during the month slide; after the fix, a real run that day booked 2/2 for 2026-11-01 |

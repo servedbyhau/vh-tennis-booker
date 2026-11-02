@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-01.
+Last updated: 2026-11-02.
 
 ## Start of a session
 
@@ -12,8 +12,13 @@ Last updated: 2026-11-01.
 
 ## Next task
 
-Not decided; ask the user to choose a priority. Candidates from the [roadmap](../roadmap.md):
+Packaging the desktop app, the last step before 1.0.0; the steps are in the
+[spec](../specs/0.5.0-desktop-app.md), "Packaging". One branch per step, starting with the
+PyInstaller build of the backend and engine. Before that step, decide with the user:
 
-- Survey another subdivision when access to one is available.
-- Choosing days of the week.
-- Packaging the desktop app (last before 1.0.0).
+- The spec's open choice, how the UI reaches the backend. Recommended: the backend serves the
+  built UI, so one origin needs no CORS; today it serves only `/api`.
+- The version number the packaging work starts at.
+
+Not started because they wait on something: another subdivision's survey needs access to one,
+and choosing days of the week is not decided.
