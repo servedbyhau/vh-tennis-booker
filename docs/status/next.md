@@ -11,23 +11,17 @@ Last updated: 2026-11-03.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: 1.0.0, the first complete version
+## Next task: install 1.0.0 and prove the update button
 
-A resident downloads one installer from the release page, installs, sets up in the app, and
-later updates with one button. Each part is its own branch, PR'd into `develop` in this order:
-
-| Branch | Work |
-|---|---|
-| `feat/desktop-release` | The `Tag` workflow calls `Desktop` with the tag, which publishes the release page: the installer under one name for every version, `latest.json` for the update button, the CHANGELOG section as notes |
-| `feat/desktop-updater` | The update button: Rust commands behind a `remote` capability for `http://127.0.0.1:8765/*`; the window stops its backend before the installer runs; the UI shows the button only in the window, locked while a run holds the lock and in the quiet time |
-| `fix/desktop-uninstall-task` | The uninstaller removes the daily task when it runs this install (not on an update); the `Desktop` workflow installs, serves and uninstalls on a clean runner |
-| `docs/readme-1.0` | README for residents (download, install, set up, update, remove) with new screenshots; the command line and the build move to CONTRIBUTING |
-| `chore/release-1.0.0` | `tools/release.py 1.0.0` |
-
-The user adds two repository secrets before the release: `TAURI_SIGNING_PRIVATE_KEY` (the
-content of `D:\VH-Booker\dev-tools\keys\court-booker-updater.key`) and
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (empty). 0.19.0 has no update button: 1.0.0 is installed
-by hand over it, later versions by the button.
+1. Once the `Tag` workflow has published the 1.0.0 release page, the user installs
+   `CourtBooker-setup.exe` from it over 0.19.0 (0.19.0 has no update button). Check that the
+   daily task still runs `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`.
+2. Check that the window reaches its commands: started with
+   `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>`, the page's
+   `invoke("update_version")` answers `null` (no newer version).
+3. The first press of the button that installs something is the next release's; note in
+   [progress.md](progress.md) whether it went through, kept the data and the task, and reopened
+   the app.
 
 ## After that
 

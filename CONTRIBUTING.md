@@ -175,8 +175,9 @@ Try it with Python off the `PATH` and with `COURT_BOOKER_HOME` set to a scratch 
 
 The update button installs only what the updater key signed. Its public half is in
 `desktop/src-tauri/tauri.conf.json`; the private half is kept off the repo and given to the
-`Desktop` workflow as the repository secrets `TAURI_SIGNING_PRIVATE_KEY` and
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. A release fails without them; other builds skip the
+`Desktop` workflow as the repository secret `TAURI_SIGNING_PRIVATE_KEY` (and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` for a key with a password; the current one has none). A
+release fails without the key; other builds skip the
 signing. Losing the private key means installed apps can no longer update by the button.
 
 After the build the workflow runs `tools/check_installer.ps1` on its clean runner: install, serve
