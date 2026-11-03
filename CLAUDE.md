@@ -147,7 +147,8 @@ npm run api:types                                    # src/api/schema.d.ts from 
   JSON with an `error` code. `api/ui.py` serves the built UI in the packaged app.
 
 `desktop/` (Tauri 2, Rust): the window. It starts the packaged backend, or uses one that already
-answers, and shows the page the backend serves; `packaging/` holds the PyInstaller spec.
+answers, and shows the page the backend serves; the page may call its two update commands
+(`capabilities/updates.json`). `packaging/` holds the PyInstaller spec.
 
 `ui/src` (React 19, strict TypeScript, Vite): `pages/`, `components/`, `styles/` (tokens),
 `i18n/` (Vietnamese default, English), `api/` (generated types, client, React Query hooks,

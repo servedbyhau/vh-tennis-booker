@@ -155,6 +155,15 @@ is stopped on leaving. The backend starts from a plain path, without Tauri's `\\
 writes its own path into the daily task. It must stay true that nothing about a booking runs in the
 window: the daily task runs `court-booker.exe` alone, with the window closed.
 
+The update button: the page reaches two Rust commands, `update_version` and `install_update`,
+through the `updates` capability, the only one for the remote page `http://127.0.0.1:8765/*`
+(`build.rs` names the commands, so nothing else is reachable). The updater reads `latest.json`
+from the newest release page and installs only what the updater key signed. `install_update`
+refuses while a run holds the lock (`GET /api/status`), and stops the backend it started before
+the installer runs, since both use the files the installer replaces. In `ui/`, `desktop.ts`
+calls the commands; `UpdateButton` shows only in the window, when a newer version is out, and
+is locked while a run holds the lock and in the quiet time.
+
 ## Backend (`court_booker.api`)
 
 `create_app(AppContext)`; `court-booker serve` listens on 127.0.0.1:8765, docs at `/api/docs`.

@@ -2,8 +2,12 @@ import { useOverview } from "../api/queries";
 import { LanguageSwitch } from "./LanguageSwitch";
 import styles from "./SiteHeader.module.css";
 import { StatusLine } from "./StatusLine";
+import { UpdateButton } from "./UpdateButton";
 
-/** Show the app's name, the status line and the language switch, ruled off in ink. */
+/**
+ * Show the app's name, the status line, the update button (in the desktop window, when a newer
+ * version is out) and the language switch, ruled off in ink.
+ */
 export function SiteHeader() {
   const overview = useOverview();
   return (
@@ -17,6 +21,7 @@ export function SiteHeader() {
       <div className={styles.status}>
         {overview.data && <StatusLine overview={overview.data} />}
       </div>
+      <UpdateButton />
       <LanguageSwitch />
     </header>
   );

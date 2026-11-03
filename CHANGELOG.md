@@ -10,6 +10,9 @@ uses [Semantic Versioning](https://semver.org/).
 - Each release has a GitHub release page with its installer, always named
   `CourtBooker-setup.exe`, and the `latest.json` the update button reads: the `Tag` workflow
   calls the `Desktop` workflow with the tag (`tools/release_assets.py`).
+- The app shows "Cập nhật lên x.y.z" in its header when a newer version is out: one press
+  downloads it, installs it over the app and opens it again, with the data and the daily task
+  kept. It is locked while a run holds the lock and in the quiet time around the booking.
 
 ## [0.19.0] - 2026-11-03
 

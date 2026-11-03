@@ -83,21 +83,30 @@ fn is_healthy(answer: &str) -> bool {
     answer.starts_with("HTTP/1.1 200") && answer.contains(r#""status":"ok""#)
 }
 
+/// Return the backend's whole answer to `GET path` at `address`, or `None` if none came.
+fn get(address: &str, path: &str) -> Option<String> {
+    let address = address.parse::<SocketAddr>().ok()?;
+    let mut stream = TcpStream::connect_timeout(&address, CONNECT_TIMEOUT).ok()?;
+    let _ = stream.set_read_timeout(Some(ANSWER_TIMEOUT));
+    let request = format!("GET {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+    stream.write_all(request.as_bytes()).ok()?;
+    let mut answer = String::new();
+    stream.read_to_string(&mut answer).ok()?;
+    Some(answer)
+}
+
 /// Return whether a backend answers at `address`.
 pub fn backend_answers(address: &str) -> bool {
-    let Ok(address) = address.parse::<SocketAddr>() else {
-        return false;
-    };
-    let Ok(mut stream) = TcpStream::connect_timeout(&address, CONNECT_TIMEOUT) else {
-        return false;
-    };
-    let _ = stream.set_read_timeout(Some(ANSWER_TIMEOUT));
-    let request = "GET /api/health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n";
-    if stream.write_all(request.as_bytes()).is_err() {
-        return false;
-    }
-    let mut answer = String::new();
-    stream.read_to_string(&mut answer).is_ok() && is_healthy(&answer)
+    get(address, "/api/health").is_some_and(|answer| is_healthy(&answer))
+}
+
+/// Return whether the backend at `address` tells that no run holds the lock.
+///
+/// An update replaces the files a run uses, so it waits for none; no answer counts as busy.
+pub fn backend_idle(address: &str) -> bool {
+    get(address, "/api/status").is_some_and(|answer| {
+        answer.starts_with("HTTP/1.1 200") && answer.contains(r#""running":null"#)
+    })
 }
 
 #[cfg(test)]
@@ -136,6 +145,14 @@ mod tests {
     fn another_program_on_the_port_does_not_answer() {
         assert!(!backend_answers(&answer_once("HTTP/1.1 200 OK\r\n\r\n<html>")));
         assert!(!backend_answers(&answer_once("HTTP/1.1 500 Oops\r\n\r\n")));
+    }
+
+    #[test]
+    fn a_backend_without_a_run_is_idle() {
+        let idle = "HTTP/1.1 200 OK\r\n\r\n{\"version\":\"1.0.0\",\"running\":null,\"schedule\":{}}";
+        assert!(backend_idle(&answer_once(idle)));
+        let busy = "HTTP/1.1 200 OK\r\n\r\n{\"version\":\"1.0.0\",\"running\":{\"pid\":7}}";
+        assert!(!backend_idle(&answer_once(busy)));
     }
 
     #[test]
