@@ -14,6 +14,12 @@ uses [Semantic Versioning](https://semver.org/).
   downloads it, installs it over the app and opens it again, with the data and the daily task
   kept. It is locked while a run holds the lock and in the quiet time around the booking.
 
+### Fixed
+- Uninstalling the app removes its daily task, which went on waking the PC every morning; a
+  task that runs another copy stays, and so does the data folder. The `Desktop` workflow now
+  installs, serves without Python and uninstalls on its clean runner
+  (`tools/check_installer.ps1`).
+
 ## [0.19.0] - 2026-11-03
 
 ### Added

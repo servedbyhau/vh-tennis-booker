@@ -68,6 +68,11 @@ jobs:
           path: desktop/src-tauri/Cargo.lock
       - run: cargo test --lib
         working-directory: desktop/src-tauri
+      - name: Install, serve and uninstall on this clean PC
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem desktop/src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          ./tools/check_installer.ps1 -Installer $installer.FullName
       - name: Publish the release page
         if: inputs.tag != ''
         shell: bash
