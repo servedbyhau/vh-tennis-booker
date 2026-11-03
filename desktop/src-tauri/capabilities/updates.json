@@ -1,0 +1,9 @@
+{
+  "identifier": "updates",
+  "description": "The backend's page finds and installs a newer version, and nothing else.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://127.0.0.1:8765/*"]
+  },
+  "permissions": ["allow-update-version", "allow-install-update"]
+}
