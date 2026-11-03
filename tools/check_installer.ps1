@@ -61,9 +61,13 @@ Uninstall-App
 if (-not (Test-Task)) { throw "The uninstaller removed a task it does not own" }
 Write-Output "Another copy's task was kept"
 
-# The app's own task goes with the app; its data stays.
+# The app's own task, set as its "Tự đặt" switch sets it, goes with the app; its data stays.
 Install-App
-Set-Task $Engine
+$env:COURT_BOOKER_HOME = $data
+$config = Join-Path $data "config.toml"
+Start-Process -FilePath $Engine -ArgumentList @("schedule", "install", "--config", "`"$config`"") -Wait
+if (-not (Test-Task)) { throw "schedule install set no task" }
+Write-Output "The app set its task: $((Get-ScheduledTask -TaskName $Task).Actions[0].Execute)"
 Uninstall-App
 if (Test-Task) { throw "The uninstaller left the app's task behind" }
 if (-not (Test-Path (Join-Path $data "config.toml"))) { throw "The uninstaller removed the data" }
