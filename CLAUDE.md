@@ -194,8 +194,9 @@ Utilities list. Details, labels and their dates are in `docs/field-notes.md`.
 - CI (GitHub Actions): `lint` (ruff check + format), `test` (Python 3.9, 3.11, 3.12, 3.13,
   3.14), `driver` (build the Android sources with JDK 21 and SDK 35), and `ui` (Node 22:
   `npm ci`, generated API type check, typecheck, lint, format check, test, build); the `Tag`
-  workflow tags each push to `main` with its version; the `Desktop` workflow builds the NSIS
-  installer on Windows for `main` and `feat/desktop-*`. Ruff's version is pinned once, in
+  workflow tags each push to `main` with its version and calls the `Desktop` workflow, which
+  builds the NSIS installer on Windows and publishes the release page; it also builds for
+  `feat/desktop-*` and `fix/desktop-*` pushes. Ruff's version is pinned once, in
   `pyproject.toml` (CI reads it; pre-commit runs the installed Ruff, a test checks). Tooling:
   pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF), Dependabot, PR and
   issue templates.

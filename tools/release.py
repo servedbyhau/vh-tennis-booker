@@ -110,8 +110,8 @@ def next_steps(version: str, pushed: bool) -> list[str]:
         f"{GITHUB}/compare/develop...{branch}",
         f"Then from develop into main, titled 'Release v{version}', merge commit: "
         f"{GITHUB}/compare/main...develop (the tag workflow tags it v{version})",
-        "Then install over the app the installer the Desktop workflow builds from that "
-        "merge: gh run download <run> -n court-booker-installer",
+        "Then update the app once its release page is up: the update button, or the "
+        "installer from the release page",
     ]
     return steps
 

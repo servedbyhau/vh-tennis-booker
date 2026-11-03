@@ -141,20 +141,21 @@ as a patch; the rest waits for the next release, about once a week.
 2. Open a pull request from `develop` into `main`, titled `Release vX.Y.Z`, and merge it
    with a merge commit.
 3. The `Tag` workflow (`.github/workflows/tag.yml`) tags that merge commit `vX.Y.Z`; it
-   fails when the tag already names another commit (the version was not bumped). Do not tag
-   by hand unless it failed; then:
+   fails when the tag already names another commit (the version was not bumped). It then
+   calls the `Desktop` workflow with the tag, which builds the installer and publishes the
+   version's release page (`tools/release_assets.py`): the installer, always named
+   `CourtBooker-setup.exe`, so the README's link gets the newest; `latest.json`, which the
+   app's update button reads; and the version's CHANGELOG section as notes. Do not tag by
+   hand unless it failed; then:
    ```bash
    git switch main && git pull --ff-only
    git tag -a vX.Y.Z -m "vX.Y.Z" <merge-commit>
    git push origin vX.Y.Z
    ```
-4. Optionally create a GitHub release from the tag using the changelog entry; delete the
-   `chore/release-X.Y.Z` branch.
-5. The `Desktop` workflow builds the installer from the merge on `main`. Install it over the
-   app: the install folder stays the same, so the daily task needs no change.
-   ```bash
-   gh run download <run> -n court-booker-installer
-   ```
+   A tag pushed by hand starts no workflow: run `Desktop` from the Actions page instead.
+4. Delete the `chore/release-X.Y.Z` branch.
+5. Update the app: its update button, or the installer from the release page installed over
+   it. The install folder stays the same, so the daily task needs no change.
 
 ## Packaged app
 
@@ -171,6 +172,12 @@ python -m venv <folder>
 The app has no console, so its output shows only when redirected
 (`dist/court-booker/court-booker.exe --version > version.txt`); the rest goes to the log file.
 Try it with Python off the `PATH` and with `COURT_BOOKER_HOME` set to a scratch folder.
+
+The update button installs only what the updater key signed. Its public half is in
+`desktop/src-tauri/tauri.conf.json`; the private half is kept off the repo and given to the
+`Desktop` workflow as the repository secrets `TAURI_SIGNING_PRIVATE_KEY` and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. A release fails without them; other builds skip the
+signing. Losing the private key means installed apps can no longer update by the button.
 
 The window lives in `desktop/` (Tauri, Rust). The `Desktop` workflow builds the NSIS installer on
 a Windows runner, which has Rust and the MSVC tools, for `main` and `feat/desktop-*`; fetch it with
