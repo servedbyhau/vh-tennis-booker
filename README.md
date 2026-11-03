@@ -25,8 +25,8 @@ and the history of every run.
 
 It books tennis and the other courts a subdivision offers (multi-purpose, volleyball, table
 tennis, basketball, football, pickleball, badminton), for the Origami and BS subdivisions so
-far. Today it runs from the command line and, for the web UI, in a browser; a packaged
-desktop app with an installer is the last step before 1.0.0.
+far. It installs as a desktop app (one installer, no Python needed), which also sets the
+daily task; the command line and a browser still work for development.
 
 > [!IMPORTANT]
 > An educational, personal project, not affiliated with or endorsed by Vinhomes.
@@ -310,9 +310,9 @@ work in progress.
 ## Roadmap
 
 The 0.x versions go through four phases toward 1.0.0: it runs, it handles every situation,
-it is fast, it is friendly to use. Released: 0.13.1 ([changelog](CHANGELOG.md)), with several
-accounts booking side by side (one MuMu instance each). Last before 1.0.0: the desktop app
-with an installer. See [docs/roadmap.md](docs/roadmap.md).
+it is fast, it is friendly to use. Released: 0.19.0 ([changelog](CHANGELOG.md)), the desktop
+app with its installer, which books every morning. Left before 1.0.0: finishing the packaging.
+See [docs/roadmap.md](docs/roadmap.md).
 
 ## Credits
 

@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 It is also the shared project guidance for Codex, whose entry point is `AGENTS.md`.
 
-Last updated: 2026-11-02.
+Last updated: 2026-11-03.
 
 ## Project
 
@@ -70,7 +70,7 @@ npm run api:types                                    # src/api/schema.d.ts from 
 - The scheduled task has no `--dry-run`; it books for real. For a scheduled test, add
   `--dry-run` to the task arguments by hand (`schedule install` overwrites it).
 - Never switch the schedule on from a development backend (`PUT /api/schedule`): the task
-  would run the development Python instead of the runner folder.
+  would run the development Python instead of the installed app.
 - After a backend route, model or `catalog.py` change: `python tools/export_openapi.py`
   (writes `ui/openapi.json` and `ui/src/catalog.json`), then `npm run api:types` (backend
   tests and CI fail until they match).
@@ -100,8 +100,8 @@ npm run api:types                                    # src/api/schema.d.ts from 
   another still targets `develop`, merged in order. Only finished, tested work is merged (a
   booking flow change: a real booking first), so `develop` can be released any time. A
   release (CONTRIBUTING, "Releasing") moves the 06:00 run to new code, so it is cut when that
-  run needs a change (the engine, or a config key the backend writes), at once for a fix it
-  needs, else about weekly: the UI and the backend run from the development folder.
+  run needs a change (the installed app: engine, backend and UI), at once for a fix it
+  needs, else about weekly.
   `python tools/release.py X.Y.Z` on a clean, up-to-date `develop` commits on
   `chore/release-X.Y.Z`; a PR into `develop`, then a PR from `develop` into `main`, whose
   merge commit the `Tag` workflow tags `vX.Y.Z` (by hand only if it failed); an urgent fix
@@ -205,12 +205,12 @@ Utilities list. Details, labels and their dates are in `docs/field-notes.md`.
   `127.0.0.1:16384`, its clone instance 1 on `127.0.0.1:16416` with a second account,
   renderer Vulkan); adb is found and connected automatically
   (`device = "auto"`).
-- The daily task (wake 05:50 on this machine, start 06:00) runs the runner folder
-  `D:\VH-Booker\runner` (git worktree at the last release tag, own `.venv`, its
-  `pythonw.exe`) with the development `config.toml` and `logs/`; `Start In` is the
-  development folder, which the src layout keeps from being imported. Move the runner with
-  `tools/setup_runner.py` after each release; the development folder may stay on any
-  branch.
+- The daily task (wake 05:45 on this machine, start 06:00) runs the installed app,
+  `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
+  `config.toml` and `logs/` (`Start In` is the data folder). A release reaches it through the
+  installer, installed over the app; the development folder may stay on any branch. The
+  runner folder `D:\VH-Booker\runner` (worktree at `v0.18.1`, own `.venv`) is kept as a way
+  back until 2026-11-10 (CONTRIBUTING, "Runner folder").
 - Repo `github.com/servedbyhau/vh-tennis-booker` is **public**; local path
   `D:\VH-Booker\vh-tennis-booker`. GitHub CLI `gh` is installed and logged in.
 

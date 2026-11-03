@@ -29,7 +29,7 @@ two-instance run on 2026-11-01. Failures are fixed as the 06:00 logs show them. 
 | Phase | Next | Scope |
 |---|---|---|
 | 1 Runs | Other subdivisions | Origami and BS are in `catalog.py` with every sport; BS tennis at BCX3 was booked for real on 2026-11-01. BE7 tennis and basketball have dry-run coverage; other BS courts have only the survey. Left: survey each other subdivision with `dev-tools/survey/walk.py` and add it to the catalog |
-| 4 UI | Desktop app, last before 1.0.0 | Tauri shell with a PyInstaller sidecar, installer, release automation; version number set when it starts ([spec](specs/0.5.0-desktop-app.md), "Packaging") |
+| 4 UI | Finish the packaging, last before 1.0.0 | The installed app (0.19.0) runs the daily booking. Left: the installer built on each version tag, the uninstaller removing the task, a test on a clean PC, code signing, updates ([spec](specs/0.5.0-desktop-app.md), "Packaging") |
 
 ## Situations
 
