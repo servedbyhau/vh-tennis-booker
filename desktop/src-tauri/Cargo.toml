@@ -13,5 +13,8 @@ path = "src/lib.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# generate_context! reads the plugins' config with it.
+serde_json = "1"
 tauri = { version = "2", features = [] }
 tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"

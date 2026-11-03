@@ -20,6 +20,7 @@ Read the matching doc before changing an area; these notes hold only the essenti
 | `docs/field-notes.md` | Facts about the app and MuMu the code relies on: screens, labels, dialogs, timings |
 | `docs/roadmap.md` | Goal, what is left, situations table, ruled-out ideas |
 | `docs/how-it-works.md` | How the flow reads the app (dumps, matching, navigation) |
+| `docs/command-line.md` | Running from a clone: config keys, commands, exit codes, logs |
 | `docs/specs/0.5.0-desktop-app.md` | Desktop app product decisions and the packaging plan (last) |
 | `CONTRIBUTING.md` | Setup, checks, branches, releasing, runner folder |
 | `docs/status/` | Current state, the next task, known issues (kept current each session) |
@@ -147,7 +148,8 @@ npm run api:types                                    # src/api/schema.d.ts from 
   JSON with an `error` code. `api/ui.py` serves the built UI in the packaged app.
 
 `desktop/` (Tauri 2, Rust): the window. It starts the packaged backend, or uses one that already
-answers, and shows the page the backend serves; `packaging/` holds the PyInstaller spec.
+answers, and shows the page the backend serves; the page may call its two update commands
+(`capabilities/updates.json`). `packaging/` holds the PyInstaller spec.
 
 `ui/src` (React 19, strict TypeScript, Vite): `pages/`, `components/`, `styles/` (tokens),
 `i18n/` (Vietnamese default, English), `api/` (generated types, client, React Query hooks,
@@ -194,8 +196,9 @@ Utilities list. Details, labels and their dates are in `docs/field-notes.md`.
 - CI (GitHub Actions): `lint` (ruff check + format), `test` (Python 3.9, 3.11, 3.12, 3.13,
   3.14), `driver` (build the Android sources with JDK 21 and SDK 35), and `ui` (Node 22:
   `npm ci`, generated API type check, typecheck, lint, format check, test, build); the `Tag`
-  workflow tags each push to `main` with its version; the `Desktop` workflow builds the NSIS
-  installer on Windows for `main` and `feat/desktop-*`. Ruff's version is pinned once, in
+  workflow tags each push to `main` with its version and calls the `Desktop` workflow, which
+  builds the NSIS installer on Windows and publishes the release page; it also builds for
+  `feat/desktop-*` and `fix/desktop-*` pushes. Ruff's version is pinned once, in
   `pyproject.toml` (CI reads it; pre-commit runs the installed Ruff, a test checks). Tooling:
   pre-commit (ruff, basic hooks), `.editorconfig`, `.gitattributes` (LF), Dependabot, PR and
   issue templates.

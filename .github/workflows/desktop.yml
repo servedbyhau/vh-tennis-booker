@@ -1,17 +1,28 @@
 name: Desktop
 
 # Builds the installer on a Windows runner, which has Rust and the MSVC tools. The app's
-# version comes from the code, so it has one home.
+# version comes from the code, so it has one home. Called by the Tag workflow with a tag, it
+# also publishes that version's release page (tools/release_assets.py).
 on:
   push:
-    branches: [main, "feat/desktop-*"]
+    branches: ["feat/desktop-*", "fix/desktop-*"]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release's tag, e.g. v1.0.0
+        type: string
+        required: true
 
 jobs:
   installer:
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
@@ -30,9 +41,21 @@ jobs:
       - name: Build the installer
         working-directory: desktop
         shell: bash
+        env:
+          # The update button installs only what this key signed (tauri.conf.json, updater).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAG: ${{ inputs.tag }}
         run: |
           version=$(python -c "import court_booker; print(court_booker.__version__)")
-          echo "{\"version\": \"$version\"}" > version.json
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "{\"version\": \"$version\", \"bundle\": {\"createUpdaterArtifacts\": true}}" > version.json
+          elif [ -n "$TAG" ]; then
+            echo "::error::A release needs the TAURI_SIGNING_PRIVATE_KEY secret"
+            exit 1
+          else
+            echo "{\"version\": \"$version\"}" > version.json
+          fi
           npx tauri build --config version.json
       - uses: actions/upload-artifact@v7
         with:
@@ -45,3 +68,17 @@ jobs:
           path: desktop/src-tauri/Cargo.lock
       - run: cargo test --lib
         working-directory: desktop/src-tauri
+      - name: Install, serve and uninstall on this clean PC
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem desktop/src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          ./tools/check_installer.ps1 -Installer $installer.FullName
+      - name: Publish the release page
+        if: inputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          python tools/release_assets.py "$TAG" --bundle desktop/src-tauri/target/release/bundle/nsis --out release
+          gh release create "$TAG" release/assets/* --title "Court Booker ${TAG#v}" --notes-file release/notes.md --verify-tag

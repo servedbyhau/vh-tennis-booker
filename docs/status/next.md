@@ -11,19 +11,23 @@ Last updated: 2026-11-03.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: install 0.19.0 and watch the week
+## Next task: install 1.0.0 and prove the update button
 
-1. Once `Release v0.19.0` is merged into `main`, fetch the installer the `Desktop` workflow
-   builds from it (`gh run download <run> -n court-booker-installer`) and install it over the
-   app. The install folder stays the same, so the task needs no change; check
-   `python -m court_booker schedule status` anyway.
-2. Add each 06:00 run to [progress.md](progress.md). After a week without a failure
-   (2026-11-10), remove the runner folder (`git worktree remove ..\runner`) and its section in
-   CONTRIBUTING.
+1. Once the `Tag` workflow has published the 1.0.0 release page, the user installs
+   `CourtBooker-setup.exe` from it over 0.19.0 (0.19.0 has no update button). Check that the
+   daily task still runs `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`.
+2. Check that the window reaches its commands: started with
+   `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>`, the page's
+   `invoke("update_version")` answers `null` (no newer version).
+3. The first press of the button that installs something is the next release's; note in
+   [progress.md](progress.md) whether it went through, kept the data and the task, and reopened
+   the app.
 
 ## After that
 
-The packaging left before 1.0.0 (the spec, "Packaging"): the installer built on each version
-tag, the uninstaller removing the task, a test on a clean PC, code signing, updates, and the
-Windows Defender check over a few mornings. Waiting on something: another subdivision's survey
-needs access to one, and choosing days of the week is not decided.
+- Add each 06:00 run to [progress.md](progress.md). After a week without a failure
+  (2026-11-10), remove the runner folder (`git worktree remove ..\runner`) and its sections in
+  CONTRIBUTING and CLAUDE.md.
+- Ruled out for now: code signing (SmartScreen's "Run anyway" stays). Waiting on something:
+  another subdivision's survey needs access to one, and choosing days of the week is not
+  decided.

@@ -1,7 +1,8 @@
 name: Tag
 
 # Every commit on main is a release (CONTRIBUTING, "Releasing"): tag it vX.Y.Z from the
-# version it carries, so a release needs no tag pushed by hand.
+# version it carries, so a release needs no tag pushed by hand, then publish its release page
+# with the installer (desktop.yml).
 on:
   push:
     branches: [main]
@@ -12,15 +13,19 @@ permissions:
 jobs:
   tag:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Tag the release
+        id: tag
         run: |
           version=$(PYTHONPATH=src python3 -c "import court_booker; print(court_booker.__version__)")
           test -n "$version"
           tag="v$version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           if tagged=$(git rev-parse --quiet --verify "refs/tags/$tag^{commit}"); then
             if [ "$tagged" = "$GITHUB_SHA" ]; then
               echo "$tag tags this commit already"
@@ -34,3 +39,13 @@ jobs:
           git tag -a "$tag" -m "$tag" "$GITHUB_SHA"
           git push origin "refs/tags/$tag"
           echo "Tagged $GITHUB_SHA $tag"
+
+  # A tag this workflow pushes starts no other workflow, so it builds the release page itself.
+  release:
+    needs: tag
+    permissions:
+      contents: write
+    uses: ./.github/workflows/desktop.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets: inherit

@@ -6,6 +6,27 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-03
+
+### Added
+- Each release has a GitHub release page with its installer, always named
+  `CourtBooker-setup.exe`, and the `latest.json` the update button reads: the `Tag` workflow
+  calls the `Desktop` workflow with the tag (`tools/release_assets.py`).
+- The app shows "Cập nhật lên x.y.z" in its header when a newer version is out: one press
+  downloads it, installs it over the app and opens it again, with the data and the daily task
+  kept. It is locked while a run holds the lock and in the quiet time around the booking.
+
+### Changed
+- The README is for residents: download, install, set up, update and uninstall, with new
+  screenshots; running from a clone, every command and exit code move to
+  `docs/command-line.md`.
+
+### Fixed
+- Uninstalling the app removes its daily task, which went on waking the PC every morning; a
+  task that runs another copy stays, and so does the data folder. The `Desktop` workflow now
+  installs, serves without Python and uninstalls on its clean runner
+  (`tools/check_installer.ps1`).
+
 ## [0.19.0] - 2026-11-03
 
 ### Added

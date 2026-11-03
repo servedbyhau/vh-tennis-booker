@@ -22,14 +22,30 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
-    "icon": ["icons/icon.ico"],
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/icon.ico"
+    ],
     "resources": {
       "../../dist/court-booker": "court-booker"
     },
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerHooks": "windows/hooks.nsh"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcyMjY3NTVDQzIzNkI5MjYKUldRbXVUYkNYSFVtY25WdjdRN0RDUHRWTkFhTU9xTjBLL1hGcHZ0c2Z2cUlQdWEvSzBhRmxrTWIK",
+      "endpoints": [
+        "https://github.com/servedbyhau/vh-tennis-booker/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }

@@ -16,6 +16,12 @@
       "en": "English"
     }
   },
+  "update": {
+    "button": "Update to {{version}}",
+    "installing": "Updating…",
+    "locked": "Update when no run is going on, outside {{from}}–{{to}}",
+    "failed": "The update did not go through; try again later"
+  },
   "pages": {
     "overview": {
       "title": "Overview",
