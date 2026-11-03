@@ -44,7 +44,9 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - The app is one PyInstaller folder inside a per-user NSIS installer, and the backend serves the
   built UI. The installer is built by the `Desktop` workflow, as this PC has no Rust.
 - Choosing days of the week: later, not decided.
-- No GitHub Release pages. Releases go ahead without asking again.
+- From 1.0.0 each version has a GitHub release page with its installer; the pages of
+  0.1.0 to 0.9.0 were deleted on 2026-11-03, their tags kept. Releases go ahead without
+  asking again.
 - Accounts, quotas, re-logins and adding instances to `config.toml` are the user's job.
 - Test tickets booked during development are cancelled by the user.
 
