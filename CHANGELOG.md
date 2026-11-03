@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-03
+
 ### Added
 - `tools/release.py X.Y.Z` makes the release commit on its `chore/release-X.Y.Z` branch
   after checking the version and the branch, and prints the pull requests to open.
