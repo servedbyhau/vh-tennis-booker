@@ -24,12 +24,12 @@ to be awake. Unattended, scheduled, as fast as possible.
 The 0.x versions go through four phases toward 1.0.0: (1) it runs, (2) it handles every
 situation, (3) it is fast, (4) it has a user-friendly UI. Releases 0.1.0 to 0.13.1 covered all
 four (CHANGELOG); 0.13.0 ended phase 3 with MuMu instances side by side, confirmed by a real
-two-instance run on 2026-11-01. Failures are fixed as the 06:00 logs show them. What is left:
+two-instance run on 2026-11-01; 1.0.0 ended phase 4 with the installer, its release page and
+the update button. Failures are fixed as the 06:00 logs show them. What is left:
 
 | Phase | Next | Scope |
 |---|---|---|
 | 1 Runs | Other subdivisions | Origami and BS are in `catalog.py` with every sport; BS tennis at BCX3 was booked for real on 2026-11-01. BE7 tennis and basketball have dry-run coverage; other BS courts have only the survey. Left: survey each other subdivision with `dev-tools/survey/walk.py` and add it to the catalog |
-| 4 UI | Finish the packaging, last before 1.0.0 | The installed app (0.19.0) runs the daily booking. Left: the installer built on each version tag, the uninstaller removing the task, a test on a clean PC, code signing, updates ([spec](specs/0.5.0-desktop-app.md), "Packaging") |
 
 ## Situations
 

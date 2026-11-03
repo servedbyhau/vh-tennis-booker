@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-03
+
 ### Added
 - Each release has a GitHub release page with its installer, always named
   `CourtBooker-setup.exe`, and the `latest.json` the update button reads: the `Tag` workflow

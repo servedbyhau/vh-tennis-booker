@@ -222,8 +222,8 @@ and releases.
 ## Roadmap
 
 The 0.x versions go through four phases toward 1.0.0: it runs, it handles every situation,
-it is fast, it is friendly to use. Released: 0.19.0 ([changelog](CHANGELOG.md)), the desktop
-app with its installer, which books every morning. Left before 1.0.0: finishing the packaging.
+it is fast, it is friendly to use. 1.0.0 is the first complete version: the desktop app with
+its installer and update button, which books every morning ([changelog](CHANGELOG.md)).
 See [docs/roadmap.md](docs/roadmap.md).
 
 ## Credits

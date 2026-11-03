@@ -8,7 +8,9 @@ Last updated: 2026-11-03.
 
 ## Release and daily run
 
-- Released: **0.19.0** (tag `v0.19.0`, 2026-11-03): the packaged desktop app and its installer.
+- Released: **1.0.0** (tag `v1.0.0`, 2026-11-03), the first complete version: the installer on
+  its release page, the update button, and the uninstaller removing the daily task. 0.19.0 has
+  no update button, so 1.0.0 is installed by hand over it; later versions update by the button.
 - The Android app is developed in `servedbyhau/v-court`, which ports this repo's booking
   flow and driver; this repo is its behavior reference.
 - Daily task `\court-booker`: runs the installed app,
@@ -40,7 +42,7 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
   width and Vietnamese by default. It sends no request per step while a run is going, and does
   not check MuMu while the run lock is held.
 - The installed app is the daily run; a release reaches it through the installer built from
-  `main`, installed over the app. The packaging left is the last step before 1.0.0.
+  `main`: the app's update button, or the installer from the release page.
 - The app is one PyInstaller folder inside a per-user NSIS installer, and the backend serves the
   built UI. The installer is built by the `Desktop` workflow, as this PC has no Rust.
 - Choosing days of the week: later, not decided.
