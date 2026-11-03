@@ -20,21 +20,21 @@ uiautomator2 as a fallback. It uses no private API and does not modify the app.
 **The result.** It has booked real courts at 06:00 since 2026-10-10. On 2026-11-01,
 two MuMu instances booked four slots in parallel, at Origami and BS; each first slot reached
 its ticket within five seconds. Beside the booking engine there is a local FastAPI backend
-and a React and TypeScript web UI, in Vietnamese and English, for the settings, the schedule
-and the history of every run.
+and a React and TypeScript UI, in Vietnamese and English, for the settings, the schedule
+and the history of every run, in a Tauri window.
 
 It books tennis and the other courts a subdivision offers (multi-purpose, volleyball, table
 tennis, basketball, football, pickleball, badminton), for the Origami and BS subdivisions so
-far. It installs as a desktop app (one installer, no Python needed), which also sets the
-daily task; the command line and a browser still work for development.
+far. It installs as a Windows app from one installer, with no Python needed, and updates
+itself with one button.
 
 > [!IMPORTANT]
 > An educational, personal project, not affiliated with or endorsed by Vinhomes.
 
-![The web UI during a dry run: the ticket shows round 2 of 2 being booked large, one slot
+![The app during a dry run: the ticket shows round 2 of 2 being booked large, one slot
 through, and each step as it happens; the History is beside it](docs/img/running.png)
 
-<sub>The web UI during a dry run. All screenshots show made-up data.</sub>
+<sub>The app during a dry run. All screenshots show made-up data.</sub>
 
 ## Highlights
 
@@ -116,105 +116,49 @@ Further reading:
   code relies on
 - [docs/roadmap.md](docs/roadmap.md): the goal, what is left and the situations handled
 
-## Quick start
+## Install
 
-### Requirements
+What you need:
 
-- Windows (used on Windows 11) with [MuMu Player](https://www.mumuplayer.com/); ADB ships
-  with MuMu
-- The Vinhomes Resident app installed in MuMu and logged in
-- Python 3.9 or later
-- Node.js 22.12 or later, only for the web UI
+- A Windows 10 or 11 PC that stays on or asleep at night, never shut down (a PC that is off
+  cannot be woken), plugged in and signed in to Windows (a locked screen is fine).
+- [MuMu Player](https://www.mumuplayer.com/), with the Vinhomes Resident app installed in it
+  and logged in to your resident account.
 
-### 1. Install
+Then:
 
-```bash
-git clone https://github.com/servedbyhau/vh-tennis-booker.git
-cd vh-tennis-booker
-pip install -e ".[app]"            # "app" adds the backend of the web UI
-cp config.example.toml config.toml
-```
+1. Download **[CourtBooker-setup.exe](https://github.com/servedbyhau/vh-tennis-booker/releases/latest/download/CourtBooker-setup.exe)**
+   from the [newest release](https://github.com/servedbyhau/vh-tennis-booker/releases/latest).
+2. Run it. The installer is not code-signed, so Windows SmartScreen may say it protected your
+   PC: choose **More info**, then **Run anyway**. It installs for you alone, without
+   administrator rights.
+3. Open **Court Booker** from the Start menu. The **Setup** tab lists what only you can do
+   (install MuMu and the Vinhomes app, log in); tick each step once it is done.
+4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
+   order you want them.
+5. Press **Dry run now** between 06:00 and 21:00, while the Vinhomes app takes bookings. It
+   walks the whole booking and stops before the final confirmation, so nothing is booked.
+6. Once it has passed, turn **Auto-book** on. Every morning the PC wakes at the wake time and
+   books at 06:00; the window does not need to be open.
 
-If `court-booker` is not found afterwards (Python's `Scripts` folder is not on `PATH`), use
-`python -m court_booker` instead.
+The app is in Vietnamese by default, English is one click away.
 
-### 2. Configure
+### Update
 
-Edit `config.toml`, or later use Settings in the web UI. The keys you usually change:
+When a newer version is out, the top of the window shows **Update to x.y.z**. One press
+downloads it, installs it over the app and opens it again; your settings, history and
+morning booking stay. The button waits while a run is going on and around 06:00.
 
-| Key | Example | Meaning |
-|---|---|---|
-| `slots` | `["18:00 - 19:00", "19:00 - 20:00"]` | Slots to book, one round each, in this order: put the most wanted first |
-| `sport` | `"tennis"` | What to book: `tennis`, `multi`, `volleyball`, `table-tennis`, `basketball`, `football`, `pickleball` or `badminton` |
-| `court` | `"S10 - Sân tennis"` | The court, as the app names it (S6, S8, S9 or S10 for tennis at Origami; BE7 or BCX3/CX2 01-02 at BS) |
-| `subdivision` | `""` | The account's subdivision, `origami` or `bs`; empty follows the account. The run books by `court` either way |
-| `start_at` | `"06:00"` | When the app opens bookings |
-| `wake_at` | `"05:45"` | When the daily task wakes the PC and starts preparing |
+### Uninstall
 
-Everything else (the app's labels, timeouts, the MuMu folder) has a working default,
-explained in `config.example.toml`.
+In Windows Settings, open **Apps**, find **Court Booker** and choose **Uninstall**. This removes
+the app and its morning booking. Your settings and history stay in
+`%LOCALAPPDATA%\CourtBooker` (with the logs of every run, in `logs`); delete that folder to
+remove them too.
 
-To book with more accounts at once, clone the MuMu instance in MuMu's multi-instance manager,
-log the clone in to another account, and add an `[[instances]]` table for it (example in
-`config.example.toml`): its `mumu_index`, and any of `slots`, `subdivision`, `sport`, `court` and
-`venue_keyword` that differ. The web UI shows a tab for each machine on top of the
-ticket, with its own settings and its own setup; "Máy 2" (MuMu 1) is always there, and its
-"Dùng máy này" switch adds or removes its `[[instances]]` table.
+## Using the app
 
-### 3. Set up the PC and the emulator
-
-```bash
-court-booker setup                         # check MuMu, its screen, wake timers and the app
-court-booker setup --auto                  # fix by hand what the runs and schedule fix
-court-booker setup --auto --restart-mumu   # also restart a running MuMu to apply its screen
-```
-
-Nothing here is needed before a run: each run finds MuMu when `mumu_manager` points
-elsewhere (without rewriting `config.toml`) and sets the screen of a stopped MuMu to
-540x1600 at 220 DPI before starting it (the whole slot list then fits without scrolling; a
-running MuMu with another screen is only logged). Switching the schedule on allows wake
-timers on mains and battery. `setup --auto` also saves the MuMu folder to `config.toml`.
-The rest is up to you:
-
-- Keep the app logged in inside MuMu.
-- Leave the PC on or in **Sleep**: a PC that is shut down cannot be woken.
-- Keep it plugged in.
-- Stay signed in to Windows (a locked screen is fine): MuMu needs the desktop session.
-
-### 4. Try a dry run
-
-```bash
-court-booker --dry-run --at 14:05     # a time a few minutes from now
-```
-
-A dry run walks the whole flow and stops before "Xác nhận", so nothing is booked. Close MuMu
-first to test the whole chain, as at 06:00. Exit code 4 usually means the app is logged
-out.
-
-### 5. Book every morning
-
-```bash
-court-booker schedule install   # daily task at wake_at; it books for real at start_at
-court-booker schedule status    # the task, its last and next run
-```
-
-The ticket's "Auto-book" switch in the web UI does the same, once a dry run has passed.
-`court-booker schedule remove` deletes the task. A real run closes MuMu once its rounds are
-done; the next run starts it again. A dry run leaves it open.
-
-## Web UI
-
-```bash
-court-booker serve --config config.toml   # backend on http://127.0.0.1:8765, API docs at /api/docs
-cd ui && npm ci && npm run dev            # then open http://localhost:5173
-```
-
-`--config config.toml` makes the UI read and save the same file as the command line. The
-backend listens on 127.0.0.1 only, and the 06:00 run does not need it; watching a run in
-the UI does not slow it down. Vietnamese is the default language, English is one click
-away.
-
-The UI is one screen, without a menu:
+The app is one screen, without a menu:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
@@ -230,8 +174,8 @@ The UI is one screen, without a menu:
   need no step (the runs and the daily switch see to them). It
   opens first, with a count, while anything is left. The Windows notification switch sits on
   the ticket, beside the daily switch.
-
-Saving settings rewrites `config.toml` (its comments are dropped); the next run reads it.
+- **A tab per machine** on top of the ticket: "Máy 2" (a second MuMu instance, logged in to
+  another account) books alongside the first once its "Dùng máy này" switch is on.
 
 <p>
   <img src="docs/img/home.png" width="49%" alt="Ready for 06:00: the ticket with the daily
@@ -242,53 +186,18 @@ Saving settings rewrites `config.toml` (its comments are dropped); the next run 
   of three tasks, three lines on how to start and the steps to tick">
 </p>
 
-## Command line
-
-| Command | What it does |
-|---|---|
-| `court-booker` | Book the slots in `config.toml` now |
-| `court-booker --dry-run` | Walk the whole flow and stop before "Xác nhận" |
-| `court-booker --at 06:00` | Prepare now, start booking at 06:00:00 |
-| `court-booker --scheduled` | The same at `start_at` (what the daily task runs) |
-| `court-booker --slots "18:00 - 19:00"` | Other slots, for this run only |
-| `court-booker --verbose` | Also print every screen read and every tap |
-| `court-booker --driver instrumentation` / `--driver uiautomator2` | Use only that driver; the default `auto` tries instrumentation, then falls back to uiautomator2 |
-| `court-booker setup [--auto]` | Check the PC and the emulator, or fix them |
-| `court-booker schedule install` / `status` / `remove` | The daily task |
-| `court-booker serve --config config.toml` | The backend of the web UI |
-
-Every command takes `--config` (default: `config.toml` in the current folder; for `serve`,
-the one in the data folder).
-
-| Exit code | Meaning |
-|---|---|
-| 0 | every round succeeded |
-| 1 | a round failed |
-| 2 | bad arguments or config, the start time has passed, or a dry run around the scheduled run |
-| 3 | emulator or ADB error, or the emulator stopped answering (frozen) |
-| 4 | the app did not reach its home screen (for example, logged out) |
-| 5 | another run holds the run lock |
-| 130 | interrupted with Ctrl+C |
-
-- **Logs**: each run appends to `logs/court-booker-YYYY-MM-DD.log` beside `config.toml`,
-  with every screen it read and every tap; each other MuMu instance to its own
-  `…-mumuN.log`.
-- **Data folder**: the history database `booker.db` and the run lock `run.lock` (and
-  `run-mumuN.lock` for each other instance) are in `%LOCALAPPDATA%\CourtBooker`; set
-  `COURT_BOOKER_HOME` to move them.
-- **One run at a time**: a second run is refused (exit code 5), and the scheduled run waits
-  for a run already going, then stops it two minutes before the start time. No dry run or
-  auto setup starts from `wake_at` to five minutes after `start_at`.
-
 ## Project layout
 
 ```text
 src/court_booker/       booking engine and command line: emulator, ADB, flow, clock, history
-src/court_booker/api/   FastAPI backend of the web UI
-ui/                     web UI: React, TypeScript, Vite
+src/court_booker/api/   FastAPI backend, which also serves the UI in the installed app
+ui/                     the UI: React, TypeScript, Vite
+desktop/                the window and the installer: Tauri, Rust
+packaging/              the PyInstaller build of the engine and backend
+android/                the instrumentation driver that taps in the emulator
 tests/                  Python tests with a fake device, ADB, clock and Task Scheduler
-tools/                  screen inspector, runner folder, OpenAPI export, release
-docs/                   how it works, architecture, field notes, roadmap, desktop app spec
+tools/                  app build, release, screen inspector, OpenAPI export
+docs/                   how it works, architecture, field notes, command line, roadmap, spec
 ```
 
 [docs/architecture.md](docs/architecture.md) says what each module does.
@@ -296,16 +205,19 @@ docs/                   how it works, architecture, field notes, roadmap, deskto
 ## Development
 
 ```bash
+git clone https://github.com/servedbyhau/vh-tennis-booker.git
+cd vh-tennis-booker
 pip install -e ".[dev,app]"
 pre-commit install
 pytest
 cd ui && npm ci && npm test
 ```
 
-When the app changes its screens, `python tools/inspect_screen.py --near "Tôi đã hiểu"`
-prints the elements around a label. [CONTRIBUTING.md](CONTRIBUTING.md) covers the checks,
-conventions, branches and releases, and the runner folder that keeps the daily task off
-work in progress.
+[docs/command-line.md](docs/command-line.md) runs the engine, the backend and the UI from the
+clone, with every command, setting and exit code. When the app changes its screens,
+`python tools/inspect_screen.py --near "Tôi đã hiểu"` prints the elements around a label.
+[CONTRIBUTING.md](CONTRIBUTING.md) covers the checks, conventions, branches, building the app
+and releases.
 
 ## Roadmap
 
