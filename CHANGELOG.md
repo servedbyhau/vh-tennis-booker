@@ -36,6 +36,9 @@ uses [Semantic Versioning](https://semver.org/).
   as `docs/status/`; the local Android lab branch is gone, so CLAUDE.md no longer names it.
 - Ruff has one version, the one `pyproject.toml` pins (0.17.3): CI installs that pin instead
   of its own, and pre-commit runs the installed Ruff, so a Dependabot bump needs no second edit.
+- The installed app runs the daily booking, since its first real 06:00 run booked 2/2 on
+  2026-11-03: a release reaches that run through the installer built from `main`, and the
+  runner folder stays only as a way back. `tools/release.py` says so in its last step.
 
 ## [0.18.1] - 2026-10-30
 

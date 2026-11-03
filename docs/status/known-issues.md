@@ -4,7 +4,7 @@ Open bugs, by severity: **1** may cost the 06:00 run, **2** reports wrongly or t
 **3** UI or docs. Remove an issue once it is fixed and confirmed (`CHANGELOG.md` keeps the
 history). Ideas the user ruled out are listed last, so they are not proposed again.
 
-Last updated: 2026-11-02.
+Last updated: 2026-11-03.
 
 No confirmed open bugs. The next-month day tap was confirmed by real bookings for 2026-11-01
 after the fix on 2026-10-30 and by the 2026-10-31 06:00 run for 2026-11-02.
@@ -23,7 +23,7 @@ crashing mid-round, ADB lost mid-run. Fixed when a log shows one.
   notice stops the run (0.11.0).
 - A PC that did not wake (the user had shut it down). A scrolled home screen where Back
   leaves the app (only after someone touched it).
-- The schedule switch in a development UI replacing the runner's task (2026-10-16, not fixed:
+- The schedule switch in a development UI replacing the app's task (2026-10-16, not fixed:
   never switch the schedule from a development backend).
 - Tapping by MuMu's clock instead of NTP (2026-10-24): it would save a few hundred
   milliseconds at most. Measured at 21:00 on 2026-10-24: MuMu ran 0.71 s behind NTP, and the

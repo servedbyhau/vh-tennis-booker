@@ -123,12 +123,9 @@ cd ui && npm run api:types       # writes ui/src/api/schema.d.ts
 
 ## Releasing
 
-A release moves the daily 06:00 run to new code (the runner folder, below). The web UI and
-its backend run from the development folder, so their changes reach you without one. Cut a
-release when the 06:00 run needs a change: one to the engine (`src/court_booker` outside
-`api/`), or a config key the backend now writes, which an older runner refuses. A fix the
-06:00 run needs goes out at once as a patch; the rest waits for the next release, about once
-a week.
+A release moves the installed app, and with it the daily 06:00 run, to new code: the engine,
+the backend and the UI all come from its installer. A fix the 06:00 run needs goes out at once
+as a patch; the rest waits for the next release, about once a week.
 
 1. On `develop`, clean and up to date with GitHub, run:
    ```bash
@@ -153,10 +150,10 @@ a week.
    ```
 4. Optionally create a GitHub release from the tag using the changelog entry; delete the
    `chore/release-X.Y.Z` branch.
-5. Once a dry run of the release passes on the emulator, move the runner folder to the new
-   tag (see below); until then the daily task keeps the previous release:
+5. The `Desktop` workflow builds the installer from the merge on `main`. Install it over the
+   app: the install folder stays the same, so the daily task needs no change.
    ```bash
-   python tools/setup_runner.py vX.Y.Z
+   gh run download <run> -n court-booker-installer
    ```
 
 ## Packaged app
@@ -183,9 +180,10 @@ PyInstaller folder first: `npm ci`, then `npx tauri build` in `desktop/`. The ic
 
 ## Runner folder
 
-The daily scheduled task books for real, so it never runs the development checkout. It runs
-`../runner`, a git worktree checked out at a release tag, with its own virtual environment;
-it still reads `config.toml` and writes `logs/` in the development folder.
+Before the installed app, the daily task ran `../runner`, a git worktree checked out at a
+release tag, with its own virtual environment, so it never ran the development checkout. It
+stays for now only as a way back: `schedule install` from its Python points the task at it
+again.
 
 ```bash
 python tools/setup_runner.py vX.Y.Z --schedule   # first time: create it and point the task at it
@@ -193,6 +191,4 @@ python tools/setup_runner.py vX.Y.Z              # after a release: move it to t
 python tools/setup_runner.py <previous-tag>      # roll back to the last working release
 ```
 
-The log of each run names the Python and code folder it used. A fix that must reach the
-06:00 run before the next release goes out as a patch release (`vX.Y.Z+1`) and then moves
-the runner.
+The log of each run names the Python, or the app, and the code folder it used.
