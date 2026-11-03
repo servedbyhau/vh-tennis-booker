@@ -179,6 +179,10 @@ The update button installs only what the updater key signed. Its public half is 
 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. A release fails without them; other builds skip the
 signing. Losing the private key means installed apps can no longer update by the button.
 
+After the build the workflow runs `tools/check_installer.ps1` on its clean runner: install, serve
+without Python, and uninstall, which must remove the app's daily task and keep another's. It
+creates a task named `court-booker`, so never run it on a PC that books.
+
 The window lives in `desktop/` (Tauri, Rust). The `Desktop` workflow builds the NSIS installer on
 a Windows runner, which has Rust and the MSVC tools, for `main` and `feat/desktop-*`; fetch it with
 `gh run download <run> -n court-booker-installer`. Building it locally needs both, and the

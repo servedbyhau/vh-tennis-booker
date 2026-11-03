@@ -164,6 +164,10 @@ the installer runs, since both use the files the installer replaces. In `ui/`, `
 calls the commands; `UpdateButton` shows only in the window, when a newer version is out, and
 is locked while a run holds the lock and in the quiet time.
 
+The uninstaller removes the daily task when its command is in the install folder
+(`windows/hooks.nsh`), not on an update, which runs no uninstaller. `tools/check_installer.ps1`
+proves install, serve and uninstall on the `Desktop` workflow's clean runner.
+
 ## Backend (`court_booker.api`)
 
 `create_app(AppContext)`; `court-booker serve` listens on 127.0.0.1:8765, docs at `/api/docs`.
