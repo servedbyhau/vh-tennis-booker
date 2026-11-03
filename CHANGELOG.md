@@ -6,6 +6,40 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-03
+
+### Added
+- `tools/release.py X.Y.Z` makes the release commit on its `chore/release-X.Y.Z` branch
+  after checking the version and the branch, and prints the pull requests to open.
+- The `Tag` workflow tags each push to `main` `vX.Y.Z` from its version; tags by hand only
+  when it fails.
+- One function, `engine_command`, says how to start the engine, so the dry run, a second
+  instance and the daily task also start from a packaged app, which has no `python -m`.
+- The backend serves the built UI when it sits beside the code, as in the packaged app, and an
+  address that is no file opens the UI; development without a build serves `/api` alone.
+- `tools/build_app.py` builds the UI, then `packaging/court-booker.spec` the PyInstaller folder
+  that runs without Python, with no console: then the backend logs to its file.
+- `desktop/` is the app's window (Tauri): it starts the packaged backend, or uses one that already
+  answers, and shows its page. The `Desktop` workflow builds the per-user NSIS installer.
+
+### Changed
+- The roadmap and field notes record real BS and two-instance bookings on 2026-11-01, and
+  successful next-month bookings for both dates opened on the last two days of October.
+- CLAUDE.md: commits and pull requests carry no AI attribution (author Pham Van Hau,
+  unsigned, no attribution lines).
+- Releases come when the 06:00 run needs a change (about weekly otherwise); CHANGELOG
+  entries are one short line per change; each fact has one home in the docs, and CLAUDE.md
+  links to `architecture.md` and `field-notes.md` instead of restating them.
+- The README opens with the problem, the approach and the result, and its highlights are
+  shorter; CONTRIBUTING asks docs to be written for someone new to the project.
+- The status notes (current state, next task, known issues) move into the repo, in English,
+  as `docs/status/`; the local Android lab branch is gone, so CLAUDE.md no longer names it.
+- Ruff has one version, the one `pyproject.toml` pins (0.17.3): CI installs that pin instead
+  of its own, and pre-commit runs the installed Ruff, so a Dependabot bump needs no second edit.
+- The installed app runs the daily booking, since its first real 06:00 run booked 2/2 on
+  2026-11-03: a release reaches that run through the installer built from `main`, and the
+  runner folder stays only as a way back. `tools/release.py` says so in its last step.
+
 ## [0.18.1] - 2026-10-30
 
 ### Fixed

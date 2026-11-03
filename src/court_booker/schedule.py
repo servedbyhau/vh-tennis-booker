@@ -6,8 +6,8 @@ import argparse
 import getpass
 import logging
 import os
-import sys
 import tempfile
+from collections.abc import Sequence
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -16,6 +16,7 @@ from court_booker.clock import parse_time
 from court_booker.config import load_config
 from court_booker.device_setup import ensure_wake_timers
 from court_booker.emulator import Run, run_command
+from court_booker.engine import engine_command
 from court_booker.errors import CourtBookerError, RequestError, ScheduleError
 from court_booker.logging_setup import LOGGER_NAME, configure_logging
 
@@ -70,12 +71,6 @@ def next_start(now: datetime, start_at: str) -> datetime:
     return start if start > now else start + timedelta(days=1)
 
 
-def windowless_python(executable: Path) -> Path:
-    """Return ``pythonw.exe`` next to ``executable`` if present, so no console opens."""
-    candidate = executable.with_name("pythonw.exe")
-    return candidate if candidate.is_file() else executable
-
-
 def current_user() -> str:
     """Return ``DOMAIN\\user`` for the task principal."""
     domain = os.environ.get("USERDOMAIN")
@@ -86,7 +81,7 @@ def current_user() -> str:
 def build_task_xml(
     *,
     wake_at: str,
-    python: Path,
+    engine: Sequence[str],
     config_path: Path,
     user: str,
     today: date,
@@ -97,11 +92,11 @@ def build_task_xml(
     because the emulator needs the interactive desktop.
     """
     wake = parse_time(wake_at, "wake_at")
-    arguments = f'-m court_booker --config "{config_path}" --scheduled'
+    arguments = " ".join([*engine[1:], f'--config "{config_path}" --scheduled'])
     return _TASK_XML.format(
         start_boundary=datetime.combine(today, wake).isoformat(timespec="seconds"),
         user=escape(user),
-        command=escape(str(python)),
+        command=escape(engine[0]),
         arguments=escape(arguments),
         workdir=escape(str(config_path.parent)),
     )
@@ -111,14 +106,14 @@ def install(
     config_path: Path,
     wake_at: str,
     run: Run = run_command,
-    python: Path | None = None,
+    engine: Sequence[str] | None = None,
     user: str | None = None,
     today: date | None = None,
 ) -> None:
     """Create or replace the scheduled task."""
     xml = build_task_xml(
         wake_at=wake_at,
-        python=python or windowless_python(Path(sys.executable)),
+        engine=engine or engine_command(windowless=True),
         config_path=config_path,
         user=user or current_user(),
         today=today or date.today(),

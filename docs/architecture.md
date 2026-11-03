@@ -1,6 +1,7 @@
 # Architecture
 
-Three parts: the **engine** (`python -m court_booker`) books a court in a run of its own; the
+Three parts: the **engine** (`engine.py` says how to start it: `python -m court_booker`, or the
+packaged app's own exe) books a court in a run of its own; the
 **backend** (`court_booker.api`, FastAPI) serves the app's screens; the **UI** (`ui/`, React)
 is those screens. The 06:00 task runs the engine alone. How the flow reads the app:
 [how-it-works.md](how-it-works.md); facts about the app and MuMu: [field-notes.md](field-notes.md);
@@ -114,7 +115,8 @@ Details live in the docstrings; this page says where things are and what must st
 - `history.py`: `booker.db` (SQLite, WAL, migrations by `PRAGMA user_version`) as an event sink:
   `runs` (with the MuMu instance as `device`, from schema 2; empty for older runs; `court` is
   the configured court until a slot is booked, then the court the app booked), `run_slots`,
-  `events`, and the run's log lines. The first database error turns history off for the process.
+  `events`, and the run's log lines (about 0.13 ms per row written). The first database error
+  turns history off for the process.
   Schema changes only add columns, so an older runner still writes to a newer database.
 - `history_read.py`: read-only queries for the backend (runs, one run, events, the live feed's
   `events_after`, `dry_run_passed`, `account_subdivisions`: the subdivision each
@@ -141,11 +143,25 @@ Details live in the docstrings; this page says where things are and what must st
   another screen is only logged, never restarted before the start); `schedule install` and
   `PUT /api/schedule` call `ensure_wake_timers` (`powercfg`).
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the
-  runner folder's Python.
+  engine of whatever installed it: the runner folder's Python, or the packaged app.
+
+## Desktop window (`desktop/`)
+
+A Tauri shell around the backend, built by the `Desktop` workflow; the PyInstaller folder
+(`packaging/court-booker.spec`, `tools/build_app.py`) is one of its resources. It shows a waiting
+page, starts `court-booker.exe serve` without a window, waits for `/api/health` and moves on to the
+backend's page. A backend that already answers is used as it is, and only a backend started here
+is stopped on leaving. The backend starts from a plain path, without Tauri's `\\?\` prefix, as it
+writes its own path into the daily task. It must stay true that nothing about a booking runs in the
+window: the daily task runs `court-booker.exe` alone, with the window closed.
 
 ## Backend (`court_booker.api`)
 
 `create_app(AppContext)`; `court-booker serve` listens on 127.0.0.1:8765, docs at `/api/docs`.
+With a built UI in `court_booker/ui` beside the code, as in the packaged app, it serves that too
+(`api/ui.py`), so the window has one origin and needs no CORS: `/api` and the live feed win, and
+any other address that is no file answers `index.html`. In development the folder is absent and
+Vite serves the UI.
 `cli.serve` imports it lazily, so a run never loads FastAPI. Route modules skip
 `from __future__ import annotations` and use `Optional` (Python 3.9 evaluates them).
 `CourtBookerError`s become `Problem` JSON with an `error` code (409 `lock_held`, 400

@@ -3,7 +3,6 @@
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
 # time.
 import subprocess
-import sys
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +11,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from court_booker.api.context import Context
+from court_booker.engine import engine_command
 from court_booker.errors import LockHeldError
 from court_booker.lock import RunLock, check_quiet_time
 
@@ -27,11 +27,10 @@ def launch(config_path: Path) -> "subprocess.Popen[bytes]":
     """Start ``court-booker --dry-run`` in its own process, as the scheduled task starts a run.
 
     The dry run then takes the exact code path of the 06:00 run, writes its own history and
-    log file, and a crash in it cannot take the backend down. The packaged desktop app
-    will start its own executable instead of ``python -m``.
+    log file, and a crash in it cannot take the backend down.
     """
     return subprocess.Popen(
-        [sys.executable, "-m", "court_booker", "--dry-run", "--config", str(config_path)],
+        [*engine_command(), "--dry-run", "--config", str(config_path)],
         cwd=config_path.parent,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,

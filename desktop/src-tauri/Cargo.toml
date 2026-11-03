@@ -1,0 +1,17 @@
+[package]
+name = "court-booker-desktop"
+version = "0.0.0" # the build passes the app's version (.github/workflows/desktop.yml)
+description = "The Court Booker window"
+edition = "2021"
+publish = false
+
+[lib]
+name = "court_booker_desktop"
+path = "src/lib.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-single-instance = "2"

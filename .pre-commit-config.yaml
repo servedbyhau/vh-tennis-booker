@@ -9,9 +9,19 @@ repos:
       - id: check-added-large-files
       - id: detect-private-key
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.0
+  # The Ruff installed from pyproject.toml's pin: a hook repo would hold a second version,
+  # which Dependabot does not bump.
+  - repo: local
     hooks:
       - id: ruff-check
-        args: [--fix]
+        name: ruff check
+        entry: python -m ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
       - id: ruff-format
+        name: ruff format
+        entry: python -m ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
