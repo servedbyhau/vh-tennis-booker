@@ -14,6 +14,11 @@ uses [Semantic Versioning](https://semver.org/).
   downloads it, installs it over the app and opens it again, with the data and the daily task
   kept. It is locked while a run holds the lock and in the quiet time around the booking.
 
+### Changed
+- The README is for residents: download, install, set up, update and uninstall, with new
+  screenshots; running from a clone, every command and exit code move to
+  `docs/command-line.md`.
+
 ### Fixed
 - Uninstalling the app removes its daily task, which went on waking the PC every morning; a
   task that runs another copy stays, and so does the data folder. The `Desktop` workflow now

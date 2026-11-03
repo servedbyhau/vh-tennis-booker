@@ -20,6 +20,7 @@ Read the matching doc before changing an area; these notes hold only the essenti
 | `docs/field-notes.md` | Facts about the app and MuMu the code relies on: screens, labels, dialogs, timings |
 | `docs/roadmap.md` | Goal, what is left, situations table, ruled-out ideas |
 | `docs/how-it-works.md` | How the flow reads the app (dumps, matching, navigation) |
+| `docs/command-line.md` | Running from a clone: config keys, commands, exit codes, logs |
 | `docs/specs/0.5.0-desktop-app.md` | Desktop app product decisions and the packaging plan (last) |
 | `CONTRIBUTING.md` | Setup, checks, branches, releasing, runner folder |
 | `docs/status/` | Current state, the next task, known issues (kept current each session) |
