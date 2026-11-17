@@ -41,21 +41,26 @@ def is_inside(box: Box, outer: Box) -> bool:
     )
 
 
+def is_small(box: Box, screen_width: int) -> bool:
+    """Return whether ``box`` is the size of a checkbox or an icon button, not of a panel."""
+    left, top, right, bottom = box
+    max_size = screen_width * _CHECKBOX_MAX_SIZE_RATIO
+    return 0 < right - left <= max_size and 0 < bottom - top <= max_size
+
+
 def is_checkbox_beside(box: Box, label: Box, screen_width: int) -> bool:
     """Return whether ``box`` is a plausible checkbox for the caption ``label``.
 
     A checkbox must be small, sit to the left of the caption and overlap it
     vertically. Thresholds scale with the screen width.
     """
-    left, top, right, bottom = box
+    _, top, right, bottom = box
     label_left, label_top, _, label_bottom = label
-    max_size = screen_width * _CHECKBOX_MAX_SIZE_RATIO
     gap = screen_width * _CHECKBOX_GAP_RATIO
 
-    is_small = 0 < right - left <= max_size and 0 < bottom - top <= max_size
     is_left_of_label = right <= label_left + gap
     is_same_row = top < label_bottom and bottom > label_top
-    return is_small and is_left_of_label and is_same_row
+    return is_small(box, screen_width) and is_left_of_label and is_same_row
 
 
 def month_index(year: int, month: int) -> int:

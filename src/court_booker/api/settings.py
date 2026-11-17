@@ -55,6 +55,7 @@ class LabelSettings(BaseModel):
     ticket: str
     processing: str
     registered: str
+    dont_show_again: str
 
 
 class InstanceSettings(BaseModel):

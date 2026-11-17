@@ -38,6 +38,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 | App | Logged out | Fails early (exit 4) |
 | App | App set to English | Works: the language is found on the first screen |
 | App | Closed-hours notice (tap before 06:00) | Closed with Back and the utility tapped again until `open_retry_seconds`; the wait goes by NTP time on a counter, the first tap 0.1 s after the start |
+| App | Promotion popup over the home screen | Closed with its X before the utilities list is opened (field notes); Back does not close it |
 | App | Update prompt, other dialogs, network error | Not handled |
 | App | App crash or freeze during a round | Not handled |
 | App | Slow server | Every screen awaited up to `timeout` (30 s), a tap repeated every 2 s while its element still shows |

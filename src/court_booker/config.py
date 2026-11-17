@@ -101,6 +101,9 @@ class Labels:
     """Ticket status while the server handles the booking (seen at 06:00)."""
     registered: str = "Đã đăng ký"
     """Ticket status once the booking is registered."""
+    dont_show_again: str = "Không hiện lại"
+    """Caption of the tick box on a promotion popup over the home screen; the popup is closed
+    with its unlabelled X, as Back leaves it open."""
 
 
 @dataclass

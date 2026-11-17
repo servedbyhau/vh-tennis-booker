@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-03.
+Last updated: 2026-11-17.
 
 ## Release and daily run
 
@@ -26,13 +26,13 @@ Last updated: 2026-11-03.
 
 | Date | Version | Result |
 |---|---|---|
-| 2026-11-03 | 0.18.1, installed app | 2/2 (5.6 s, 3.9 s): the first run from the installed app, without Python |
-| 2026-11-02 | 0.18.1 | 2/2 (6.6 s, 3.9 s) |
+| 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed on `fix/home-popup`) |
+| 2026-11-16 | 1.0.0 | Instance 0 1/1, instance 1 2/2 |
+| 2026-11-15 | 1.0.0 | Instance 0 1/1 (5.1 s), instance 1 2/2 (4.9 s, 3.2 s) |
+| 2026-11-14 | 1.0.0 | 1/2: the second slot was taken by someone else at "Xác nhận" (06:00:09) |
+| 2026-11-13 | 1.0.0 | 1/2: the court of the first slot was full by 06:00:05.9 |
 | 2026-11-01 | 0.18.1 | Both instances 2/2: Origami (4.5 s, 3.6 s), BS (4.8 s, 3.5 s); real BS and parallel bookings confirmed |
-| 2026-10-31 | 0.18.1 | 2/2 (5.9 s, 3.8 s); both rounds switched to November and selected 2026-11-02 within 0.4 s |
 | 2026-10-30 | 0.18.0 | 0/2 at 06:00: the day tap landed during the month slide; after the fix, a real run that day booked 2/2 for 2026-11-01 |
-| 2026-10-29 | 0.17.0 | 2/2 (7.0 s, 3.6 s) |
-| 2026-10-28 | 0.15.0 | 2/2 (7.1 s, 5.2 s) |
 
 ## Decisions in force
 
