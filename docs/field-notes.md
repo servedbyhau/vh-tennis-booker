@@ -120,7 +120,11 @@ unlabelled tick box `[331,1096][375,1140]`. The home screen's labels leave the d
   run that read the home screen at 05:45 met it at 05:59. It showed again after each restart
   while the box stayed unticked.
 - Its size varies: in a later read the image spanned `[23,103][517,1517]`, the X
-  `[481,56][517,92]` and the caption `[331,1533][517,1577]`, so the X is found per read.
+  `[481,56][517,92]` and the caption `[331,1533][517,1577]`, so the X is found per read. It can
+  show at that large size first and shrink to the small one about a second later: a tap placed
+  from the first read then misses the X, so the X is tapped again from a new read.
+- Whether ticking "Không hiện lại" before the X keeps it away after a restart is not known: two
+  tries on 2026-11-17 ended with MuMu frozen.
 - The X closed it within 0.1 s, with the home screen beneath. Back did nothing (8 presses).
   A dry run on the fix closed it at 09:57 on 2026-11-17 and went on to the calendar. With the
   popup left to show during the wait, as at 05:59 that day, the warm-up closed it and was on

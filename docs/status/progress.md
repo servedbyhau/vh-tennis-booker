@@ -8,9 +8,10 @@ Last updated: 2026-11-17.
 
 ## Release and daily run
 
-- Released: **1.0.0** (tag `v1.0.0`, 2026-11-03), the first complete version: the installer on
-  its release page, the update button, and the uninstaller removing the daily task. 0.19.0 has
-  no update button, so 1.0.0 is installed by hand over it; later versions update by the button.
+- Released: **1.0.1** (tag `v1.0.1`, 2026-11-17): the 06:00 run closes the promotion popup
+  over the home screen. 1.0.0 (2026-11-03) was the first complete version: the installer on
+  its release page, the update button, and the uninstaller removing the daily task; 1.0.1 is
+  the first version installed by the button.
 - The Android app is developed in `servedbyhau/v-court`, which ports this repo's booking
   flow and driver; this repo is its behavior reference.
 - Daily task `\court-booker`: runs the installed app,
@@ -26,7 +27,7 @@ Last updated: 2026-11-17.
 
 | Date | Version | Result |
 |---|---|---|
-| 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed on `fix/home-popup`) |
+| 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed in 1.0.1) |
 | 2026-11-16 | 1.0.0 | Instance 0 1/1, instance 1 2/2 |
 | 2026-11-15 | 1.0.0 | Instance 0 1/1 (5.1 s), instance 1 2/2 (4.9 s, 3.2 s) |
 | 2026-11-14 | 1.0.0 | 1/2: the second slot was taken by someone else at "Xác nhận" (06:00:09) |
