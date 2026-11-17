@@ -1107,6 +1107,90 @@ def test_return_to_utilities_warns_about_a_notice_it_closes(caplog):
     assert app.screen == "utilities"
 
 
+POPUP_X = (481, 493, 517, 529)
+POPUP = [  # an event invitation over the home screen, read on 2026-11-17; Back leaves it open
+    node("", (0, 0, 540, 1600)),
+    node("", POPUP_X),
+    node("", (23, 540, 517, 1080)),  # the image
+    node("Không hiện lại", (331, 1096, 517, 1140)),
+    node("", (331, 1096, 375, 1140)),  # its tick box
+    node("9:46 AM", (6, 5, 50, 28), False),
+]
+
+
+def popup_app(screen="popup"):
+    """Return the booking app with the popup over its home screen; its X closes it."""
+    app = booking_app(screen=screen)
+    app.screens["popup"] = POPUP
+    app.taps_to[("popup", POPUP_X)] = "home"
+    app.launches_to = ["home", ("popup", 2)]  # it showed 0.3-0.8 s after the home screen
+    return app
+
+
+def test_a_popup_over_the_home_screen_is_closed_with_its_x(caplog):
+    caplog.set_level(logging.INFO, logger="court_booker.flow")
+    app = popup_app()
+
+    Booker(app, Config()).locate_entry()  # 05:59 on 2026-11-17: Back alone failed
+
+    assert app.taps == [POPUP_X, "Tiện ích"]  # never the tick box: the app's setting stays
+    assert app.calls == []
+    assert app.screen == "utilities"
+    assert "Closing a popup of the app over the home screen" in caplog.text
+
+
+def test_prepare_closes_a_popup_that_shows_after_the_home_screen(monkeypatch):
+    monkeypatch.setattr(flow, "_POPUP_WAIT", 2.0)
+    app = popup_app(screen="loading")
+
+    Booker(app, Config()).prepare()
+
+    assert app.taps == [POPUP_X]  # closed at the start, not when the run taps "Tiện ích"
+    assert app.screen == "home"
+
+
+def test_prepare_watches_for_a_popup_without_tapping_when_none_shows(monkeypatch, fake_time):
+    monkeypatch.setattr(flow, "_POPUP_WAIT", 2.0)
+    app = booking_app(screen="loading")
+
+    Booker(app, Config()).prepare()
+
+    assert app.taps == []
+    assert app.screen == "home"
+    assert fake_time[0] >= 2.0
+
+
+def test_a_popup_that_shows_before_the_first_read_still_tells_the_language():
+    app = popup_app(screen="loading")
+    app.launches_to = "popup"
+    booker = Booker(app, Config())
+
+    booker.prepare()
+
+    assert booker.language.name == "Vietnamese"
+    assert app.taps == [POPUP_X]
+    assert "back" not in app.calls
+    assert app.screen == "home"
+
+
+def test_a_popup_whose_x_the_app_missed_is_closed_again(fake_time):
+    app = popup_app()
+    app.swallow[POPUP_X] = 1
+
+    Booker(app, Config()).return_to_home()
+
+    assert app.taps == [POPUP_X, POPUP_X]
+    assert app.calls == []
+    assert app.screen == "home"
+
+
+def test_the_popup_x_is_the_small_unlabelled_node_above_the_tick_box():
+    booker = Booker(booking_app(), Config())
+
+    assert booker.locate_popup_close(screen_of(POPUP)).box == POPUP_X
+    assert booker.locate_popup_close(screen_of(NOTICE)) is None
+
+
 def screen_of(nodes):
     return Screen([Node(desc, box, clickable) for desc, box, clickable in nodes])
 

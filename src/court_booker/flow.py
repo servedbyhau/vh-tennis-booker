@@ -38,6 +38,7 @@ from court_booker.geometry import (
     ANY_SLOT_PATTERN,
     is_checkbox_beside,
     is_inside,
+    is_small,
     month_index,
     parse_booked_time,
 )
@@ -65,6 +66,11 @@ _MOVED_COURT_WAIT = 0.6
 
 A tap that opens a court shows the booking details page 0.23-0.45 s later (14-17/10)."""
 _BACK_PRESSES = 8
+_POPUP_WAIT = 2.0
+"""How long ``prepare`` watches the home screen for a promotion popup before it is ready.
+
+The popup showed 0.3-0.8 s after the home screen (2 restarts, 2026-11-17). Closed then, it
+cannot cover the home screen's button the moment a run taps it."""
 _CONTINUE_WAIT = 2.0
 """How long the slot list is read again while "Tiếp tục" shows disabled, before the slot tap.
 
@@ -177,6 +183,7 @@ class Booker:
         self.ticket = Match(desc=labels.ticket)
         self.processing = Match(desc=labels.processing)
         self.registered = Match(desc=labels.registered)
+        self.popup = Match(desc=labels.dont_show_again, clickable=True)
 
     # Public API -------------------------------------------------------------
 
@@ -231,6 +238,9 @@ class Booker:
         logger.info("App language: %s", found[0].name)
         try:
             home = self.return_to_home(found[1])
+            popup = self.wait_for(self._finder(self.popup), _POPUP_WAIT, home)
+            if popup is not None:
+                home = self.return_to_home(popup[1])
         except NavigationError as exc:
             raise AppNotReadyError(str(exc)) from exc
         self.read_account(home)
@@ -459,6 +469,10 @@ class Booker:
                     screen, self.home, self.labels.home, self._finder(self.utility)
                 )
                 return screen
+            closed = self.close_popup(screen, arrived)
+            if closed is not None:
+                screen = closed
+                continue
             self._warn_about_notice(screen)
             screen = self.go_back(screen, arrived)
         raise NavigationError("Could not return to the utilities list")
@@ -467,11 +481,16 @@ class Booker:
         """Press Back until the home screen shows; Back is never pressed on it (that exits)."""
         if screen is None:
             screen = self.snapshot()
+        arrived = self._finder(self.home)
         for _ in range(_BACK_PRESSES):
             if screen.find(self.home):
                 return screen
+            closed = self.close_popup(screen, arrived)
+            if closed is not None:
+                screen = closed
+                continue
             self._warn_about_notice(screen)
-            screen = self.go_back(screen, self._finder(self.home))
+            screen = self.go_back(screen, arrived)
         raise NavigationError("Could not return to the home screen")
 
     # Navigation -------------------------------------------------------------
@@ -833,6 +852,46 @@ class Booker:
             )
         return None
 
+    def locate_popup_close(self, screen: Screen) -> Node | None:
+        """Return the X of a promotion popup over the home screen, or ``None`` if none shows.
+
+        The popup (an event invitation, 2026-11-17) is an image with a "Không hiện lại" tick
+        box below it and an X above its right corner; it covers the home screen's labels, and
+        Back leaves it open. The X has no label: it is the smallest clickable node without a
+        label above the tick box's row that is the size of an icon, not the image.
+        """
+        caption = screen.find(self.popup)
+        if caption is None:
+            return None
+        width, _ = screen.size
+        candidates = [
+            node
+            for node in screen.nodes
+            if node.clickable
+            and not node.desc
+            and node.box[3] <= caption.box[1]
+            and is_small(node.box, width)
+        ]
+        return min(candidates, key=_area, default=None)
+
+    def close_popup(self, screen: Screen, arrived: Finder[Node]) -> Screen | None:
+        """Close a promotion popup on ``screen`` with its X; ``None`` if none shows.
+
+        The X closed it within 0.1 s (2026-11-17). The tick box is left alone, so the app's
+        own setting is unchanged; the popup shows again after a restart and is closed again.
+        Returns the first read that ``arrived`` finds, such as the home screen, or the last
+        read after :data:`_NEXT_SCREEN_TIMEOUT`, for the caller to look at again. A read
+        without the popup is not enough: a frame without labels in between would get a
+        Back, which leaves the app on the home screen.
+        """
+        node = self.locate_popup_close(screen)
+        if node is None:
+            return None
+        logger.info("Closing a popup of the app over the home screen")
+        self.tap(node)
+        found = self.wait_for(arrived, _NEXT_SCREEN_TIMEOUT)
+        return found[1] if found is not None else self.last_screen
+
     def _warn_about_notice(self, screen: Screen) -> None:
         """Log a notice about to be closed with Back; it may belong to the round before."""
         message = self.notice_text(screen)
@@ -883,11 +942,12 @@ class Booker:
     def _find_language(self, screen: Screen) -> AppLanguage | None:
         """Return the language whose home or utility button ``screen`` shows.
 
-        Their labels differ in each language (field notes), so no screen shows two.
+        Their labels differ in each language (field notes), so no screen shows two. A
+        popup over the home screen hides its button, so the popup's tick box counts too.
         """
         for language in self.languages:
             labels = language.labels
-            for label in (labels.home, labels.utility):
+            for label in (labels.home, labels.utility, labels.dont_show_again):
                 if label and screen.find(Match(desc=label, clickable=True)) is not None:
                     return language
         return None

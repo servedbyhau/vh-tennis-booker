@@ -77,6 +77,14 @@ def restore_package_logger():
 
 
 @pytest.fixture(autouse=True)
+def no_popup_wait(monkeypatch):
+    """Skip ``prepare``'s 2 s watch for a popup; the popup tests set it back."""
+    from court_booker import flow
+
+    monkeypatch.setattr(flow, "_POPUP_WAIT", 0)
+
+
+@pytest.fixture(autouse=True)
 def closed_mumu(monkeypatch):
     """Record the configs a run would close MuMu for, so tests never close the real MuMu."""
     from court_booker import cli
