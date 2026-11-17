@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- CI's test job runs on Ubuntu 24.04: `ubuntu-latest` became Ubuntu 26.04, which has no
+  Python 3.9.
+
 ## [1.0.0] - 2026-11-03
 
 ### Added
