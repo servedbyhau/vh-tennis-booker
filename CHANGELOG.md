@@ -6,6 +6,17 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-17
+
+### Changed
+- CI's test job runs on Ubuntu 24.04: `ubuntu-latest` became Ubuntu 26.04, which has no
+  Python 3.9.
+
+### Fixed
+- A promotion popup over the app's home screen, which Back does not close, failed the 06:00
+  run on 2026-11-17 on both accounts; the run now closes it with its X (new `[labels]`
+  `dont_show_again`).
+
 ## [1.0.0] - 2026-11-03
 
 ### Added

@@ -100,6 +100,10 @@ Details live in the docstrings; this page says where things are and what must st
   "Outcome unknown" (`BookingUnconfirmedError`). A dry run stops before "Xác nhận".
 - Navigation back (`return_to_utilities`, `return_to_home`, `go_back`) presses the next Back as
   soon as the screen before shows; Back is never pressed on the home screen (it leaves the app).
+  A promotion popup over the home screen (`dont_show_again` label) does not close with Back:
+  both close it with its unlabelled X (`close_popup`) and wait for the home screen.
+  `prepare()` also tells the language by the popup's label, and watches the home screen 2 s
+  for it (`_POPUP_WAIT`), so it is closed before a round taps "Tiện ích".
 - `book()` returns `Booked`: date, slot and court read on the confirmation page (a difference is
   a warning only) and the ticket's status, from reads the round makes anyway.
 - Pure modules (testable without a device): `geometry.py`, `screen.py`, `app_language.py`,

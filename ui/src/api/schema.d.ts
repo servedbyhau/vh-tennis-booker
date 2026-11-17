@@ -437,6 +437,8 @@ export interface components {
             processing: string;
             /** Registered */
             registered: string;
+            /** Dont Show Again */
+            dont_show_again: string;
         };
         /**
          * LogLine

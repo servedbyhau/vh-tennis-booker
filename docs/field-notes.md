@@ -108,6 +108,29 @@ clickable "Đóng"; the page beneath leaves the dump.
 - **Slot taken** (someone booked it first): after "Xác nhận", "Tiện ích đã hết chỗ, vui lòng
   chọn vị trí/thời gian khác".
 
+### Promotion popup over the home screen
+
+Seen first on 2026-11-17 (an event invitation on both accounts); it failed that 06:00 run, whose
+Back presses never closed it. Not a "Thông báo" dialog: a clickable scrim over the whole screen,
+an image `[23,540][517,1080]`, an unlabelled clickable X above its right corner
+`[481,493][517,529]`, and a clickable caption "Không hiện lại" `[331,1096][517,1140]` with its
+unlabelled tick box `[331,1096][375,1140]`. The home screen's labels leave the dump.
+
+- It shows 0.3-0.8 s after the home screen once the app starts (2 restarts, 2026-11-17), so a
+  run that read the home screen at 05:45 met it at 05:59. It showed again after each restart
+  while the box stayed unticked.
+- Its size varies: in a later read the image spanned `[23,103][517,1517]`, the X
+  `[481,56][517,92]` and the caption `[331,1533][517,1577]`, so the X is found per read. It can
+  show at that large size first and shrink to the small one about a second later: a tap placed
+  from the first read then misses the X, so the X is tapped again from a new read.
+- Whether ticking "Không hiện lại" before the X keeps it away after a restart is not known: two
+  tries on 2026-11-17 ended with MuMu frozen.
+- The X closed it within 0.1 s, with the home screen beneath. Back did nothing (8 presses).
+  A dry run on the fix closed it at 09:57 on 2026-11-17 and went on to the calendar. With the
+  popup left to show during the wait, as at 05:59 that day, the warm-up closed it and was on
+  the utilities list 0.47 s later, without a Back.
+- The English caption is not seen yet; `app_language.py` guesses "Don't show again".
+
 ## Other sports (Origami)
 
 Surveyed 2026-10-26 with an account of the Origami subdivision, app in Vietnamese. The
@@ -248,6 +271,7 @@ slots and the booked date and time read the same.
 | `registered` | Đã đăng ký | Registered |
 | `notice` | Thông báo | Notification |
 | `quota_full` | hết hạn mức | registration quota (seen in a dry run, 2026-10-25) |
+| `dont_show_again` | Không hiện lại | Don't show again (a guess, not seen) |
 | (dialog button) | Đóng | Close |
 
 - A day reads `21, Wednesday, October 21, 2026`.

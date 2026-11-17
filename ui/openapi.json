@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Court Booker",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "paths": {
     "/api/health": {
@@ -1185,6 +1185,10 @@
           "registered": {
             "type": "string",
             "title": "Registered"
+          },
+          "dont_show_again": {
+            "type": "string",
+            "title": "Dont Show Again"
           }
         },
         "additionalProperties": false,
@@ -1209,7 +1213,8 @@
           "booked_place",
           "ticket",
           "processing",
-          "registered"
+          "registered",
+          "dont_show_again"
         ],
         "title": "LabelSettings",
         "description": "Accessibility labels of the Vinhomes app, in its language."
