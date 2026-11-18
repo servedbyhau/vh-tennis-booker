@@ -181,9 +181,17 @@ the installer runs, since both use the files the installer replaces. In `ui/`, `
 calls the commands; `UpdateButton` shows only in the window, when a newer version is out, and
 is locked while a run holds the lock and in the quiet time.
 
+Before copying a file, the installer (`windows/hooks.nsh`, `NSIS_HOOK_PREINSTALL`) stops every
+process of the install folder, whoever started it: the window, the backend, a dry run. Windows
+refuses to overwrite a running program, and a backend the window had not started left an update
+half done on 2026-11-18. A real booking (an engine process without `serve`, `setup`,
+`schedule` or `--dry-run`: the 06:00 run, a run by hand) is never stopped: the installer then
+ends at once with exit code 2 and a message, before changing anything.
+
 The uninstaller removes the daily task when its command is in the install folder
 (`windows/hooks.nsh`), not on an update, which runs no uninstaller. `tools/check_installer.ps1`
-proves install, serve and uninstall on the `Desktop` workflow's clean runner.
+proves install, serve, an update over a running backend, an update refused during a booking and
+uninstall on the `Desktop` workflow's clean runner.
 
 ## Backend (`court_booker.api`)
 
