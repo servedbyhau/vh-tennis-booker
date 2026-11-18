@@ -11,19 +11,15 @@ Last updated: 2026-11-18.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: try logging in again on the device, then release
+## Next task: install 1.1.0 and watch the 06:00 runs
 
-The backend protection and the login again are written and tested (not committed: the user
-commits when they say so), in two parts: `fix/backend-local-only`, then the login on a branch
-stacked on it.
-
-1. The user saves the login of MuMu 1 under "Tự đăng nhập lại" (a development backend writes
-   the same Windows vault the installed app reads), with MuMu 1 logged out (it is since the
-   survey on 2026-11-18).
-2. A timed dry run of instance 1 a few minutes ahead logs in by itself: the log shows the
-   masked phone, "Logged in again", then the rounds. Note in the field notes what the app
-   showed after "Đăng nhập".
-3. Commit when asked, in the two branches; release; the user updates by the button.
+1. Once the release page of 1.1.0 is up, the user presses "Cập nhật lên 1.1.0" before 05:45;
+   check that the task runs the installed app and that it reports 1.1.0, with the version
+   beside the app's name.
+2. The login of MuMu 1 is saved in the vault (2026-11-18); the user may change the Vinhomes
+   password and save the new one under "Tự đăng nhập lại" of machine 2.
+3. Watch the next 06:00 logs; a run that logged in again shows "Logged in again" and a
+   `logged_in` step.
 4. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
    keeps the popup away; two tries froze MuMu. Not needed by the run.
 
