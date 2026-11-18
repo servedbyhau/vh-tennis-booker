@@ -4,6 +4,7 @@ import type { Overview, RunSummary } from "./types";
 import {
   type EventsQuery,
   getAccounts,
+  getLogin,
   getOverview,
   getRun,
   getNotifications,
@@ -26,6 +27,7 @@ export const queryKeys = {
   settings: ["settings"] as const,
   notifications: ["notifications"] as const,
   accounts: ["accounts"] as const,
+  login: (mumuIndex: number) => ["login", mumuIndex] as const,
 };
 
 /** How often the Overview is read while a run is starting or letting go of the emulator. */
@@ -111,4 +113,13 @@ export function useNotifications() {
 /** Read the subdivision each MuMu instance's account told last. */
 export function useAccounts() {
   return useQuery({ queryKey: queryKeys.accounts, queryFn: getAccounts });
+}
+
+/** Read whether a login is saved for MuMu instance `mumuIndex`; waits for a known index. */
+export function useLogin(mumuIndex: number | null) {
+  return useQuery({
+    queryKey: queryKeys.login(mumuIndex ?? -1),
+    queryFn: () => getLogin(mumuIndex ?? 0),
+    enabled: mumuIndex !== null,
+  });
 }

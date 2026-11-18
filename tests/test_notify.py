@@ -221,9 +221,32 @@ def test_a_court_is_named_short_with_its_sport_unless_tennis(court, name):
             "The app did not move on",
         ),
         (
-            "The app did not show 'Tiện ích'; check that it is logged in",
-            "App Vinhomes chưa mở được, có thể đã bị đăng xuất",
-            "The Vinhomes app did not open; it may be logged out",
+            "The app did not show 'Tiện ích'; check that it is logged in",  # before the login
+            "App Vinhomes chưa mở được",
+            "The Vinhomes app did not open",
+        ),
+        (
+            "The app did not show 'Tiện ích' or 'Utilities' in 180 s; check the app on MuMu 0",
+            "App Vinhomes chưa mở được",
+            "The Vinhomes app did not open",
+        ),
+        (
+            "The app is logged out (the account logged in on another device): log in again "
+            "on MuMu 0, or save the login in the app's setup so a run logs in by itself",
+            "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
+            "The Vinhomes app is logged out and no login is saved",
+        ),
+        (
+            "The app refused the saved login: Sai mật khẩu. Vui lòng thử lại; save it again in "
+            "the app's setup (the app locks an account after 5 wrong passwords)",
+            "App từ chối tài khoản đã lưu: Sai mật khẩu. Vui lòng thử lại",
+            "The app refused the saved login: Sai mật khẩu. Vui lòng thử lại",
+        ),
+        (
+            "Neither the home screen nor a message showed 30 s after 'Đăng nhập' (3 tap(s)); "
+            "check the app",
+            "Chưa tự đăng nhập lại được",
+            "Could not log in again",
         ),
         (
             "Button not found: 'S6 - Sân tennis'",

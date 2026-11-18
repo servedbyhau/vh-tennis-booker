@@ -7,11 +7,12 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from court_booker.adb import Adb, find_adb, resolve_device
 from court_booker.clock import NtpClock, wait_until
 from court_booker.config import DAYS_AHEAD, Config
+from court_booker.credentials import Login
 from court_booker.device_setup import find_mumu_manager, prepare_screen
 from court_booker.driver import PACKAGE as DRIVER_PACKAGE
 from court_booker.driver import connect_driver
@@ -20,6 +21,7 @@ from court_booker.errors import (
     BookingError,
     DeviceConnectionError,
     DeviceNotRespondingError,
+    ElementNotFoundError,
     QuotaFullError,
 )
 from court_booker.events import EventKind, Reporter
@@ -88,6 +90,15 @@ class QuickTap:
         ``label`` is for the driver, which clicks by label; a tap here goes by position only.
         """
         self._device.touch.down(x, y).up(x, y)
+
+    def set_text(self, x: int, y: int, text: str) -> None:
+        """Type ``text`` into the field at ``(x, y)``: tap it, then set the focused field."""
+        self._device.touch.down(x, y).up(x, y)
+        time.sleep(0.3)  # the field takes the focus a few frames after the tap
+        field = self._device(focused=True)
+        if not field.exists:
+            raise ElementNotFoundError("No field took the focus to type into")
+        field.set_text(text)
 
     def close(self) -> None:
         """Leave the uiautomator2 server running, as runs always did."""
@@ -173,6 +184,7 @@ def run_booking(
     clock: NtpClock | None = None,
     results: list[RoundResult] | None = None,
     report: Reporter | None = None,
+    login_for: Callable[[], Login | None] | None = None,
 ) -> list[RoundResult]:
     """Prepare the app, wait for ``start`` if given, then book every configured slot.
 
@@ -181,11 +193,12 @@ def run_booking(
     :data:`~court_booker.config.DAYS_AHEAD` after the start date. After the app's quota
     notice the slots left fail unrun. Results are appended to ``results`` as rounds finish,
     so an interrupted caller still sees them; progress goes to ``report`` as events.
+    ``login_for`` reads the saved login, typed in if the app logged out.
     """
     results = [] if results is None else results
     report = Reporter() if report is None else report
     clock = NtpClock() if clock is None else clock
-    booker = Booker(device, config, report)
+    booker = Booker(device, config, report, login_for=login_for)
     try:
         booker.prepare()
         report(EventKind.APP_READY)

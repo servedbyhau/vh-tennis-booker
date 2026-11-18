@@ -8,6 +8,16 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 - The app shows the installed version beside its name, at the top left.
+- A run that finds the Vinhomes app logged out (it logs out when the account logs in on
+  another device) closes the notice and logs in again with the login saved for that machine
+  under "Tự đăng nhập lại" in the Setup tab, tapping "Đăng nhập" once. The password is kept in
+  Windows Credential Manager and never shown, logged or answered by the backend. The driver
+  speaks protocol 2 for it (typing into a field); new `[labels]` `login`.
+
+### Changed
+- A logged-out app without a saved login stops the run at once with what to do, instead of
+  after the 180 s wait for the home screen. The notification and the History tell a logout, a
+  refused saved login and an app that did not open apart.
 
 ### Security
 - The backend refuses requests that a page of another site open in a browser makes it send:

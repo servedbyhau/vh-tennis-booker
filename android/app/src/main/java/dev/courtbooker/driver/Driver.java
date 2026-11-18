@@ -45,11 +45,16 @@ import java.nio.charset.StandardCharsets;
  */
 public final class Driver extends Instrumentation {
     static final String SOCKET = "court-driver";
-    /** Raised when a command or a reply changes in a way an older PC side cannot read. */
-    static final int PROTOCOL = 1;
+    /**
+     * Raised when a command or a reply changes in a way an older PC side cannot read. 2: the
+     * {@code set_text} command and the {@code editable} and {@code password} attributes.
+     */
+    static final int PROTOCOL = 2;
 
     private static final String TAG = "CourtDriver";
     private static final long SWIPE_STEP_MS = 5;
+    /** Time a tapped field takes to get the input focus; uiautomator2 took it in 0.3 s. */
+    private static final long FOCUS_MS = 300;
 
     private UiAutomation ui;
     private String version = "";
@@ -203,6 +208,22 @@ public final class Driver extends Instrumentation {
                         command.getInt("y"));
                 return click(node, root, reply);
             }
+            case "set_text": {
+                int x = command.getInt("x");
+                int y = command.getInt("y");
+                root = ui.getRootInActiveWindow();
+                AccessibilityNodeInfo node = Tree.editableAt(root, x, y);
+                if (node == null) {
+                    return reply.put("set", false);
+                }
+                // Flutter takes text only in the field that has the input focus, which a tap
+                // gives (2026-11-18: set without the tap, the login button stayed disabled).
+                click(node, root, new JSONObject());
+                SystemClock.sleep(FOCUS_MS);
+                root = ui.getRootInActiveWindow();
+                return reply.put("set", setText(Tree.editableAt(root, x, y),
+                        command.getString("text")));
+            }
             case "back":
                 key(KeyEvent.KEYCODE_BACK);
                 return reply;
@@ -235,6 +256,21 @@ public final class Driver extends Instrumentation {
             how = "touch";
         }
         return reply.put("clicked", true).put("how", how).put("bounds", Tree.format(r));
+    }
+
+    /**
+     * Replace the text of the field {@code node} with {@code text}, as typing would: an
+     * accessibility action, which Flutter's fields take once tapped. The text never goes to
+     * the log: it may be a password. No field gives false.
+     */
+    private static boolean setText(AccessibilityNodeInfo node, String text) {
+        if (node == null) {
+            return false;
+        }
+        Bundle arguments = new Bundle();
+        arguments.putCharSequence(
+                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text);
+        return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
     }
 
     /** Tap (x, y) with a bare touch down and up, like a finger. */

@@ -27,6 +27,7 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
   ["app_ready", {}, "Đã mở app Vinhomes", "plain"],
   ["account_subdivision", { subdivision: "bs" }, "Tài khoản thuộc phân khu BS", "plain"],
   ["account_subdivision", { subdivision: "khu-b" }, "Đã đọc phân khu của tài khoản", "plain"],
+  ["logged_in", {}, "App đã bị đăng xuất, đã tự đăng nhập lại", "plain"],
   ["waiting", { until: "2026-10-15T05:59:00" }, "Chờ đến 05:59:00", "plain"],
   [
     "booking_started",

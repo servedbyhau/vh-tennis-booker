@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-17.
+Last updated: 2026-11-18.
 
 ## Start of a session
 
@@ -11,16 +11,20 @@ Last updated: 2026-11-17.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: install 1.0.1 by the update button, then check the 06:00 run
+## Next task: try logging in again on the device, then release
 
-1. Once the `Desktop` workflow has published the 1.0.1 release page, the user presses
-   "Cập nhật lên 1.0.1" before 05:45 on 2026-11-18: the first install by the button. Note in
-   [progress.md](progress.md) whether it went through, kept the data and the task, and reopened
-   the app; check that the task still runs
-   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe` and that it reports 1.0.1.
-2. In the 2026-11-18 06:00 logs of both instances, look for "Closing a popup of the app over
-   the home screen" and the rounds after it.
-3. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
+The backend protection and the login again are written and tested (not committed: the user
+commits when they say so), in two parts: `fix/backend-local-only`, then the login on a branch
+stacked on it.
+
+1. The user saves the login of MuMu 1 under "Tự đăng nhập lại" (a development backend writes
+   the same Windows vault the installed app reads), with MuMu 1 logged out (it is since the
+   survey on 2026-11-18).
+2. A timed dry run of instance 1 a few minutes ahead logs in by itself: the log shows the
+   masked phone, "Logged in again", then the rounds. Note in the field notes what the app
+   showed after "Đăng nhập".
+3. Commit when asked, in the two branches; release; the user updates by the button.
+4. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
    keeps the popup away; two tries froze MuMu. Not needed by the run.
 
 ## After that

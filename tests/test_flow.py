@@ -9,6 +9,7 @@ import pytest
 
 import court_booker.flow as flow
 from court_booker.config import Config
+from court_booker.credentials import Login
 from court_booker.errors import (
     AppNotReadyError,
     BookingNotOpenError,
@@ -16,12 +17,15 @@ from court_booker.errors import (
     BookingUnconfirmedError,
     DeviceNotRespondingError,
     ElementNotFoundError,
+    LoggedOutError,
+    LoginFailedError,
     NavigationError,
     QuotaFullError,
     SlotUnavailableError,
 )
 from court_booker.events import EventKind, MemorySink, Reporter
 from court_booker.flow import Booked, Booker
+from court_booker.notify import failure_reason
 from court_booker.screen import Node, Screen
 from court_booker.watchdog import GuardedDevice, Watchdog
 
@@ -124,7 +128,7 @@ def english(taps):
 def in_english(app):
     """Set ``app`` to English: its screens and taps use the English labels."""
     app.screens = {
-        name: [(ENGLISH.get(desc, desc), box, clickable) for desc, box, clickable in nodes]
+        name: [(ENGLISH.get(found[0], found[0]), *found[1:]) for found in nodes]
         for name, nodes in app.screens.items()
     }
     app.taps_to = {
@@ -159,6 +163,10 @@ class FakeApp:
         self.swipes = 0
         self.swipe_args = []
         self.shells = []
+        self.typed = []
+        """``(screen, field box, text)`` of each text typed in."""
+        self.types_to = {}
+        """``(screen, field box)`` to the screen typing there leads to, as ``taps_to``."""
 
     def go(self, target):
         steps = target if isinstance(target, list) else [target]
@@ -177,8 +185,11 @@ class FakeApp:
         children = "".join(
             f"<node content-desc={quoteattr(desc, {chr(10): '&#10;'})} "
             f'bounds="[{box[0]},{box[1]}][{box[2]},{box[3]}]" '
-            f'clickable="{"true" if clickable else "false"}" />'
-            for desc, box, clickable in self.screens[self.screen]
+            f'clickable="{"true" if clickable else "false"}"'
+            + "".join(f' {name}="{str(value).lower()}"' for name, value in extra.items())
+            + " />"
+            for desc, box, clickable, *rest in self.screens[self.screen]
+            for extra in [rest[0] if rest else {}]
         )
         root = f'<node content-desc="" bounds="[0,0][{WIDTH},{HEIGHT}]" clickable="false">'
         return f"<hierarchy>{root}{children}</node></hierarchy>"
@@ -187,7 +198,7 @@ class FakeApp:
         self.labels.append(label)
         hits = [
             (desc, box)
-            for desc, box, _ in self.screens[self.screen]
+            for desc, box, *_ in self.screens[self.screen]
             if box[0] <= x <= box[2] and box[1] <= y <= box[3]
         ]
         if not hits:
@@ -201,6 +212,18 @@ class FakeApp:
             self.swallow[key] -= 1
             return
         target = self.taps_to.get((self.screen, key))
+        if target is not None:
+            self.go(target)
+
+    def set_text(self, x, y, text):
+        fields = [
+            box
+            for _, box, _, *rest in self.screens[self.screen]
+            if rest and rest[0].get("editable") and box[0] <= x <= box[2] and box[1] <= y <= box[3]
+        ]
+        assert fields, f"no field at ({x}, {y}) on {self.screen}"
+        self.typed.append((self.screen, fields[0], text))
+        target = self.types_to.get((self.screen, fields[0]))
         if target is not None:
             self.go(target)
 
@@ -1191,8 +1214,205 @@ def test_the_popup_x_is_the_small_unlabelled_node_above_the_tick_box():
     assert booker.locate_popup_close(screen_of(NOTICE)) is None
 
 
+def field(box, password=False):
+    """Return a text field: no label, its text never in the dump the flow keeps."""
+    return "", box, True, {"editable": True, "password": password}
+
+
+PHONE_FIELD = (35, 426, 505, 492)
+PASSWORD_FIELD = (35, 539, 505, 605)
+LOGIN_BUTTON = (35, 797, 505, 892)
+LOGIN = [  # the login screen of a logged-out app, read on 2026-11-18
+    node("", (0, 0, 540, 1600)),
+    node("Đăng nhập tài khoản", (35, 251, 379, 297)),
+    node("VIE", (394, 44, 511, 110)),
+    node("Vui lòng nhập thông tin của bạn", (35, 308, 386, 343), False),
+    field(PHONE_FIELD),
+    node("10/10", (459, 455, 505, 477), False),  # the phone field's count of digits
+    field(PASSWORD_FIELD, password=True),
+    node("", (439, 539, 505, 605)),  # show the password
+    node("Quên mật khẩu", (321, 652, 505, 718)),
+    node("Đăng nhập", LOGIN_BUTTON, False),  # disabled until a password is typed in
+    node("Bạn chưa có tài khoản cư dân? ", (73, 970, 386, 999), False),
+    node("Đăng ký", (386, 970, 467, 999)),
+]
+LOGIN_READY = [
+    node("Đăng nhập", LOGIN_BUTTON) if found[0] == "Đăng nhập" else found for found in LOGIN
+]
+WRONG_PASSWORD = [  # the message grows the password field (2026-11-18)
+    field((35, 539, 505, 632), password=True) if found[1] == PASSWORD_FIELD else found
+    for found in LOGIN
+] + [node("Sai mật khẩu. Vui lòng thử lại", (35, 610, 264, 632), False)]
+LOGGED_OUT = [  # over the login screen at 05:45 on 2026-11-11: the account logged in elsewhere
+    node("", (0, 0, 540, 1600)),
+    node("Thông báo", (0, 33, 540, 1600), False),
+    node("Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.", (46, 758, 494, 817), False),
+    node("Đóng", (69, 841, 264, 936)),
+    node("Đặt lại", (276, 841, 471, 936)),
+]
+SAVED = Login("0900000079", "mat-khau-bi-mat")
+
+
+def logged_out_app(after_login="home"):
+    """Return the booking app logged out: the notice, then the login; ``after_login`` next."""
+    app = booking_app(screen="loading")
+    app.screens.update(login=LOGIN, login_ready=LOGIN_READY, logged_out=LOGGED_OUT)
+    app.screens["wrong"] = WRONG_PASSWORD
+    app.launches_to = [("loading", 1), "logged_out"]
+    app.backs_to["logged_out"] = "login"
+    app.types_to[("login", PASSWORD_FIELD)] = "login_ready"
+    app.taps_to[("login_ready", "Đăng nhập")] = after_login
+    return app
+
+
+def test_a_logged_out_app_logs_in_again_with_the_saved_login(caplog):
+    caplog.set_level(logging.DEBUG, logger="court_booker")
+    app = logged_out_app()
+    sink = MemorySink()
+
+    Booker(app, Config(), Reporter(sink), login_for=lambda: SAVED).prepare()
+
+    assert app.screen == "home"
+    assert app.typed == [
+        ("login", PHONE_FIELD, SAVED.phone),
+        ("login", PASSWORD_FIELD, SAVED.password),
+    ]
+    assert app.taps == ["Đăng nhập"]
+    assert app.calls == ["app_stop", "app_start", "back"]  # one Back, for the notice only
+    assert EventKind.LOGGED_IN in [event.kind for event in sink.events]
+    assert "Closing a notice of the app: Phiên đăng nhập" in caplog.text
+    assert "09••••••79" in caplog.text
+    assert SAVED.phone not in caplog.text
+    assert SAVED.password not in caplog.text
+
+
+def test_the_login_is_read_only_once_the_app_shows_its_login():
+    reads = []
+    app = booking_app(screen="loading")
+
+    Booker(app, Config(), login_for=lambda: reads.append(1) or SAVED).prepare()
+
+    assert reads == []
+    assert app.typed == []
+
+
+def test_without_a_saved_login_the_run_stops_at_once(fake_time):
+    app = logged_out_app()
+
+    with pytest.raises(LoggedOutError, match="log in again on MuMu 0") as raised:
+        Booker(app, Config(), login_for=lambda: None).prepare()
+
+    assert failure_reason(str(raised.value)).startswith("App Vinhomes bị đăng xuất")
+
+    assert fake_time[0] < 5  # was the whole boot_timeout, 180 s, on 2026-11-11
+    assert app.typed == []
+    assert "back" in app.calls and app.calls.count("back") == 1
+
+
+def test_a_refused_password_is_never_typed_again():
+    app = logged_out_app(after_login="wrong")
+
+    with pytest.raises(
+        LoginFailedError, match=r"refused the saved login: Sai mật khẩu\."
+    ) as raised:
+        Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    words = "App từ chối tài khoản đã lưu: Sai mật khẩu. Vui lòng thử lại"
+    assert failure_reason(str(raised.value)) == words
+
+    assert app.taps == ["Đăng nhập"]  # once: the app locks an account after 5 wrong passwords
+
+
+def test_a_login_tap_the_app_missed_is_tapped_again(fake_time):
+    app = logged_out_app()
+    app.swallow["Đăng nhập"] = 1  # 2026-11-18: a tap right after the button turned did nothing
+
+    Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert app.taps == ["Đăng nhập", "Đăng nhập"]
+    assert app.screen == "home"
+
+
+def test_a_login_screen_that_never_changes_gets_three_taps_at_most(fake_time):
+    app = logged_out_app()
+    app.swallow["Đăng nhập"] = 99
+
+    with pytest.raises(LoginFailedError, match=r"\(3 tap\(s\)\)") as raised:
+        Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert failure_reason(str(raised.value)) == "Chưa tự đăng nhập lại được"
+
+    assert app.taps == ["Đăng nhập"] * 3
+
+
+def test_a_notice_after_the_login_refuses_it():
+    app = logged_out_app(after_login="refused")
+    message = "Tài khoản hoặc mật khẩu không đúng"
+    app.screens["refused"] = [
+        (message if found[0] == QUOTA_MESSAGE else found[0], *found[1:]) for found in NOTICE
+    ]
+
+    with pytest.raises(LoginFailedError, match=message):
+        Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert app.taps == ["Đăng nhập"]
+    assert app.calls.count("back") == 1
+
+
+def test_a_login_button_that_stays_disabled_taps_nothing():
+    app = logged_out_app()
+    del app.types_to[("login", PASSWORD_FIELD)]
+
+    with pytest.raises(LoginFailedError, match="'Đăng nhập' stayed disabled") as raised:
+        Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert failure_reason(str(raised.value)) == "Chưa tự đăng nhập lại được"
+
+    assert app.taps == []
+
+
+def test_the_popup_after_logging_in_is_closed_too(monkeypatch):
+    monkeypatch.setattr(flow, "_POPUP_WAIT", 2.0)
+    app = logged_out_app(after_login="popup")
+    app.screens["popup"] = POPUP
+    app.taps_to[("popup", POPUP_X)] = "home"
+
+    Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert app.taps == ["Đăng nhập", POPUP_X]
+    assert app.screen == "home"
+
+
+def test_a_login_screen_without_the_notice_logs_in_too():
+    app = logged_out_app()
+    app.launches_to = "login"
+
+    Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert app.screen == "home"
+    assert "back" not in app.calls  # Back on the login screen would leave the app
+
+
+def test_the_phone_field_s_count_is_no_message():
+    booker = Booker(booking_app(), Config())
+
+    assert booker._field_message(screen_of(LOGIN)) is None
+    assert booker._field_message(screen_of(WRONG_PASSWORD)) == "Sai mật khẩu. Vui lòng thử lại"
+
+
 def screen_of(nodes):
-    return Screen([Node(desc, box, clickable) for desc, box, clickable in nodes])
+    return Screen(
+        [
+            Node(
+                desc,
+                box,
+                clickable,
+                field=bool(rest and rest[0].get("editable")),
+                password=bool(rest and rest[0].get("password")),
+            )
+            for desc, box, clickable, *rest in nodes
+        ]
+    )
 
 
 def test_notice_text_reads_the_dialog_message():
@@ -1341,12 +1561,14 @@ def test_animations_and_banners_that_stay_on_do_not_stop_the_run(caplog):
     assert "Could not turn off animations and banners" in caplog.text
 
 
-def test_prepare_reports_logged_out_app():
+def test_prepare_reports_an_app_that_shows_nothing_it_knows():
     app = booking_app(screen="loading")
     app.launches_to = None
 
-    with pytest.raises(AppNotReadyError, match="logged in"):
+    with pytest.raises(AppNotReadyError, match="check the app on MuMu 0") as raised:
         Booker(app, Config(boot_timeout=1)).prepare()
+
+    assert failure_reason(str(raised.value)) == "App Vinhomes chưa mở được"
 
 
 def test_select_date_switches_to_next_month(caplog):
@@ -1740,7 +1962,7 @@ def test_prepare_finds_english_on_the_utilities_list_and_goes_back_home():
     assert app.screen == "home"
 
 
-def test_a_logged_out_app_names_the_labels_of_each_language():
+def test_an_app_that_shows_nothing_known_names_the_labels_of_each_language():
     app = booking_app(screen="loading")
     app.launches_to = None
 

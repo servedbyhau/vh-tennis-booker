@@ -99,6 +99,14 @@ class AppNotReadyError(CourtBookerError):
     """The app did not reach its home or utilities screen, e.g. after a logout."""
 
 
+class LoggedOutError(AppNotReadyError):
+    """The app shows its login, and no login is saved for this MuMu instance."""
+
+
+class LoginFailedError(AppNotReadyError):
+    """The saved login was typed in once and the app did not take it; never tried again."""
+
+
 class LockHeldError(CourtBookerError):
     """Another run holds the run lock; nothing was sent to the device."""
 

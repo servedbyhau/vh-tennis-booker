@@ -108,6 +108,34 @@ clickable "Đóng"; the page beneath leaves the dump.
 - **Slot taken** (someone booked it first): after "Xác nhận", "Tiện ích đã hết chỗ, vui lòng
   chọn vị trí/thời gian khác".
 
+### Logged out
+
+The app logs an account out when it logs in on another device; it has no other session
+limit, and no apartment to choose after a login (the user, 2026-11-18).
+
+- At the next start (05:45 on 2026-11-11) the login screen showed, then 2 s later a
+  "Thông báo" over it: "Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.", buttons
+  "Đóng" and "Đặt lại"; the login screen leaves the dump while it shows.
+- The login screen (read on 2026-11-18 after "Tài khoản" > "Đăng xuất" > "Đồng ý"): title
+  "Đăng nhập tài khoản", "VIE" (the language), two `EditText` fields without a label (their
+  hints show on the screen only), "Quên mật khẩu", the "Đăng nhập" button and "Đăng ký". The
+  phone field `[35,426][505,492]` keeps the last number (its `text`) with a count "10/10"
+  inside it; the password field `[35,539][505,605]` is `password` and shows its text as dots.
+  "Đăng nhập" is disabled (not clickable) until a password is in.
+- Text set with the accessibility action (`ACTION_SET_TEXT`) is taken: a password set that way
+  read as `••••••••` and enabled "Đăng nhập" in the next read. Emptied again, the field grew to
+  `[35,539][505,632]` with "Sai mật khẩu. Vui lòng thử lại" inside it at the bottom, the
+  button disabled: the app's own check, nothing sent (no button was tapped).
+- In English: "Login account", "Please enter your information", "Forgot password", "Login",
+  "Register", and "Wrong password. Please try again".
+- The app locks an account after 5 wrong passwords (the user); what a wrong one answers after
+  "Đăng nhập" is not seen, so both a notice and a message in a field end the login.
+- Logged in by a run (12:57 on 2026-11-18, MuMu 1 logged out by hand): each field takes its
+  text only once tapped (the driver taps it, waits 0.3 s, then sets it; without the tap the
+  button stayed disabled). One tap on "Đăng nhập" 0.3 s after it turned enabled; the home
+  screen showed 3 s later, then the rounds ran. An earlier try's screen stayed unchanged for
+  30 s after the tap while MuMu was freezing, yet the account was logged in afterwards.
+
 ### Promotion popup over the home screen
 
 Seen first on 2026-11-17 (an event invitation on both accounts); it failed that 06:00 run, whose
@@ -272,6 +300,7 @@ slots and the booked date and time read the same.
 | `notice` | Thông báo | Notification |
 | `quota_full` | hết hạn mức | registration quota (seen in a dry run, 2026-10-25) |
 | `dont_show_again` | Không hiện lại | Don't show again (a guess, not seen) |
+| `login` | Đăng nhập | Login (2026-11-18) |
 | (dialog button) | Đóng | Close |
 
 - A day reads `21, Wednesday, October 21, 2026`.

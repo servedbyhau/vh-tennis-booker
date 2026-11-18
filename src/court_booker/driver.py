@@ -8,7 +8,8 @@ label in the tree of the moment. The PC sends coordinates to distinguish nodes w
 same label and locate unlabelled controls; labelled clicks resolve the node again before
 acting, so they follow its current position.
 
-It speaks protocol 1: one JSON line per command and reply over the abstract socket
+It speaks protocol 2 (1 plus typing into a field and the dump's ``editable`` and ``password``
+attributes): one JSON line per command and reply over the abstract socket
 ``court-driver``, which ``adb forward`` brings to a local TCP port. Only one UiAutomation can
 run at a time, so :func:`connect_driver` ends a uiautomator2 server first, and a run stops
 the driver when it ends (:meth:`DriverDevice.close`).
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 PACKAGE = "dev.courtbooker.driver"
 INSTRUMENTATION = f"{PACKAGE}/.Driver"
 SOCKET = "localabstract:court-driver"
-PROTOCOL = 1
+PROTOCOL = 2
 APK = Path(__file__).resolve().parent / "assets" / "court-driver.apk"
 COMMAND_TIMEOUT = 10.0
 """Seconds the driver may take to answer a command; a read takes about 13 ms."""
@@ -146,6 +147,16 @@ class DriverDevice:
             logger.debug("%r had moved to %s; clicked it there", label, reply["bounds"])
         if reply.get("how") != "action":
             logger.debug("%r clicked with a touch", label)
+
+    def set_text(self, x: float, y: float, text: str) -> None:
+        """Replace the text of the field at ``(x, y)`` with ``text``, a password perhaps.
+
+        The field is looked up in the tree of the moment. ``text`` is never logged, nor put in
+        an error.
+        """
+        reply = self.client.call("set_text", x=round(x), y=round(y), text=text)
+        if not reply["set"]:
+            raise DriverError(f"No field took the text at ({round(x)}, {round(y)})")
 
     def press(self, key: str) -> None:
         if key != "back":

@@ -85,6 +85,16 @@ def no_popup_wait(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def saved_logins(monkeypatch):
+    """Keep the logins in memory, so no test reads or writes the Windows vault."""
+    from court_booker import credentials
+
+    store = credentials.MemoryStore()
+    monkeypatch.setattr(credentials, "default_store", lambda: store)
+    return store
+
+
+@pytest.fixture(autouse=True)
 def closed_mumu(monkeypatch):
     """Record the configs a run would close MuMu for, so tests never close the real MuMu."""
     from court_booker import cli

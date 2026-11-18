@@ -15,6 +15,7 @@ No coordinates are kept across screens. ``device`` is one of them or a test doub
 from __future__ import annotations
 
 import logging
+import re
 import time
 from dataclasses import asdict, dataclass
 from datetime import date
@@ -23,12 +24,15 @@ from typing import Any, Callable, Optional, TypeVar
 from court_booker import catalog
 from court_booker.app_language import AppLanguage, app_languages
 from court_booker.config import Config
+from court_booker.credentials import Login
 from court_booker.errors import (
     AppNotReadyError,
     BookingNotOpenError,
     BookingRejectedError,
     BookingUnconfirmedError,
     ElementNotFoundError,
+    LoggedOutError,
+    LoginFailedError,
     NavigationError,
     QuotaFullError,
     SlotUnavailableError,
@@ -71,6 +75,23 @@ _POPUP_WAIT = 2.0
 
 The popup showed 0.3-0.8 s after the home screen (2 restarts, 2026-11-17). Closed then, it
 cannot cover the home screen's button the moment a run taps it."""
+_START_NOTICES = 3
+"""Notices closed while the app starts before the run gives up: the one seen is the logout
+notice over the login screen (2026-11-11)."""
+_FIELD_COUNT = re.compile(r"\d+/\d+")
+"""The count of characters a field shows inside it, such as "10/10" in the phone field."""
+_LOGIN_SETTLE = 0.3
+"""Pause between the login button showing enabled and its tap. On 2026-11-18 a tap 1 ms after
+the read that showed it enabled did nothing for 30 s, as "Xác nhận" a few frames after the
+tick (field notes); the app takes the password a few frames after the button turns."""
+_LOGIN_RETAP_AFTER = 3.0
+"""How long the login screen may stay as it was after a tap before the button is tapped again."""
+_LOGIN_TAPS = 3
+"""Most taps on the login button. Each further one only while the screen stayed unchanged, so
+a refused password (a message) is never sent twice: the app locks after 5."""
+_LOGIN_READY_WAIT = 2.0
+"""How long the login button may stay disabled after the password is typed in: it was enabled
+in the read right after (2026-11-18)."""
 _CONTINUE_WAIT = 2.0
 """How long the slot list is read again while "Tiếp tục" shows disabled, before the slot tap.
 
@@ -142,11 +163,20 @@ class Booked:
 class Booker:
     """Drive one booking round per call to :meth:`book`."""
 
-    def __init__(self, device: Any, config: Config, report: Reporter | None = None) -> None:
+    def __init__(
+        self,
+        device: Any,
+        config: Config,
+        report: Reporter | None = None,
+        login_for: Callable[[], Login | None] | None = None,
+    ) -> None:
         self.device = device
         self.config = config
         self.report = Reporter() if report is None else report
         """Receives the steps of each round; reporting sends no device commands."""
+        self._login_for = login_for
+        """Read the saved login of this MuMu instance, only once the app shows its login."""
+        self._logged_in = False
         self.commands = 0
         """Device commands sent so far; each is a round trip to the emulator."""
         self.last_screen = Screen([])
@@ -184,6 +214,8 @@ class Booker:
         self.processing = Match(desc=labels.processing)
         self.registered = Match(desc=labels.registered)
         self.popup = Match(desc=labels.dont_show_again, clickable=True)
+        self.login_ready = Match(desc=labels.login, clickable=True)
+        """The login button once a password is typed in: disabled, it is not clickable."""
 
     # Public API -------------------------------------------------------------
 
@@ -211,6 +243,10 @@ class Booker:
         on the home screen and opens the utilities list shortly before the start
         (:meth:`locate_entry`), so the list it books from is freshly loaded. The first of
         these screens tells the app's language, whose labels the rounds then use.
+
+        An app logged out (on another device) shows a notice over its login screen: the
+        notice is closed, and the saved login typed in (:meth:`log_in`); without one the run
+        stops at once with :class:`LoggedOutError`.
         """
         package = self.config.package
         self.quiet_device()
@@ -222,22 +258,12 @@ class Booker:
             logger.info("Starting %s", package)
             self.device.app_start(package)
 
-        found = self.wait_for(self._find_language, self.config.boot_timeout)
-        if found is None:
-            *labels, last = [
-                repr(label)
-                for language in self.languages
-                for label in (language.labels.home, language.labels.utility)
-                if label
-            ]
-            raise AppNotReadyError(
-                f"The app did not show {', '.join(labels)} or {last} in "
-                f"{self.config.boot_timeout:.0f} s; check that it is logged in"
-            )
-        self._use(found[0])
-        logger.info("App language: %s", found[0].name)
+        screen = self._first_screen()
+        logger.info("App language: %s", self.language.name)
+        if self._password_field(screen) is not None:
+            screen = self.log_in(screen)
         try:
-            home = self.return_to_home(found[1])
+            home = self.return_to_home(screen)
             popup = self.wait_for(self._finder(self.popup), _POPUP_WAIT, home)
             if popup is not None:
                 home = self.return_to_home(popup[1])
@@ -245,6 +271,148 @@ class Booker:
             raise AppNotReadyError(str(exc)) from exc
         self.read_account(home)
         logger.info("Ready on the home screen")
+
+    def _first_screen(self) -> Screen:
+        """Return the first screen of the started app that tells its language.
+
+        That is the home screen (or the popup over it), the utilities list or the login. A
+        notice at the start, such as the one that the account logged in elsewhere, is closed
+        with Back, which is pressed again only while the notice still shows: on the login
+        screen Back would leave the app.
+        """
+        deadline = time.monotonic() + self.config.boot_timeout
+        notices = 0
+        while True:
+            found = self.wait_for(self._find_language, max(0.0, deadline - time.monotonic()))
+            if found is None:
+                *labels, last = [
+                    repr(label)
+                    for language in self.languages
+                    for label in (language.labels.home, language.labels.utility)
+                    if label
+                ]
+                raise AppNotReadyError(
+                    f"The app did not show {', '.join(labels)} or {last} in "
+                    f"{self.config.boot_timeout:.0f} s; check the app on MuMu "
+                    f"{self.config.mumu_index}"
+                )
+            self._use(found[0])
+            screen = found[1]
+            message = self.notice_text(screen)
+            if message is None:
+                return screen
+            notices += 1
+            if notices > _START_NOTICES:
+                raise AppNotReadyError(f"The app kept showing a notice: {message or 'no message'}")
+            logger.warning("Closing a notice of the app: %s", message or "no message")
+            self.press_back()
+            self.wait_for(self._notice_gone, _NEXT_SCREEN_TIMEOUT)
+
+    def _notice_gone(self, screen: Screen) -> bool | None:
+        return True if self.notice_text(screen) is None else None
+
+    def log_in(self, screen: Screen) -> Screen:
+        """Type the saved login into the login ``screen`` and return the screen after it.
+
+        The app keeps the last phone number in its field; it is typed again all the same. The
+        login button is tapped :data:`_LOGIN_SETTLE` after it shows enabled, and again only
+        while the login screen stays exactly as it was (the app missed the tap), at most
+        :data:`_LOGIN_TAPS` times: the app locks an account after 5 wrong passwords. The home
+        screen (or the popup over it) means logged in; a notice or a
+        message in a field means refused, and the run stops with :class:`LoginFailedError`.
+        Without a saved login it stops with :class:`LoggedOutError` before typing anything.
+        """
+        login = self._login_for() if self._login_for is not None else None
+        if login is None:
+            raise LoggedOutError(
+                f"The app is logged out (the account logged in on another device): log in "
+                f"again on MuMu {self.config.mumu_index}, or save the login in the app's "
+                "setup so a run logs in by itself"
+            )
+        if self._logged_in:
+            raise LoginFailedError("The app logged out again right after the saved login")
+        self._logged_in = True
+        password = self._password_field(screen)
+        assert password is not None  # the caller saw the login screen
+        phone = next(
+            (
+                node
+                for node in screen.nodes
+                if node.field and not node.password and node.box[3] <= password.box[1]
+            ),
+            None,
+        )
+        logger.info(
+            "The app is logged out; logging in with the saved login (%s)", login.masked_phone
+        )
+        if phone is not None:
+            self.type_text(phone, login.phone)
+        self.type_text(password, login.password)
+        ready = self.wait_for(self._finder(self.login_ready), _LOGIN_READY_WAIT)
+        if ready is None:
+            raise LoginFailedError(f"{self.labels.login!r} stayed disabled after typing the login")
+        time.sleep(_LOGIN_SETTLE)
+        button: Node | None = ready[0]
+        deadline = time.monotonic() + self.config.timeout
+        taps = 0
+        while True:
+            if button is not None and taps < _LOGIN_TAPS:
+                if taps:
+                    logger.info("%r tapped again: the login screen stayed as it was", button.desc)
+                self.tap(button)
+                taps += 1
+            outcome = self.wait_for(self._after_login, _retap_wait(deadline, _LOGIN_RETAP_AFTER))
+            if outcome is not None:
+                break
+            if time.monotonic() >= deadline:
+                raise LoginFailedError(
+                    f"Neither the home screen nor a message showed {self.config.timeout:.0f} s "
+                    f"after {self.labels.login!r} ({taps} tap(s)); check the app"
+                )
+            # Tapped again only while the app shows the same enabled button: one that took
+            # the tap shows something else (a message ends the login above).
+            button = self.last_screen.find(self.login_ready)
+        message = self.notice_text(outcome[1])
+        if message is None:
+            message = self._field_message(outcome[1])
+        if message is not None:
+            raise LoginFailedError(
+                f"The app refused the saved login: {message or 'no message'}; save it again "
+                "in the app's setup (the app locks an account after 5 wrong passwords)"
+            )
+        logger.info("Logged in again")
+        self.report(EventKind.LOGGED_IN)
+        return outcome[1]
+
+    def _after_login(self, screen: Screen) -> bool | None:
+        """Return ``True`` once the home screen, the popup over it or a refusal shows."""
+        if screen.find(self.home) or screen.find(self.popup):
+            return True
+        if self.notice_text(screen) is not None or self._field_message(screen) is not None:
+            return True
+        return None
+
+    def _password_field(self, screen: Screen) -> Node | None:
+        """Return the login screen's password field: the app's only field shown in dots."""
+        return next((node for node in screen.nodes if node.field and node.password), None)
+
+    def _field_message(self, screen: Screen) -> str | None:
+        """Return the message the login screen shows under a field, or ``None``.
+
+        It is a label inside the field's bounds, such as "Sai mật khẩu. Vui lòng thử lại"
+        under the password (2026-11-18); the phone field's count of digits ("10/10") is no
+        message.
+        """
+        for field in (node for node in screen.nodes if node.field):
+            for node in screen.nodes:
+                if (
+                    node.desc
+                    and not node.field
+                    and is_inside(node.box, field.box)
+                    and _FIELD_COUNT.fullmatch(node.desc) is None
+                ):
+                    return node.desc
+        return None
 
     def read_account(self, home: Screen) -> None:
         """Tell the account's subdivision from the apartment code on the home screen.
@@ -841,16 +1009,7 @@ class Booker:
         with the same label but no button inside, such as a tab, is not a dialog. The
         message is every other label inside the title that is not a button.
         """
-        for title in screen.find_all(self.notice):
-            inner = [node for node in screen.nodes if is_inside(node.box, title.box)]
-            if not any(node.clickable and node is not title for node in inner):
-                continue
-            return " ".join(
-                node.desc
-                for node in inner
-                if node.desc and not node.clickable and node.desc != title.desc
-            )
-        return None
+        return _dialog_message(screen, self.notice)
 
     def locate_popup_close(self, screen: Screen) -> Node | None:
         """Return the X of a promotion popup over the home screen, or ``None`` if none shows.
@@ -926,6 +1085,12 @@ class Booker:
         logger.debug("Tap %s(%d, %d)", f"{label!r} at " if label else "", x, y)
         self.device.click(x, y, label=label)
 
+    def type_text(self, field: Node, text: str) -> None:
+        """Replace the text of ``field`` with ``text``, which may be a password: never logged."""
+        self.commands += 1
+        logger.debug("Type into the %s field", "password" if field.password else "other")
+        self.device.set_text(*field.center, text)
+
     def press_back(self) -> None:
         self.commands += 1
         logger.debug("Press Back")
@@ -944,12 +1109,21 @@ class Booker:
 
         Their labels differ in each language (field notes), so no screen shows two. A
         popup over the home screen hides its button, so the popup's tick box counts too.
+        The login screen tells it by its login button (disabled, so not clickable), and a
+        notice by its title with a button inside; a login screen without the button's label
+        in either language is taken in the first.
         """
         for language in self.languages:
             labels = language.labels
             for label in (labels.home, labels.utility, labels.dont_show_again):
                 if label and screen.find(Match(desc=label, clickable=True)) is not None:
                     return language
+            if screen.find(Match(desc=labels.login)) is not None:
+                return language
+            if _dialog_message(screen, Match(desc=labels.notice)) is not None:
+                return language
+        if self._password_field(screen) is not None:
+            return self.languages[0]
         return None
 
     def _after_confirm(self, screen: Screen) -> bool | None:
@@ -1145,3 +1319,22 @@ def _controls(screen: Screen) -> set[Node]:
 def _area(node: Node) -> int:
     left, top, right, bottom = node.box
     return (right - left) * (bottom - top)
+
+
+def _dialog_message(screen: Screen, title_match: Match) -> str | None:
+    """Return the message of the dialog titled as ``title_match`` finds, or ``None``.
+
+    The dialog's title node spans the whole dialog and holds its buttons; a node with the
+    same label but no button inside, such as a tab, is not a dialog. The message is every
+    other label inside the title that is not a button.
+    """
+    for title in screen.find_all(title_match):
+        inner = [node for node in screen.nodes if is_inside(node.box, title.box)]
+        if not any(node.clickable and node is not title for node in inner):
+            continue
+        return " ".join(
+            node.desc
+            for node in inner
+            if node.desc and not node.clickable and node.desc != title.desc
+        )
+    return None

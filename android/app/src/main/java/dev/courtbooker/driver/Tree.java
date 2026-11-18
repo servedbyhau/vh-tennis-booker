@@ -7,7 +7,8 @@ import java.util.ArrayDeque;
 
 /**
  * Reads the accessibility tree the way the uiautomator2 dump does: only nodes visible to the
- * user, bounds clipped to the screen, the label in {@code content-desc}.
+ * user, bounds clipped to the screen, the label in {@code content-desc}; a text field is
+ * {@code editable}, a password field also {@code password} (Android shows its text as dots).
  */
 final class Tree {
     private Tree() {
@@ -78,6 +79,31 @@ final class Tree {
         return best;
     }
 
+    /**
+     * Return the smallest visible editable node whose bounds hold (x, y), or null: a text
+     * field has no label (the app's fields show their hints only on the screen).
+     */
+    static AccessibilityNodeInfo editableAt(AccessibilityNodeInfo root, int x, int y) {
+        if (root == null) {
+            return null;
+        }
+        Rect screen = screen(root);
+        AccessibilityNodeInfo best = null;
+        long bestArea = Long.MAX_VALUE;
+        for (AccessibilityNodeInfo node : visible(root)) {
+            if (!node.isEditable()) {
+                continue;
+            }
+            Rect r = bounds(node, screen);
+            long area = (long) r.width() * r.height();
+            if (r.contains(x, y) && area < bestArea) {
+                best = node;
+                bestArea = area;
+            }
+        }
+        return best;
+    }
+
     /** Return the bounds of {@code node} on the screen, clipped to it as in the dump. */
     static Rect rect(AccessibilityNodeInfo node, AccessibilityNodeInfo root) {
         return bounds(node, screen(root));
@@ -127,6 +153,8 @@ final class Tree {
                 .append("\" content-desc=\"").append(escape(node.getContentDescription()))
                 .append("\" clickable=\"").append(node.isClickable())
                 .append("\" enabled=\"").append(node.isEnabled())
+                .append("\" editable=\"").append(node.isEditable())
+                .append("\" password=\"").append(node.isPassword())
                 .append("\" bounds=\"").append(format(bounds(node, screen))).append("\">");
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo child = node.getChild(i);
