@@ -22,6 +22,35 @@ def test_parse_keeps_labels_bounds_and_clickable():
     assert screen.nodes[3].clickable is False
 
 
+LOGIN_DUMP = """<hierarchy><node content-desc="" bounds="[0,0][540,1600]" clickable="false">
+  <node text="0900000079" class="android.widget.EditText" content-desc=""
+        bounds="[35,426][505,492]" clickable="true" editable="true" password="false" />
+  <node text="••••••••" class="android.widget.EditText" content-desc=""
+        bounds="[35,539][505,605]" clickable="true" editable="true" password="true" />
+  <node text="" class="android.view.View" content-desc="Đăng nhập"
+        bounds="[35,797][505,892]" clickable="false" editable="false" password="false" />
+</node></hierarchy>"""
+
+
+def test_the_driver_s_fields_and_password_are_kept_but_not_their_text():
+    screen = Screen.parse(LOGIN_DUMP)
+
+    phone, password, button = screen.nodes[1:]
+    assert (phone.field, phone.password) == (True, False)
+    assert (password.field, password.password) == (True, True)
+    assert (button.field, button.password) == (False, False)
+    described = "\n".join(screen.describe())
+    assert "[35,426][505,492] clickable field ''" in described
+    assert "[35,539][505,605] clickable password ''" in described
+    assert "0900000079" not in described
+
+
+def test_a_uiautomator2_field_is_told_by_its_class():
+    dump = LOGIN_DUMP.replace(' editable="true"', "")
+
+    assert Screen.parse(dump).nodes[1].field is True
+
+
 def test_size_is_read_from_the_dump():
     assert Screen.parse(DUMP).size == (540, 1600)
     assert Screen([]).size == (0, 0)

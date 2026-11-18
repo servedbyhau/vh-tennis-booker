@@ -86,6 +86,7 @@ const MESSAGES: Record<StepKind, Describe> = {
       tone: "plain",
     };
   },
+  logged_in: ({ t }) => ({ text: t("steps.logged_in"), tone: "plain" }),
   waiting: ({ t, f }, data) => {
     const until = text(data, "until");
     return {

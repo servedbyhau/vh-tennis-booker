@@ -17,7 +17,9 @@ to be awake. Unattended, scheduled, as fast as possible.
   instances.
 - Out of scope: getting around any check of the app, and accessibility services, which the app
   refuses (field notes, "Accessibility agent"). In scope: the project's own instrumentation
-  driver (UiAutomation, as uiautomator2 uses); the app books with it running.
+  driver (UiAutomation, as uiautomator2 uses); the app books with it running. Since
+  2026-11-18 also logging in again with a login the user saved (the app logs an account out
+  when it logs in on another device): typed in as the user would, once a run.
 
 ## Phases
 
@@ -35,7 +37,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 
 | Area | Situation | Today |
 |---|---|---|
-| App | Logged out | Fails early (exit 4) |
+| App | Logged out (the account logged in on another device) | Closes the notice and types the login saved in the app's setup, tapping "Đăng nhập" once; refused, or none saved, the run stops at once (exit 4) with what to do |
 | App | App set to English | Works: the language is found on the first screen |
 | App | Closed-hours notice (tap before 06:00) | Closed with Back and the utility tapped again until `open_retry_seconds`; the wait goes by NTP time on a counter, the first tap 0.1 s after the start |
 | App | Promotion popup over the home screen | Closed with its X before the utilities list is opened (field notes); Back does not close it |

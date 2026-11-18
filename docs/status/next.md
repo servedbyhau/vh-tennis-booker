@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-17.
+Last updated: 2026-11-18.
 
 ## Start of a session
 
@@ -11,16 +11,16 @@ Last updated: 2026-11-17.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: install 1.0.1 by the update button, then check the 06:00 run
+## Next task: install 1.1.0 and watch the 06:00 runs
 
-1. Once the `Desktop` workflow has published the 1.0.1 release page, the user presses
-   "Cập nhật lên 1.0.1" before 05:45 on 2026-11-18: the first install by the button. Note in
-   [progress.md](progress.md) whether it went through, kept the data and the task, and reopened
-   the app; check that the task still runs
-   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe` and that it reports 1.0.1.
-2. In the 2026-11-18 06:00 logs of both instances, look for "Closing a popup of the app over
-   the home screen" and the rounds after it.
-3. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
+1. Once the release page of 1.1.0 is up, the user presses "Cập nhật lên 1.1.0" before 05:45;
+   check that the task runs the installed app and that it reports 1.1.0, with the version
+   beside the app's name.
+2. The login of MuMu 1 is saved in the vault (2026-11-18); the user may change the Vinhomes
+   password and save the new one under "Tự đăng nhập lại" of machine 2.
+3. Watch the next 06:00 logs; a run that logged in again shows "Logged in again" and a
+   `logged_in` step.
+4. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
    keeps the popup away; two tries froze MuMu. Not needed by the run.
 
 ## After that

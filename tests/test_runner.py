@@ -29,7 +29,8 @@ FULL_SLOT = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
 
 
 class FakeBooker:
-    def __init__(self, device, config, report=None):
+    def __init__(self, device, config, report=None, login_for=None):
+        self.login_for = login_for
         self.booked = []
         self.events = []
         self.commands = 0
@@ -86,7 +87,7 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger="court_booker")
     events = []
 
-    def make_booker(device, config, report=None):
+    def make_booker(device, config, report=None, login_for=None):
         booker = FakeBooker(device, config, report)
         booker.events = events
         return booker
@@ -147,7 +148,7 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
 
     bookers = []
 
-    def make_booker(device, config, report=None):
+    def make_booker(device, config, report=None, login_for=None):
         bookers.append(SlowListBooker(device, config, report))
         return bookers[-1]
 

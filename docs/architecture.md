@@ -54,7 +54,7 @@ Details live in the docstrings; this page says where things are and what must st
 - `screen.Screen` is one `dump_hierarchy` parsed into `Node`s (label, visible bounds,
   clickable); `screen.Match` finds nodes locally. One read per screen state, no element queries.
 - The device is used only through `snapshot()`, `tap()`/`tap_point()` (label and point),
-  `press_back()` and `_scroll()`, each counted in `commands`. A full round costs 16 commands
+  `press_back()`, `_scroll()` and `type_text()` (the login only), each counted in `commands`. A full round costs 16 commands
   (tests hold it). A screen that differs from the last read is logged at debug level, so the
   log holds every screen of a run.
 - Labels come from `app_language.app_languages(config.labels, config.sport)`: Vietnamese from
@@ -62,6 +62,19 @@ Details live in the docstrings; this page says where things are and what must st
   `app_language.ENGLISH_SPORTS`) unless `[labels] utility` names one. `prepare()` finds the
   language on the first screen and uses it; a language without a tile for the sport stops the
   run there.
+- Logged out (field notes): `prepare()` also takes the start's notice and the login screen
+  (a `password` field) as the first screen. A notice is closed with Back, pressed again only
+  while it still shows (Back on the login screen leaves the app); the login screen goes to
+  `log_in`, which reads the saved login (`credentials.py`) only then: without one,
+  `LoggedOutError` at once. Else it types the phone and the password (`type_text`), taps the
+  enabled login button once, never twice (the app locks an account after 5 wrong passwords),
+  and waits for the home screen (`logged_in` step) or a refusal, a notice or a message inside
+  a field: `LoginFailedError`. Both are `AppNotReadyError` (exit 4). The masked phone is
+  logged, never the phone or the password; `Node` keeps no field text.
+- `credentials.py`: one `Login` per MuMu instance in Windows Credential Manager (`advapi32`,
+  generic credential `CourtBooker/vinhomes/mumu-N`, kept for this Windows user on this PC,
+  whom the daily task runs as); in memory where Windows is missing. `Login`'s repr hides the
+  password. The run reads its own instance's (`cli` → `run_booking(login_for=...)`).
 - `prepare()` then tells the account's subdivision (`read_account`) from the apartment code
   on the home screen it read anyway ("BS…" → `bs`, "S…" → `origami`; 0 commands). Only the
   subdivision is logged and reported (`account_subdivision`), never the code (personal data).
@@ -179,6 +192,10 @@ With a built UI in `court_booker/ui` beside the code, as in the packaged app, it
 (`api/ui.py`), so the window has one origin and needs no CORS: `/api` and the live feed win, and
 any other address that is no file answers `index.html`. In development the folder is absent and
 Vite serves the UI.
+It has no login, so `api/local_only.py` refuses (403 `forbidden`, a WebSocket closed with 1008)
+every request whose `Host` is not 127.0.0.1 or localhost (a name pointed at this PC by a site)
+or whose `Origin`, when sent, is not a page of this PC on any port (the window, Vite): a page
+of another site open in a browser cannot start a dry run or read or change the settings.
 `cli.serve` imports it lazily, so a run never loads FastAPI. Route modules skip
 `from __future__ import annotations` and use `Optional` (Python 3.9 evaluates them).
 `CourtBookerError`s become `Problem` JSON with an `error` code (409 `lock_held`, 400
@@ -198,6 +215,7 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
+| `GET`/`PUT`/`DELETE /api/logins/{mumu_index}` | Whether a login is saved for the instance, with its phone masked (`09••••••79`); save one (10-digit phone, password as `SecretStr`) or remove it. No answer or error holds the password; Windows refusing is 503 `credentials`. Not recorded in the history |
 | `WS /api/live` | Pushes each new step |
 
 After a route, model or catalog change: `python tools/export_openapi.py` (writes
@@ -232,8 +250,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SidePanel` beside it, two tabs:
   `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
-  opens one run's slots, steps and log) and `SetupTab` (the user's ticks and the guide,
-  those of the machine chosen on the ticket, which `HomePage` holds).
+  opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the saved login
+  and the guide, those of the machine chosen on the ticket, which `HomePage` holds). The
+  saved login shows its masked phone with Change and Remove, else a phone and password form;
+  a password typed in is sent once and never shown again.
   The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
   readers. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the
@@ -260,15 +280,16 @@ when the sources change without a rebuild). `driver.py` installs it when its SHA
 forwards a port and talks to it; no answer within 10 s per command is
 `DeviceNotRespondingError`.
 
-Protocol 1, one JSON object per line each way (`op`, arguments, optional `id`; the reply has
+Protocol 2, one JSON object per line each way (`op`, arguments, optional `id`; the reply has
 `ok`, `error`):
 
 | `op` | Does |
 |---|---|
 | `hello` | `protocol`, `version`, `sdk` |
-| `dump` | The window as uiautomator2's XML (visible nodes, bounds clipped) |
+| `dump` | The window as uiautomator2's XML (visible nodes, bounds clipped), with `editable` and `password` on each node |
 | `click` `label x y` | Clicks the node labelled `label` nearest (x, y) where it is now (`ACTION_CLICK`, else a touch at its middle); `clicked` false when gone |
 | `click_at` `x y` | The same for the smallest clickable node at (x, y): unlabelled elements |
+| `set_text` `x y text` | Sets the text of the smallest editable node at (x, y) (`ACTION_SET_TEXT`); `set` false without one. The text, maybe a password, is never logged |
 | `back`, `swipe x1 y1 x2 y2 ms` | Injected key or touch |
 | `current` | Package of the active window |
 | `stop` | Ends the driver |
@@ -276,8 +297,8 @@ Protocol 1, one JSON object per line each way (`op`, arguments, optional `id`; t
 ## Tests
 
 - External effects are injectable; nothing in the suite touches a device, adb, the network,
-  Task Scheduler, MuMu or PowerShell. `tests/conftest.py` points `COURT_BOOKER_HOME` at a
-  temporary folder.
+  Task Scheduler, MuMu, PowerShell or the Windows vault. `tests/conftest.py` points
+  `COURT_BOOKER_HOME` at a temporary folder and keeps the logins in memory.
 - `tests/test_flow.py`: `FakeApp`, a scripted app (screens as node lists, taps and Back switch
   screens), with a fake clock; `in_english` turns it English. A full round costs 16 commands.
 - Backend tests are in `tests/api/` (skipped without FastAPI); UI tests sit beside the code.

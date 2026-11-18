@@ -100,6 +100,69 @@ describe("SetupTab steps the user does", () => {
   });
 });
 
+describe("SetupTab saved login", () => {
+  const NONE = { mumu_index: 0, saved: false, phone: null };
+  const SAVED = { mumu_index: 0, saved: true, phone: "09••••••79" };
+
+  it("shows a saved login by its masked phone, never its password", async () => {
+    renderSetup(overview(), { "GET /api/logins/0": reply(SAVED) });
+    const tab = await setupTab();
+
+    expect(await within(tab).findByText("Đã lưu cho số 09••••••79")).toBeInTheDocument();
+    expect(within(tab).queryByLabelText("Mật khẩu")).not.toBeInTheDocument();
+  });
+
+  it("saves a login and empties the form", async () => {
+    const { fetch } = renderSetup(overview(), {
+      "GET /api/logins/0": reply(NONE),
+      "PUT /api/logins/0": reply(SAVED),
+    });
+    const tab = await setupTab();
+
+    fireEvent.change(await within(tab).findByLabelText("Số điện thoại"), {
+      target: { value: "0900000079" },
+    });
+    fireEvent.change(within(tab).getByLabelText("Mật khẩu"), {
+      target: { value: "mat-khau-bi-mat" },
+    });
+    fireEvent.click(within(tab).getByRole("button", { name: "Lưu" }));
+
+    expect(await within(tab).findByText("Đã lưu cho số 09••••••79")).toBeInTheDocument();
+    const put = fetch.mock.calls.find(([request]) => request.method === "PUT");
+    expect(await put?.[0].json()).toEqual({ phone: "0900000079", password: "mat-khau-bi-mat" });
+    expect(within(tab).queryByLabelText("Mật khẩu")).not.toBeInTheDocument();
+  });
+
+  it("removes a saved login", async () => {
+    const { fetch } = renderSetup(overview(), {
+      "GET /api/logins/0": reply(SAVED),
+      "DELETE /api/logins/0": reply(null, 204),
+    });
+    const tab = await setupTab();
+
+    fireEvent.click(await within(tab).findByRole("button", { name: "Xóa" }));
+
+    expect(await within(tab).findByLabelText("Mật khẩu")).toHaveValue("");
+    expect(requestsTo(fetch, "DELETE /api/logins/0")).toBe(1);
+  });
+
+  it("says so when Windows did not keep it", async () => {
+    renderSetup(overview(), {
+      "GET /api/logins/0": reply(NONE),
+      "PUT /api/logins/0": reply({ error: "credentials", detail: "error 1312" }, 503),
+    });
+    const tab = await setupTab();
+
+    fireEvent.change(await within(tab).findByLabelText("Số điện thoại"), {
+      target: { value: "0900000079" },
+    });
+    fireEvent.change(within(tab).getByLabelText("Mật khẩu"), { target: { value: "x" } });
+    fireEvent.click(within(tab).getByRole("button", { name: "Lưu" }));
+
+    expect(await within(tab).findByRole("alert")).toHaveTextContent("Chưa lưu được");
+  });
+});
+
 describe("SetupTab without auto setup", () => {
   it("has no button: the runs and the daily switch set up MuMu and waking", async () => {
     renderSetup();

@@ -17,6 +17,7 @@
     }
   },
   "update": {
+    "current": "Phiên bản {{version}}",
     "button": "Cập nhật lên {{version}}",
     "installing": "Đang cập nhật…",
     "locked": "Cập nhật khi không có lần chạy nào và ngoài {{from}}–{{to}}",
@@ -154,9 +155,21 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Court Booker không đọc mật khẩu."
+          "hint": "Tài khoản cư dân. Lưu ở mục bên dưới nếu muốn app tự đăng nhập lại."
         },
         "off": "đang tắt, không tính vào việc thiết lập"
+      },
+      "login": {
+        "title": "Tự đăng nhập lại",
+        "why": "App Vinhomes đăng xuất khi tài khoản đăng nhập ở máy khác. Đã lưu thì lượt đặt tự đăng nhập lại; mật khẩu nằm trong Windows, không bao giờ hiện lại.",
+        "saved": "Đã lưu cho số {{phone}}",
+        "change": "Đổi",
+        "remove": "Xóa",
+        "phone": "Số điện thoại",
+        "password": "Mật khẩu",
+        "save": "Lưu",
+        "cancel": "Hủy",
+        "failed": "Chưa lưu được, hãy thử lại."
       },
       "guide": {
         "title": "Hướng dẫn",
@@ -183,7 +196,7 @@
           },
           "loggedOut": {
             "question": "App bị đăng xuất",
-            "answer": "Đăng nhập lại trong MuMu, rồi chạy thử một lần."
+            "answer": "Lưu tài khoản ở mục \"Tự đăng nhập lại\" để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, lưu lại cho đúng: app khóa tài khoản sau 5 lần sai."
           }
         }
       }
@@ -265,6 +278,7 @@
       "full": "Tài khoản thuộc phân khu {{name}}",
       "plain": "Đã đọc phân khu của tài khoản"
     },
+    "logged_in": "App đã bị đăng xuất, đã tự đăng nhập lại",
     "waiting": {
       "full": "Chờ đến {{time}}",
       "plain": "Chờ đến giờ đặt"
@@ -373,7 +387,10 @@
     "notOpen": "Ngày chưa mở đặt",
     "stuck": "App không chuyển màn hình",
     "busy": "Đang có lần chạy khác",
-    "loggedOut": "App Vinhomes chưa mở được, có thể đã bị đăng xuất",
+    "loggedOut": "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
+    "loginRefused": "App từ chối tài khoản đã lưu: {{message}}",
+    "loginFailed": "Chưa tự đăng nhập lại được",
+    "notReady": "App Vinhomes chưa mở được",
     "other": "Có lỗi, xem nhật ký"
   },
   "errors": {

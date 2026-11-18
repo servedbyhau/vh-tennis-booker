@@ -3,10 +3,12 @@ import type {
   AccountSubdivision,
   DryRunStarted,
   Health,
+  NewLogin,
   NotificationSettings,
   Overview,
   RunDetail,
   RunSummary,
+  SavedLogin,
   ScheduleState,
   Settings,
   Step,
@@ -69,6 +71,30 @@ export function switchInstance(mumuIndex: number, enabled: boolean): Promise<Set
 /** Read the subdivision each MuMu instance's account told last, newest first. */
 export function getAccounts(): Promise<AccountSubdivision[]> {
   return call(client.GET("/api/accounts"));
+}
+
+/** Tell whether a login is saved for MuMu instance `mumuIndex`, its phone number masked. */
+export function getLogin(mumuIndex: number): Promise<SavedLogin> {
+  return call(
+    client.GET("/api/logins/{mumu_index}", { params: { path: { mumu_index: mumuIndex } } }),
+  );
+}
+
+/** Save the login a run types in once the app logged out; the answer never holds it. */
+export function saveLogin(mumuIndex: number, login: NewLogin): Promise<SavedLogin> {
+  return call(
+    client.PUT("/api/logins/{mumu_index}", {
+      params: { path: { mumu_index: mumuIndex } },
+      body: login,
+    }),
+  );
+}
+
+/** Remove the saved login of MuMu instance `mumuIndex`. */
+export async function deleteLogin(mumuIndex: number): Promise<void> {
+  await call(
+    client.DELETE("/api/logins/{mumu_index}", { params: { path: { mumu_index: mumuIndex } } }),
+  );
 }
 
 /** Read whether every run ends with a Windows notification, and its language. */

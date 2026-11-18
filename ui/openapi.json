@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Court Booker",
-    "version": "1.0.1"
+    "version": "1.1.0"
   },
   "paths": {
     "/api/health": {
@@ -595,6 +595,176 @@
         }
       }
     },
+    "/api/logins/{mumu_index}": {
+      "get": {
+        "tags": [
+          "logins"
+        ],
+        "summary": "Read Login",
+        "description": "Tell whether a login is saved for the instance, with its phone number masked.",
+        "operationId": "read_login_api_logins__mumu_index__get",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedLogin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "logins"
+        ],
+        "summary": "Save Login",
+        "description": "Save the login a run of the instance types in once the app logged out.\n\nIt replaces the one saved before. The app does not check it here: a wrong one shows at\nthe next logout, as a run that stops after one try (the app locks an account after 5\nwrong passwords). Windows refusing to keep it answers 503 ``credentials``.",
+        "operationId": "save_login_api_logins__mumu_index__put",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedLogin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "logins"
+        ],
+        "summary": "Delete Login",
+        "description": "Remove the saved login of the instance; a run then stops when the app logged out.",
+        "operationId": "delete_login_api_logins__mumu_index__delete",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -1004,6 +1174,7 @@
           "device_ready",
           "app_ready",
           "account_subdivision",
+          "logged_in",
           "waiting",
           "booking_started",
           "run_finished",
@@ -1186,6 +1357,10 @@
             "type": "string",
             "title": "Registered"
           },
+          "login": {
+            "type": "string",
+            "title": "Login"
+          },
           "dont_show_again": {
             "type": "string",
             "title": "Dont Show Again"
@@ -1214,6 +1389,7 @@
           "ticket",
           "processing",
           "registered",
+          "login",
           "dont_show_again"
         ],
         "title": "LabelSettings",
@@ -1271,6 +1447,31 @@
         ],
         "title": "MonthSummary",
         "description": "One month with real bookings: how many runs, how many slots they booked."
+      },
+      "NewLogin": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "pattern": "^0\\d{9}$",
+            "title": "Phone"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "format": "password",
+            "title": "Password",
+            "writeOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "phone",
+          "password"
+        ],
+        "title": "NewLogin",
+        "description": "The phone number and password of the Vinhomes app, to save for a MuMu instance."
       },
       "NotificationSettings": {
         "properties": {
@@ -1662,6 +1863,36 @@
         ],
         "title": "Running",
         "description": "The run that holds the emulator now; ``since`` is empty while a dry run starts."
+      },
+      "SavedLogin": {
+        "properties": {
+          "mumu_index": {
+            "type": "integer",
+            "title": "Mumu Index"
+          },
+          "saved": {
+            "type": "boolean",
+            "title": "Saved"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mumu_index",
+          "saved"
+        ],
+        "title": "SavedLogin",
+        "description": "Whether a login is saved for a MuMu instance; never its password."
       },
       "ScheduleState": {
         "properties": {

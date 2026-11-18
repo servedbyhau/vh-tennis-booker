@@ -15,7 +15,7 @@ def fast_poll(monkeypatch):
 def test_new_steps_are_pushed_as_runs_write_them(client, context, record_run):
     record_run(context.data.database)  # written before the client connects: not sent
 
-    with client.websocket_connect("/api/live") as websocket:
+    with client.websocket_connect("ws://127.0.0.1:8765/api/live") as websocket:
         run_id = record_run(context.data.database, slots=[("18:00 - 19:00", True)])
         first = websocket.receive_json()
         kinds = [first["step"]["kind"]] + [
@@ -37,7 +37,7 @@ def test_a_client_can_resume_after_a_step(client, context, record_run):
     record(context, EventKind.SETTINGS_SAVED, changed=["slots"])
     record(context, EventKind.SETTINGS_SAVED, changed=["court"])
 
-    with client.websocket_connect("/api/live?after=1") as websocket:
+    with client.websocket_connect("ws://127.0.0.1:8765/api/live?after=1") as websocket:
         message = websocket.receive_json()
 
     assert message["step"]["id"] == 2
