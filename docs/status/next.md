@@ -11,15 +11,16 @@ Last updated: 2026-11-18.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: install 1.1.0 and watch the 06:00 runs
+## Next task: update to 1.1.1 by the button, then watch the 06:00 runs
 
-1. Once the release page of 1.1.0 is up, the user presses "Cập nhật lên 1.1.0" before 05:45;
-   check that the task runs the installed app and that it reports 1.1.0, with the version
-   beside the app's name.
+1. Once the release page of 1.1.1 is up, the user presses "Cập nhật lên 1.1.1" outside
+   05:45-06:05. It proves the installer fix: check that the engine, the window and Windows all
+   report 1.1.1 and that no process of the app was left; then remove the update issue from
+   [known-issues.md](known-issues.md).
 2. The login of MuMu 1 is saved in the vault (2026-11-18); the user may change the Vinhomes
    password and save the new one under "Tự đăng nhập lại" of machine 2.
-3. Watch the next 06:00 logs; a run that logged in again shows "Logged in again" and a
-   `logged_in` step.
+3. Watch the next 06:00 logs; a run that logged in again shows "Logged in again", and one that
+   stopped on an unexplained failure saved a screenshot in `logs\screens`.
 4. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
    keeps the popup away; two tries froze MuMu. Not needed by the run.
 

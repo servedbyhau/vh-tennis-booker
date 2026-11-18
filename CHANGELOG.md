@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-18
+
 ### Added
 - A real run that stops on a failure the app did not explain (an unknown screen, the app not
   opening, a login that failed) saves a screenshot in `logs\screens`, named in the log and the
