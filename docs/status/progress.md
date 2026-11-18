@@ -10,8 +10,9 @@ Last updated: 2026-11-18.
 
 - Released: **1.1.1** (tag `v1.1.1`, 2026-11-18): the installer stops the app's processes
   before an update (never a booking), and a real run that stops on an unexplained failure
-  saves the screen. 1.1.0 (same day) logs in again with the saved login; its update by the
-  button stopped halfway and was installed by hand. 1.0.1 closed the promotion popup; 1.0.0
+  saves the screen; installed by the update button at 15:41, in full. 1.1.0 (same day) logs in
+  again with the saved login; its update by the button stopped halfway and was installed by
+  hand. 1.0.1 closed the promotion popup; 1.0.0
   (2026-11-03) was the first complete version.
 - The Android app is developed in `servedbyhau/v-court`, which ports this repo's booking
   flow and driver; this repo is its behavior reference.
