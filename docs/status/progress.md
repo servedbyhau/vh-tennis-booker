@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-17.
+Last updated: 2026-11-18.
 
 ## Release and daily run
 
@@ -27,6 +27,7 @@ Last updated: 2026-11-17.
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-18 | 1.0.1 (by the update button) | Instance 0 1/1 (6.0 s), instance 1 2/2 (5.5 s, 3.9 s); no popup showed |
 | 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed in 1.0.1) |
 | 2026-11-16 | 1.0.0 | Instance 0 1/1, instance 1 2/2 |
 | 2026-11-15 | 1.0.0 | Instance 0 1/1 (5.1 s), instance 1 2/2 (4.9 s, 3.2 s) |
@@ -50,7 +51,9 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - From 1.0.0 each version has a GitHub release page with its installer; the pages of
   0.1.0 to 0.9.0 were deleted on 2026-11-03, their tags kept. Releases go ahead without
   asking again.
-- Accounts, quotas, re-logins and adding instances to `config.toml` are the user's job.
+- Accounts, quotas, the first login and adding instances to `config.toml` are the user's job.
+  Logging in again after a logout is the app's, with a login the user saved (2026-11-18); the
+  "ping-pong" with another device on the same account is the user's to set up.
 - Test tickets booked during development are cancelled by the user.
 
 ## Test environment notes

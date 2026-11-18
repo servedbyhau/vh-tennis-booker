@@ -89,7 +89,10 @@ REASONS = {
         "notOpen": "Ngày chưa mở đặt",
         "stuck": "App không chuyển màn hình",
         "busy": "Đang có lần chạy khác",
-        "loggedOut": "App Vinhomes chưa mở được, có thể đã bị đăng xuất",
+        "loggedOut": "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
+        "loginRefused": "App từ chối tài khoản đã lưu: {message}",
+        "loginFailed": "Chưa tự đăng nhập lại được",
+        "notReady": "App Vinhomes chưa mở được",
         "other": "Có lỗi, xem nhật ký",
     },
     "en": {
@@ -102,7 +105,10 @@ REASONS = {
         "notOpen": "Not open for booking yet",
         "stuck": "The app did not move on",
         "busy": "Another run was in progress",
-        "loggedOut": "The Vinhomes app did not open; it may be logged out",
+        "loggedOut": "The Vinhomes app is logged out and no login is saved",
+        "loginRefused": "The app refused the saved login: {message}",
+        "loginFailed": "Could not log in again",
+        "notReady": "The Vinhomes app did not open",
         "other": "Error, see the activity log",
     },
 }
@@ -118,7 +124,20 @@ _PATTERNS = [
     (re.compile(r" not open after \d+ attempt"), "notOpen"),
     (re.compile(r" but the next screen did not appear$"), "stuck"),
     (re.compile(r"^Another run is in progress"), "busy"),
-    (re.compile(r"check that it is logged in$"), "loggedOut"),
+    (re.compile(r"^The app is logged out"), "loggedOut"),
+    (
+        re.compile(r"^The app refused the saved login: (?P<message>.*); save it again", re.DOTALL),
+        "loginRefused",
+    ),
+    (
+        re.compile(
+            r"stayed disabled after typing the login$|\(\d+ tap\(s\)\); check the app$"
+            r"|^The app logged out again"
+        ),
+        "loginFailed",
+    ),
+    # Runs before the saved login asked to check the login; a logout is told apart since.
+    (re.compile(r"check that it is logged in$|; check the app on MuMu \d+$"), "notReady"),
 ]
 """The engine's reasons as it writes them, as in ``ui/src/reasons.ts``."""
 

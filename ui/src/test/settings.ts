@@ -47,6 +47,7 @@ export function settings(fields: Partial<Settings> = {}): Settings {
       ticket: "Chi tiết đặt lịch",
       processing: "Đang xử lý",
       registered: "Đã đăng ký",
+      login: "Đăng nhập",
       dont_show_again: "Không hiện lại",
     },
     ...fields,

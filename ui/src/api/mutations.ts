@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Language } from "../i18n";
+import type { NewLogin } from "./types";
 import {
+  deleteLogin,
   getNotifications,
+  saveLogin,
   saveNotifications,
   saveSettings,
   startDryRun,
@@ -68,6 +71,30 @@ export function useSaveNotificationLanguage() {
       cache.setQueryData(queryKeys.notifications, settings);
       await cache.invalidateQueries({ queryKey: ["events"] });
     },
+  });
+}
+
+/** Save a machine's Vinhomes login; the answer tells it saved, never the password. */
+export function useSaveLogin() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: ({ mumuIndex, login }: { mumuIndex: number; login: NewLogin }) =>
+      saveLogin(mumuIndex, login),
+    onSuccess: (saved) => cache.setQueryData(queryKeys.login(saved.mumu_index), saved),
+  });
+}
+
+/** Remove a machine's saved login. */
+export function useDeleteLogin() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: deleteLogin,
+    onSuccess: (_, mumuIndex) =>
+      cache.setQueryData(queryKeys.login(mumuIndex), {
+        mumu_index: mumuIndex,
+        saved: false,
+        phone: null,
+      }),
   });
 }
 

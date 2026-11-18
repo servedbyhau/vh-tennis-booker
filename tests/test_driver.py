@@ -53,7 +53,7 @@ class FakeStream:
 def driver_stream(**replies):
     """Return a stream that answers like a running driver; ``replies`` overrides ops."""
     defaults = {
-        "hello": {"protocol": 1, "version": "c52e8ff35726"},
+        "hello": {"protocol": 2, "version": "c52e8ff35726"},
         "click": {"clicked": True, "how": "action"},
         "click_at": {"clicked": True, "how": "action"},
     }
@@ -116,7 +116,7 @@ def test_each_command_is_one_json_line_with_its_own_id():
     stream = driver_stream()
     client = DriverClient(stream)
 
-    assert client.call("hello")["protocol"] == 1
+    assert client.call("hello")["protocol"] == 2
     client.call("click_at", x=43, y=1345)
 
     assert stream.commands == [
@@ -217,6 +217,23 @@ def test_a_tap_without_a_label_clicks_the_element_at_that_point():
     device(stream).click(57, 1345)
 
     assert stream.commands == [{"id": 1, "op": "click_at", "x": 57, "y": 1345}]
+
+
+def test_text_goes_to_the_field_at_the_point():
+    stream = driver_stream(set_text={"set": True})
+
+    device(stream).set_text(270.4, 572, "mat-khau")
+
+    assert stream.commands == [{"id": 1, "op": "set_text", "x": 270, "y": 572, "text": "mat-khau"}]
+
+
+def test_no_field_at_the_point_fails_without_the_text():
+    stream = driver_stream(set_text={"set": False})
+
+    with pytest.raises(DriverError, match=r"No field took the text at \(270, 572\)") as failed:
+        device(stream).set_text(270, 572, "mat-khau")
+
+    assert "mat-khau" not in str(failed.value)  # it may be a password
 
 
 def test_back_is_the_only_key():
@@ -410,9 +427,9 @@ def test_a_refused_connection_counts_as_no_answer():
 
 
 def test_a_driver_of_another_protocol_is_unavailable(apk):
-    stream = driver_stream(hello={"protocol": 2, "version": "abc"})
+    stream = driver_stream(hello={"protocol": 1, "version": "abc"})
 
-    with pytest.raises(DriverUnavailableError, match=r"abc speaks protocol 2, not 1"):
+    with pytest.raises(DriverUnavailableError, match=r"abc speaks protocol 1, not 2"):
         connect(FakeAdb(installed_hash=apk_hash(apk)), [stream], apk)
 
     assert stream.closed

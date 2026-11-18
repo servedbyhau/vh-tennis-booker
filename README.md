@@ -171,7 +171,11 @@ The app is one screen, without a menu:
   request); one click opens the reasons, the steps and the technical log.
 - **Thiết lập / Setup** beside it: the steps only you can do (install MuMu and the Vinhomes
   app, log in), ticked by you, and a short guide; MuMu's place and screen and waking the PC
-  need no step (the runs and the daily switch see to them). It
+  need no step (the runs and the daily switch see to them). Under **Tự đăng nhập lại / Log in
+  again by itself** you may save the Vinhomes phone number and password of each machine: the
+  Vinhomes app logs out when the account logs in on another device, and a booking that finds
+  it logged out then logs in again by itself, trying the password once. The password is kept
+  by Windows (Credential Manager) for your Windows account and never shown again. It
   opens first, with a count, while anything is left. The Windows notification switch sits on
   the ticket, beside the daily switch.
 - **A tab per machine** on top of the ticket: "Máy 2" (a second MuMu instance, logged in to

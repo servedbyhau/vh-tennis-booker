@@ -36,6 +36,7 @@ ENGLISH_LABELS = Labels(  # read from the app in English on 2026-10-20
     ticket="Booking details",
     processing="Processing",
     registered="Registered",
+    login="Login",  # read on 2026-11-18
     dont_show_again="Don't show again",  # not seen: the popup was read in Vietnamese only
 )
 """The English labels. The Vietnamese ones are the config's ``[labels]``."""

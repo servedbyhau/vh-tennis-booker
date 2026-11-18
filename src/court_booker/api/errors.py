@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from court_booker.credentials import CredentialError
 from court_booker.errors import (
     AppNotReadyError,
     CourtBookerError,
@@ -58,6 +59,7 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (AppNotReadyError, 503, "app_not_ready"),
     (ScheduleError, 503, "schedule"),
     (NotificationError, 503, "notification"),
+    (CredentialError, 503, "credentials"),
 )
 """First match wins: HTTP status and code per error class."""
 

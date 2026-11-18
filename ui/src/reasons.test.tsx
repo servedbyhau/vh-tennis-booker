@@ -38,8 +38,30 @@ describe("failureReason", () => {
     ["Another run is in progress: dry_run run (pid 17156) since 11:12:48", "Đang có lần chạy khác"],
     [
       "The app did not show 'Trang chủ' or 'Sân Tennis' in 60 s; check that it is logged in",
-      "App Vinhomes chưa mở được, có thể đã bị đăng xuất",
+      "App Vinhomes chưa mở được",
     ],
+    [
+      "The app did not show 'Tiện ích', 'Sân Tennis', 'Utilities' or 'Tennis' in 180 s; " +
+        "check the app on MuMu 1",
+      "App Vinhomes chưa mở được",
+    ],
+    [
+      "The app is logged out (the account logged in on another device): log in again on MuMu " +
+        "1, or save the login in the app's setup so a run logs in by itself",
+      "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
+    ],
+    [
+      "The app refused the saved login: Sai mật khẩu. Vui lòng thử lại; save it again in the " +
+        "app's setup (the app locks an account after 5 wrong passwords)",
+      "App từ chối tài khoản đã lưu: Sai mật khẩu. Vui lòng thử lại",
+    ],
+    ["'Đăng nhập' stayed disabled after typing the login", "Chưa tự đăng nhập lại được"],
+    [
+      "Neither the home screen nor a message showed 30 s after 'Đăng nhập' (3 tap(s)); " +
+        "check the app",
+      "Chưa tự đăng nhập lại được",
+    ],
+    ["The app logged out again right after the saved login", "Chưa tự đăng nhập lại được"],
     ["AdbShellError(AdbTimeout('adb read timeout'))", "Có lỗi, xem nhật ký"],
     [null, "Có lỗi, xem nhật ký"],
   ])("words %j as %j", async (reason, words) => {

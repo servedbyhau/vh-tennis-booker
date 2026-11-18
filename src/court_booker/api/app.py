@@ -13,6 +13,7 @@ from court_booker.api import (
     accounts,
     history,
     live,
+    logins,
     notifications,
     runs,
     schedule,
@@ -61,7 +62,8 @@ def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
         """Tell the UI the backend is up, and its version."""
         return Health(status="ok", version=__version__)
 
-    for module in (history, settings, accounts, notifications, setup, schedule, runs, status):
+    modules = (history, settings, accounts, logins, notifications, setup, schedule, runs, status)
+    for module in modules:
         app.include_router(module.router, responses=ERROR_RESPONSES)
     app.include_router(live.router)
     if ui_folder is not None:

@@ -155,9 +155,21 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "The resident account. Court Booker never reads the password."
+          "hint": "The resident account. Save it below to have the app log in again by itself."
         },
         "off": "off, not counted in the setup"
+      },
+      "login": {
+        "title": "Log in again by itself",
+        "why": "The Vinhomes app logs out when the account logs in on another device. Once saved, a booking logs in again by itself; the password stays in Windows and never shows again.",
+        "saved": "Saved for {{phone}}",
+        "change": "Change",
+        "remove": "Remove",
+        "phone": "Phone number",
+        "password": "Password",
+        "save": "Save",
+        "cancel": "Cancel",
+        "failed": "Not saved, please try again."
       },
       "guide": {
         "title": "Guide",
@@ -184,7 +196,7 @@
           },
           "loggedOut": {
             "question": "The app was logged out",
-            "answer": "Log in again in MuMu, then do one dry run."
+            "answer": "Save the account under \"Log in again by itself\" to have a booking log in. If the app says the password is wrong, save the right one: the app locks an account after 5 wrong passwords."
           }
         }
       }
@@ -266,6 +278,7 @@
       "full": "The account is in the {{name}} subdivision",
       "plain": "Read the account's subdivision"
     },
+    "logged_in": "The app had logged out; logged in again",
     "waiting": {
       "full": "Waiting until {{time}}",
       "plain": "Waiting for the start time"
@@ -374,7 +387,10 @@
     "notOpen": "Not open for booking yet",
     "stuck": "The app did not move on",
     "busy": "Another run was in progress",
-    "loggedOut": "The Vinhomes app did not open; it may be logged out",
+    "loggedOut": "The Vinhomes app is logged out and no login is saved",
+    "loginRefused": "The app refused the saved login: {{message}}",
+    "loginFailed": "Could not log in again",
+    "notReady": "The Vinhomes app did not open",
     "other": "Error, see the activity log"
   },
   "errors": {

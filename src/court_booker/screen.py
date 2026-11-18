@@ -16,11 +16,19 @@ from court_booker.geometry import Box, center, parse_bounds
 
 @dataclass(frozen=True)
 class Node:
-    """An element of the screen: its accessibility label and visible bounds."""
+    """An element of the screen: its accessibility label and visible bounds.
+
+    A text field (the app's login) has no label; its text, which may be a phone number, is
+    not kept, so no log ever shows it.
+    """
 
     desc: str
     box: Box
     clickable: bool
+    field: bool = False
+    """A text field, which takes typed text."""
+    password: bool = False
+    """A password field: Android shows its text as dots."""
 
     @property
     def center(self) -> tuple[int, int]:
@@ -64,13 +72,26 @@ class Screen:
 
     @classmethod
     def parse(cls, xml: str) -> Screen:
-        """Build a screen from ``dump_hierarchy`` XML; nodes without bounds are skipped."""
+        """Build a screen from ``dump_hierarchy`` XML; nodes without bounds are skipped.
+
+        A field is ``editable`` in the driver's dump; uiautomator2's has no such attribute, so
+        its ``EditText`` class tells it there.
+        """
         nodes = []
         for element in ET.fromstring(xml).iter("node"):
             box = parse_bounds(element.get("bounds", ""))
             if box is not None:
+                field = element.get("editable") == "true" or element.get("class", "").endswith(
+                    "EditText"
+                )
                 nodes.append(
-                    Node(element.get("content-desc", ""), box, element.get("clickable") == "true")
+                    Node(
+                        element.get("content-desc", ""),
+                        box,
+                        element.get("clickable") == "true",
+                        field=field,
+                        password=element.get("password") == "true",
+                    )
                 )
         return cls(nodes)
 
@@ -107,15 +128,18 @@ class Screen:
         return None
 
     def describe(self) -> list[str]:
-        """Return one log line per labelled or clickable element, in document order.
+        """Return one log line per labelled, clickable or field element, in document order.
 
         Unlabelled clickable elements are kept because some buttons, such as the
-        month arrows of the calendar, may have no label.
+        month arrows of the calendar, may have no label. A field shows as a field only: its
+        text is not kept.
         """
         lines = []
         for node in self.nodes:
-            if node.desc or node.clickable:
+            if node.desc or node.clickable or node.field:
                 left, top, right, bottom = node.box
                 flag = " clickable" if node.clickable else ""
+                if node.field:
+                    flag += " password" if node.password else " field"
                 lines.append(f"[{left},{top}][{right},{bottom}]{flag} {node.desc!r}")
         return lines

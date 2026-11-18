@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, NoReturn
 
-from court_booker import __version__, device_setup, schedule
+from court_booker import __version__, credentials, device_setup, schedule
 from court_booker.adb import AUTO
 from court_booker.clock import NtpClock, ntp_offset, resolve_start
 from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
@@ -429,6 +429,7 @@ def main(argv: list[str] | None = None) -> int:
                 clock=clock,
                 results=results,
                 report=report,
+                login_for=lambda: credentials.default_store().read(config.mumu_index),
             )
         code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:

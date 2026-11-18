@@ -64,6 +64,7 @@ booked_place = "Vị trí/dịch vụ"      # caption of the court to book
 ticket = "Chi tiết đặt lịch"         # title of the ticket: the booking went through
 processing = "Đang xử lý"            # ticket status while the server handles it
 registered = "Đã đăng ký"            # ticket status once registered
+login = "Đăng nhập"                  # button of the login screen, once logged out
 dont_show_again = "Không hiện lại"   # on a popup over the home screen, closed with its X
 
 # Optional: more MuMu instances, each logged in to its own account, booking side by side

@@ -101,6 +101,9 @@ class Labels:
     """Ticket status while the server handles the booking (seen at 06:00)."""
     registered: str = "Đã đăng ký"
     """Ticket status once the booking is registered."""
+    login: str = "Đăng nhập"
+    """Button of the login screen the app shows once logged out; disabled until a password is
+    typed in. The screen's fields have no label: the password field is the one in dots."""
     dont_show_again: str = "Không hiện lại"
     """Caption of the tick box on a promotion popup over the home screen; the popup is closed
     with its unlabelled X, as Back leaves it open."""
