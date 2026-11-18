@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-18
+
 ### Added
 - The app shows the installed version beside its name, at the top left.
 - A run that finds the Vinhomes app logged out (it logs out when the account logs in on
