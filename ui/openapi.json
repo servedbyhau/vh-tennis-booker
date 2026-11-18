@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Court Booker",
-    "version": "1.1.0"
+    "version": "1.1.1"
   },
   "paths": {
     "/api/health": {
@@ -1175,6 +1175,7 @@
           "app_ready",
           "account_subdivision",
           "logged_in",
+          "screen_saved",
           "waiting",
           "booking_started",
           "run_finished",

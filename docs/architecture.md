@@ -45,6 +45,13 @@ Details live in the docstrings; this page says where things are and what must st
   A `BookingError` fails its round only, except: `DeviceNotRespondingError` ends the run after
   its round, and `QuotaFullError` leaves the rounds left unrun ("Skipped: the booking quota is
   used up", no device command). A failure logs the last screen read (`log_last_screen`).
+- `runner.save_screen`: a real run that stops on a failure the app did not explain (anything
+  but a full slot or court and the app's notices) saves a PNG of the screen in the log
+  folder's `screens` (`adb exec-out screencap`, or uiautomator2's `screenshot`; about 1 s),
+  logs its path and records a `screen_saved` step: when the app is not made ready, or when
+  such a failure ends the last round. One in an earlier round saves none, so the next round
+  is not late. A run that books, a dry run and a frozen emulator save none; a screenshot
+  that fails only logs. The 30 newest are kept; they hold personal data and stay on the PC.
 - `clock.py`: NTP (the configured server, then fallbacks; the answer with the shortest round
   trip) anchored on `time.perf_counter()`, so Windows setting the PC clock during the wait
   changes nothing. Without an answer it is the PC clock, with a warning.
@@ -181,9 +188,17 @@ the installer runs, since both use the files the installer replaces. In `ui/`, `
 calls the commands; `UpdateButton` shows only in the window, when a newer version is out, and
 is locked while a run holds the lock and in the quiet time.
 
+Before copying a file, the installer (`windows/hooks.nsh`, `NSIS_HOOK_PREINSTALL`) stops every
+process of the install folder, whoever started it: the window, the backend, a dry run. Windows
+refuses to overwrite a running program, and a backend the window had not started left an update
+half done on 2026-11-18. A real booking (an engine process without `serve`, `setup`,
+`schedule` or `--dry-run`: the 06:00 run, a run by hand) is never stopped: the installer then
+ends at once with exit code 2 and a message, before changing anything.
+
 The uninstaller removes the daily task when its command is in the install folder
 (`windows/hooks.nsh`), not on an update, which runs no uninstaller. `tools/check_installer.ps1`
-proves install, serve and uninstall on the `Desktop` workflow's clean runner.
+proves install, serve, an update over a running backend, an update refused during a booking and
+uninstall on the `Desktop` workflow's clean runner.
 
 ## Backend (`court_booker.api`)
 

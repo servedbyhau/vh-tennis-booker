@@ -6,6 +6,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-18
+
+### Added
+- A real run that stops on a failure the app did not explain (an unknown screen, the app not
+  opening, a login that failed) saves a screenshot in `logs\screens`, named in the log and the
+  History, so the next day shows what went wrong. A run that books, a full slot and a dry run
+  take none; the 30 newest are kept.
+
+### Fixed
+- An update could stop halfway, leaving the new UI on the old engine ("v1.0.1" after the
+  update to 1.1.0), when a backend the window had not started was running. The installer now
+  stops every process of the app before copying, except a booking going on: then it changes
+  nothing and says to update once the booking is done.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

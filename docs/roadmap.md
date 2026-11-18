@@ -55,7 +55,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 | Device | ADB lost during a run | Not handled |
 | Device | Wrong MuMu resolution | Set by the run while MuMu is off; a running MuMu is logged (WARNING) and scrolls |
 | Device | PC woke late, clock drift | Runs at once if under 10 min late; NTP time on a counter Windows does not set |
-| Reporting | Every failure reported | Log file, history database, a Windows notification after every run; Telegram optional |
+| Reporting | Every failure reported | Log file, history database, a Windows notification after every run; Telegram optional. A real run that stopped on a failure the app did not explain also saves the screen (`logs\screens`) |
 
 ## Ruled out
 

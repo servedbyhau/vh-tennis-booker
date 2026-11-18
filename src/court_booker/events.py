@@ -25,6 +25,7 @@ class EventKind(str, Enum):
     APP_READY = "app_ready"
     ACCOUNT_SUBDIVISION = "account_subdivision"
     LOGGED_IN = "logged_in"
+    SCREEN_SAVED = "screen_saved"
     WAITING = "waiting"
     BOOKING_STARTED = "booking_started"
     RUN_FINISHED = "run_finished"

@@ -279,6 +279,7 @@
       "plain": "Read the account's subdivision"
     },
     "logged_in": "The app had logged out; logged in again",
+    "screen_saved": "Saved the screen at the failure, in the logs\\screens folder",
     "waiting": {
       "full": "Waiting until {{time}}",
       "plain": "Waiting for the start time"

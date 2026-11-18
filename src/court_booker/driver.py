@@ -177,6 +177,10 @@ class DriverDevice:
     def shell(self, command: str) -> str:
         return self.adb.shell(self.serial, command)
 
+    def screenshot(self, filename: str) -> None:
+        """Save the screen as a PNG file, as uiautomator2's ``screenshot`` does; through adb."""
+        Path(filename).write_bytes(self.adb.screencap(self.serial))
+
     def app_start(self, package: str) -> None:
         """Open ``package`` at its launcher activity, as uiautomator2 does."""
         self.shell(f"monkey -p {package} -c android.intent.category.LAUNCHER 1")

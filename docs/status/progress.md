@@ -8,10 +8,11 @@ Last updated: 2026-11-18.
 
 ## Release and daily run
 
-- Released: **1.1.0** (tag `v1.1.0`, 2026-11-18): a run logs in again with the login saved
-  per machine when the app logged out, the backend refuses requests from other sites' pages,
-  and the app shows its version. 1.0.1 (2026-11-17) closed the promotion popup and was the
-  first version installed by the button; 1.0.0 (2026-11-03) was the first complete version.
+- Released: **1.1.1** (tag `v1.1.1`, 2026-11-18): the installer stops the app's processes
+  before an update (never a booking), and a real run that stops on an unexplained failure
+  saves the screen. 1.1.0 (same day) logs in again with the saved login; its update by the
+  button stopped halfway and was installed by hand. 1.0.1 closed the promotion popup; 1.0.0
+  (2026-11-03) was the first complete version.
 - The Android app is developed in `servedbyhau/v-court`, which ports this repo's booking
   flow and driver; this repo is its behavior reference.
 - Daily task `\court-booker`: runs the installed app,

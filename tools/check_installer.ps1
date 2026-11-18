@@ -1,4 +1,5 @@
-# Install the app on a clean Windows PC, serve it without Python, and uninstall it.
+# Install the app on a clean Windows PC, serve it without Python, update it over a running
+# backend and during a booking, and uninstall it.
 #
 # The Desktop workflow runs it on its runner after building the installer. It creates and
 # removes a scheduled task named court-booker, so never run it on a PC that books.
@@ -52,8 +53,37 @@ for ($i = 0; $i -lt 60 -and $null -eq $health; $i++) {
 if ($null -eq $health -or $health.status -ne "ok") { throw "The backend did not answer" }
 $page = Invoke-WebRequest "http://127.0.0.1:8765/" -UseBasicParsing
 if ($page.Content -notmatch '<div id="root">') { throw "The backend did not serve the UI" }
-Stop-Process -Id $backend.Id -Force
 Write-Output "Served version $($health.version) without Python"
+
+# An update over a running backend, as on 2026-11-18: the installer stops it and installs it
+# all (its uninstaller is written last), instead of stopping halfway at court-booker.exe.
+$Uninstaller = Join-Path $Folder "uninstall.exe"
+$before = (Get-Item $Uninstaller).LastWriteTime
+Start-Sleep -Seconds 2
+$update = Start-Process -FilePath $Installer -ArgumentList "/S" -Wait -PassThru
+if ($update.ExitCode -ne 0) { throw "The update over a running backend failed ($($update.ExitCode))" }
+if (-not $backend.HasExited) { throw "The installer left the backend running" }
+if ((Get-Item $Uninstaller).LastWriteTime -le $before) { throw "The update stopped halfway" }
+$left = @(Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -like "$Folder\*" })
+if ($left.Count) { throw "The update left $($left.Count) process(es) of the app running" }
+Write-Output "An update over a running backend stopped it and installed in full"
+
+# A real booking is never stopped: the installer ends before copying anything. A copy of
+# ping.exe named court-booker.exe in the install folder stands for the 06:00 run.
+$fake = Join-Path $Folder "booking\court-booker.exe"
+New-Item -ItemType Directory -Force (Split-Path $fake) | Out-Null
+Copy-Item "$env:SystemRoot\System32\PING.EXE" $fake
+$booking = Start-Process -FilePath $fake -ArgumentList "-n 60 127.0.0.1" -WindowStyle Hidden -PassThru
+$before = (Get-Item $Uninstaller).LastWriteTime
+Start-Sleep -Seconds 2
+$refused = Start-Process -FilePath $Installer -ArgumentList "/S" -Wait -PassThru
+if ($refused.ExitCode -ne 2) { throw "An update during a booking did not stop ($($refused.ExitCode))" }
+if ($booking.HasExited) { throw "The installer stopped a booking" }
+if ((Get-Item $Uninstaller).LastWriteTime -ne $before) { throw "An update during a booking changed the app" }
+Stop-Process -Id $booking.Id -Force
+$booking.WaitForExit()
+Remove-Item (Split-Path $fake) -Recurse -Force
+Write-Output "An update during a booking stopped before copying anything"
 
 # A task that runs another copy (the runner folder, say) outlives the uninstaller.
 Set-Task "C:\runner\.venv\Scripts\pythonw.exe"
