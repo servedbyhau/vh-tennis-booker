@@ -22,6 +22,7 @@ from court_booker.api import (
 )
 from court_booker.api.context import AppContext
 from court_booker.api.errors import Problem, add_error_handlers
+from court_booker.api.local_only import LocalOnly
 from court_booker.api.ui import ui_router
 
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
@@ -41,7 +42,8 @@ class Health(BaseModel):
 def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
     """Return the backend for ``context``; its OpenAPI schema is at ``/api/openapi.json``.
 
-    With ``ui_folder``, a built UI, it serves that UI too; without it only ``/api``.
+    With ``ui_folder``, a built UI, it serves that UI too; without it only ``/api``. Requests
+    a page of another site makes the browser send are refused (:mod:`.local_only`).
     """
     app = FastAPI(
         title="Court Booker",
@@ -51,6 +53,7 @@ def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.context = context
+    app.add_middleware(LocalOnly)
     add_error_handlers(app)
 
     @app.get("/api/health", response_model=Health, tags=["app"], responses=ERROR_RESPONSES)
