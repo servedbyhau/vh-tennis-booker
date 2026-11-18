@@ -279,6 +279,7 @@
       "plain": "Đã đọc phân khu của tài khoản"
     },
     "logged_in": "App đã bị đăng xuất, đã tự đăng nhập lại",
+    "screen_saved": "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
     "waiting": {
       "full": "Chờ đến {{time}}",
       "plain": "Chờ đến giờ đặt"

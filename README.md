@@ -168,7 +168,9 @@ The app is one screen, without a menu:
   shows the steps as they happen.
 - **Lịch sử / History** on the right: each run in two lines, its play day, court and count
   ("2/2"), then every slot booked or not and when it started (real bookings, dry runs on
-  request); one click opens the reasons, the steps and the technical log.
+  request); one click opens the reasons, the steps and the technical log. A booking that
+  stopped on a failure the app did not explain also saved a screenshot of MuMu in
+  `%LOCALAPPDATA%\CourtBooker\logs\screens`.
 - **Thiết lập / Setup** beside it: the steps only you can do (install MuMu and the Vinhomes
   app, log in), ticked by you, and a short guide; MuMu's place and screen and waking the PC
   need no step (the runs and the daily switch see to them). Under **Tự đăng nhập lại / Log in

@@ -45,6 +45,13 @@ Details live in the docstrings; this page says where things are and what must st
   A `BookingError` fails its round only, except: `DeviceNotRespondingError` ends the run after
   its round, and `QuotaFullError` leaves the rounds left unrun ("Skipped: the booking quota is
   used up", no device command). A failure logs the last screen read (`log_last_screen`).
+- `runner.save_screen`: a real run that stops on a failure the app did not explain (anything
+  but a full slot or court and the app's notices) saves a PNG of the screen in the log
+  folder's `screens` (`adb exec-out screencap`, or uiautomator2's `screenshot`; about 1 s),
+  logs its path and records a `screen_saved` step: when the app is not made ready, or when
+  such a failure ends the last round. One in an earlier round saves none, so the next round
+  is not late. A run that books, a dry run and a frozen emulator save none; a screenshot
+  that fails only logs. The 30 newest are kept; they hold personal data and stay on the PC.
 - `clock.py`: NTP (the configured server, then fallbacks; the answer with the shortest round
   trip) anchored on `time.perf_counter()`, so Windows setting the PC clock during the wait
   changes nothing. Without an answer it is the PC clock, with a warning.

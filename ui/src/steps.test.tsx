@@ -28,6 +28,12 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
   ["account_subdivision", { subdivision: "bs" }, "Tài khoản thuộc phân khu BS", "plain"],
   ["account_subdivision", { subdivision: "khu-b" }, "Đã đọc phân khu của tài khoản", "plain"],
   ["logged_in", {}, "App đã bị đăng xuất, đã tự đăng nhập lại", "plain"],
+  [
+    "screen_saved",
+    { path: "C:\\logs\\screens\\2026-11-19-060012-mumu0.png" },
+    "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
+    "plain",
+  ],
   ["waiting", { until: "2026-10-15T05:59:00" }, "Chờ đến 05:59:00", "plain"],
   [
     "booking_started",

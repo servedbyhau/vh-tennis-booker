@@ -1,5 +1,6 @@
 """Runner tests with a fake booker; no device required."""
 
+import contextlib
 import logging
 import threading
 from datetime import datetime, timedelta
@@ -192,6 +193,97 @@ def test_failed_preparation_logs_the_last_screen(monkeypatch, caplog):
         runner.run_booking(FakeDevice(), Config(slots=["19:00 - 20:00"]))
 
     assert "Last screen read (1 elements):" in caplog.text
+
+
+class ShotDevice(FakeDevice):
+    """A device that saves a fake screenshot; ``shots`` names each one."""
+
+    def __init__(self):
+        self.shots = []
+
+    def screenshot(self, filename):
+        Path(filename).write_bytes(b"\x89PNG fake")
+        self.shots.append(Path(filename).name)
+
+
+class StuckBooker(FakeBooker):
+    """Fails every slot on a screen it did not know, as the popup of 2026-11-17 did."""
+
+    def book(self, slot, target, dry_run=False):
+        raise NavigationError("Could not return to the utilities list")
+
+
+def shots_of(monkeypatch, tmp_path, booker, slots, dry_run=False):
+    """Run ``booker`` on ``slots`` and return the screenshots saved and the steps."""
+    monkeypatch.setattr(runner, "Booker", booker)
+    device, sink = ShotDevice(), MemorySink()
+    with contextlib.suppress(AppNotReadyError):  # the preparation's failure ends the run
+        runner.run_booking(
+            device, Config(slots=slots), dry_run=dry_run, report=Reporter(sink), screens=tmp_path
+        )
+    return device.shots, [event for event in sink.events if event.kind is EventKind.SCREEN_SAVED]
+
+
+def test_a_run_that_books_takes_no_screenshot(monkeypatch, tmp_path):
+    shots, steps = shots_of(monkeypatch, tmp_path, FakeBooker, ["19:00 - 20:00"])
+
+    assert shots == [] and steps == []
+
+
+def test_a_failure_the_app_explained_takes_no_screenshot(monkeypatch, tmp_path):
+    shots, _ = shots_of(monkeypatch, tmp_path, FakeBooker, ["19:00 - 20:00", "18:00 - 19:00"])
+
+    assert shots == []  # "fully booked" is in the log word for word
+
+
+def test_an_unexplained_failure_of_the_last_round_saves_the_screen(monkeypatch, tmp_path, caplog):
+    caplog.set_level(logging.INFO, logger="court_booker")
+
+    shots, steps = shots_of(monkeypatch, tmp_path, StuckBooker, ["18:00 - 19:00", "19:00 - 20:00"])
+
+    assert len(shots) == 1 and shots[0].endswith("-mumu0.png")
+    assert steps[0].data == {"path": str(tmp_path / shots[0])}
+    assert "Screen not saved: the next round goes first" in caplog.text  # the first round's
+    assert f"Saved the screen at the failure: {tmp_path / shots[0]}" in caplog.text
+
+
+def test_an_app_not_made_ready_saves_the_screen(monkeypatch, tmp_path):
+    class LoggedOutBooker(FakeBooker):
+        def prepare(self):
+            raise AppNotReadyError("The app is logged out")
+
+    shots, steps = shots_of(monkeypatch, tmp_path, LoggedOutBooker, ["19:00 - 20:00"])
+
+    assert len(shots) == 1 and len(steps) == 1
+
+
+def test_a_dry_run_takes_no_screenshot(monkeypatch, tmp_path):
+    shots, _ = shots_of(monkeypatch, tmp_path, StuckBooker, ["19:00 - 20:00"], dry_run=True)
+
+    assert shots == []
+
+
+def test_a_screenshot_that_fails_never_costs_the_run(monkeypatch, tmp_path, caplog):
+    class BrokenDevice(ShotDevice):
+        def screenshot(self, filename):
+            raise RuntimeError("adb screencap gave no PNG")
+
+    monkeypatch.setattr(runner, "Booker", StuckBooker)
+    results = runner.run_booking(BrokenDevice(), Config(slots=["19:00 - 20:00"]), screens=tmp_path)
+
+    assert [r.ok for r in results] == [False]
+    assert "Could not save the screen" in caplog.text
+
+
+def test_only_the_newest_screenshots_are_kept(monkeypatch, tmp_path):
+    for day in range(1, runner.SCREENS_KEPT + 5):
+        (tmp_path / f"2026-10-{day:02d}-060000-mumu0.png").write_bytes(b"old")
+
+    shots, _ = shots_of(monkeypatch, tmp_path, StuckBooker, ["19:00 - 20:00"])
+
+    kept = sorted(path.name for path in tmp_path.glob("*.png"))
+    assert len(kept) == runner.SCREENS_KEPT
+    assert shots[0] in kept and "2026-10-01-060000-mumu0.png" not in kept
 
 
 def test_events_follow_the_run(monkeypatch):

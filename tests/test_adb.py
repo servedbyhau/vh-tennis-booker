@@ -134,3 +134,35 @@ def test_shell_runs_on_the_given_device():
     fake.adb().shell("127.0.0.1:16384", "pm", "path", "com.vinhomes.resident")
 
     assert fake.calls == ["-s 127.0.0.1:16384 shell pm path com.vinhomes.resident"]
+
+
+def test_a_screenshot_is_the_png_adb_prints(monkeypatch, tmp_path):
+    calls = []
+
+    def run(argv, **kwargs):
+        calls.append(argv[1:])
+        return subprocess.CompletedProcess(argv, 0, stdout=b"\x89PNG\r\n\x1a\nimage", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", run)
+
+    assert Adb(tmp_path / "adb.exe").screencap("127.0.0.1:16384") == b"\x89PNG\r\n\x1a\nimage"
+    assert calls == [["-s", "127.0.0.1:16384", "exec-out", "screencap", "-p"]]
+
+
+@pytest.mark.parametrize(
+    "outcome",
+    [
+        subprocess.CompletedProcess([], 1, stdout=b"error: closed", stderr=b""),
+        subprocess.TimeoutExpired(["adb"], 20.0),
+    ],
+)
+def test_no_screenshot_is_an_error(monkeypatch, tmp_path, outcome):
+    def run(argv, **kwargs):
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(subprocess, "run", run)
+
+    with pytest.raises(DeviceConnectionError, match="screencap"):
+        Adb(tmp_path / "adb.exe").screencap("127.0.0.1:16384")

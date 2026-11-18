@@ -19,10 +19,12 @@ from court_booker.driver import connect_driver
 from court_booker.emulator import MuMu
 from court_booker.errors import (
     BookingError,
+    BookingRejectedError,
     DeviceConnectionError,
     DeviceNotRespondingError,
     ElementNotFoundError,
     QuotaFullError,
+    SlotUnavailableError,
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
@@ -39,6 +41,9 @@ The app answered an early tap with a notice on 2026-10-19 (up to 0.76 s early). 
 0.1 s margin reduces that risk, but a notice still appeared on 2026-10-20 with the PC
 clock behind NTP. Which clock the app uses for opening hours remains unverified.
 The 06:00 logs show where the tap fell ("Start reached"); retaps handle a notice."""
+SCREENS_KEPT = 30
+"""Screenshots of failures kept in the log folder's ``screens``; each holds personal data, so
+they stay on this PC and the oldest go."""
 QUOTA_SKIPPED = "Skipped: the booking quota is used up"
 """Why a round after the app's quota notice failed without running."""
 AUTO_DRIVER = "auto"
@@ -60,6 +65,39 @@ class RoundResult:
     court: str | None = None
     """The court the confirmation page named, if the round read it: the one booked, which
     once differed from the configured one."""
+
+
+def explained(error: BaseException) -> bool:
+    """Tell whether the app itself said why a round failed: then no screenshot is needed.
+
+    A full slot or court and a notice of the app (the quota, a slot taken first) are in the log
+    word for word; anything else stopped the run on a screen the log may not explain.
+    """
+    return isinstance(error, (SlotUnavailableError, BookingRejectedError))
+
+
+def save_screen(device: Any, folder: Path | None, report: Reporter, mumu_index: int) -> None:
+    """Save the screen as a PNG in ``folder``, keeping the newest :data:`SCREENS_KEPT`.
+
+    Called only when a real run stopped on a failure the app did not explain, so a normal
+    run never takes one. It costs about a second; a failure only logs, except a frozen
+    emulator, which ends the run as such (the device's worker thread is stuck).
+    """
+    if folder is None:
+        return
+    path = folder / f"{datetime.now():%Y-%m-%d-%H%M%S}-mumu{mumu_index}.png"
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        device.screenshot(str(path))
+    except DeviceNotRespondingError:
+        raise
+    except Exception:  # a screenshot never costs the run
+        logger.warning("Could not save the screen", exc_info=True)
+        return
+    logger.info("Saved the screen at the failure: %s", path)
+    report(EventKind.SCREEN_SAVED, path=str(path))
+    for old in sorted(folder.glob("*.png"))[:-SCREENS_KEPT]:
+        old.unlink(missing_ok=True)
 
 
 def log_last_screen(booker: Booker) -> None:
@@ -185,6 +223,7 @@ def run_booking(
     results: list[RoundResult] | None = None,
     report: Reporter | None = None,
     login_for: Callable[[], Login | None] | None = None,
+    screens: Path | None = None,
 ) -> list[RoundResult]:
     """Prepare the app, wait for ``start`` if given, then book every configured slot.
 
@@ -194,11 +233,17 @@ def run_booking(
     notice the slots left fail unrun. Results are appended to ``results`` as rounds finish,
     so an interrupted caller still sees them; progress goes to ``report`` as events.
     ``login_for`` reads the saved login, typed in if the app logged out.
+
+    A real run that stops on a failure the app did not explain saves the screen in
+    ``screens`` (:func:`save_screen`): when the app is not made ready, or when such a failure
+    ends the last round. One in an earlier round saves none, to keep the next round on time;
+    a dry run and a frozen emulator save none.
     """
     results = [] if results is None else results
     report = Reporter() if report is None else report
     clock = NtpClock() if clock is None else clock
     booker = Booker(device, config, report, login_for=login_for)
+    shots = None if dry_run else screens
     try:
         booker.prepare()
         report(EventKind.APP_READY)
@@ -218,8 +263,10 @@ def run_booking(
             booker.locate_entry()
             wait_until(start + OPENING_MARGIN, clock.now)
             logger.info("Start reached at %s", clock.reading())
-    except Exception:  # the caller logs the error itself
+    except Exception as exc:  # the caller logs the error itself
         log_last_screen(booker)
+        if not isinstance(exc, DeviceNotRespondingError):
+            save_screen(device, shots, report, config.mumu_index)
         raise
     target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
     logger.info(
@@ -245,6 +292,7 @@ def run_booking(
         shown: dict[str, Any] = {}
         frozen: DeviceNotRespondingError | None = None
         quota_full = False
+        unexplained = False
         try:
             shown = booker.book(slot, target, dry_run=dry_run).event_data()
         except DeviceNotRespondingError as exc:
@@ -256,12 +304,19 @@ def run_booking(
             log_last_screen(booker)
             ok, detail = False, str(exc)
             quota_full = isinstance(exc, QuotaFullError)
+            unexplained = not explained(exc)
         except Exception as exc:  # keep later rounds running on device glitches
             logger.exception("Unexpected error")
             log_last_screen(booker)
             ok, detail = False, repr(exc)
+            unexplained = True
         else:
             ok, detail = True, "dry run passed" if dry_run else "booked"
+        if unexplained and shots is not None:
+            if index == len(config.slots):
+                save_screen(device, shots, report, config.mumu_index)
+            else:
+                logger.info("Screen not saved: the next round goes first (the log holds it)")
         seconds = time.perf_counter() - started
         used = booker.commands - commands
         results.append(RoundResult(slot, ok, detail, seconds, shown.get("shown_court")))

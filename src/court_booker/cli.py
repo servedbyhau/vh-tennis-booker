@@ -373,6 +373,7 @@ def main(argv: list[str] | None = None) -> int:
         config = apply_overrides(load_config(args.config), args)
         if args.instance is not None:
             config = select_instance(config, args.instance)
+        log_dir: Path | None = None
         if config.log_dir:
             # Relative to the config file, since a scheduled task may start elsewhere.
             log_dir = Path(args.config).resolve().parent / config.log_dir
@@ -430,6 +431,7 @@ def main(argv: list[str] | None = None) -> int:
                 results=results,
                 report=report,
                 login_for=lambda: credentials.default_store().read(config.mumu_index),
+                screens=None if log_dir is None else log_dir / "screens",
             )
         code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:

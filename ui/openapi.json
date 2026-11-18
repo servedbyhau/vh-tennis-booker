@@ -1175,6 +1175,7 @@
           "app_ready",
           "account_subdivision",
           "logged_in",
+          "screen_saved",
           "waiting",
           "booking_started",
           "run_finished",
