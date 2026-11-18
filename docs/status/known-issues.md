@@ -6,14 +6,8 @@ history). Ideas the user ruled out are listed last, so they are not proposed aga
 
 Last updated: 2026-11-18.
 
-- **1. The update button can leave a half-installed app.** On 2026-11-18 at 13:47 the button
-  installed 1.1.0's UI and libraries but not `court-booker.exe`, which a running backend held
-  (the window stops only a backend it started itself, `desktop/src-tauri/src/lib.rs`); the
-  installer stopped there, Windows still listed 1.0.1, and the UI showed "v1.0.1" from the old
-  backend, with the user seeing an error. Fixed by hand at 14:20: the window and its backend
-  stopped, the release's installer run with `/S` (1.1.0 everywhere, the task and the data
-  kept). Fixed on `fix/desktop-update-stops-backend` (the installer stops every process of the
-  app first, never a booking); confirmed once the update to the next version goes through.
+No confirmed open bugs. The half-done update of 2026-11-18 is fixed in 1.1.1 (the installer
+stops the app's processes first) and was confirmed by the button's update to 1.1.1 at 15:41.
 
 ## Unhandled situations
 
