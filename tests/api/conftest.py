@@ -6,6 +6,9 @@ import pytest
 
 collect_ignore_glob = [] if importlib.util.find_spec("fastapi") else ["test_*.py"]
 
+LOCAL = "http://127.0.0.1:8765"
+"""The backend's address: it refuses requests that name another host."""
+
 
 @pytest.fixture
 def context(tmp_path, data_home):
@@ -27,7 +30,7 @@ def app(context):
 def client(app):
     from fastapi.testclient import TestClient
 
-    with TestClient(app) as client:
+    with TestClient(app, base_url=LOCAL) as client:
         yield client
 
 

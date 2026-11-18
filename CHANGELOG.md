@@ -9,6 +9,11 @@ uses [Semantic Versioning](https://semver.org/).
 ### Added
 - The app shows the installed version beside its name, at the top left.
 
+### Security
+- The backend refuses requests that a page of another site open in a browser makes it send:
+  such a page could start a dry run, and with a name pointed at this PC read or change the
+  settings.
+
 ## [1.0.1] - 2026-11-17
 
 ### Changed

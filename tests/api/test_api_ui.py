@@ -22,7 +22,9 @@ def built(tmp_path):
 
 @pytest.fixture
 def ui_client(context, built):
-    with TestClient(create_app(context, ui_folder=built)) as client:
+    with TestClient(
+        create_app(context, ui_folder=built), base_url="http://127.0.0.1:8765"
+    ) as client:
         yield client
 
 
@@ -68,7 +70,7 @@ def test_an_unknown_api_address_is_a_problem_not_the_ui(ui_client, address):
 
 
 def test_the_live_feed_wins_over_the_ui(ui_client):
-    with ui_client.websocket_connect("/api/live") as socket:
+    with ui_client.websocket_connect("ws://127.0.0.1:8765/api/live") as socket:
         socket.close()
 
 

@@ -37,7 +37,7 @@ def test_the_built_ui_beside_the_code_is_served(served, monkeypatch, tmp_path):
     server.main(["--config", str(tmp_path / "config.toml")])
 
     ((app, _),) = served
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://127.0.0.1:8765") as client:
         assert client.get("/").text == "<!doctype html>"
 
 
@@ -47,7 +47,7 @@ def test_development_without_a_build_serves_the_api_only(served, monkeypatch, tm
     server.main(["--config", str(tmp_path / "config.toml")])
 
     ((app, _),) = served
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://127.0.0.1:8765") as client:
         assert client.get("/").status_code == 404
         assert client.get("/api/health").status_code == 200
 
