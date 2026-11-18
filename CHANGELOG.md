@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- An update could stop halfway, leaving the new UI on the old engine ("v1.0.1" after the
+  update to 1.1.0), when a backend the window had not started was running. The installer now
+  stops every process of the app before copying, except a booking going on: then it changes
+  nothing and says to update once the booking is done.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

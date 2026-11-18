@@ -4,10 +4,16 @@ Open bugs, by severity: **1** may cost the 06:00 run, **2** reports wrongly or t
 **3** UI or docs. Remove an issue once it is fixed and confirmed (`CHANGELOG.md` keeps the
 history). Ideas the user ruled out are listed last, so they are not proposed again.
 
-Last updated: 2026-11-03.
+Last updated: 2026-11-18.
 
-No confirmed open bugs. The next-month day tap was confirmed by real bookings for 2026-11-01
-after the fix on 2026-10-30 and by the 2026-10-31 06:00 run for 2026-11-02.
+- **1. The update button can leave a half-installed app.** On 2026-11-18 at 13:47 the button
+  installed 1.1.0's UI and libraries but not `court-booker.exe`, which a running backend held
+  (the window stops only a backend it started itself, `desktop/src-tauri/src/lib.rs`); the
+  installer stopped there, Windows still listed 1.0.1, and the UI showed "v1.0.1" from the old
+  backend, with the user seeing an error. Fixed by hand at 14:20: the window and its backend
+  stopped, the release's installer run with `/S` (1.1.0 everywhere, the task and the data
+  kept). Fixed on `fix/desktop-update-stops-backend` (the installer stops every process of the
+  app first, never a booking); confirmed once the update to the next version goes through.
 
 ## Unhandled situations
 
