@@ -31,6 +31,9 @@ EMULATOR_PORTS = (7555, 16384, 16416, 16448, 5555, 5557, 5559, 62001)
 CONNECT_TIMEOUT = 30.0
 _RETRY_INTERVAL = 1.0
 _PROBE_TIMEOUT = 0.3
+SCREENCAP_TIMEOUT = 20.0
+"""Seconds a screenshot may take: about 1 s; a frozen MuMu never answers (2026-11-17)."""
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
 def port_open(host: str, port: int) -> bool:
@@ -135,6 +138,21 @@ class Adb:
         if not output.isdigit():
             raise DeviceConnectionError(f"adb forward to {remote} failed: {output or 'no port'}")
         return int(output)
+
+    def screencap(self, serial: str) -> bytes:
+        """Return the screen of ``serial`` as PNG bytes (``adb exec-out screencap -p``)."""
+        try:
+            result = subprocess.run(
+                [str(self.path), "-s", serial, "exec-out", "screencap", "-p"],
+                capture_output=True,
+                timeout=SCREENCAP_TIMEOUT,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise DeviceConnectionError(f"adb screencap failed: {exc}") from exc
+        if not result.stdout.startswith(PNG_SIGNATURE):
+            raise DeviceConnectionError("adb screencap gave no PNG")
+        return result.stdout
 
     def forward_remove(self, serial: str, port: int) -> None:
         """Drop the forward of local TCP ``port``."""

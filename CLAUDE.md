@@ -143,9 +143,12 @@ npm run api:types                                    # src/api/schema.d.ts from 
 - `lock.py` + `processes.py` (run lock, quiet time), `events.py` (event kinds are stable
   strings), `history.py` + `history_read.py` (`booker.db`), `config.py`, `paths.py` (data
   folder `%LOCALAPPDATA%\CourtBooker`, `COURT_BOOKER_HOME`), `device_setup.py`,
-  `schedule.py` (Task Scheduler), `power.py`, `notify.py`.
+  `schedule.py` (Task Scheduler), `power.py`, `notify.py`, `credentials.py` (the Vinhomes
+  login saved per MuMu instance in Windows Credential Manager, typed in when the app logged
+  out; never logged or answered).
 - `api/`: FastAPI backend (`court-booker serve`, 127.0.0.1:8765); errors become `Problem`
-  JSON with an `error` code. `api/ui.py` serves the built UI in the packaged app.
+  JSON with an `error` code. `api/ui.py` serves the built UI in the packaged app;
+  `api/local_only.py` refuses requests that a page of another site makes the browser send.
 
 `desktop/` (Tauri 2, Rust): the window. It starts the packaged backend, or uses one that already
 answers, and shows the page the backend serves; the page may call its two update commands
