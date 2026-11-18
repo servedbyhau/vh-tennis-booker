@@ -6,6 +6,9 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The app shows the installed version beside its name, at the top left.
+
 ## [1.0.1] - 2026-11-17
 
 ### Changed

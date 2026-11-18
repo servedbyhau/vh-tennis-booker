@@ -18,6 +18,16 @@
   color: var(--color-stamp);
 }
 
+/* The installed version, quiet beside the name: read when checking an update. */
+.version {
+  margin-left: var(--space-2);
+  font-family: var(--font-mono);
+  font-weight: normal;
+  font-size: var(--text-small);
+  letter-spacing: normal;
+  color: var(--color-muted);
+}
+
 /* The status line takes the room left, set against the language switch. */
 .status {
   flex: 1 1 auto;

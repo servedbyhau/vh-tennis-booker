@@ -17,6 +17,7 @@
     }
   },
   "update": {
+    "current": "Version {{version}}",
     "button": "Update to {{version}}",
     "installing": "Updating…",
     "locked": "Update when no run is going on, outside {{from}}–{{to}}",

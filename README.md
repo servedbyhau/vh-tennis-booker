@@ -145,7 +145,7 @@ The app is in Vietnamese by default, English is one click away.
 
 ### Update
 
-When a newer version is out, the top of the window shows **Update to x.y.z**. One press
+The version installed shows beside the app's name, at the top left. When a newer version is out, the top of the window shows **Update to x.y.z**. One press
 downloads it, installs it over the app and opens it again; your settings, history and
 morning booking stay. The button waits while a run is going on and around 06:00.
 

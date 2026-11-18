@@ -17,6 +17,7 @@
     }
   },
   "update": {
+    "current": "Phiên bản {{version}}",
     "button": "Cập nhật lên {{version}}",
     "installing": "Đang cập nhật…",
     "locked": "Cập nhật khi không có lần chạy nào và ngoài {{from}}–{{to}}",
