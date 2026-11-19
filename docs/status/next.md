@@ -11,36 +11,19 @@ Last updated: 2026-11-19.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: getting ready repairs itself
+## Next task: watch the 06:00 runs of 1.1.2
 
-On 2026-11-19 a failed MuMuManager command ended machine 1's run at 05:45. Decided with the
-user that day: before 06:00 every passing failure is repaired, only one no repair can change
-ends the run. One branch a part, each stacked on the one before, all PR'd into `develop`:
-
-1. `fix/startup-repair` (done, not merged): MuMuManager commands tried 3 times (today's
-   failure); a first version of the other repairs, which 2 replaces.
-2. `fix/setup-supervisor` (done, not merged): `ready.py` repairs MuMu, ADB, the driver and the
-   app layer by layer until 05:58, escalating to the layer below, with waits from measured
-   times. Tested by unit tests and a dry run from cold.
-3. `feat/ready-watch` (done, not merged): while the run waits on the home screen, it checks
-   every 60 s until 05:58 (the app in front, one screen read) and repairs what broke; the
-   warm-up at 05:59 repairs too. Tried on MuMu: the app stopped by hand was found by the
-   next check and restarted (6 s); the driver stopped before the warm-up was restarted
-   there (1.5 s).
-4. `fix/mumu-freeze-recovery` (done, not merged): a frozen or hung MuMu (no answer to `am
-   get-current-user` in 10 s) has its `MuMuNxDevice` process ended, not through MuMuManager,
-   which hangs then, and is started again. Tried on a really hung instance 0: ready 41 s
-   after the ping gave up.
-
-Done on the real MuMu (2026-11-19), each repaired: the app and the driver stopped by hand, a
-really hung Android (41 s to ready), a suspended `MuMuNxDevice` found by the minute check
-(49 s to ready; the warm-up and the rounds then ran on time). Merged into `develop`
-(#257-#260). Left: a real booking on `develop` (ask the user for free slots), then the
-release.
+1.1.2 repairs getting ready by itself (`ready.py`, see [architecture](../architecture.md)).
+Check each 06:00 log for `repaired` events and what they fixed; a failure that ended the run
+before 05:58 is a gap to study.
 
 Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
-still waits on the home screen and opens the utilities list at 05:59, as before. The check
-every minute before 05:58 replaces the ruled-out "health check before 06:00".
+still waits on the home screen and opens the utilities list at 05:59, as before. Repairs
+during the rounds come later, in their own task.
+
+Known limits of the setup repairs: the deadline is checked between repairs, so a MuMu restart
+begun just before 05:58 may end after the warm-up (worst case about two minutes, 41-49 s
+seen); a fault in the last 15 s before the start is not repaired.
 
 ## After that
 

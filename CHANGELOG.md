@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-19
+
 ### Added
 - While a timed run waits on the home screen, it checks every minute until 05:58 that the
   app is still in front on its home screen (two commands, no tap), and repairs what broke
