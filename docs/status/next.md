@@ -32,9 +32,11 @@ ends the run. One branch a part, each stacked on the one before, all PR'd into `
    which hangs then, and is started again. Tried on a really hung instance 0: ready 41 s
    after the ping gave up.
 
-Done on the real MuMu (2026-11-19): the app and the driver stopped by hand, a really hung
-Android; each was repaired. Left: a suspended `MuMuNxDevice` (MuMuManager hangs too), a
-real booking (ask the user for free slots), then the release.
+Done on the real MuMu (2026-11-19), each repaired: the app and the driver stopped by hand, a
+really hung Android (41 s to ready), a suspended `MuMuNxDevice` found by the minute check
+(49 s to ready; the warm-up and the rounds then ran on time). Left: a real booking (ask
+the user for free slots), the user's OK for the CLAUDE.md lines on MuMu freezing and on
+`runner.py`, then the merges in order and the release.
 
 Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
 still waits on the home screen and opens the utilities list at 05:59, as before. The check
