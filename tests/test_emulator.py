@@ -263,3 +263,35 @@ def test_an_unreadable_state_counts_as_still_running(manager_path):
 def test_a_missing_manager_is_a_failure_no_repair_can_change(tmp_path):
     with pytest.raises(MuMuNotFoundError):
         MuMu(tmp_path / "missing.exe", run=FakeManager().run).is_started()
+
+
+_DEVICE_EXE = r'"C:\Program Files\Netease\MuMuPlayer\nx_device\15.0\shell\MuMuNxDevice.exe"'
+DEVICES = [
+    (9232, f"{_DEVICE_EXE} --vm MuMuPlayerGlobal-15.0-0"),
+    (13168, f"{_DEVICE_EXE} --vm MuMuPlayerGlobal-15.0-1"),
+]
+"""The two instances' processes as Windows lists them (2026-11-19)."""
+
+
+@pytest.mark.parametrize(("index", "ended"), [(0, [9232]), (1, [13168])])
+def test_kill_ends_the_process_of_its_instance_alone(manager_path, index, ended):
+    stopped = []
+
+    found = MuMu(manager_path, index).kill(find=lambda name: DEVICES, stop=stopped.append)
+
+    assert found and stopped == ended
+
+
+def test_kill_without_a_process_ends_nothing(manager_path):
+    stopped = []
+
+    assert not MuMu(manager_path, 2).kill(find=lambda name: DEVICES, stop=stopped.append)
+    assert stopped == []
+
+
+def test_a_process_that_cannot_be_ended_is_logged(manager_path, caplog):
+    def stop(pid):
+        raise PermissionError("access denied")
+
+    assert MuMu(manager_path, 0).kill(find=lambda name: DEVICES, stop=stop)
+    assert "Could not end process 9232: access denied" in caplog.text

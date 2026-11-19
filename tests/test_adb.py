@@ -151,11 +151,12 @@ def timed(result=None, error=None):
 
 
 def test_android_that_answers_passes_the_ping():
-    run, calls = timed(subprocess.CompletedProcess([], 0, stdout="court-booker-ping\n", stderr=""))
+    run, calls = timed(subprocess.CompletedProcess([], 0, stdout="0\r\n", stderr=""))
 
     Adb("adb", timed_run=run).ping("127.0.0.1:16384")
 
-    assert calls == [(["-s", "127.0.0.1:16384", "shell", "echo", "court-booker-ping"], 10.0)]
+    # A call to the system server: a hung Android still answered echo (2026-11-19).
+    assert calls == [(["-s", "127.0.0.1:16384", "shell", "am", "get-current-user"], 10.0)]
 
 
 def test_android_that_gives_no_answer_is_not_responding():

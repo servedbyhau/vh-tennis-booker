@@ -27,12 +27,16 @@ ends the run. One branch a part, each stacked on the one before, all PR'd into `
    warm-up at 05:59 repairs too. Tried on MuMu: the app stopped by hand was found by the
    next check and restarted (6 s); the driver stopped before the warm-up was restarted
    there (1.5 s).
-4. `fix/mumu-freeze-recovery`: a frozen MuMu (no adb answer) is ended by its
-   `MuMuNxDevice` process (field notes), not by MuMuManager, which hangs then, and started
-   again.
+4. `fix/mumu-freeze-recovery` (done, not merged): a frozen or hung MuMu (no answer to `am
+   get-current-user` in 10 s) has its `MuMuNxDevice` process ended, not through MuMuManager,
+   which hangs then, and is started again. Tried on a really hung instance 0: ready 41 s
+   after the ping gave up.
 
-Then: fault-injection dry runs on the real MuMu (stop the driver, the app, disconnect ADB,
-suspend `MuMuNxDevice`), a real booking (ask the user for free slots), a release.
+Done on the real MuMu (2026-11-19), each repaired: the app and the driver stopped by hand, a
+really hung Android (41 s to ready), a suspended `MuMuNxDevice` found by the minute check
+(49 s to ready; the warm-up and the rounds then ran on time). Left: a real booking (ask
+the user for free slots), the user's OK for the CLAUDE.md lines on MuMu freezing and on
+`runner.py`, then the merges in order and the release.
 
 Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
 still waits on the home screen and opens the utilities list at 05:59, as before. The check

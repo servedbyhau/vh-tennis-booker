@@ -63,6 +63,8 @@ BOOT_RETRY_WAIT = 90.0
 has just woken."""
 SHUTDOWN_WAIT = 20.0
 """Seconds a MuMu instance may take to stop: 4 s (2026-11-19), 18 s at most (2026-10-13)."""
+KILL_WAIT = 15.0
+"""Seconds MuMuManager may take to see an ended process stopped: 0.8-3 s (2026-11-19)."""
 ADB_CONNECT_WAIT = 15.0
 """Seconds a connection to a booted instance may take: under a second on every run."""
 DRIVER_STARTS = 2
@@ -298,6 +300,8 @@ class Supervisor:
         """Layers the next pass restarts, not only checks."""
         self._layer = Layer.APP
         self._booted = False
+        self._frozen = False
+        """Whether Android gave no answer at all: MuMu is restarted by ending its process."""
         self._app_ready = False
         self._driver_failures = 0
         self._mumu_restarts = 0
@@ -383,7 +387,11 @@ class Supervisor:
             self._failures[layer] = 0
 
     def _ensure_mumu(self) -> None:
-        """Start the instance unless booted; a pending repair restarts it."""
+        """Start the instance unless booted in this run; a pending repair restarts it.
+
+        Once booted, MuMuManager is not asked again: the ADB layer above tells whether Android
+        answers, and a frozen instance makes MuMuManager hang as well (field notes).
+        """
         if not self.config.mumu_manager:
             return
         if self.mumu is None:
@@ -394,27 +402,43 @@ class Supervisor:
             self._restart_mumu()
             self._pending.discard(Layer.MUMU)
             return
-        self.mumu.ensure_started(BOOT_RETRY_WAIT if self._booted else self.config.boot_timeout)
+        if self._booted:
+            return
+        self.mumu.ensure_started(self.config.boot_timeout)
         self._booted = True
 
     def _restart_mumu(self) -> None:
-        """Shut the instance down, check that it stopped, and start it again."""
+        """Stop the instance, check that it stopped, and start it again.
+
+        A frozen one has its process ended at once; any other is shut down through
+        MuMuManager first, and its process ended only if it is still running after
+        :data:`SHUTDOWN_WAIT`.
+        """
         mumu = self.mumu
         assert mumu is not None  # only a configured MuMu gets a restart pending
+        frozen, self._frozen = self._frozen, False
         self._mumu_restarts += 1
         self.device.drop(stop=False)  # the driver goes with Android
         self._driver_failures = 0  # a fresh Android may start the driver again
         logger.warning(
-            "Restarting MuMu instance %d (%d of %d)", mumu.index, self._mumu_restarts, MUMU_RESTARTS
+            "Restarting MuMu instance %d (%d of %d)%s",
+            mumu.index,
+            self._mumu_restarts,
+            MUMU_RESTARTS,
+            ", which froze" if frozen else "",
         )
-        try:
-            mumu.shutdown()
-        except EmulatorError as exc:
-            logger.warning("MuMu did not take the shutdown: %s", exc)
-        if not mumu.wait_stopped(SHUTDOWN_WAIT):
-            raise EmulatorError(
-                f"MuMu instance {mumu.index} did not shut down in {SHUTDOWN_WAIT:.0f} s"
-            )
+        stopped = False
+        if not frozen:
+            try:
+                mumu.shutdown()
+            except EmulatorError as exc:
+                logger.warning("MuMu did not take the shutdown: %s", exc)
+            stopped = mumu.wait_stopped(SHUTDOWN_WAIT)
+        if not stopped:
+            if not mumu.kill():
+                raise EmulatorError(f"MuMu instance {mumu.index} runs in no process to end")
+            if not mumu.wait_stopped(KILL_WAIT):
+                raise EmulatorError(f"MuMu instance {mumu.index} did not stop")
         if self.adb is not None and self.serial is not None and ":" in self.serial:
             self.adb.disconnect(self.serial)  # adb keeps a stopped instance offline
         mumu.ensure_started(BOOT_RETRY_WAIT)
@@ -466,6 +490,8 @@ class Supervisor:
             try:
                 device = watchdog.run("connect", lambda: connect_driver(adb, serial))
             except DeviceNotRespondingError:
+                if watchdog.hung is not None:
+                    self.device.ever_hung = True  # its thread still waits on the connection
                 raise
             except Exception as exc:  # any driver failure; the layer is repaired
                 self._driver_failures += 1
@@ -512,6 +538,7 @@ class Supervisor:
         if layer is Layer.ADB and isinstance(error, DeviceNotRespondingError):
             # Android gave no answer at all: MuMu froze, and nothing above it can help.
             self._pending.add(Layer.MUMU)
+            self._frozen = True
         if Layer.MUMU in self._pending and self._mumu_restarts >= MUMU_RESTARTS:
             logger.error("MuMu was restarted %d times already; giving up", self._mumu_restarts)
             return None

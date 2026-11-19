@@ -42,9 +42,11 @@ _PROBE_TIMEOUT = 0.3
 SCREENCAP_TIMEOUT = 20.0
 """Seconds a screenshot may take: about 1 s; a frozen MuMu never answers (2026-11-17)."""
 PING_TIMEOUT = 10.0
-"""Seconds ``adb shell echo`` may take: it answers in well under a second; a frozen MuMu (its
-``MuMuNxDevice`` suspended, 2026-11-19) gave no answer in 15 s."""
-PING_REPLY = "court-booker-ping"
+"""Seconds the ping may take: it answered in 50-220 ms on a working instance (2026-11-19)."""
+PING_COMMAND = ("am", "get-current-user")
+"""What the ping asks Android: a call to its system server, which answers with the user id.
+An ``echo`` is not enough: on 2026-11-19 a hung Android answered ``echo`` in 0.5 s while
+``am`` and ``pm`` hung, and the driver could not start."""
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
@@ -145,13 +147,13 @@ class Adb:
         return self._call("-s", serial, "shell", *args)
 
     def ping(self, serial: str, timeout: float = PING_TIMEOUT) -> None:
-        """Check that Android on ``serial`` answers a shell command.
+        """Check that Android on ``serial`` answers, its system server included.
 
         Raises :class:`DeviceNotRespondingError` when it gives no answer in ``timeout``, as a
-        frozen emulator does, and :class:`DeviceConnectionError` when adb fails at once, as
-        for a device offline or gone.
+        frozen emulator or a hung Android does, and :class:`DeviceConnectionError` when adb
+        fails at once, as for a device offline or gone.
         """
-        argv = [str(self.path), "-s", serial, "shell", "echo", PING_REPLY]
+        argv = [str(self.path), "-s", serial, "shell", *PING_COMMAND]
         try:
             result = self._timed_run(argv, timeout)
         except subprocess.TimeoutExpired as exc:
@@ -160,7 +162,7 @@ class Adb:
             ) from exc
         except OSError as exc:
             raise DeviceConnectionError(f"adb shell failed: {exc}") from exc
-        if PING_REPLY not in result.stdout:
+        if not result.stdout.strip().isdigit():
             detail = (result.stderr or result.stdout).strip() or f"exit {result.returncode}"
             raise DeviceConnectionError(f"adb shell on {serial} failed: {detail}")
 

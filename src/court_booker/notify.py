@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import logging
-import os
 import re
 import subprocess
 import sys
@@ -16,6 +15,7 @@ from typing import Callable
 from xml.sax.saxutils import escape
 
 from court_booker import catalog
+from court_booker.processes import powershell
 from court_booker.runner import RoundResult
 
 logger = logging.getLogger(__name__)
@@ -299,7 +299,7 @@ def send_windows(title: str, body: str, run: Run | None = None) -> bool:
         run = subprocess.run
     script = _SCRIPT.format(app_id=APP_ID, app_name=APP_NAME, xml=_toast_xml(title, body))
     command = [
-        _powershell(),
+        powershell(),
         "-NoProfile",
         "-NonInteractive",
         "-EncodedCommand",
@@ -332,9 +332,3 @@ def _toast_xml(title: str, body: str) -> str:
         f"<text>{escape(title, entities)}</text><text>{escape(body, entities)}</text>"
         "</binding></visual></toast>"
     )
-
-
-def _powershell() -> str:
-    """Return Windows PowerShell's full path, so no other powershell.exe on PATH runs."""
-    root = os.environ.get("SYSTEMROOT", "C:\\Windows")
-    return os.path.join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe")

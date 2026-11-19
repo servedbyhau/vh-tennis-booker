@@ -42,9 +42,13 @@ Details live in the docstrings; this page says where things are and what must st
   stopped, launched, booted in `BOOT_RETRY_WAIT`; the first boot waits `boot_timeout`), the
   serial disconnected alone and connected again (the adb server is shared by the instances'
   processes), the driver started again, the app restarted after growing pauses
-  (`APP_BACKOFF`, as a PC just woken may join its network late). `adb ping` (`shell echo`)
-  tells a frozen Android (no answer in 10 s) from a lost connection; no answer restarts MuMu
-  at once. A layer failing `ESCALATE_AFTER` times in a row gets the one below repaired too.
+  (`APP_BACKOFF`, as a PC just woken may join its network late). `Adb.ping` (`am
+  get-current-user`, a call to Android's system server) tells a frozen or hung Android (no
+  answer in 10 s) from a lost connection; no answer restarts MuMu at once by ending its
+  `MuMuNxDevice` process (`MuMu.kill`, found by its command line), as MuMuManager hangs on
+  a frozen instance; another restart shuts it down through MuMuManager and ends the process
+  only if it still runs after 20 s. Once booted, MuMu is not asked again: the ping tells
+  whether it answers. A layer failing `ESCALATE_AFTER` times in a row gets the one below repaired too.
   Failures no repair can change end the run at once (`PERMANENT_ERRORS`: config, MuMu or adb
   missing, the app not installed, a logout without a saved login, a refused login); limits
   stop a failure that keeps coming back (`MUMU_RESTARTS`, `REPAIRS_MAX`). Each repair logs a

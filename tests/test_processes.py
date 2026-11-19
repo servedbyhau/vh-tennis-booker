@@ -54,3 +54,10 @@ def test_stop_ends_a_process():
     child.wait(timeout=10)
 
     assert not processes.is_running(pid, started)
+
+
+def test_command_lines_are_read_from_pid_tab_command():
+    command = r'"C:\MuMu\MuMuNxDevice.exe" --vm MuMuPlayerGlobal-15.0-0'
+    text = f"9232\t{command}\r\n\r\nnot a pid\n"
+
+    assert processes.parse_command_lines(text) == [(9232, command)]
