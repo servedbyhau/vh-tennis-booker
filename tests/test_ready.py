@@ -2,7 +2,7 @@
 
 import logging
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -554,3 +554,80 @@ def test_a_missing_mumu_keeps_the_configured_path(monkeypatch):
     monkeypatch.setattr(ready, "find_mumu_manager", lambda configured: None)
 
     assert str(ready.find_manager("C:/old/MuMuManager.exe")) == str(Path("C:/old/MuMuManager.exe"))
+
+
+# The checks while the run waits ------------------------------------------------
+
+
+class WatchedBooker(FakeBooker):
+    def check_home(self):
+        self.script.step("check")
+
+
+def watched(world):
+    world.booker = WatchedBooker(world.script)
+    supervisor = world.prepare()
+    world.script.calls.clear()
+    return supervisor
+
+
+def test_a_ready_run_is_checked_every_minute_until_the_deadline(world):
+    supervisor = watched(world)
+    waits = []
+
+    supervisor.watch(world.booker, DEADLINE, waits.append)
+
+    assert waits == [NOW + timedelta(minutes=minute) for minute in range(1, 13)]  # to 05:57
+    assert world.script.calls == ["check"] * 12
+    assert supervisor.repairs == 0
+
+
+def test_an_app_no_longer_ready_is_made_ready_again(world, caplog):
+    supervisor = watched(world)
+    world.script.fail("check", AppNotReadyError("com.vinhomes.resident is no longer in front"))
+
+    supervisor.watch(world.booker, NOW + timedelta(minutes=2, seconds=30), lambda moment: None)
+
+    # Checked again once repaired, then at the next minute.
+    assert world.script.calls == ["check", "boot", "ping", "probe", "prepare", "check", "check"]
+    assert world.booker.restarts[-1] is True
+    assert world.repaired() == ["restart_app"]
+    assert "The run was no longer ready: com.vinhomes.resident is no longer in front" in caplog.text
+
+
+def test_a_driver_lost_while_waiting_is_started_again(world):
+    supervisor = watched(world)
+    world.script.fail("check", DriverError("The driver closed the connection during current"))
+
+    supervisor.watch(world.booker, NOW + timedelta(minutes=1, seconds=30), lambda moment: None)
+
+    repaired = ["boot", "ping", "stop", "driver", "probe", "prepare"]
+    assert world.script.calls == ["check", *repaired, "check"]
+    assert world.repaired() == ["restart_driver"]
+
+
+def test_a_failure_no_repair_can_change_found_while_waiting_ends_the_run(world):
+    supervisor = watched(world)
+    world.script.fail("check", AppMissingError("com.vinhomes.resident is not installed"))
+
+    with pytest.raises(AppMissingError):
+        supervisor.watch(world.booker, DEADLINE, lambda moment: None)
+
+
+def test_a_step_that_fails_is_run_again_once_the_app_is_ready(world):
+    supervisor = watched(world)
+    world.script.fail("locate", NavigationError("Could not return to the utilities list"))
+
+    supervisor.run_step(world.booker, lambda: world.script.step("locate"), DEADLINE)
+
+    assert world.script.calls == ["locate", "boot", "ping", "probe", "prepare", "locate"]
+
+
+def test_a_step_that_fails_past_its_deadline_is_not_repaired(world):
+    supervisor = watched(world)
+    world.script.fail("locate", NavigationError("Could not return to the utilities list"))
+    world.clock[0] = DEADLINE
+
+    with pytest.raises(NavigationError):
+        supervisor.run_step(world.booker, lambda: world.script.step("locate"), DEADLINE)
+    assert supervisor.repairs == 0

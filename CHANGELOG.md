@@ -6,6 +6,13 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- While a timed run waits on the home screen, it checks every minute until 05:58 that the
+  app is still in front on its home screen (two commands, no tap), and repairs what broke
+  in the meantime: the app closed, a screen it left, the driver lost. A failure while it
+  opens the utilities list at 05:59 (as the popup of 2026-11-17) is repaired the same way,
+  until 15 s before 06:00, instead of ending the run at the second try.
+
 ### Changed
 - Getting ready before 06:00 is supervised layer by layer (MuMu, its connection, the driver,
   the app) instead of a fixed number of tries per step: each pass repairs the first layer that

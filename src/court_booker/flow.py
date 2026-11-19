@@ -652,6 +652,27 @@ class Booker:
             screen = self.go_back(screen, arrived)
         raise NavigationError("Could not return to the utilities list")
 
+    def check_home(self) -> None:
+        """Check that the app is still in front on its home screen, as a run left it.
+
+        Two commands: the app in front, one screen read. A popup that came over the home
+        screen is closed; a screen the run cannot get back from, or another app in front,
+        raises :class:`AppNotReadyError`, and the app is made ready again
+        (:mod:`court_booker.ready`).
+        """
+        package = self.config.package
+        self.commands += 1
+        current = self.device.app_current().get("package")
+        if current != package:
+            raise AppNotReadyError(f"{package} is no longer in front ({current or 'none'} is)")
+        screen = self.snapshot()
+        if screen.find(self.home):
+            return
+        try:
+            self.return_to_home(screen)
+        except NavigationError as exc:
+            raise AppNotReadyError(str(exc)) from exc
+
     def return_to_home(self, screen: Screen | None = None) -> Screen:
         """Press Back until the home screen shows; Back is never pressed on it (that exits)."""
         if screen is None:

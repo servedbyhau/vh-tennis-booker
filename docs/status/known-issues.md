@@ -32,8 +32,9 @@ crashing mid-round, ADB lost mid-run. Fixed when a log shows one.
 - Tapping by MuMu's clock instead of NTP (2026-10-24): it would save a few hundred
   milliseconds at most. Measured at 21:00 on 2026-10-24: MuMu ran 0.71 s behind NTP, and the
   app seems to check against MuMu's clock; the 0.2 s re-tap covers most of it.
-- A health check at 05:58, backup slots or courts, Telegram setup, opening the calendar
-  before 06:00, booking two slots in one flow, double taps, an AccessibilityService agent.
+- Backup slots or courts, Telegram setup, opening the calendar before 06:00, booking two
+  slots in one flow, double taps, an AccessibilityService agent. (A check while the run
+  waits, ruled out at first, is done since 2026-11-19: one read a minute until 05:58.)
 - Risks reviewed on 2026-10-10, fixed only if a log shows them: a slow first tap after a long
   idle, the 2 s re-tap threshold, load from continuous screen reads, uiautomator2 not pinned,
   Windows Update restarting the PC.

@@ -38,6 +38,9 @@ class FakeBooker:
     def locate_entry(self):
         self.events.append("locate")
 
+    def check_home(self):
+        self.events.append("check")
+
     def book(self, slot, target, dry_run=False):
         if slot == "18:00 - 19:00":
             raise SlotUnavailableError("Slot 18:00 - 19:00 is fully booked")
@@ -95,8 +98,11 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     config = Config(slots=["19:00 - 20:00"], warm_up_seconds=60)
     runner.run_booking(FakeDevice(), config, start=start, clock=FakeClock(events))
 
+    # Checked every minute from 05:46 until the deadline, 05:58, while waiting on the home screen.
+    checks = [datetime(2026, 10, 10, 5, 46) + timedelta(minutes=minute) for minute in range(12)]
     assert events == [
         "prepare",
+        *[step for tick in checks for step in (tick, "check")],
         start - timedelta(seconds=60),
         "measure",  # once more, as Windows may have set the PC clock since the first check
         "locate",
@@ -152,12 +158,17 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
     monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
 
     results = runner.run_booking(
-        FakeDevice(), Config(slots=["19:00 - 20:00"]), start=datetime(2026, 10, 10, 6, 0)
+        FakeDevice(),
+        Config(slots=["19:00 - 20:00"]),
+        start=datetime(2026, 10, 10, 6, 0),
+        clock=FakeClock([]),  # 05:45: time to repair before the start
     )
 
-    assert bookers[0].events == ["prepare", "locate", "locate"]
+    # The app made ready again, then the list opened at once, and read just before the start.
+    steps = ["prepare", "locate", "prepare", "locate", "locate"]
+    assert [e for e in bookers[0].events if e != "check"] == steps
     assert results[0].ok
-    assert "Could not open the utilities list yet" in caplog.text
+    assert "The run was no longer ready: Tapped 'Tiện ích' but the next screen" in caplog.text
 
 
 def test_failed_round_logs_the_last_screen(monkeypatch, caplog):

@@ -42,7 +42,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 | App | Closed-hours notice (tap before 06:00) | Closed with Back and the utility tapped again until `open_retry_seconds`; the wait goes by NTP time on a counter, the first tap 0.1 s after the start |
 | App | Promotion popup over the home screen | Closed with its X before the utilities list is opened (field notes); Back does not close it |
 | App | Update prompt, other dialogs, network error | Not handled |
-| App | App crash or freeze during a round | Not handled |
+| App | App crash or freeze | While the run waits (to 05:58): a check every minute (the app in front, one screen read) finds it and the app is made ready again; at the warm-up (05:59) a failure is repaired until 05:59:45; during a round: not handled |
 | App | Slow server | Every screen awaited up to `timeout` (30 s), a tap repeated every 2 s while its element still shows |
 | Booking | New date not open yet | Calendar reloaded for `open_retry_seconds` |
 | Booking | Slot or court fully booked | Round fails; no fallback slot or court (by decision) |
@@ -62,7 +62,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 ## Ruled out
 
 - Opening the calendar before 06:00, two slots in one booking, pre-recorded coordinates.
-- A health check before 06:00; fallback slots and courts (other users book within seconds).
+- Fallback slots and courts (other users book within seconds).
 - Setting up Telegram (the optional code stays).
 - An on-device accessibility agent: the app refuses to book while one is enabled.
 - Counting the month's bookings in the app's history before the run: the user tracks the quota.

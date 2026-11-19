@@ -22,8 +22,11 @@ ends the run. One branch a part, each stacked on the one before, all PR'd into `
 2. `fix/setup-supervisor` (done, not merged): `ready.py` repairs MuMu, ADB, the driver and the
    app layer by layer until 05:58, escalating to the layer below, with waits from measured
    times. Tested by unit tests and a dry run from cold.
-3. `feat/ready-watch`: while the run waits on the home screen, check every 60 s until 05:58
-   (one screen read and the app in front) and repair what broke.
+3. `feat/ready-watch` (done, not merged): while the run waits on the home screen, it checks
+   every 60 s until 05:58 (the app in front, one screen read) and repairs what broke; the
+   warm-up at 05:59 repairs too. Tried on MuMu: the app stopped by hand was found by the
+   next check and restarted (6 s); the driver stopped before the warm-up was restarted
+   there (1.5 s).
 4. `fix/mumu-freeze-recovery`: a frozen MuMu (no adb answer) is ended by its
    `MuMuNxDevice` process (field notes), not by MuMuManager, which hangs then, and started
    again.

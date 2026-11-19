@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 
 LOCATE_AHEAD = timedelta(seconds=2)
 """How long before the start time the utilities entry is read again."""
+WARM_UP_REPAIRS_END = timedelta(seconds=15)
+"""How long before the start time repairs at the warm-up stop: the app made ready again takes
+6-10 s (a restart and its home screen, 2026-11-19), and the list is read again 2 s before."""
 OPENING_MARGIN = timedelta(seconds=0.1)
 """How long after the start time a timed run taps first.
 
@@ -134,21 +137,23 @@ def run_booking(
     device = supervisor.device
     booker = Booker(device, config, report, login_for=login_for)
     shots = None if dry_run else screens
+    deadline = setup_deadline(start, config.warm_up_seconds, clock.now())
     try:
-        supervisor.prepare(booker, setup_deadline(start, config.warm_up_seconds, clock.now()))
+        supervisor.prepare(booker, deadline)
         report(EventKind.APP_READY)
         if start is not None:
             report(EventKind.WAITING, until=start.isoformat(timespec="seconds"))
-            # Wait on the home screen, then load the utilities list shortly before the
-            # start, so the app has just talked to its server when the first tap comes.
+            # Wait on the home screen, checked every minute until the deadline, then load the
+            # utilities list shortly before the start, so the app has just talked to its
+            # server when the first tap comes.
+            supervisor.watch(booker, deadline, lambda moment: wait_until(moment, clock.now))
             wait_until(start - timedelta(seconds=config.warm_up_seconds), clock.now)
             # A fresh answer leaves the counter only the warm-up to drift, and the log shows
             # how far Windows set the PC clock since the first one.
             clock.measure()
-            try:
-                booker.locate_entry()
-            except BookingError as exc:
-                logger.warning("Could not open the utilities list yet (%s); retrying", exc)
+            # A failure here is repaired as one while getting ready (the 2026-11-17 popup, a
+            # driver lost after the last check), with time left for the read before the start.
+            supervisor.run_step(booker, booker.locate_entry, start - WARM_UP_REPAIRS_END)
             wait_until(start - LOCATE_AHEAD, clock.now)
             booker.locate_entry()
             wait_until(start + OPENING_MARGIN, clock.now)
