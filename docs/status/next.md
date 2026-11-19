@@ -34,9 +34,9 @@ ends the run. One branch a part, each stacked on the one before, all PR'd into `
 
 Done on the real MuMu (2026-11-19), each repaired: the app and the driver stopped by hand, a
 really hung Android (41 s to ready), a suspended `MuMuNxDevice` found by the minute check
-(49 s to ready; the warm-up and the rounds then ran on time). Left: a real booking (ask
-the user for free slots), the user's OK for the CLAUDE.md lines on MuMu freezing and on
-`runner.py`, then the merges in order and the release.
+(49 s to ready; the warm-up and the rounds then ran on time). Merged into `develop`
+(#257-#260). Left: a real booking on `develop` (ask the user for free slots), then the
+release.
 
 Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
 still waits on the home screen and opens the utilities list at 05:59, as before. The check
