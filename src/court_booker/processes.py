@@ -7,10 +7,14 @@ app's platform); elsewhere any running process with the id counts, which is enou
 
 from __future__ import annotations
 
+import logging
 import os
 import signal
+import subprocess
 import sys
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 _PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 _STILL_ACTIVE = 259
@@ -57,6 +61,56 @@ def is_running(pid: int, started: float) -> bool:
 def stop(pid: int) -> None:
     """Stop process ``pid`` at once (``TerminateProcess`` on Windows)."""
     os.kill(pid, signal.SIGTERM)
+
+
+def powershell() -> str:
+    """Return Windows PowerShell's full path, so no other powershell.exe on PATH runs."""
+    root = os.environ.get("SYSTEMROOT", "C:\\Windows")
+    return os.path.join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+
+
+_LIST_TIMEOUT = 20.0
+"""Seconds the process list may take: PowerShell answers in one or two."""
+_LIST_SCRIPT = (
+    "Get-CimInstance Win32_Process -Filter \"Name='{name}'\" | "
+    'ForEach-Object {{ "$($_.ProcessId)`t$($_.CommandLine)" }}'
+)
+
+
+def command_lines(name: str) -> list[tuple[int, str]]:
+    """Return the id and command line of each running process named ``name``.
+
+    Empty outside Windows, and when the list cannot be read (logged): a caller then finds
+    nothing to stop.
+    """
+    if sys.platform != "win32":
+        return []
+    script = _LIST_SCRIPT.format(name=name.replace("'", "''"))
+    try:
+        result = subprocess.run(
+            [powershell(), "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=_LIST_TIMEOUT,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning("Could not list the %s processes: %s", name, exc)
+        return []
+    return parse_command_lines(result.stdout)
+
+
+def parse_command_lines(text: str) -> list[tuple[int, str]]:
+    """Return ``(pid, command line)`` from lines of a pid, a tab and the command line."""
+    found = []
+    for line in text.splitlines():
+        pid, _, command = line.partition("\t")
+        if pid.strip().isdigit():
+            found.append((int(pid), command.strip()))
+    return found
 
 
 def _kernel32() -> Any:

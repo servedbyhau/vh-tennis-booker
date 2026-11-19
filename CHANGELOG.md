@@ -25,6 +25,10 @@ uses [Semantic Versioning](https://semver.org/).
   says how many the run made.
 
 ### Fixed
+- A frozen or hung MuMu before 06:00 is restarted instead of ending the run: the run asks
+  Android's system server (`am get-current-user`), as a hung Android still answered an
+  `echo`, and with no answer in 10 s it ends that instance's process, which MuMuManager
+  cannot do then, and starts it again (ready on the home screen about 40 s later).
 - A run repairs what fails while it gets ready, before 06:00, instead of stopping: a
   MuMuManager command that fails is tried again up to 3 times, 2 s apart (on 2026-11-19
   `control launch` failed once with "nemu-api init failed" and machine 1 booked nothing); MuMu

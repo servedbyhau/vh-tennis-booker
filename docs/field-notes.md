@@ -336,6 +336,12 @@ slots and the booked date and time read the same.
   in 22 s and adb answered. Without a freeze: `control shutdown` stopped it in 4 s, ending the
   process in 0.8 s, and a launch after either booted in 21-24 s. After a shutdown, `adb
   devices` keeps the serial as `offline` until it is disconnected.
+- A hung Android (2026-11-19, instance 0, after the driver was force-stopped twice in tests):
+  `adb shell echo` answered in 0.5 s, but `am get-current-user` and every `pm` and `am`
+  command hung, so the driver could not start; MuMuManager `info` still answered
+  (`start_finished`). A working instance answers `am get-current-user` (`0`) in 50-220 ms,
+  so that is the run's ping. Ending the instance's process and launching it again had it
+  ready on the home screen 41 s after the ping gave up.
 - A MuMuManager command can fail at once for no lasting reason: at 05:45:05 on 2026-11-19
   `control launch -v 0` exited with 4294966796 and printed `{"errcode": -500, "errmsg":
   "nemu-api init failed"}` within 0.7 s, while instance 1's process was starting its own

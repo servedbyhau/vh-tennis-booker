@@ -4,18 +4,22 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Callable
 
+from court_booker import processes
 from court_booker.errors import EmulatorError, MuMuNotFoundError
 
 logger = logging.getLogger(__name__)
 
 Run = Callable[[Sequence[str]], "subprocess.CompletedProcess[str]"]
 
+DEVICE_PROCESS = "MuMuNxDevice.exe"
+"""The process that runs one MuMu instance, ``--vm MuMuPlayerGlobal-15.0-<index>``."""
 _POLL_INTERVAL = 2.0
 _STOP_POLL_INTERVAL = 0.5
 _COMMAND_TIMEOUT = 60.0
@@ -148,6 +152,29 @@ class MuMu:
                 logger.info("Android started after %.1f s", self._clock() - started)
                 return
         raise EmulatorError(f"MuMu instance {self.index} did not finish booting in {timeout:.0f} s")
+
+    def kill(
+        self,
+        find: Callable[[str], list[tuple[int, str]]] = processes.command_lines,
+        stop: Callable[[int], None] = processes.stop,
+    ) -> bool:
+        """End the instance's ``MuMuNxDevice`` process; return whether one was found.
+
+        MuMuManager is not asked: a frozen instance makes its commands hang (2026-11-19). The
+        process is the one whose command line ends in ``--vm <name>-<index>``.
+        """
+        pattern = re.compile(rf"--vm\s+\S+-{self.index}\s*$")
+        found = False
+        for pid, command in find(DEVICE_PROCESS):
+            if not pattern.search(command):
+                continue
+            found = True
+            logger.warning("Ending MuMu instance %d's process %d", self.index, pid)
+            try:
+                stop(pid)
+            except OSError as exc:
+                logger.warning("Could not end process %d: %s", pid, exc)
+        return found
 
     def wait_stopped(self, timeout: float) -> bool:
         """Return whether the instance's process ended within ``timeout`` seconds.

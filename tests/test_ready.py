@@ -60,6 +60,7 @@ class FakeMuMu:
         self.boot_waits = []
         self.stops = stops
         """Whether each shutdown stops it, in turn; it stops once the list is empty."""
+        self.has_process = True
 
     def ensure_started(self, timeout):
         self.boot_waits.append(timeout)
@@ -74,6 +75,10 @@ class FakeMuMu:
 
     def adb_serial(self):
         return SERIAL
+
+    def kill(self):
+        self.script.step("kill")
+        return self.has_process
 
 
 class FakeAdb:
@@ -219,23 +224,14 @@ def test_a_boot_that_fails_restarts_mumu(world, caplog):
     )
 
 
-def test_a_mumu_that_does_not_shut_down_is_restarted_again(world):
-    world.script.fail("boot", EmulatorError("did not finish booting"))
-    world.stops.append(False)
-
-    world.prepare()
-
-    assert world.script.calls.count("shutdown") == 2
-    assert world.repaired() == ["restart_mumu", "restart_mumu"]
-
-
 def test_a_serial_that_does_not_connect_is_disconnected_and_connected_again(world):
     world.script.fail("connect", DeviceConnectionError("Could not connect to 127.0.0.1:16384"))
 
     world.prepare()
 
     # The second pass drops that serial alone, never the adb server the other instances use.
-    first, second = ["screen", "boot", "connect"], ["boot", "disconnect", "connect", "ping"]
+    # MuMu, booted, is not asked again: adb tells whether Android answers.
+    first, second = ["screen", "boot", "connect"], ["disconnect", "connect", "ping", "driver"]
     assert world.script.calls[:7] == first + second
     assert world.repaired() == ["reconnect_adb"]
 
@@ -256,7 +252,11 @@ def test_android_that_gives_no_answer_restarts_mumu_at_once(world, caplog):
     world.prepare()
 
     assert world.repaired() == ["restart_mumu"]  # a frozen MuMu: nothing above it can help
-    assert world.script.calls.count("shutdown") == 1
+    # Its process ended at once: MuMuManager hangs on a frozen instance.
+    restart = ["kill", "stopped?", "disconnect", "boot"]
+    reconnect = ["disconnect", "connect", "ping", "driver", "probe", "prepare"]
+    assert world.script.calls == ["screen", "boot", "connect", "ping", *restart, *reconnect]
+    assert "which froze" in caplog.text
 
 
 def test_a_driver_that_does_not_start_is_started_again(world):
@@ -589,7 +589,7 @@ def test_an_app_no_longer_ready_is_made_ready_again(world, caplog):
     supervisor.watch(world.booker, NOW + timedelta(minutes=2, seconds=30), lambda moment: None)
 
     # Checked again once repaired, then at the next minute.
-    assert world.script.calls == ["check", "boot", "ping", "probe", "prepare", "check", "check"]
+    assert world.script.calls == ["check", "ping", "probe", "prepare", "check", "check"]
     assert world.booker.restarts[-1] is True
     assert world.repaired() == ["restart_app"]
     assert "The run was no longer ready: com.vinhomes.resident is no longer in front" in caplog.text
@@ -601,7 +601,7 @@ def test_a_driver_lost_while_waiting_is_started_again(world):
 
     supervisor.watch(world.booker, NOW + timedelta(minutes=1, seconds=30), lambda moment: None)
 
-    repaired = ["boot", "ping", "stop", "driver", "probe", "prepare"]
+    repaired = ["ping", "stop", "driver", "probe", "prepare"]
     assert world.script.calls == ["check", *repaired, "check"]
     assert world.repaired() == ["restart_driver"]
 
@@ -620,7 +620,7 @@ def test_a_step_that_fails_is_run_again_once_the_app_is_ready(world):
 
     supervisor.run_step(world.booker, lambda: world.script.step("locate"), DEADLINE)
 
-    assert world.script.calls == ["locate", "boot", "ping", "probe", "prepare", "locate"]
+    assert world.script.calls == ["locate", "ping", "probe", "prepare", "locate"]
 
 
 def test_a_step_that_fails_past_its_deadline_is_not_repaired(world):
@@ -631,3 +631,34 @@ def test_a_step_that_fails_past_its_deadline_is_not_repaired(world):
     with pytest.raises(NavigationError):
         supervisor.run_step(world.booker, lambda: world.script.step("locate"), DEADLINE)
     assert supervisor.repairs == 0
+
+
+def test_a_mumu_that_does_not_shut_down_has_its_process_ended(world):
+    world.script.fail("boot", EmulatorError("did not finish booting"))
+    world.stops.append(False)  # the shutdown did nothing
+
+    world.prepare()
+
+    restart = ["shutdown", "stopped?", "kill", "stopped?", "boot"]
+    assert world.script.calls[:7] == ["screen", "boot", *restart]
+    assert world.repaired() == ["restart_mumu"]
+
+
+def test_a_mumu_in_no_process_is_repaired_again(world):
+    world.script.fail("ping", DeviceNotRespondingError("Android did not answer adb within 10 s"))
+    supervisor = world.supervisor()
+    original = world.script.step
+
+    def step(name):
+        if name == "kill":
+            world.mumu.has_process = world.script.calls.count("kill") > 0
+        original(name)
+
+    world.script.step = step
+
+    world.prepare(supervisor)
+
+    # No process to end: the next restart goes through MuMuManager.
+    assert world.script.calls.count("kill") == 1
+    assert world.script.calls.count("shutdown") == 1
+    assert world.repaired() == ["restart_mumu", "restart_mumu"]
