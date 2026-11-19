@@ -6,6 +6,17 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Getting ready before 06:00 is supervised layer by layer (MuMu, its connection, the driver,
+  the app) instead of a fixed number of tries per step: each pass repairs the first layer that
+  fails, and the one below it too after 3 failures in a row, until a minute before the warm-up
+  (05:58 for 06:00). The app is restarted after growing pauses, as a PC just woken may join
+  its network late, and is given 45 s to open instead of 180 s; an Android that gives no
+  answer restarts MuMu at once; a lost driver is started again, uiautomator2 after 2 failed
+  starts. The app not installed stops the run at once, as a logout without a saved login does.
+  Each repair is a step of the History ("Có lỗi khi chuẩn bị, đã tự …"), and the notification
+  says how many the run made.
+
 ### Fixed
 - A run repairs what fails while it gets ready, before 06:00, instead of stopping: a
   MuMuManager command that fails is tried again up to 3 times, 2 s apart (on 2026-11-19

@@ -41,6 +41,7 @@ const REASONS: [RegExp, Phrase][] = [
     (t) => t("reasons.loginFailed"),
   ],
   [NOT_READY, (t) => t("reasons.notReady")],
+  [/ is not installed on .+; install it$/, (t) => t("reasons.appMissing")],
 ];
 
 /** Return a few words for an engine reason; an unknown one says to see the activity log. */

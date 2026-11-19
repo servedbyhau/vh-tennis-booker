@@ -1575,8 +1575,11 @@ def test_prepare_reports_an_app_that_shows_nothing_it_knows():
     app = booking_app(screen="loading")
     app.launches_to = None
 
+    booker = Booker(app, Config())
+    booker.app_start_timeout = 1
+
     with pytest.raises(AppNotReadyError, match="check the app on MuMu 0") as raised:
-        Booker(app, Config(boot_timeout=1)).prepare()
+        booker.prepare()
 
     assert failure_reason(str(raised.value)) == "App Vinhomes chưa mở được"
 
@@ -1976,11 +1979,14 @@ def test_an_app_that_shows_nothing_known_names_the_labels_of_each_language():
     app = booking_app(screen="loading")
     app.launches_to = None
 
+    booker = Booker(app, Config())
+    booker.app_start_timeout = 1
+
     with pytest.raises(
         AppNotReadyError,
         match=r"did not show 'Tiện ích', 'Sân Tennis', 'Utilities' or 'Tennis' in 1 s; ",
     ):
-        Booker(app, Config(boot_timeout=1)).prepare()
+        booker.prepare()
 
 
 def test_the_sport_picks_the_tile_to_tap():

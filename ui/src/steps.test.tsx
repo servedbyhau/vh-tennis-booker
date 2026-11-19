@@ -29,6 +29,19 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
   ["account_subdivision", { subdivision: "khu-b" }, "Đã đọc phân khu của tài khoản", "plain"],
   ["logged_in", {}, "App đã bị đăng xuất, đã tự đăng nhập lại", "plain"],
   [
+    "repaired",
+    { layer: "app", action: "restart_app", error: "no home", repair: 1 },
+    "Có lỗi khi chuẩn bị, đã tự mở lại app Vinhomes",
+    "plain",
+  ],
+  [
+    "repaired",
+    { action: "restart_mumu" },
+    "Có lỗi khi chuẩn bị, đã tự khởi động lại MuMu",
+    "plain",
+  ],
+  ["repaired", {}, "Có lỗi khi chuẩn bị, đã tự sửa", "plain"],
+  [
     "screen_saved",
     { path: "C:\\logs\\screens\\2026-11-19-060012-mumu0.png" },
     "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",

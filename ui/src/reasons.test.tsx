@@ -46,6 +46,10 @@ describe("failureReason", () => {
       "App Vinhomes chưa mở được",
     ],
     [
+      "com.vinhomes.resident is not installed on 127.0.0.1:16384; install it",
+      "App Vinhomes chưa được cài trên MuMu",
+    ],
+    [
       "The app is logged out (the account logged in on another device): log in again on MuMu " +
         "1, or save the login in the app's setup so a run logs in by itself",
       "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",

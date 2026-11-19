@@ -50,11 +50,11 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 | Booking | Booked court differs from the tapped one | The court list moves under the tap (field notes); the booking details page must name the configured court, another one is left with Back and the court tapped again |
 | Booking | Target date in the next month | Works: after the missed day tap at 06:00 on 30/10, the fix booked two real slots for 01/11 later that day; the 31/10 06:00 run on 0.18.1 booked two slots for 02/11 |
 | Booking | Quota (2 slots a day, 8 a month per apartment) | Tracking is left to the user. The app's quota notice, after "Tiếp tục" or "Xác nhận", fails the round with "Booking quota used up" and skips the rounds left; the log and the notification say so (since 0.11.0). The 06:00 run books a new day, so there it means the month is used up |
-| Device | MuMu not running / frozen | Started automatically / a device command over 60 s ends the run (exit 3); no restart, no retry (by decision) |
-| Device | A MuMuManager command fails, Android does not boot, ADB does not connect (at the start) | Each MuMuManager command tried up to 3 times, 2 s apart; the instance restarted once; the serial disconnected and connected once again |
-| App | The app does not reach its home screen at the start (a hang, an unknown screen) | Stopped and opened again, up to 3 tries, a timed run's only before its warm-up; a logout or a refused login stops at once |
+| Device | MuMu not running / frozen | Started automatically. While getting ready (to 05:58), no adb answer restarts it (`ready.py`); during the rounds a device command over 60 s ends the run (exit 3), no restart (by decision) |
+| Device | A MuMuManager command fails, Android does not boot, ADB or the driver does not connect (while getting ready) | Each MuMuManager command tried up to 3 times, 2 s apart; every layer repaired until 05:58, bottom up, the layer below too after 3 failures in a row (`ready.py`); the driver gives way to uiautomator2 after 2 failed starts |
+| App | The app does not reach its home screen while getting ready (a hang, an unknown screen, no network yet) | Restarted after growing pauses (0, 5, 10, 20, 30 s) until 05:58; a logout without a saved login, a refused login or the app not installed stops at once |
 | Device | One of several MuMu instances fails or freezes | Only its own process ends; the others book on, and the main log names its exit code. Its slots are not moved to another instance (by decision) |
-| Device | ADB lost during a run | Not handled |
+| Device | ADB or the driver lost | While getting ready: connected or started again (`ready.py`); during the rounds: not handled |
 | Device | Wrong MuMu resolution | Set by the run while MuMu is off; a running MuMu is logged (WARNING) and scrolls |
 | Device | PC woke late, clock drift | Runs at once if under 10 min late; NTP time on a counter Windows does not set |
 | Reporting | Every failure reported | Log file, history database, a Windows notification after every run; Telegram optional. A real run that stopped on a failure the app did not explain also saves the screen (`logs\screens`) |

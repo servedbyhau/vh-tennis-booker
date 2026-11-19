@@ -15,7 +15,7 @@ max_swipes = 6                      # scroll attempts when a slot is hidden (sho
 # Emulator start. Leave mumu_manager empty if you start the emulator yourself.
 mumu_manager = "C:/Program Files/Netease/MuMuPlayer/nx_main/MuMuManager.exe"
 mumu_index = 0                      # MuMu instance number (0 = first)
-boot_timeout = 180                  # seconds to wait for Android and for the app
+boot_timeout = 180                  # seconds the first boot of Android may take in a run
 restart_app = true                  # restart the app for a clean state before booking
 
 # Timed start: the scheduled task starts at wake_at and books at start_at.

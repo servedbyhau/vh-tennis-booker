@@ -8,6 +8,7 @@ from court_booker.adb import Adb, find_adb, resolve_device
 from court_booker.errors import (
     AdbNotFoundError,
     DeviceConnectionError,
+    DeviceNotRespondingError,
     MultipleDevicesError,
     NoDeviceError,
 )
@@ -134,6 +135,42 @@ def test_shell_runs_on_the_given_device():
     fake.adb().shell("127.0.0.1:16384", "pm", "path", "com.vinhomes.resident")
 
     assert fake.calls == ["-s 127.0.0.1:16384 shell pm path com.vinhomes.resident"]
+
+
+def timed(result=None, error=None):
+    """A ``timed_run`` that returns ``result`` or raises ``error``, recording its calls."""
+    calls = []
+
+    def run(argv, timeout):
+        calls.append((argv[1:], timeout))
+        if error is not None:
+            raise error
+        return result
+
+    return run, calls
+
+
+def test_android_that_answers_passes_the_ping():
+    run, calls = timed(subprocess.CompletedProcess([], 0, stdout="court-booker-ping\n", stderr=""))
+
+    Adb("adb", timed_run=run).ping("127.0.0.1:16384")
+
+    assert calls == [(["-s", "127.0.0.1:16384", "shell", "echo", "court-booker-ping"], 10.0)]
+
+
+def test_android_that_gives_no_answer_is_not_responding():
+    run, _ = timed(error=subprocess.TimeoutExpired(["adb"], 10.0))
+
+    with pytest.raises(DeviceNotRespondingError, match="did not answer adb within 10 s"):
+        Adb("adb", timed_run=run).ping("127.0.0.1:16384")
+
+
+def test_a_device_offline_fails_the_ping_at_once():
+    offline = subprocess.CompletedProcess([], 1, stdout="", stderr="error: device offline\n")
+    run, _ = timed(offline)
+
+    with pytest.raises(DeviceConnectionError, match="device offline"):
+        Adb("adb", timed_run=run).ping("127.0.0.1:16384")
 
 
 def test_disconnect_drops_one_serial_only():

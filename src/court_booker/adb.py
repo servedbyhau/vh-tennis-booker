@@ -15,6 +15,7 @@ from court_booker.emulator import Run, run_command
 from court_booker.errors import (
     AdbNotFoundError,
     DeviceConnectionError,
+    DeviceNotRespondingError,
     MultipleDevicesError,
     NoDeviceError,
 )
@@ -22,6 +23,13 @@ from court_booker.errors import (
 logger = logging.getLogger(__name__)
 
 Probe = Callable[[str, int], bool]
+TimedRun = Callable[[Sequence[str], float], "subprocess.CompletedProcess[str]"]
+
+
+def run_timed(args: Sequence[str], timeout: float) -> subprocess.CompletedProcess[str]:
+    """Run ``args`` limited to ``timeout`` seconds; raises ``TimeoutExpired`` past it."""
+    return run_command(args, timeout=timeout)
+
 
 AUTO = "auto"
 LOCALHOST = "127.0.0.1"
@@ -33,6 +41,10 @@ _RETRY_INTERVAL = 1.0
 _PROBE_TIMEOUT = 0.3
 SCREENCAP_TIMEOUT = 20.0
 """Seconds a screenshot may take: about 1 s; a frozen MuMu never answers (2026-11-17)."""
+PING_TIMEOUT = 10.0
+"""Seconds ``adb shell echo`` may take: it answers in well under a second; a frozen MuMu (its
+``MuMuNxDevice`` suspended, 2026-11-19) gave no answer in 15 s."""
+PING_REPLY = "court-booker-ping"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
@@ -79,9 +91,11 @@ class Adb:
         probe: Probe = port_open,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
+        timed_run: TimedRun = run_timed,
     ) -> None:
         self.path = path
         self._run = run
+        self._timed_run = timed_run
         self._probe = probe
         self._clock = clock
         self._sleep = sleep
@@ -129,6 +143,26 @@ class Adb:
     def shell(self, serial: str, *args: str) -> str:
         """Run ``adb -s serial shell args`` and return its output."""
         return self._call("-s", serial, "shell", *args)
+
+    def ping(self, serial: str, timeout: float = PING_TIMEOUT) -> None:
+        """Check that Android on ``serial`` answers a shell command.
+
+        Raises :class:`DeviceNotRespondingError` when it gives no answer in ``timeout``, as a
+        frozen emulator does, and :class:`DeviceConnectionError` when adb fails at once, as
+        for a device offline or gone.
+        """
+        argv = [str(self.path), "-s", serial, "shell", "echo", PING_REPLY]
+        try:
+            result = self._timed_run(argv, timeout)
+        except subprocess.TimeoutExpired as exc:
+            raise DeviceNotRespondingError(
+                f"Android on {serial} did not answer adb within {timeout:g} s"
+            ) from exc
+        except OSError as exc:
+            raise DeviceConnectionError(f"adb shell failed: {exc}") from exc
+        if PING_REPLY not in result.stdout:
+            detail = (result.stderr or result.stdout).strip() or f"exit {result.returncode}"
+            raise DeviceConnectionError(f"adb shell on {serial} failed: {detail}")
 
     def forward(self, serial: str, remote: str) -> int:
         """Return a local TCP port forwarded to ``remote`` on ``serial``, reusing one if set."""
@@ -192,17 +226,20 @@ class Adb:
         return result.stdout
 
 
-def resolve_device(adb: Adb, device: str, preferred: str | None = None) -> str:
+def resolve_device(
+    adb: Adb, device: str, preferred: str | None = None, timeout: float = CONNECT_TIMEOUT
+) -> str:
     """Return the serial to drive.
 
     An explicit ``device`` is connected alone. ``auto`` uses ``preferred`` (the
-    serial reported by the emulator) when known, else scans for a single device.
+    serial reported by the emulator) when known, else scans for a single device. A
+    connection is tried for ``timeout`` seconds.
     """
     adb.ensure_server()
     if device != AUTO:
-        return adb.connect_until(device)
+        return adb.connect_until(device, timeout)
     if preferred:
-        return adb.connect_until(preferred)
+        return adb.connect_until(preferred, timeout)
     serials = adb.discover()
     if not serials:
         raise NoDeviceError("No emulator found; start it or set 'device' in config.toml")

@@ -61,6 +61,10 @@ class EmulatorError(DeviceError):
     """The emulator could not be found, launched or booted."""
 
 
+class MuMuNotFoundError(EmulatorError):
+    """MuMuManager.exe is not where the config or the install says: no repair can start it."""
+
+
 class AdbNotFoundError(DeviceError):
     """No adb executable was found."""
 
@@ -105,6 +109,10 @@ class LoggedOutError(AppNotReadyError):
 
 class LoginFailedError(AppNotReadyError):
     """The saved login was typed in once and the app did not take it; never tried again."""
+
+
+class AppMissingError(AppNotReadyError):
+    """The app is not installed on the emulator: a person must install it."""
 
 
 class LockHeldError(CourtBookerError):

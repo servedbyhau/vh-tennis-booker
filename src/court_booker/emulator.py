@@ -10,14 +10,19 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Callable
 
-from court_booker.errors import EmulatorError
+from court_booker.errors import EmulatorError, MuMuNotFoundError
 
 logger = logging.getLogger(__name__)
 
 Run = Callable[[Sequence[str]], "subprocess.CompletedProcess[str]"]
 
 _POLL_INTERVAL = 2.0
+_STOP_POLL_INTERVAL = 0.5
 _COMMAND_TIMEOUT = 60.0
+MUMU_TIMEOUT = 20.0
+"""Seconds a MuMuManager command may take: each answers in under a second (``control launch``
+returns before Android boots). A frozen instance makes ``info`` hang (2026-11-19, a suspended
+``MuMuNxDevice``), so a longer limit only delays the repair."""
 CALL_ATTEMPTS = 3
 """Tries a run gives each MuMuManager command. On 2026-11-19 ``control launch`` failed at once
 with "nemu-api init failed" (exit -500) while the other instance's process started its own
@@ -28,7 +33,9 @@ RETRY_DELAY = 2.0
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
-def run_command(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
+def run_command(
+    args: Sequence[str], timeout: float = _COMMAND_TIMEOUT
+) -> subprocess.CompletedProcess[str]:
     """Run ``args`` and capture its text output."""
     return subprocess.run(
         list(args),
@@ -36,10 +43,15 @@ def run_command(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
         text=True,
         encoding="utf-8",
         errors="replace",
-        timeout=_COMMAND_TIMEOUT,
+        timeout=timeout,
         creationflags=_NO_WINDOW,
         check=False,
     )
+
+
+def run_mumu_command(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
+    """Run a MuMuManager command, limited to :data:`MUMU_TIMEOUT`."""
+    return run_command(args, timeout=MUMU_TIMEOUT)
 
 
 class MuMu:
@@ -53,7 +65,7 @@ class MuMu:
         self,
         manager: Path,
         index: int = 0,
-        run: Run = run_command,
+        run: Run = run_mumu_command,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
         attempts: int = 1,
@@ -82,6 +94,10 @@ class MuMu:
     def is_started(self) -> bool:
         """Return whether Android inside the instance has finished booting."""
         return bool(self.info().get("is_android_started"))
+
+    def is_process_started(self) -> bool:
+        """Return whether the instance's process runs, booted or not."""
+        return bool(self.info().get("is_process_started"))
 
     def adb_serial(self) -> str | None:
         """Return the ``host:port`` ADB serial of the running instance, if reported."""
@@ -118,45 +134,41 @@ class MuMu:
             "setting", *[arg for key, value in values.items() for arg in ("-k", key, "-val", value)]
         )
 
-    def ensure_started(self, timeout: float, restarts: int = 0) -> None:
-        """Launch the instance unless running, then wait until Android has booted.
-
-        Android not booted in ``timeout`` restarts the instance, up to ``restarts`` times,
-        each awaited for ``timeout`` again.
-        """
+    def ensure_started(self, timeout: float) -> None:
+        """Launch the instance unless running, then wait until Android has booted."""
         if self.is_started():
             logger.info("MuMu instance %d already running", self.index)
             return
         logger.info("Launching MuMu instance %d", self.index)
-        self.launch()
-        for restart in range(restarts + 1):
-            if restart:
-                logger.warning(
-                    "MuMu instance %d did not finish booting in %.0f s; restarting it (%d of %d)",
-                    self.index,
-                    timeout,
-                    restart,
-                    restarts,
-                )
-                self.restart()
-            if self._await_boot(timeout):
-                return
-        raise EmulatorError(f"MuMu instance {self.index} did not finish booting in {timeout:.0f} s")
-
-    def _await_boot(self, timeout: float) -> bool:
-        """Return whether Android booted within ``timeout`` seconds."""
         started = self._clock()
+        self.launch()
         while self._clock() - started < timeout:
             self._sleep(_POLL_INTERVAL)
             if self.is_started():
                 logger.info("Android started after %.1f s", self._clock() - started)
-                return True
-        return False
+                return
+        raise EmulatorError(f"MuMu instance {self.index} did not finish booting in {timeout:.0f} s")
+
+    def wait_stopped(self, timeout: float) -> bool:
+        """Return whether the instance's process ended within ``timeout`` seconds.
+
+        A read that fails counts as still running: a frozen instance makes ``info`` hang.
+        """
+        started = self._clock()
+        while True:
+            try:
+                if not self.is_process_started():
+                    return True
+            except EmulatorError as exc:
+                logger.debug("MuMu instance %d state unknown: %s", self.index, exc)
+            if self._clock() - started >= timeout:
+                return False
+            self._sleep(_STOP_POLL_INTERVAL)
 
     def _call(self, command: str, *args: str) -> str:
         """Run a MuMuManager command, tried up to ``attempts`` times while it fails."""
         if not self.manager.is_file():
-            raise EmulatorError(
+            raise MuMuNotFoundError(
                 f"MuMuManager not found at {self.manager}; set 'mumu_manager' in config.toml, "
                 "or leave it empty to skip starting the emulator"
             )
