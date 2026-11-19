@@ -4,14 +4,18 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
 ## Release and daily run
 
-- Released: **1.1.1** (tag `v1.1.1`, 2026-11-18): the installer stops the app's processes
-  before an update (never a booking), and a real run that stops on an unexplained failure
-  saves the screen. 1.1.0 (same day) logs in again with the saved login; its update by the
-  button stopped halfway and was installed by hand. 1.0.1 closed the promotion popup; 1.0.0
+- Released: **1.1.2** (tag `v1.1.2`, 2026-11-19): getting ready before 06:00 repairs itself
+  (`ready.py`): MuMu, ADB, the driver and the app layer by layer until 05:58, a check every
+  minute while waiting, a frozen MuMu restarted by ending its process. A real timed booking
+  on `develop` booked 2/2 to the ticket before the release. 1.1.1 (2026-11-18): the installer
+  stops the app's processes before an update, and a run that stops on an unexplained failure
+  saves the screen. 1.1.0 (same day) logs in
+  again with the saved login; its update by the button stopped halfway and was installed by
+  hand. 1.0.1 closed the promotion popup; 1.0.0
   (2026-11-03) was the first complete version.
 - The Android app is developed in `servedbyhau/v-court`, which ports this repo's booking
   flow and driver; this repo is its behavior reference.
@@ -28,6 +32,7 @@ Last updated: 2026-11-18.
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-19 | 1.1.1 | Instance 0 0/2: `MuMuManager control launch` failed once at 05:45 ("nemu-api init failed"), the run stopped (fixed in 1.1.2); instance 1 1/1 (6.7 s) |
 | 2026-11-18 | 1.0.1 (by the update button) | Instance 0 1/1 (6.0 s), instance 1 2/2 (5.5 s, 3.9 s); no popup showed |
 | 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed in 1.0.1) |
 | 2026-11-16 | 1.0.0 | Instance 0 1/1, instance 1 2/2 |

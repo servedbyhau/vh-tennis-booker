@@ -6,6 +6,38 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-19
+
+### Added
+- While a timed run waits on the home screen, it checks every minute until 05:58 that the
+  app is still in front on its home screen (two commands, no tap), and repairs what broke
+  in the meantime: the app closed, a screen it left, the driver lost. A failure while it
+  opens the utilities list at 05:59 (as the popup of 2026-11-17) is repaired the same way,
+  until 15 s before 06:00, instead of ending the run at the second try.
+
+### Changed
+- Getting ready before 06:00 is supervised layer by layer (MuMu, its connection, the driver,
+  the app) instead of a fixed number of tries per step: each pass repairs the first layer that
+  fails, and the one below it too after 3 failures in a row, until a minute before the warm-up
+  (05:58 for 06:00). The app is restarted after growing pauses, as a PC just woken may join
+  its network late, and is given 45 s to open instead of 180 s; an Android that gives no
+  answer restarts MuMu at once; a lost driver is started again, uiautomator2 after 2 failed
+  starts. The app not installed stops the run at once, as a logout without a saved login does.
+  Each repair is a step of the History ("Có lỗi khi chuẩn bị, đã tự …"), and the notification
+  says how many the run made.
+
+### Fixed
+- A frozen or hung MuMu before 06:00 is restarted instead of ending the run: the run asks
+  Android's system server (`am get-current-user`), as a hung Android still answered an
+  `echo`, and with no answer in 10 s it ends that instance's process, which MuMuManager
+  cannot do then, and starts it again (ready on the home screen about 40 s later).
+- A run repairs what fails while it gets ready, before 06:00, instead of stopping: a
+  MuMuManager command that fails is tried again up to 3 times, 2 s apart (on 2026-11-19
+  `control launch` failed once with "nemu-api init failed" and machine 1 booked nothing); MuMu
+  not booted in `boot_timeout` is restarted once; a connection to MuMu that fails is made once
+  again; the app not reaching its home screen is stopped and opened again, up to 3 tries, a
+  timed run's only before its warm-up. A logout and a refused login still stop the run at once.
+
 ## [1.1.1] - 2026-11-18
 
 ### Added

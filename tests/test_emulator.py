@@ -5,8 +5,8 @@ import subprocess
 
 import pytest
 
-from court_booker.emulator import MuMu
-from court_booker.errors import EmulatorError
+from court_booker.emulator import CALL_ATTEMPTS, RETRY_DELAY, MuMu
+from court_booker.errors import EmulatorError, MuMuNotFoundError
 
 RUNNING = {
     "index": "0",
@@ -152,8 +152,146 @@ def test_shutdown_asks_mumu_to_shut_the_instance_down(manager_path):
 
 
 def test_failed_command_raises(manager_path):
+    calls = []
+
     def run(argv):
+        calls.append(argv)
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="no such player")
 
     with pytest.raises(EmulatorError, match="no such player"):
         MuMu(manager_path, run=run).is_started()
+    assert len(calls) == 1  # the setup checks and the backend answer at once
+
+
+NEMU_FAILED = '{\n  "errcode": -500,\n  "errmsg": "nemu-api init failed"\n}'
+"""What ``control launch`` printed on 2026-11-19, exit code 4294966796."""
+
+
+class FlakyManager(FakeManager):
+    """Fails ``command`` (any, if empty) ``failures`` times, as MuMuManager did on 2026-11-19."""
+
+    def __init__(self, failures, command="", **kwargs):
+        super().__init__(**kwargs)
+        self.failures = failures
+        self.command = command
+        self.sleeps = []
+
+    def run(self, argv):
+        if self.failures and self.command in ("", argv[1]):
+            self.failures -= 1
+            self.calls.append(f"{argv[1]} (failed)")
+            return subprocess.CompletedProcess(argv, 4294966796, stdout=NEMU_FAILED, stderr="")
+        return super().run(argv)
+
+    def sleep(self, seconds):
+        self.sleeps.append(seconds)
+        super().sleep(seconds)
+
+
+def flaky(manager_path, fake):
+    return MuMu(
+        manager_path,
+        run=fake.run,
+        clock=lambda: fake.now,
+        sleep=fake.sleep,
+        attempts=CALL_ATTEMPTS,
+    )
+
+
+def test_a_failed_command_of_a_run_is_tried_again(manager_path, caplog):
+    fake = FlakyManager(failures=1, started=True)
+
+    assert flaky(manager_path, fake).is_started()
+    assert fake.calls == ["info (failed)", "info"]
+    assert fake.sleeps == [RETRY_DELAY]
+    assert "nemu-api init failed" in caplog.text and "trying again in 2 s (2 of 3)" in caplog.text
+
+
+def test_a_launch_that_fails_once_still_boots(manager_path):
+    fake = FlakyManager(failures=1, command="control", boot_polls=1)
+
+    flaky(manager_path, fake).ensure_started(timeout=180)
+
+    assert fake.calls == ["info", "control (failed)", "control", "info"]
+
+
+def test_a_command_failing_every_try_raises(manager_path):
+    fake = FlakyManager(failures=10, started=True)
+
+    with pytest.raises(EmulatorError, match="nemu-api init failed"):
+        flaky(manager_path, fake).is_started()
+    assert fake.calls == ["info (failed)"] * 3
+    assert fake.sleeps == [RETRY_DELAY] * 2
+
+
+def test_a_stopped_instance_is_seen_stopped(manager_path):
+    fake = FakeManager(started=False)
+
+    assert make(manager_path, fake).wait_stopped(timeout=5)
+
+
+def test_an_instance_that_keeps_running_is_not_seen_stopped(manager_path):
+    def run(argv):
+        state = {"index": "0", "is_process_started": True, "is_android_started": True}
+        return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(state), stderr="")
+
+    clock = [0.0]
+
+    def sleep(seconds):
+        clock[0] += seconds
+
+    mumu = MuMu(manager_path, run=run, clock=lambda: clock[0], sleep=sleep)
+
+    assert not mumu.wait_stopped(timeout=5)
+    assert clock[0] >= 5
+
+
+def test_an_unreadable_state_counts_as_still_running(manager_path):
+    def run(argv):  # a frozen instance makes info hang until its time limit
+        raise subprocess.TimeoutExpired(argv, 20)
+
+    clock = [0.0]
+
+    def sleep(seconds):
+        clock[0] += seconds
+
+    mumu = MuMu(manager_path, run=run, clock=lambda: clock[0], sleep=sleep)
+
+    assert not mumu.wait_stopped(timeout=2)
+
+
+def test_a_missing_manager_is_a_failure_no_repair_can_change(tmp_path):
+    with pytest.raises(MuMuNotFoundError):
+        MuMu(tmp_path / "missing.exe", run=FakeManager().run).is_started()
+
+
+_DEVICE_EXE = r'"C:\Program Files\Netease\MuMuPlayer\nx_device\15.0\shell\MuMuNxDevice.exe"'
+DEVICES = [
+    (9232, f"{_DEVICE_EXE} --vm MuMuPlayerGlobal-15.0-0"),
+    (13168, f"{_DEVICE_EXE} --vm MuMuPlayerGlobal-15.0-1"),
+]
+"""The two instances' processes as Windows lists them (2026-11-19)."""
+
+
+@pytest.mark.parametrize(("index", "ended"), [(0, [9232]), (1, [13168])])
+def test_kill_ends_the_process_of_its_instance_alone(manager_path, index, ended):
+    stopped = []
+
+    found = MuMu(manager_path, index).kill(find=lambda name: DEVICES, stop=stopped.append)
+
+    assert found and stopped == ended
+
+
+def test_kill_without_a_process_ends_nothing(manager_path):
+    stopped = []
+
+    assert not MuMu(manager_path, 2).kill(find=lambda name: DEVICES, stop=stopped.append)
+    assert stopped == []
+
+
+def test_a_process_that_cannot_be_ended_is_logged(manager_path, caplog):
+    def stop(pid):
+        raise PermissionError("access denied")
+
+    assert MuMu(manager_path, 0).kill(find=lambda name: DEVICES, stop=stop)
+    assert "Could not end process 9232: access denied" in caplog.text

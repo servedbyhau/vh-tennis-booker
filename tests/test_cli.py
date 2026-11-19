@@ -20,15 +20,19 @@ from court_booker.config import Config
 from court_booker.device_setup import Check, Status
 from court_booker.engine import engine_command
 from court_booker.errors import AppNotReadyError, DeviceNotRespondingError, EmulatorError
+from court_booker.events import EventKind
 from court_booker.history import History as HistoryStore
 from court_booker.history import HistoryHandler
 from court_booker.lock import Holder
+from court_booker.ready import DeviceHandle
 from court_booker.runner import RoundResult
 
 
 def fake_run(outcomes):
-    def run_booking(device, config, *, results, **kwargs):
+    def run_booking(device, config, *, results, supervisor=None, **kwargs):
         run_booking.config, run_booking.kwargs = config, kwargs
+        if supervisor is not None:
+            supervisor.start()  # as the run's preparation connects the device first
         for slot, ok in outcomes:
             if ok is KeyboardInterrupt:
                 raise KeyboardInterrupt
@@ -53,13 +57,32 @@ class FakeDevice:
 
 
 def fake_connect(config, driver="auto"):
-    """Stand in for ``connect_device``."""
+    """Connect the device the way ``driver`` asks, as the supervisor does."""
     return FakeDevice("instrumentation" if driver == "auto" else driver)
+
+
+def use_connect(monkeypatch, connect):
+    """Make the run's supervisor connect its device with ``connect(config, driver)``."""
+
+    class FakeSupervisor:
+        def __init__(self, config, driver="auto", report=None, now=None):
+            self.config, self.driver, self.report = config, driver, report
+            self.device = DeviceHandle()
+            self.repairs = 0
+
+        def start(self):
+            self.device.replace(connect(self.config, self.driver))
+            self.report(EventKind.DEVICE_READY, driver=self.device.driver)
+
+        def prepare(self, booker, deadline):
+            self.start()
+
+    monkeypatch.setattr(cli, "Supervisor", FakeSupervisor)
 
 
 def run_cli(monkeypatch, tmp_path, outcomes=(), connect=fake_connect, args=(), now=None):
     """Run the CLI with a fake device; the time is 05:40 unless ``now`` gives a class."""
-    monkeypatch.setattr(cli, "connect_device", connect)
+    use_connect(monkeypatch, connect)
     monkeypatch.setattr(cli, "run_booking", fake_run(outcomes))
     monkeypatch.setattr(cli, "datetime", now or FixedDatetime)
     return cli.main(["--config", str(tmp_path / "missing.toml"), *args])
@@ -94,7 +117,7 @@ def test_the_driver_flag_reaches_the_device_and_the_history(monkeypatch, tmp_pat
 def test_bad_config_exits_2(monkeypatch, tmp_path):
     path = tmp_path / "config.toml"
     path.write_text("unknown = 1\n", encoding="utf-8")
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     assert cli.main(["--config", str(path)]) == cli.EXIT_BAD_REQUEST
 
 
@@ -127,7 +150,7 @@ def test_scheduled_uses_config_start_and_clock_offset(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
     monkeypatch.setattr(cli, "ntp_offset", lambda server: 0.25)
     run = fake_run([("18:00 - 19:00", True)])
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run)
 
     assert cli.main(["--config", str(tmp_path / "missing.toml"), "--scheduled"]) == 0
@@ -148,7 +171,7 @@ def test_without_an_ntp_answer_the_run_waits_by_the_pc_clock(
     monkeypatch.setattr(cli, "ntp_offset", lambda server: servers.append(server) or answer)
     run = fake_run([("18:00 - 19:00", True)])
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run)
 
     assert cli.main(["--config", str(path), "--scheduled"]) == 0
@@ -180,7 +203,7 @@ def test_summary_is_sent_to_telegram_even_on_device_error(monkeypatch, tmp_path)
     def connect(config, driver):
         raise EmulatorError("MuMu did not start")
 
-    monkeypatch.setattr(cli, "connect_device", connect)
+    use_connect(monkeypatch, connect)
     assert cli.main(["--config", str(path)]) == cli.EXIT_DEVICE
     assert sent == ["court-booker: 0/0 ok\nError: MuMu did not start"]
 
@@ -207,7 +230,7 @@ def test_the_notification_reports_a_config_that_did_not_load(tmp_path, windows_n
 def test_the_notification_follows_its_settings(monkeypatch, tmp_path, windows_notifications):
     path = tmp_path / "config.toml"
     path.write_text('notification_language = "en"\n', encoding="utf-8")
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", fake_run([("18:00 - 19:00", True)]))
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
     cli.main(["--config", str(path)])
@@ -266,7 +289,7 @@ def test_a_frozen_device_is_reported_then_ends_the_process(monkeypatch, tmp_path
     def run_booking(device, config, *, results, **kwargs):
         raise DeviceNotRespondingError(error)
 
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 
@@ -326,7 +349,7 @@ def test_a_frozen_device_is_not_closed(monkeypatch, tmp_path):
     def run_booking(device, config, *, results, **kwargs):
         raise DeviceNotRespondingError("MuMu did not answer click within 60 s")
 
-    monkeypatch.setattr(cli, "connect_device", lambda config, driver: device)
+    use_connect(monkeypatch, lambda config, driver: device)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 
@@ -362,7 +385,7 @@ def test_an_error_before_the_rounds_leaves_mumu_open(monkeypatch, tmp_path, clos
     def run_booking(device, config, *, results, **kwargs):
         raise AppNotReadyError("The app is logged out")
 
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 
@@ -377,7 +400,7 @@ def test_a_frozen_mumu_is_not_closed(monkeypatch, tmp_path, closed_mumu):
         results.append(RoundResult("18:00 - 19:00", False, "MuMu did not answer", 60.0))
         raise DeviceNotRespondingError("MuMu did not answer click within 60 s")
 
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 
@@ -398,17 +421,18 @@ def test_close_emulator_shuts_the_configured_instance_down(monkeypatch):
     shut = []
 
     class FakeMuMu:
-        def __init__(self, manager, index):
-            self.manager, self.index = manager, index
+        def __init__(self, manager, index, attempts=1):
+            self.manager, self.index, self.attempts = manager, index, attempts
 
         def shutdown(self):
-            shut.append((self.manager, self.index))
+            shut.append((self.manager, self.index, self.attempts))
 
     monkeypatch.setattr(cli, "MuMu", FakeMuMu)
 
     close_emulator(Config(mumu_manager="C:/MuMu/MuMuManager.exe", mumu_index=1))
 
-    assert shut == [(Path("C:/MuMu/MuMuManager.exe"), 1)]
+    # Retried like a run's other MuMuManager commands: both instances close at once.
+    assert shut == [(Path("C:/MuMu/MuMuManager.exe"), 1, 3)]
 
 
 INSTANCES = """slots = ["18:00 - 19:00", "19:00 - 20:00"]
@@ -456,7 +480,7 @@ def test_another_instance_books_on_its_own(
         locks.extend(sorted(item.name for item in data_home.glob("*.lock")))
         return run(device, config, results=results, **kwargs)
 
-    monkeypatch.setattr(cli, "connect_device", fake_connect)
+    use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 

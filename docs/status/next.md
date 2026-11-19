@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
 ## Start of a session
 
@@ -11,24 +11,27 @@ Last updated: 2026-11-18.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: update to 1.1.1 by the button, then watch the 06:00 runs
+## Next task: watch the 06:00 runs of 1.1.2
 
-1. Once the release page of 1.1.1 is up, the user presses "Cập nhật lên 1.1.1" outside
-   05:45-06:05. It proves the installer fix: check that the engine, the window and Windows all
-   report 1.1.1 and that no process of the app was left; then remove the update issue from
-   [known-issues.md](known-issues.md).
-2. The login of MuMu 1 is saved in the vault (2026-11-18); the user may change the Vinhomes
-   password and save the new one under "Tự đăng nhập lại" of machine 2.
-3. Watch the next 06:00 logs; a run that logged in again shows "Logged in again", and one that
-   stopped on an unexplained failure saved a screenshot in `logs\screens`.
-4. Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
-   keeps the popup away; two tries froze MuMu. Not needed by the run.
+1.1.2 repairs getting ready by itself (`ready.py`, see [architecture](../architecture.md)).
+Check each 06:00 log for `repaired` events and what they fixed; a failure that ended the run
+before 05:58 is a gap to study.
+
+Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
+still waits on the home screen and opens the utilities list at 05:59, as before. Repairs
+during the rounds come later, in their own task.
+
+Known limits of the setup repairs: the deadline is checked between repairs, so a MuMu restart
+begun just before 05:58 may end after the warm-up (worst case about two minutes, 41-49 s
+seen); a fault in the last 15 s before the start is not repaired.
 
 ## After that
 
-- Add each 06:00 run to [progress.md](progress.md). After a week without a failure
-  (2026-11-10), remove the runner folder (`git worktree remove ..\runner`) and its sections in
-  CONTRIBUTING and CLAUDE.md.
+- Add each 06:00 run to [progress.md](progress.md). After a week without a failure, remove the
+  runner folder (`git worktree remove ..\runner`) and its sections in CONTRIBUTING and
+  CLAUDE.md.
+- Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
+  keeps the popup away; two tries froze MuMu. Not needed by the run.
 - Ruled out for now: code signing (SmartScreen's "Run anyway" stays). Waiting on something:
   another subdivision's survey needs access to one, and choosing days of the week is not
   decided.

@@ -16,7 +16,7 @@ from court_booker.adb import AUTO
 from court_booker.clock import NtpClock, ntp_offset, resolve_start
 from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
-from court_booker.emulator import MuMu
+from court_booker.emulator import CALL_ATTEMPTS, MuMu
 from court_booker.engine import engine_command
 from court_booker.errors import (
     AppNotReadyError,
@@ -34,7 +34,8 @@ from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_
 from court_booker.notify import format_notification, format_summary, send_telegram, send_windows
 from court_booker.paths import data_folder
 from court_booker.power import keep_awake
-from court_booker.runner import AUTO_DRIVER, DRIVERS, RoundResult, connect_device, run_booking
+from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
+from court_booker.runner import RoundResult, run_booking
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -207,7 +208,7 @@ def close_emulator(config: Config) -> None:
     """Shut the MuMu instance down; a failure only logs a warning, as the run is over."""
     logger.info("Closing MuMu instance %d", config.mumu_index)
     try:
-        MuMu(Path(config.mumu_manager), config.mumu_index).shutdown()
+        MuMu(Path(config.mumu_manager), config.mumu_index, attempts=CALL_ATTEMPTS).shutdown()
     except EmulatorError as exc:
         logger.warning("Could not close MuMu: %s", exc)
 
@@ -258,6 +259,7 @@ def notify_windows(
     target: date,
     instance: int | None = None,
     account: str | None = None,
+    repairs: int = 0,
 ) -> None:
     """Show the outcome as a Windows notification if it is on; a failure only logs."""
     if not config.windows_notification:
@@ -273,6 +275,7 @@ def notify_windows(
             language=config.notification_language,
             instance=instance,
             account=account,
+            repairs=repairs,
         )
         send_windows(title, body)
     except Exception:  # reporting never costs a booking
@@ -365,6 +368,7 @@ def main(argv: list[str] | None = None) -> int:
     results: list[RoundResult] = []
     config: Config | None = None
     device: Any = None
+    supervisor: Supervisor | None = None
     error: str | None = None
     frozen = False
     start: datetime | None = None
@@ -419,12 +423,12 @@ def main(argv: list[str] | None = None) -> int:
             clock = NtpClock(config.ntp_server, ntp_offset)
             if start is not None:
                 clock.measure()
-            device = connect_device(config, args.driver)
-            logger.info("Driving the device with %s", device.driver)
-            report(EventKind.DEVICE_READY, driver=device.driver)
+            supervisor = Supervisor(config, args.driver, report, now=clock.now)
+            device = supervisor.device
             run_booking(
                 device,
                 config,
+                supervisor=supervisor,
                 dry_run=args.dry_run,
                 start=start,
                 clock=clock,
@@ -471,6 +475,7 @@ def main(argv: list[str] | None = None) -> int:
         target=(start or datetime.now()).date() + timedelta(days=DAYS_AHEAD),
         instance=instance,
         account=account.subdivision,
+        repairs=0 if supervisor is None else supervisor.repairs,
     )
     # A real run closes MuMu once its rounds ran; the next run starts it again. MuMu stays
     # open after a dry run, Ctrl+C or an error before the rounds, for whoever is at the PC,
@@ -491,6 +496,7 @@ def main(argv: list[str] | None = None) -> int:
         lock.release()
     if history is not None:
         close_history(history)
-    if frozen:
+    # A device call that hung, even one a repair got past, leaves a thread waiting on it.
+    if frozen or getattr(device, "ever_hung", False) or getattr(device, "hung", False):
         end_process(code)
     return code

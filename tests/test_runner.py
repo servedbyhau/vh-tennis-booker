@@ -2,7 +2,6 @@
 
 import contextlib
 import logging
-import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -12,11 +11,8 @@ import court_booker.runner as runner
 from court_booker.clock import NtpClock
 from court_booker.config import Config
 from court_booker.errors import (
-    AdbNotFoundError,
     AppNotReadyError,
     DeviceNotRespondingError,
-    DriverError,
-    DriverUnavailableError,
     NavigationError,
     QuotaFullError,
     SlotUnavailableError,
@@ -24,7 +20,6 @@ from court_booker.errors import (
 from court_booker.events import EventKind, MemorySink, Reporter
 from court_booker.flow import Booked
 from court_booker.screen import Node, Screen
-from court_booker.watchdog import GuardedDevice, Watchdog
 
 FULL_SLOT = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
 
@@ -37,11 +32,14 @@ class FakeBooker:
         self.commands = 0
         self.last_screen = Screen([FULL_SLOT])
 
-    def prepare(self):
+    def prepare(self, restart=False):
         self.events.append("prepare")
 
     def locate_entry(self):
         self.events.append("locate")
+
+    def check_home(self):
+        self.events.append("check")
 
     def book(self, slot, target, dry_run=False):
         if slot == "18:00 - 19:00":
@@ -75,7 +73,7 @@ class FakeClock:
         self.events = events
 
     def now(self):
-        raise AssertionError("the tests replace wait_until")
+        return datetime(2026, 10, 10, 5, 45)  # the tests replace wait_until
 
     def measure(self):
         self.events.append("measure")
@@ -100,8 +98,11 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     config = Config(slots=["19:00 - 20:00"], warm_up_seconds=60)
     runner.run_booking(FakeDevice(), config, start=start, clock=FakeClock(events))
 
+    # Checked every minute from 05:46 until the deadline, 05:58, while waiting on the home screen.
+    checks = [datetime(2026, 10, 10, 5, 46) + timedelta(minutes=minute) for minute in range(12)]
     assert events == [
         "prepare",
+        *[step for tick in checks for step in (tick, "check")],
         start - timedelta(seconds=60),
         "measure",  # once more, as Windows may have set the PC clock since the first check
         "locate",
@@ -157,12 +158,17 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
     monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
 
     results = runner.run_booking(
-        FakeDevice(), Config(slots=["19:00 - 20:00"]), start=datetime(2026, 10, 10, 6, 0)
+        FakeDevice(),
+        Config(slots=["19:00 - 20:00"]),
+        start=datetime(2026, 10, 10, 6, 0),
+        clock=FakeClock([]),  # 05:45: time to repair before the start
     )
 
-    assert bookers[0].events == ["prepare", "locate", "locate"]
+    # The app made ready again, then the list opened at once, and read just before the start.
+    steps = ["prepare", "locate", "prepare", "locate", "locate"]
+    assert [e for e in bookers[0].events if e != "check"] == steps
     assert results[0].ok
-    assert "Could not open the utilities list yet" in caplog.text
+    assert "The run was no longer ready: Tapped 'Tiện ích' but the next screen" in caplog.text
 
 
 def test_failed_round_logs_the_last_screen(monkeypatch, caplog):
@@ -183,7 +189,7 @@ def test_failed_round_logs_the_last_screen(monkeypatch, caplog):
 
 def test_failed_preparation_logs_the_last_screen(monkeypatch, caplog):
     class LoggedOutBooker(FakeBooker):
-        def prepare(self):
+        def prepare(self, restart=False):
             raise AppNotReadyError("The app did not show 'Tiện ích'")
 
     monkeypatch.setattr(runner, "Booker", LoggedOutBooker)
@@ -249,7 +255,7 @@ def test_an_unexplained_failure_of_the_last_round_saves_the_screen(monkeypatch, 
 
 def test_an_app_not_made_ready_saves_the_screen(monkeypatch, tmp_path):
     class LoggedOutBooker(FakeBooker):
-        def prepare(self):
+        def prepare(self, restart=False):
             raise AppNotReadyError("The app is logged out")
 
     shots, steps = shots_of(monkeypatch, tmp_path, LoggedOutBooker, ["19:00 - 20:00"])
@@ -380,200 +386,3 @@ def test_the_quota_notice_skips_the_rounds_left(monkeypatch, caplog, failing):
     }
     assert sink.kinds.count(EventKind.SLOT_STARTED) == failing + 1
     assert f"Booking quota used up; skipping {', '.join(slots[failing + 1 :])}" in caplog.text
-
-
-class TouchDevice:
-    """Record taps the way uiautomator2 takes them: ``touch.down(x, y).up(x, y)``."""
-
-    serial = "127.0.0.1:16384"
-
-    def __init__(self, release=None):
-        self.events = []
-        self.touch = self
-        self.release = release
-        """An event ``up`` waits for, to stand for a frozen emulator."""
-
-    def down(self, x, y):
-        self.events.append(("down", x, y))
-        return self
-
-    def up(self, x, y):
-        if self.release is not None:
-            self.release.wait()
-        self.events.append(("up", x, y))
-        return self
-
-    def click(self, x, y):
-        self.events.append(("click", x, y))
-
-    def press(self, key):
-        self.events.append(("press", key))
-        return True
-
-
-def test_quick_tap_touches_down_then_up_at_the_point():
-    device = TouchDevice()
-
-    runner.QuickTap(device).click(270, 1537)
-
-    assert device.events == [("down", 270, 1537), ("up", 270, 1537)]
-
-
-def test_quick_tap_passes_everything_else_to_the_device():
-    device = TouchDevice()
-    quick = runner.QuickTap(device)
-
-    assert quick.press("back") is True
-    assert quick.serial == "127.0.0.1:16384"
-    assert device.events == [("press", "back")]
-
-
-def test_a_quick_tap_is_one_time_limited_call():
-    release = threading.Event()
-    device = GuardedDevice(runner.QuickTap(TouchDevice(release)), Watchdog(timeout=0.05))
-    try:
-        with pytest.raises(DeviceNotRespondingError, match="did not answer click within"):
-            device.click(270, 1537)
-    finally:
-        release.set()
-
-
-class FakeDriver:
-    driver = "instrumentation"
-
-
-class FakeAdb:
-    def __init__(self, path):
-        self.shells = []
-
-    def shell(self, serial, *args):
-        self.shells.append(" ".join(args))
-        return ""
-
-
-@pytest.fixture
-def drivers(monkeypatch):
-    """Connect without MuMu or adb; the driver starts unless ``drivers.driver`` is an error."""
-    state = type("Drivers", (), {"driver": FakeDriver(), "tried": [], "adb": None})()
-
-    def make_adb(path):
-        state.adb = FakeAdb(path)
-        return state.adb
-
-    def connect_driver(adb, serial):
-        state.tried.append("instrumentation")
-        if isinstance(state.driver, BaseException):
-            raise state.driver
-        return state.driver
-
-    def connect_uiautomator2(serial, watchdog):
-        state.tried.append("uiautomator2")
-        return TouchDevice()
-
-    monkeypatch.setattr(runner, "Adb", make_adb)
-    monkeypatch.setattr(runner, "find_adb", lambda path, dirs: "adb")
-    monkeypatch.setattr(runner, "resolve_device", lambda adb, device, preferred: "serial")
-    monkeypatch.setattr(runner, "connect_driver", connect_driver)
-    monkeypatch.setattr(runner, "connect_uiautomator2", connect_uiautomator2)
-    return state
-
-
-def test_the_driver_drives_the_device_when_it_starts(drivers):
-    device = runner.connect_device(Config(mumu_manager=""))
-
-    assert device.driver == "instrumentation"
-    assert drivers.tried == ["instrumentation"]
-
-
-@pytest.mark.parametrize(
-    "error",
-    [
-        DriverUnavailableError("The driver did not answer 10 s after being started"),
-        DriverError("The driver refused hello: boom"),
-        KeyError("version"),
-    ],
-)
-def test_without_the_driver_uiautomator2_drives_the_device(drivers, caplog, error):
-    drivers.driver = error
-
-    device = runner.connect_device(Config(mumu_manager=""))
-
-    assert device.driver == "uiautomator2"
-    assert drivers.tried == ["instrumentation", "uiautomator2"]
-    assert f"Driver unavailable ({error}); using uiautomator2" in caplog.text
-    # A driver left running would hold UiAutomation, which uiautomator2 needs.
-    assert drivers.adb.shells == ["am force-stop dev.courtbooker.driver"]
-
-
-def test_a_frozen_emulator_is_not_handed_to_uiautomator2(drivers):
-    drivers.driver = DeviceNotRespondingError("MuMu did not answer connect within 60 s")
-
-    with pytest.raises(DeviceNotRespondingError):
-        runner.connect_device(Config(mumu_manager=""))
-
-    assert drivers.tried == ["instrumentation"]
-
-
-def test_asking_for_the_driver_fails_the_run_without_it(drivers):
-    drivers.driver = DriverUnavailableError("The driver APK is missing")
-
-    with pytest.raises(DriverUnavailableError):
-        runner.connect_device(Config(mumu_manager=""), runner.INSTRUMENTATION)
-
-    assert drivers.tried == ["instrumentation"]
-
-
-def test_asking_for_uiautomator2_leaves_the_driver_alone(drivers):
-    device = runner.connect_device(Config(mumu_manager=""), runner.UIAUTOMATOR2)
-
-    assert device.driver == "uiautomator2"
-    assert drivers.tried == ["uiautomator2"]
-
-
-def test_closing_uiautomator2_leaves_its_server_running():
-    device = TouchDevice()
-
-    runner.QuickTap(device).close()  # TouchDevice has no close(): nothing reaches it
-
-    assert device.events == []
-
-
-def test_a_wrong_mumu_path_is_found_again(tmp_path, monkeypatch, caplog):
-    found = tmp_path / "nx_main" / "MuMuManager.exe"
-    monkeypatch.setattr(runner, "find_mumu_manager", lambda configured: found)
-    caplog.set_level(logging.INFO)
-
-    assert runner.find_manager("C:/old/MuMuManager.exe") == found
-    assert "MuMu found at" in caplog.text
-
-
-def test_a_missing_mumu_keeps_the_configured_path(monkeypatch):
-    monkeypatch.setattr(runner, "find_mumu_manager", lambda configured: None)
-
-    assert str(runner.find_manager("C:/old/MuMuManager.exe")) == str(Path("C:/old/MuMuManager.exe"))
-
-
-def test_the_screen_is_set_before_mumu_starts(tmp_path, monkeypatch):
-    calls = []
-
-    class FakeMuMu:
-        def __init__(self, manager, index):
-            self.manager = manager
-
-        def ensure_started(self, timeout):
-            calls.append("start")
-
-        def adb_serial(self):
-            return "127.0.0.1:16384"
-
-    def no_adb(path, folders):
-        raise AdbNotFoundError("stop here")
-
-    monkeypatch.setattr(runner, "find_mumu_manager", lambda configured: tmp_path / "m.exe")
-    monkeypatch.setattr(runner, "MuMu", FakeMuMu)
-    monkeypatch.setattr(runner, "prepare_screen", lambda mumu: calls.append("screen"))
-    monkeypatch.setattr(runner, "find_adb", no_adb)
-
-    with pytest.raises(AdbNotFoundError):
-        runner.connect_device(Config(mumu_manager="C:/old/MuMuManager.exe"))
-    assert calls == ["screen", "start"]

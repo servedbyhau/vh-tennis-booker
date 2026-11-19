@@ -87,6 +87,34 @@ def test_notification_has_a_line_per_round_in_vietnamese():
     assert body.splitlines() == ["✅ 18:00 - 19:00 · S6", "❌ 19:00 - 20:00 · Hết chỗ"]
 
 
+@pytest.mark.parametrize(
+    ("language", "line"),
+    [
+        ("vi", "🔧 Đã tự sửa 2 lỗi khi chuẩn bị"),
+        ("en", "🔧 Repaired 2 problem(s) while getting ready"),
+    ],
+)
+def test_notification_counts_the_repairs_made_while_getting_ready(language, line):
+    _, body = format_notification(
+        RESULTS,
+        None,
+        dry_run=False,
+        interrupted=False,
+        target=TARGET,
+        court=COURT,
+        language=language,
+        repairs=2,
+    )
+
+    assert body.splitlines()[-1] == line
+
+
+def test_notification_without_repairs_says_nothing_of_them():
+    _, body = notification(RESULTS)
+
+    assert "🔧" not in body
+
+
 def test_notification_in_english():
     title, body = notification(RESULTS, language="en")
 

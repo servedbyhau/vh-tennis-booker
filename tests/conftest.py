@@ -85,6 +85,16 @@ def no_popup_wait(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def repair_pauses(monkeypatch):
+    """Record the supervisor's pauses between repairs instead of sleeping through them."""
+    from court_booker import ready
+
+    paused = []
+    monkeypatch.setattr(ready, "pause", paused.append)
+    return paused
+
+
+@pytest.fixture(autouse=True)
 def saved_logins(monkeypatch):
     """Keep the logins in memory, so no test reads or writes the Windows vault."""
     from court_booker import credentials

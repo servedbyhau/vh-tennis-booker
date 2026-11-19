@@ -129,8 +129,9 @@ npm run api:types                                    # src/api/schema.d.ts from 
   (`RequestError` 2, `DeviceError` 3, `AppNotReadyError` 4, `LockHeldError` 5, Ctrl+C 130).
   Each `[[instances]]` table (another MuMu instance and account) runs as its own
   `--instance N` process.
-- `runner.py` connects the device (`emulator.py`, `adb.py`, `driver.py` with uiautomator2 as
-  fallback) and runs the rounds; `watchdog.py` limits every device call to 60 s.
+- `ready.py` connects the device (`emulator.py`, `adb.py`, `driver.py` with uiautomator2 as
+  fallback) and repairs MuMu, ADB, the driver and the app until 05:58; `runner.py` runs the
+  rounds; `watchdog.py` limits every device call to 60 s.
 - `engine.py` says how to start the engine (the packaged exe alone, else `python -m`); the
   dry run, a second instance and the daily task all use it.
 - `driver.py` talks to the instrumentation APK built from `android/` by
@@ -189,7 +190,8 @@ Utilities list. Details, labels and their dates are in `docs/field-notes.md`.
   round (the quota one, 2 slots a day and 8 a month, also skips the rounds left). A frame
   without labels shows before either, so a page going away proves nothing; neither within
   `timeout` fails the round as "Outcome unknown".
-- MuMu can freeze; a device call then never returns, so the watchdog ends the run after
+- MuMu can freeze; a device call then never returns. Before 06:00 the run restarts a frozen
+  MuMu by ending its process (`ready.py`); during the rounds the watchdog ends the run after
   60 s (no restart, no retry).
 
 ## Environment

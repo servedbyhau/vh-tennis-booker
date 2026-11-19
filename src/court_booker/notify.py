@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import logging
-import os
 import re
 import subprocess
 import sys
@@ -16,6 +15,7 @@ from typing import Callable
 from xml.sax.saxutils import escape
 
 from court_booker import catalog
+from court_booker.processes import powershell
 from court_booker.runner import RoundResult
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,7 @@ TEXTS = {
         "stopped": "đã dừng",
         "dry_run": " (chạy thử)",
         "otherSubdivision": "⚠️ Tài khoản thuộc {subdivision}, sân {court} không thuộc phân khu này",
+        "repaired": "🔧 Đã tự sửa {count} lỗi khi chuẩn bị",
         "test_title": "Thông báo thử",
         "test_body": "Court Booker sẽ báo kết quả ở đây sau mỗi lượt đặt sân.",
     },
@@ -72,6 +73,7 @@ TEXTS = {
         "stopped": "stopped",
         "dry_run": " (dry run)",
         "otherSubdivision": "⚠️ The account is in {subdivision}; court {court} is not",
+        "repaired": "🔧 Repaired {count} problem(s) while getting ready",
         "test_title": "Test notification",
         "test_body": "Court Booker will report here after every booking run.",
     },
@@ -93,6 +95,7 @@ REASONS = {
         "loginRefused": "App từ chối tài khoản đã lưu: {message}",
         "loginFailed": "Chưa tự đăng nhập lại được",
         "notReady": "App Vinhomes chưa mở được",
+        "appMissing": "App Vinhomes chưa được cài trên MuMu",
         "other": "Có lỗi, xem nhật ký",
     },
     "en": {
@@ -109,6 +112,7 @@ REASONS = {
         "loginRefused": "The app refused the saved login: {message}",
         "loginFailed": "Could not log in again",
         "notReady": "The Vinhomes app did not open",
+        "appMissing": "The Vinhomes app is not installed on MuMu",
         "other": "Error, see the activity log",
     },
 }
@@ -138,6 +142,7 @@ _PATTERNS = [
     ),
     # Runs before the saved login asked to check the login; a logout is told apart since.
     (re.compile(r"check that it is logged in$|; check the app on MuMu \d+$"), "notReady"),
+    (re.compile(r" is not installed on .+; install it$"), "appMissing"),
 ]
 """The engine's reasons as it writes them, as in ``ui/src/reasons.ts``."""
 
@@ -227,6 +232,7 @@ def format_notification(
     language: str = DEFAULT_LANGUAGE,
     instance: int | None = None,
     account: str | None = None,
+    repairs: int = 0,
 ) -> tuple[str, str]:
     """Return the title and the text of the notification for a finished run.
 
@@ -234,7 +240,8 @@ def format_notification(
     if the round did not read it), or why it failed. A run that failed before its rounds
     has one line for its error instead. The title names the MuMu ``instance`` if given, as
     each instance of a run with several reports on its own. A last line warns when the
-    catalog lists ``court`` outside ``account``, the subdivision the home screen told.
+    catalog lists ``court`` outside ``account``, the subdivision the home screen told, and
+    one says how many ``repairs`` the run made while getting ready.
     """
     if language not in TEXTS:  # the config is not validated when loaded
         language = DEFAULT_LANGUAGE
@@ -268,6 +275,8 @@ def format_notification(
     if chosen is not None and catalog.court_outside(account, court):
         warning = texts["otherSubdivision"].format(subdivision=chosen.name, court=court_name(court))
         lines.append(warning)
+    if repairs:
+        lines.append(texts["repaired"].format(count=repairs))
     return title, "\n".join(lines)
 
 
@@ -290,7 +299,7 @@ def send_windows(title: str, body: str, run: Run | None = None) -> bool:
         run = subprocess.run
     script = _SCRIPT.format(app_id=APP_ID, app_name=APP_NAME, xml=_toast_xml(title, body))
     command = [
-        _powershell(),
+        powershell(),
         "-NoProfile",
         "-NonInteractive",
         "-EncodedCommand",
@@ -323,9 +332,3 @@ def _toast_xml(title: str, body: str) -> str:
         f"<text>{escape(title, entities)}</text><text>{escape(body, entities)}</text>"
         "</binding></visual></toast>"
     )
-
-
-def _powershell() -> str:
-    """Return Windows PowerShell's full path, so no other powershell.exe on PATH runs."""
-    root = os.environ.get("SYSTEMROOT", "C:\\Windows")
-    return os.path.join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe")

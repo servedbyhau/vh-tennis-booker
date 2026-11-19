@@ -1521,6 +1521,45 @@ def test_prepare_keeps_running_app_and_goes_back_to_home():
     assert app.screen == "home"
 
 
+def test_a_check_of_the_home_screen_sends_two_commands_and_no_tap():
+    app = booking_app(screen="home")
+    app.current = "com.vinhomes.resident"
+    booker = Booker(app, Config())
+
+    booker.check_home()
+
+    assert app.calls == [] and app.taps == []
+    assert booker.commands == 2  # the app in front and one screen read
+
+
+def test_a_check_brings_a_screen_the_app_left_back_home():
+    app = booking_app(screen="utilities")
+    app.current = "com.vinhomes.resident"
+
+    Booker(app, Config()).check_home()
+
+    assert app.calls == ["back"]
+    assert app.screen == "home"
+
+
+def test_a_check_finds_another_app_in_front():
+    app = booking_app(screen="home")
+    app.current = "com.android.launcher3"
+
+    with pytest.raises(AppNotReadyError, match="no longer in front"):
+        Booker(app, Config()).check_home()
+
+
+def test_a_try_after_a_failed_prepare_restarts_the_app_even_without_restart_app():
+    app = booking_app(screen="utilities")
+    app.current = "com.vinhomes.resident"
+
+    Booker(app, Config(restart_app=False)).prepare(restart=True)
+
+    assert app.calls == ["app_stop", "app_start"]
+    assert app.screen == "home"
+
+
 def test_located_entry_opens_the_utilities_list_from_home_then_reads_it_again():
     app = booking_app(screen="home")
     booker = Booker(app, Config())
@@ -1565,8 +1604,11 @@ def test_prepare_reports_an_app_that_shows_nothing_it_knows():
     app = booking_app(screen="loading")
     app.launches_to = None
 
+    booker = Booker(app, Config())
+    booker.app_start_timeout = 1
+
     with pytest.raises(AppNotReadyError, match="check the app on MuMu 0") as raised:
-        Booker(app, Config(boot_timeout=1)).prepare()
+        booker.prepare()
 
     assert failure_reason(str(raised.value)) == "App Vinhomes chưa mở được"
 
@@ -1966,11 +2008,14 @@ def test_an_app_that_shows_nothing_known_names_the_labels_of_each_language():
     app = booking_app(screen="loading")
     app.launches_to = None
 
+    booker = Booker(app, Config())
+    booker.app_start_timeout = 1
+
     with pytest.raises(
         AppNotReadyError,
         match=r"did not show 'Tiện ích', 'Sân Tennis', 'Utilities' or 'Tennis' in 1 s; ",
     ):
-        Booker(app, Config(boot_timeout=1)).prepare()
+        booker.prepare()
 
 
 def test_the_sport_picks_the_tile_to_tap():

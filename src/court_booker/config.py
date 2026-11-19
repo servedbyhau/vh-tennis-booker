@@ -140,7 +140,7 @@ class Config:
     """MuMuManager.exe used to start the emulator; empty skips starting it."""
     mumu_index: int = 0
     boot_timeout: float = 180.0
-    """Seconds to wait for the emulator to boot and for the app to open."""
+    """Seconds the first boot of the emulator in a run may take; a restart waits 90 s."""
     restart_app: bool = True
     """Stop and start the app before booking instead of reusing its current screen."""
     start_at: str = "06:00"

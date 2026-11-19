@@ -9,7 +9,12 @@ import pytest
 
 from court_booker import driver
 from court_booker.driver import DriverClient, DriverDevice, connect_driver, ensure_installed
-from court_booker.errors import DeviceNotRespondingError, DriverError, DriverUnavailableError
+from court_booker.errors import (
+    AppMissingError,
+    DeviceNotRespondingError,
+    DriverError,
+    DriverUnavailableError,
+)
 
 SERIAL = "127.0.0.1:16384"
 APK_PATH = "/data/app/~~x/dev.courtbooker.driver-y/base.apk"
@@ -277,6 +282,18 @@ def test_the_app_is_started_and_stopped_through_adb():
         "am force-stop com.vinhomes.resident",
         "monkey -p com.vinhomes.resident -c android.intent.category.LAUNCHER 1",
     ]
+
+
+def test_an_app_not_installed_is_a_failure_no_repair_can_change():
+    class NoAppAdb(FakeAdb):
+        def shell(self, serial, *args):
+            super().shell(serial, *args)
+            return "** No activities found to run, monkey aborted.\n"
+
+    driver_device = device(driver_stream(), NoAppAdb())
+
+    with pytest.raises(AppMissingError, match="is not installed on 127"):
+        driver_device.app_start("com.vinhomes.resident")
 
 
 def test_closing_stops_the_driver_and_drops_the_forward():

@@ -4,16 +4,14 @@ Open bugs, by severity: **1** may cost the 06:00 run, **2** reports wrongly or t
 **3** UI or docs. Remove an issue once it is fixed and confirmed (`CHANGELOG.md` keeps the
 history). Ideas the user ruled out are listed last, so they are not proposed again.
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
-- **1. The update button can leave a half-installed app.** On 2026-11-18 at 13:47 the button
-  installed 1.1.0's UI and libraries but not `court-booker.exe`, which a running backend held
-  (the window stops only a backend it started itself, `desktop/src-tauri/src/lib.rs`); the
-  installer stopped there, Windows still listed 1.0.1, and the UI showed "v1.0.1" from the old
-  backend, with the user seeing an error. Fixed by hand at 14:20: the window and its backend
-  stopped, the release's installer run with `/S` (1.1.0 everywhere, the task and the data
-  kept). Fixed on `fix/desktop-update-stops-backend` (the installer stops every process of the
-  app first, never a booking); confirmed once the update to the next version goes through.
+## Severity 1
+
+- **A failure while the run gets ready ended it, 15 minutes before 06:00** (2026-11-19, 1.1.1):
+  `MuMuManager control launch` failed once ("nemu-api init failed") and machine 1 booked
+  nothing. Fixed on `fix/startup-repair` and `fix/setup-supervisor` (every layer repaired
+  until 05:58), not released; the rest is planned in [next.md](next.md).
 
 ## Unhandled situations
 
@@ -34,8 +32,9 @@ crashing mid-round, ADB lost mid-run. Fixed when a log shows one.
 - Tapping by MuMu's clock instead of NTP (2026-10-24): it would save a few hundred
   milliseconds at most. Measured at 21:00 on 2026-10-24: MuMu ran 0.71 s behind NTP, and the
   app seems to check against MuMu's clock; the 0.2 s re-tap covers most of it.
-- A health check at 05:58, backup slots or courts, Telegram setup, opening the calendar
-  before 06:00, booking two slots in one flow, double taps, an AccessibilityService agent.
+- Backup slots or courts, Telegram setup, opening the calendar before 06:00, booking two
+  slots in one flow, double taps, an AccessibilityService agent. (A check while the run
+  waits, ruled out at first, is done since 2026-11-19: one read a minute until 05:58.)
 - Risks reviewed on 2026-10-10, fixed only if a log shows them: a slow first tap after a long
   idle, the 2 s re-tap threshold, load from continuous screen reads, uiautomator2 not pinned,
   Windows Update restarting the PC.

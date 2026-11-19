@@ -27,7 +27,12 @@ from pathlib import Path
 from typing import Any, BinaryIO, Callable
 
 from court_booker.adb import LOCALHOST, Adb
-from court_booker.errors import DeviceNotRespondingError, DriverError, DriverUnavailableError
+from court_booker.errors import (
+    AppMissingError,
+    DeviceNotRespondingError,
+    DriverError,
+    DriverUnavailableError,
+)
 from court_booker.geometry import parse_bounds
 
 logger = logging.getLogger(__name__)
@@ -45,6 +50,8 @@ _HELLO_INTERVAL = 0.1
 _U2_SERVER = "'com.wetest.uia2.Mai[n]'"
 """The uiautomator2 server process, which holds UiAutomation while it runs. The pattern does
 not match the shell running ``pkill``, whose command line holds the pattern itself."""
+_NO_ACTIVITY = "No activities found to run"
+"""What ``monkey -p`` prints for a package that is not installed."""
 _LOG = "/data/local/tmp/court-driver.log"
 """What ``am instrument`` prints, such as a crash of the driver."""
 
@@ -182,8 +189,14 @@ class DriverDevice:
         Path(filename).write_bytes(self.adb.screencap(self.serial))
 
     def app_start(self, package: str) -> None:
-        """Open ``package`` at its launcher activity, as uiautomator2 does."""
-        self.shell(f"monkey -p {package} -c android.intent.category.LAUNCHER 1")
+        """Open ``package`` at its launcher activity, as uiautomator2 does.
+
+        Raises :class:`AppMissingError` when the package is not installed: monkey then finds
+        no activity to start.
+        """
+        output = self.shell(f"monkey -p {package} -c android.intent.category.LAUNCHER 1")
+        if _NO_ACTIVITY in output:
+            raise AppMissingError(f"{package} is not installed on {self.serial}; install it")
 
     def app_stop(self, package: str) -> None:
         self.shell(f"am force-stop {package}")
