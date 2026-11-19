@@ -327,6 +327,11 @@ slots and the booked date and time read the same.
   and `MuMuManager control shutdown` answers but does nothing; `MuMuNxDevice` must be ended by
   hand. A running MuMu shuts down with it within 18 s and starts again in about 24 s (42-48 s
   when the run starts it from cold).
+- A MuMuManager command can fail at once for no lasting reason: at 05:45:05 on 2026-11-19
+  `control launch -v 0` exited with 4294966796 and printed `{"errcode": -500, "errmsg":
+  "nemu-api init failed"}` within 0.7 s, while instance 1's process was starting its own
+  MuMu (its launch, 0.3 s later, worked). The two launches had overlapped the same way on
+  2026-11-15 to 18 without a failure. Another try is the fix (`emulator.CALL_ATTEMPTS`).
 - A second instance for a second account (2026-10-25): `MuMuManager clone -v 0`, with
   instance 0 off, copies its disk (5.4 GB, about 70 s) with the app, the driver and the screen
   settings. The command prints `-502 mainnx request failed` after 10 s while MuMu's main process

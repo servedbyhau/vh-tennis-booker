@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-from court_booker.emulator import MuMu
+from court_booker.emulator import CALL_ATTEMPTS, RETRY_DELAY, MuMu
 from court_booker.errors import EmulatorError
 
 RUNNING = {
@@ -152,8 +152,100 @@ def test_shutdown_asks_mumu_to_shut_the_instance_down(manager_path):
 
 
 def test_failed_command_raises(manager_path):
+    calls = []
+
     def run(argv):
+        calls.append(argv)
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="no such player")
 
     with pytest.raises(EmulatorError, match="no such player"):
         MuMu(manager_path, run=run).is_started()
+    assert len(calls) == 1  # the setup checks and the backend answer at once
+
+
+NEMU_FAILED = '{\n  "errcode": -500,\n  "errmsg": "nemu-api init failed"\n}'
+"""What ``control launch`` printed on 2026-11-19, exit code 4294966796."""
+
+
+class FlakyManager(FakeManager):
+    """Fails ``command`` (any, if empty) ``failures`` times, as MuMuManager did on 2026-11-19."""
+
+    def __init__(self, failures, command="", **kwargs):
+        super().__init__(**kwargs)
+        self.failures = failures
+        self.command = command
+        self.sleeps = []
+
+    def run(self, argv):
+        if self.failures and self.command in ("", argv[1]):
+            self.failures -= 1
+            self.calls.append(f"{argv[1]} (failed)")
+            return subprocess.CompletedProcess(argv, 4294966796, stdout=NEMU_FAILED, stderr="")
+        return super().run(argv)
+
+    def sleep(self, seconds):
+        self.sleeps.append(seconds)
+        super().sleep(seconds)
+
+
+def flaky(manager_path, fake):
+    return MuMu(
+        manager_path,
+        run=fake.run,
+        clock=lambda: fake.now,
+        sleep=fake.sleep,
+        attempts=CALL_ATTEMPTS,
+    )
+
+
+def test_a_failed_command_of_a_run_is_tried_again(manager_path, caplog):
+    fake = FlakyManager(failures=1, started=True)
+
+    assert flaky(manager_path, fake).is_started()
+    assert fake.calls == ["info (failed)", "info"]
+    assert fake.sleeps == [RETRY_DELAY]
+    assert "nemu-api init failed" in caplog.text and "trying again in 2 s (2 of 3)" in caplog.text
+
+
+def test_a_launch_that_fails_once_still_boots(manager_path):
+    fake = FlakyManager(failures=1, command="control", boot_polls=1)
+
+    flaky(manager_path, fake).ensure_started(timeout=180)
+
+    assert fake.calls == ["info", "control (failed)", "control", "info"]
+
+
+def test_a_command_failing_every_try_raises(manager_path):
+    fake = FlakyManager(failures=10, started=True)
+
+    with pytest.raises(EmulatorError, match="nemu-api init failed"):
+        flaky(manager_path, fake).is_started()
+    assert fake.calls == ["info (failed)"] * 3
+    assert fake.sleeps == [RETRY_DELAY] * 2
+
+
+class StuckBootManager(FakeManager):
+    """Android never boots after the launch; after a ``control restart`` it boots at once."""
+
+    def run(self, argv):
+        if argv[1] == "control" and argv[-1] == "restart":
+            self.boot_polls = 1
+        return super().run(argv)
+
+
+def test_an_instance_that_does_not_boot_is_restarted(manager_path, caplog):
+    fake = StuckBootManager(boot_polls=1000)
+
+    make(manager_path, fake).ensure_started(timeout=10, restarts=1)
+
+    # Five polls 2 s apart fill the 10 s, then the restart and the poll that sees Android.
+    assert fake.calls == ["info", "control"] + ["info"] * 5 + ["control", "info"]
+    assert "did not finish booting in 10 s; restarting it (1 of 1)" in caplog.text
+
+
+def test_an_instance_that_does_not_boot_after_its_restarts_raises(manager_path):
+    fake = FakeManager(boot_polls=1000)
+
+    with pytest.raises(EmulatorError, match="did not finish booting"):
+        make(manager_path, fake).ensure_started(timeout=10, restarts=1)
+    assert fake.calls.count("control") == 2  # the launch and one restart

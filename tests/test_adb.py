@@ -136,6 +136,15 @@ def test_shell_runs_on_the_given_device():
     assert fake.calls == ["-s 127.0.0.1:16384 shell pm path com.vinhomes.resident"]
 
 
+def test_disconnect_drops_one_serial_only():
+    fake = FakeAdb(attached=["127.0.0.1:16384", "127.0.0.1:16416"])
+
+    fake.adb().disconnect("127.0.0.1:16384")
+
+    # Not kill-server: the other instance's process keeps its connection and driver forward.
+    assert fake.calls == ["disconnect 127.0.0.1:16384"]
+
+
 def test_a_screenshot_is_the_png_adb_prints(monkeypatch, tmp_path):
     calls = []
 

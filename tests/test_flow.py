@@ -1521,6 +1521,16 @@ def test_prepare_keeps_running_app_and_goes_back_to_home():
     assert app.screen == "home"
 
 
+def test_a_try_after_a_failed_prepare_restarts_the_app_even_without_restart_app():
+    app = booking_app(screen="utilities")
+    app.current = "com.vinhomes.resident"
+
+    Booker(app, Config(restart_app=False)).prepare(restart=True)
+
+    assert app.calls == ["app_stop", "app_start"]
+    assert app.screen == "home"
+
+
 def test_located_entry_opens_the_utilities_list_from_home_then_reads_it_again():
     app = booking_app(screen="home")
     booker = Booker(app, Config())

@@ -35,12 +35,19 @@ Details live in the docstrings; this page says where things are and what must st
   setup from `wake_at` to start + 5 min.
 - `runner.connect_device`: start MuMu (`emulator.py`, MuMuManager), find adb and the serial
   (`adb.py`), then the instrumentation driver (`driver.py`), falling back to uiautomator2 when
-  it does not start (not after a freeze). `--driver` picks one. Every device call runs on one
-  worker thread (`watchdog.py`) and fails with `DeviceNotRespondingError` after 60 s; the run
-  then ends (exit 3, through `os._exit`, as a stuck thread could hold the exit).
+  it does not start (not after a freeze). `--driver` picks one. A run tries each MuMuManager
+  command up to 3 times, 2 s apart (`emulator.CALL_ATTEMPTS`; the setup checks and the backend
+  once), restarts an instance whose Android did not boot in `boot_timeout` once, and connects
+  a serial that did not connect once again after `adb disconnect` of that serial alone
+  (`connect_serial`; the adb server is shared by the instances' processes). Every device call
+  runs on one worker thread (`watchdog.py`) and fails with `DeviceNotRespondingError` after
+  60 s; the run then ends (exit 3, through `os._exit`, as a stuck thread could hold the exit).
 - `runner.run_booking`: `prepare()` (animations and notification banners off in one shell
-  command, app restarted, home screen), wait until
-  `start - warm_up_seconds`, measure the clock again, open the utilities list (`locate_entry`),
+  command, app restarted, home screen), tried up to 3 times by `prepare_app`, each try after
+  the first with the app stopped and opened again (`prepare(restart=True)`); a timed run tries
+  again only before `start - warm_up_seconds`, and a logout or refused login is never tried
+  again. Then wait until `start - warm_up_seconds`, measure the clock again, open the
+  utilities list (`locate_entry`),
   read it again 2 s before the start, wait until start + 0.1 s, then one round per slot.
   A `BookingError` fails its round only, except: `DeviceNotRespondingError` ends the run after
   its round, and `QuotaFullError` leaves the rounds left unrun ("Skipped: the booking quota is

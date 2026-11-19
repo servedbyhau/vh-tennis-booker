@@ -398,17 +398,18 @@ def test_close_emulator_shuts_the_configured_instance_down(monkeypatch):
     shut = []
 
     class FakeMuMu:
-        def __init__(self, manager, index):
-            self.manager, self.index = manager, index
+        def __init__(self, manager, index, attempts=1):
+            self.manager, self.index, self.attempts = manager, index, attempts
 
         def shutdown(self):
-            shut.append((self.manager, self.index))
+            shut.append((self.manager, self.index, self.attempts))
 
     monkeypatch.setattr(cli, "MuMu", FakeMuMu)
 
     close_emulator(Config(mumu_manager="C:/MuMu/MuMuManager.exe", mumu_index=1))
 
-    assert shut == [(Path("C:/MuMu/MuMuManager.exe"), 1)]
+    # Retried like a run's other MuMuManager commands: both instances close at once.
+    assert shut == [(Path("C:/MuMu/MuMuManager.exe"), 1, 3)]
 
 
 INSTANCES = """slots = ["18:00 - 19:00", "19:00 - 20:00"]

@@ -4,10 +4,15 @@ Open bugs, by severity: **1** may cost the 06:00 run, **2** reports wrongly or t
 **3** UI or docs. Remove an issue once it is fixed and confirmed (`CHANGELOG.md` keeps the
 history). Ideas the user ruled out are listed last, so they are not proposed again.
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
-No confirmed open bugs. The half-done update of 2026-11-18 is fixed in 1.1.1 (the installer
-stops the app's processes first) and was confirmed by the button's update to 1.1.1 at 15:41.
+## Severity 1
+
+- **A failure while the run gets ready ended it, 15 minutes before 06:00** (2026-11-19, 1.1.1):
+  `MuMuManager control launch` failed once ("nemu-api init failed") and machine 1 booked
+  nothing. Fixed on `fix/startup-repair` (tries again, restarts MuMu or the app), not released.
+  Next: the app hanging or closing and the driver dropping while the run waits or books
+  (`docs/status/next.md`).
 
 ## Unhandled situations
 
