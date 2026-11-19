@@ -16,7 +16,7 @@ from court_booker.adb import AUTO
 from court_booker.clock import NtpClock, ntp_offset, resolve_start
 from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
-from court_booker.emulator import MuMu
+from court_booker.emulator import CALL_ATTEMPTS, MuMu
 from court_booker.engine import engine_command
 from court_booker.errors import (
     AppNotReadyError,
@@ -207,7 +207,7 @@ def close_emulator(config: Config) -> None:
     """Shut the MuMu instance down; a failure only logs a warning, as the run is over."""
     logger.info("Closing MuMu instance %d", config.mumu_index)
     try:
-        MuMu(Path(config.mumu_manager), config.mumu_index).shutdown()
+        MuMu(Path(config.mumu_manager), config.mumu_index, attempts=CALL_ATTEMPTS).shutdown()
     except EmulatorError as exc:
         logger.warning("Could not close MuMu: %s", exc)
 

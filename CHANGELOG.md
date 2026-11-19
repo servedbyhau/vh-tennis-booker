@@ -6,6 +6,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- A run repairs what fails while it gets ready, before 06:00, instead of stopping: a
+  MuMuManager command that fails is tried again up to 3 times, 2 s apart (on 2026-11-19
+  `control launch` failed once with "nemu-api init failed" and machine 1 booked nothing); MuMu
+  not booted in `boot_timeout` is restarted once; a connection to MuMu that fails is made once
+  again; the app not reaching its home screen is stopped and opened again, up to 3 tries, a
+  timed run's only before its warm-up. A logout and a refused login still stop the run at once.
+
 ## [1.1.1] - 2026-11-18
 
 ### Added

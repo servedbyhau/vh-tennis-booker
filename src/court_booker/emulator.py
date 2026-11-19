@@ -18,6 +18,12 @@ Run = Callable[[Sequence[str]], "subprocess.CompletedProcess[str]"]
 
 _POLL_INTERVAL = 2.0
 _COMMAND_TIMEOUT = 60.0
+CALL_ATTEMPTS = 3
+"""Tries a run gives each MuMuManager command. On 2026-11-19 ``control launch`` failed at once
+with "nemu-api init failed" (exit -500) while the other instance's process started its own
+MuMu; the other one launched. A failure is passing, and the run has 15 minutes to spare."""
+RETRY_DELAY = 2.0
+"""Seconds between two tries of a MuMuManager command."""
 # Keep the console window of a scheduled run from flashing for every call.
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
@@ -37,7 +43,11 @@ def run_command(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
 
 
 class MuMu:
-    """One MuMu Player instance, addressed by its index."""
+    """One MuMu Player instance, addressed by its index.
+
+    ``attempts`` is how often a failed MuMuManager command is tried in all: a run passes
+    :data:`CALL_ATTEMPTS`; the setup checks and the backend keep one, to answer at once.
+    """
 
     def __init__(
         self,
@@ -46,9 +56,11 @@ class MuMu:
         run: Run = run_command,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], None] = time.sleep,
+        attempts: int = 1,
     ) -> None:
         self.manager = manager
         self.index = index
+        self.attempts = max(1, attempts)
         self._run = run
         self._clock = clock
         self._sleep = sleep
@@ -106,28 +118,66 @@ class MuMu:
             "setting", *[arg for key, value in values.items() for arg in ("-k", key, "-val", value)]
         )
 
-    def ensure_started(self, timeout: float) -> None:
-        """Launch the instance unless running, then wait until Android has booted."""
+    def ensure_started(self, timeout: float, restarts: int = 0) -> None:
+        """Launch the instance unless running, then wait until Android has booted.
+
+        Android not booted in ``timeout`` restarts the instance, up to ``restarts`` times,
+        each awaited for ``timeout`` again.
+        """
         if self.is_started():
             logger.info("MuMu instance %d already running", self.index)
             return
         logger.info("Launching MuMu instance %d", self.index)
-        started = self._clock()
         self.launch()
+        for restart in range(restarts + 1):
+            if restart:
+                logger.warning(
+                    "MuMu instance %d did not finish booting in %.0f s; restarting it (%d of %d)",
+                    self.index,
+                    timeout,
+                    restart,
+                    restarts,
+                )
+                self.restart()
+            if self._await_boot(timeout):
+                return
+        raise EmulatorError(f"MuMu instance {self.index} did not finish booting in {timeout:.0f} s")
+
+    def _await_boot(self, timeout: float) -> bool:
+        """Return whether Android booted within ``timeout`` seconds."""
+        started = self._clock()
         while self._clock() - started < timeout:
             self._sleep(_POLL_INTERVAL)
             if self.is_started():
                 logger.info("Android started after %.1f s", self._clock() - started)
-                return
-        raise EmulatorError(f"MuMu instance {self.index} did not finish booting in {timeout:.0f} s")
+                return True
+        return False
 
     def _call(self, command: str, *args: str) -> str:
+        """Run a MuMuManager command, tried up to ``attempts`` times while it fails."""
         if not self.manager.is_file():
             raise EmulatorError(
                 f"MuMuManager not found at {self.manager}; set 'mumu_manager' in config.toml, "
                 "or leave it empty to skip starting the emulator"
             )
         argv = [str(self.manager), command, "-v", str(self.index), *args]
+        for attempt in range(1, self.attempts + 1):
+            try:
+                return self._call_once(command, argv)
+            except EmulatorError as exc:
+                if attempt == self.attempts:
+                    raise
+                logger.warning(
+                    "%s; trying again in %g s (%d of %d)",
+                    exc,
+                    RETRY_DELAY,
+                    attempt + 1,
+                    self.attempts,
+                )
+                self._sleep(RETRY_DELAY)
+        raise AssertionError("unreachable: the last attempt returns or raises")
+
+    def _call_once(self, command: str, argv: list[str]) -> str:
         try:
             result = self._run(argv)
         except (OSError, subprocess.SubprocessError) as exc:

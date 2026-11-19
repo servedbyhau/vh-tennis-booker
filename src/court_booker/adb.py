@@ -109,6 +109,10 @@ class Adb:
         # Success prints "connected to" or "already connected to"; failures do not.
         return "connected to" in output
 
+    def disconnect(self, serial: str) -> None:
+        """Drop the connection to ``serial`` alone; other devices on the server keep theirs."""
+        self._call("disconnect", serial)
+
     def connect_until(self, serial: str, timeout: float = CONNECT_TIMEOUT) -> str:
         """Connect ``serial``, retrying while the device is still starting."""
         deadline = self._clock() + timeout

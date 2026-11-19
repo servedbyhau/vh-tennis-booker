@@ -14,9 +14,13 @@ from court_booker.config import Config
 from court_booker.errors import (
     AdbNotFoundError,
     AppNotReadyError,
+    CourtBookerError,
+    DeviceConnectionError,
     DeviceNotRespondingError,
     DriverError,
     DriverUnavailableError,
+    LoggedOutError,
+    LoginFailedError,
     NavigationError,
     QuotaFullError,
     SlotUnavailableError,
@@ -37,7 +41,7 @@ class FakeBooker:
         self.commands = 0
         self.last_screen = Screen([FULL_SLOT])
 
-    def prepare(self):
+    def prepare(self, restart=False):
         self.events.append("prepare")
 
     def locate_entry(self):
@@ -183,7 +187,7 @@ def test_failed_round_logs_the_last_screen(monkeypatch, caplog):
 
 def test_failed_preparation_logs_the_last_screen(monkeypatch, caplog):
     class LoggedOutBooker(FakeBooker):
-        def prepare(self):
+        def prepare(self, restart=False):
             raise AppNotReadyError("The app did not show 'Tiện ích'")
 
     monkeypatch.setattr(runner, "Booker", LoggedOutBooker)
@@ -193,6 +197,100 @@ def test_failed_preparation_logs_the_last_screen(monkeypatch, caplog):
         runner.run_booking(FakeDevice(), Config(slots=["19:00 - 20:00"]))
 
     assert "Last screen read (1 elements):" in caplog.text
+
+
+class FailingPrepareBooker(FakeBooker):
+    """Fails ``prepare`` with the next of ``errors`` while any is left; records each try."""
+
+    def __init__(self, device, config, report=None, login_for=None):
+        super().__init__(device, config, report, login_for)
+        self.errors = []
+
+    def prepare(self, restart=False):
+        self.events.append(f"prepare restart={restart}")
+        if self.errors:
+            raise self.errors.pop(0)
+
+
+def prepare_tries(monkeypatch, errors, start=None, now=None):
+    """Run with ``prepare`` failing with ``errors``; return the tries and the results."""
+    events = []
+
+    def make_booker(device, config, report=None, login_for=None):
+        booker = FailingPrepareBooker(device, config, report)
+        booker.errors = list(errors)
+        booker.events = events
+        return booker
+
+    class Clock(FakeClock):
+        def now(self):
+            return now
+
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
+    config = Config(slots=["19:00 - 20:00"], warm_up_seconds=60)
+    results = []
+    try:
+        runner.run_booking(
+            FakeDevice(), config, start=start, clock=Clock([]), results=results, dry_run=True
+        )
+    except CourtBookerError as exc:
+        return [e for e in events if e.startswith("prepare")], exc
+    return [e for e in events if e.startswith("prepare")], results
+
+
+def test_an_app_not_ready_is_restarted_and_prepared_again(monkeypatch, caplog):
+    tries, results = prepare_tries(
+        monkeypatch, [AppNotReadyError("Could not return to the home screen")]
+    )
+
+    assert tries == ["prepare restart=False", "prepare restart=True"]
+    assert [r.ok for r in results] == [True]
+    assert "The app is not ready (Could not return to the home screen); restarting it" in (
+        caplog.text
+    )
+
+
+def test_an_app_never_ready_ends_the_run_after_its_tries(monkeypatch):
+    errors = [NavigationError("Could not return to the home screen")] * 5
+    tries, error = prepare_tries(monkeypatch, [AppNotReadyError("no home"), *errors])
+
+    assert len(tries) == runner.PREPARE_ATTEMPTS
+    assert str(error) == "Could not return to the home screen"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        LoggedOutError("The app is logged out"),
+        LoginFailedError("The app refused the saved login"),  # the app locks after 5
+    ],
+)
+def test_a_logout_is_not_tried_again(monkeypatch, error):
+    tries, raised = prepare_tries(monkeypatch, [error])
+
+    assert tries == ["prepare restart=False"]
+    assert raised is error
+
+
+def test_a_timed_run_does_not_try_again_after_its_warm_up(monkeypatch):
+    start = datetime(2026, 11, 19, 6, 0)
+    late = start - timedelta(seconds=30)  # inside the 60 s warm-up
+
+    tries, _ = prepare_tries(monkeypatch, [AppNotReadyError("no home")], start, late)
+
+    assert tries == ["prepare restart=False"]
+
+
+def test_a_timed_run_tries_again_before_its_warm_up(monkeypatch):
+    start = datetime(2026, 11, 19, 6, 0)
+
+    tries, results = prepare_tries(
+        monkeypatch, [AppNotReadyError("no home")], start, datetime(2026, 11, 19, 5, 46)
+    )
+
+    assert tries == ["prepare restart=False", "prepare restart=True"]
+    assert [r.ok for r in results] == [True]
 
 
 class ShotDevice(FakeDevice):
@@ -249,7 +347,7 @@ def test_an_unexplained_failure_of_the_last_round_saves_the_screen(monkeypatch, 
 
 def test_an_app_not_made_ready_saves_the_screen(monkeypatch, tmp_path):
     class LoggedOutBooker(FakeBooker):
-        def prepare(self):
+        def prepare(self, restart=False):
             raise AppNotReadyError("The app is logged out")
 
     shots, steps = shots_of(monkeypatch, tmp_path, LoggedOutBooker, ["19:00 - 20:00"])
@@ -553,14 +651,97 @@ def test_a_missing_mumu_keeps_the_configured_path(monkeypatch):
     assert str(runner.find_manager("C:/old/MuMuManager.exe")) == str(Path("C:/old/MuMuManager.exe"))
 
 
+class ReconnectAdb:
+    def __init__(self):
+        self.disconnected = []
+
+    def disconnect(self, serial):
+        self.disconnected.append(serial)
+
+
+def failing_once(error):
+    """A ``resolve_device`` that raises ``error`` the first time, then returns its serial."""
+    calls = []
+
+    def resolve(adb, device, preferred):
+        calls.append((device, preferred))
+        if len(calls) == 1:
+            raise error
+        return preferred or device
+
+    return resolve, calls
+
+
+def test_a_serial_that_does_not_connect_is_connected_again(monkeypatch, caplog):
+    resolve, calls = failing_once(
+        DeviceConnectionError("Could not connect to 127.0.0.1:16384 in 30 s")
+    )
+    monkeypatch.setattr(runner, "resolve_device", resolve)
+    adb = ReconnectAdb()
+
+    assert runner.connect_serial(adb, "auto", "127.0.0.1:16384") == "127.0.0.1:16384"
+    assert adb.disconnected == ["127.0.0.1:16384"]  # that serial alone, not the adb server
+    assert len(calls) == 2
+    assert "disconnecting it and connecting again" in caplog.text
+
+
+def test_a_serial_that_never_connects_ends_the_run(monkeypatch):
+    def resolve(adb, device, preferred):
+        raise DeviceConnectionError("Could not connect to 127.0.0.1:16384 in 30 s")
+
+    monkeypatch.setattr(runner, "resolve_device", resolve)
+    adb = ReconnectAdb()
+
+    with pytest.raises(DeviceConnectionError):
+        runner.connect_serial(adb, "auto", "127.0.0.1:16384")
+    assert adb.disconnected == ["127.0.0.1:16384"]
+
+
+def test_without_a_known_serial_nothing_is_disconnected(monkeypatch):
+    resolve, _ = failing_once(DeviceConnectionError("Could not connect"))
+    monkeypatch.setattr(runner, "resolve_device", resolve)
+    adb = ReconnectAdb()
+
+    with pytest.raises(DeviceConnectionError):
+        runner.connect_serial(adb, "auto", None)
+    assert adb.disconnected == []
+
+
+def test_mumu_commands_of_a_run_are_tried_again(tmp_path, monkeypatch):
+    made = []
+
+    class FakeMuMu:
+        def __init__(self, manager, index, attempts=1):
+            self.manager = manager
+            made.append(attempts)
+
+        def ensure_started(self, timeout, restarts=0):
+            made.append(restarts)
+
+        def adb_serial(self):
+            return "127.0.0.1:16384"
+
+    def no_adb(path, folders):
+        raise AdbNotFoundError("stop here")
+
+    monkeypatch.setattr(runner, "find_mumu_manager", lambda configured: tmp_path / "m.exe")
+    monkeypatch.setattr(runner, "MuMu", FakeMuMu)
+    monkeypatch.setattr(runner, "prepare_screen", lambda mumu: None)
+    monkeypatch.setattr(runner, "find_adb", no_adb)
+
+    with pytest.raises(AdbNotFoundError):
+        runner.connect_device(Config(mumu_manager="C:/MuMu/MuMuManager.exe"))
+    assert made == [3, 1]  # each command tried 3 times; a boot that stalls, restarted once
+
+
 def test_the_screen_is_set_before_mumu_starts(tmp_path, monkeypatch):
     calls = []
 
     class FakeMuMu:
-        def __init__(self, manager, index):
+        def __init__(self, manager, index, attempts=1):
             self.manager = manager
 
-        def ensure_started(self, timeout):
+        def ensure_started(self, timeout, restarts=0):
             calls.append("start")
 
         def adb_serial(self):

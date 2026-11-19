@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
+from court_booker.adb import AUTO as AUTO_DEVICE
 from court_booker.adb import Adb, find_adb, resolve_device
 from court_booker.clock import NtpClock, wait_until
 from court_booker.config import DAYS_AHEAD, Config
@@ -16,13 +17,16 @@ from court_booker.credentials import Login
 from court_booker.device_setup import find_mumu_manager, prepare_screen
 from court_booker.driver import PACKAGE as DRIVER_PACKAGE
 from court_booker.driver import connect_driver
-from court_booker.emulator import MuMu
+from court_booker.emulator import CALL_ATTEMPTS, MuMu
 from court_booker.errors import (
+    AppNotReadyError,
     BookingError,
     BookingRejectedError,
     DeviceConnectionError,
     DeviceNotRespondingError,
     ElementNotFoundError,
+    LoggedOutError,
+    LoginFailedError,
     QuotaFullError,
     SlotUnavailableError,
 )
@@ -44,6 +48,14 @@ The 06:00 logs show where the tap fell ("Start reached"); retaps handle a notice
 SCREENS_KEPT = 30
 """Screenshots of failures kept in the log folder's ``screens``; each holds personal data, so
 they stay on this PC and the oldest go."""
+BOOT_RESTARTS = 1
+"""Restarts of a MuMu instance whose Android did not boot in ``boot_timeout``."""
+PREPARE_ATTEMPTS = 3
+"""Tries to make the app ready on its home screen; each after the first stops the app and
+opens it again, as a person would with an app that hangs or shows a screen the run does not
+know. A logout is not tried again: a restart does not log the app in, and the saved login is
+typed once a run. A timed run tries again only before the warm-up, so the booking stays on
+time."""
 QUOTA_SKIPPED = "Skipped: the booking quota is used up"
 """Why a round after the app's quota notice failed without running."""
 AUTO_DRIVER = "auto"
@@ -174,14 +186,14 @@ def connect_device(config: Config, driver: str = AUTO_DRIVER) -> Any:
     preferred = None
     extra_dirs = []
     if config.mumu_manager:
-        mumu = MuMu(find_manager(config.mumu_manager), config.mumu_index)
+        mumu = MuMu(find_manager(config.mumu_manager), config.mumu_index, attempts=CALL_ATTEMPTS)
         prepare_screen(mumu)
-        mumu.ensure_started(config.boot_timeout)
+        mumu.ensure_started(config.boot_timeout, restarts=BOOT_RESTARTS)
         preferred = mumu.adb_serial()
         extra_dirs.append(mumu.manager.parent)
 
     adb = Adb(find_adb(config.adb_path, extra_dirs))
-    serial = resolve_device(adb, config.device, preferred)
+    serial = connect_serial(adb, config.device, preferred)
     logger.info("Connecting to %s", serial)
     watchdog = Watchdog()
     if driver != UIAUTOMATOR2:
@@ -198,6 +210,23 @@ def connect_device(config: Config, driver: str = AUTO_DRIVER) -> Any:
         else:
             return GuardedDevice(device, watchdog)
     return GuardedDevice(QuickTap(connect_uiautomator2(serial, watchdog)), watchdog)
+
+
+def connect_serial(adb: Adb, device: str, preferred: str | None) -> str:
+    """Return the serial to drive, connected; a connection that fails is made once again.
+
+    Only that serial is disconnected first: the adb server is shared with the other MuMu
+    instances' processes, whose connections and driver forwards a restarted server would drop.
+    """
+    try:
+        return resolve_device(adb, device, preferred)
+    except DeviceConnectionError as exc:
+        serial = device if device != AUTO_DEVICE else preferred
+        if not serial or ":" not in serial:
+            raise
+        logger.warning("%s; disconnecting it and connecting again", exc)
+        adb.disconnect(serial)
+        return resolve_device(adb, device, preferred)
 
 
 def connect_uiautomator2(serial: str, watchdog: Watchdog) -> Any:
@@ -245,7 +274,7 @@ def run_booking(
     booker = Booker(device, config, report, login_for=login_for)
     shots = None if dry_run else screens
     try:
-        booker.prepare()
+        prepare_app(booker, config, start, clock)
         report(EventKind.APP_READY)
         if start is not None:
             report(EventKind.WAITING, until=start.isoformat(timespec="seconds"))
@@ -344,6 +373,36 @@ def run_booking(
             skip_rounds(config.slots[index:], results, report)
             break
     return results
+
+
+def prepare_app(booker: Booker, config: Config, start: datetime | None, clock: NtpClock) -> None:
+    """Make the app ready on its home screen, restarting it while that fails.
+
+    Up to :data:`PREPARE_ATTEMPTS` tries, a timed run's only before its warm-up. A logout
+    without a saved login, a refused login and a device failure end the run at once: a
+    restarted app would not change them.
+    """
+    attempt = 1
+    while True:
+        try:
+            booker.prepare(restart=attempt > 1)
+            return
+        except (LoggedOutError, LoginFailedError):
+            raise
+        except (AppNotReadyError, BookingError) as exc:
+            late = start is not None and clock.now() >= start - timedelta(
+                seconds=config.warm_up_seconds
+            )
+            if attempt >= PREPARE_ATTEMPTS or late:
+                raise
+            log_last_screen(booker)
+            attempt += 1
+            logger.warning(
+                "The app is not ready (%s); restarting it (attempt %d of %d)",
+                exc,
+                attempt,
+                PREPARE_ATTEMPTS,
+            )
 
 
 def skip_rounds(slots: list[str], results: list[RoundResult], report: Reporter) -> None:

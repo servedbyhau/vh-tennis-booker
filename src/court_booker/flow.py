@@ -235,11 +235,12 @@ class Booker:
             return
         logger.debug("Animations and notification banners off")
 
-    def prepare(self) -> None:
+    def prepare(self, restart: bool = False) -> None:
         """Open the app and stop on its home screen, ready for the first round.
 
         With ``restart_app`` the app is stopped first, so a stale screen, popup or
-        expired session from the previous day cannot get in the way. A timed run waits
+        expired session from the previous day cannot get in the way; ``restart`` stops it
+        also without, for a try after the app was not made ready. A timed run waits
         on the home screen and opens the utilities list shortly before the start
         (:meth:`locate_entry`), so the list it books from is freshly loaded. The first of
         these screens tells the app's language, whose labels the rounds then use.
@@ -250,7 +251,7 @@ class Booker:
         """
         package = self.config.package
         self.quiet_device()
-        if self.config.restart_app:
+        if self.config.restart_app or restart:
             logger.info("Restarting %s", package)
             self.device.app_stop(package)
             self.device.app_start(package)

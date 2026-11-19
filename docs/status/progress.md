@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-18.
+Last updated: 2026-11-19.
 
 ## Release and daily run
 
@@ -29,6 +29,7 @@ Last updated: 2026-11-18.
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-19 | 1.1.1 | Instance 0 0/2: `MuMuManager control launch` failed once at 05:45 ("nemu-api init failed"), the run stopped (fixed on `fix/startup-repair`); instance 1 1/1 (6.7 s) |
 | 2026-11-18 | 1.0.1 (by the update button) | Instance 0 1/1 (6.0 s), instance 1 2/2 (5.5 s, 3.9 s); no popup showed |
 | 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed in 1.0.1) |
 | 2026-11-16 | 1.0.0 | Instance 0 1/1, instance 1 2/2 |
