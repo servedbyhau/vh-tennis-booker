@@ -1521,6 +1521,35 @@ def test_prepare_keeps_running_app_and_goes_back_to_home():
     assert app.screen == "home"
 
 
+def test_a_check_of_the_home_screen_sends_two_commands_and_no_tap():
+    app = booking_app(screen="home")
+    app.current = "com.vinhomes.resident"
+    booker = Booker(app, Config())
+
+    booker.check_home()
+
+    assert app.calls == [] and app.taps == []
+    assert booker.commands == 2  # the app in front and one screen read
+
+
+def test_a_check_brings_a_screen_the_app_left_back_home():
+    app = booking_app(screen="utilities")
+    app.current = "com.vinhomes.resident"
+
+    Booker(app, Config()).check_home()
+
+    assert app.calls == ["back"]
+    assert app.screen == "home"
+
+
+def test_a_check_finds_another_app_in_front():
+    app = booking_app(screen="home")
+    app.current = "com.android.launcher3"
+
+    with pytest.raises(AppNotReadyError, match="no longer in front"):
+        Booker(app, Config()).check_home()
+
+
 def test_a_try_after_a_failed_prepare_restarts_the_app_even_without_restart_app():
     app = booking_app(screen="utilities")
     app.current = "com.vinhomes.resident"

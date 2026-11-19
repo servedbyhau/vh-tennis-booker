@@ -57,8 +57,12 @@ Details live in the docstrings; this page says where things are and what must st
   hung device, exits through `os._exit`, as the stuck thread could hold the exit.
 - `runner.run_booking`: `Supervisor.prepare` (above; `prepare()` turns animations and
   notification banners off in one shell command, restarts the app and stops on its home
-  screen, `prepare(restart=True)` also without `restart_app`). Then wait until
-  `start - warm_up_seconds`, measure the clock again, open the utilities list (`locate_entry`),
+  screen, `prepare(restart=True)` also without `restart_app`). Then wait on the home screen,
+  checked every minute until the deadline (`Supervisor.watch`: `Booker.check_home`, the app
+  in front and one screen read, a popup closed; a failure is repaired as above), until
+  `start - warm_up_seconds`, measure the clock again, open the utilities list (`locate_entry`,
+  through `Supervisor.run_step`: a failure is repaired and the list opened again, until 15 s
+  before the start, `WARM_UP_REPAIRS_END`),
   read it again 2 s before the start, wait until start + 0.1 s, then one round per slot.
   A `BookingError` fails its round only, except: `DeviceNotRespondingError` ends the run after
   its round, and `QuotaFullError` leaves the rounds left unrun ("Skipped: the booking quota is

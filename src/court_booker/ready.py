@@ -86,6 +86,9 @@ MIN_BUDGET = timedelta(minutes=2)
 """Least time for repairs, for a run started close to the start time."""
 UNTIMED_BUDGET = timedelta(minutes=5)
 """Time for repairs of a run without a start time, such as a dry run."""
+WATCH_INTERVAL = timedelta(seconds=60)
+"""How often a run waiting on the home screen checks that it is still ready, until the
+deadline: two commands a minute, far from the bursts of reads that froze MuMu in tests."""
 
 PERMANENT_ERRORS: tuple[type[BaseException], ...] = (
     RequestError,
@@ -301,6 +304,41 @@ class Supervisor:
         self._app_restarts = 0
 
     # Public API -------------------------------------------------------------
+
+    def watch(self, booker: Booker, deadline: datetime, wait: Callable[[datetime], None]) -> None:
+        """Check every :data:`WATCH_INTERVAL` until ``deadline`` that the run is still ready.
+
+        ``wait`` waits until a time, by the run's clock. A check reads the app in front and
+        its screen (:meth:`Booker.check_home`); one that fails is repaired as in
+        :meth:`prepare`, from the layer it points to. The checks are counted from the start,
+        so a clock that stands still in tests still ends them.
+        """
+        tick = self.now() + WATCH_INTERVAL
+        while tick < deadline:
+            wait(tick)
+            self.run_step(booker, booker.check_home, deadline)
+            logger.debug("Still ready at %s", format_time(self.now()))
+            tick += WATCH_INTERVAL
+
+    def run_step(self, booker: Booker, step: Callable[[], None], deadline: datetime) -> None:
+        """Run ``step`` on the app; one that fails is repaired as in :meth:`prepare` (the app
+        made ready on its home screen again) and run again, until ``deadline``.
+
+        For the check while the run waits, and the utilities list opened at the warm-up.
+        """
+        while True:
+            self._layer = Layer.APP
+            try:
+                step()
+                return
+            except Exception as exc:  # repaired below unless permanent
+                layer = self._blame(exc)
+                if layer is None or permanent(exc) or self.now() >= deadline:
+                    raise
+                logger.warning("The run was no longer ready: %s", exc)
+                if self._plan(layer, exc, booker) is None:
+                    raise
+                self.prepare(booker, deadline)
 
     def prepare(self, booker: Booker, deadline: datetime) -> None:
         """Bring every layer up and the app to its home screen, repairing until ``deadline``.
