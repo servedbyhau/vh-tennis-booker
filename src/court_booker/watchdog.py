@@ -97,6 +97,11 @@ class GuardedDevice:
         self._device = device
         self._watchdog = watchdog
 
+    @property
+    def hung(self) -> bool:
+        """Whether a call did not end in time: its worker thread may still wait on it."""
+        return self._watchdog.hung is not None
+
     def __getattr__(self, name: str) -> Any:
         attribute = getattr(self._device, name)
         if not callable(attribute):

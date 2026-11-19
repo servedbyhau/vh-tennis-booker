@@ -6,7 +6,7 @@ import subprocess
 import pytest
 
 from court_booker.emulator import CALL_ATTEMPTS, RETRY_DELAY, MuMu
-from court_booker.errors import EmulatorError
+from court_booker.errors import EmulatorError, MuMuNotFoundError
 
 RUNNING = {
     "index": "0",
@@ -224,28 +224,42 @@ def test_a_command_failing_every_try_raises(manager_path):
     assert fake.sleeps == [RETRY_DELAY] * 2
 
 
-class StuckBootManager(FakeManager):
-    """Android never boots after the launch; after a ``control restart`` it boots at once."""
+def test_a_stopped_instance_is_seen_stopped(manager_path):
+    fake = FakeManager(started=False)
 
-    def run(self, argv):
-        if argv[1] == "control" and argv[-1] == "restart":
-            self.boot_polls = 1
-        return super().run(argv)
+    assert make(manager_path, fake).wait_stopped(timeout=5)
 
 
-def test_an_instance_that_does_not_boot_is_restarted(manager_path, caplog):
-    fake = StuckBootManager(boot_polls=1000)
+def test_an_instance_that_keeps_running_is_not_seen_stopped(manager_path):
+    def run(argv):
+        state = {"index": "0", "is_process_started": True, "is_android_started": True}
+        return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(state), stderr="")
 
-    make(manager_path, fake).ensure_started(timeout=10, restarts=1)
+    clock = [0.0]
 
-    # Five polls 2 s apart fill the 10 s, then the restart and the poll that sees Android.
-    assert fake.calls == ["info", "control"] + ["info"] * 5 + ["control", "info"]
-    assert "did not finish booting in 10 s; restarting it (1 of 1)" in caplog.text
+    def sleep(seconds):
+        clock[0] += seconds
+
+    mumu = MuMu(manager_path, run=run, clock=lambda: clock[0], sleep=sleep)
+
+    assert not mumu.wait_stopped(timeout=5)
+    assert clock[0] >= 5
 
 
-def test_an_instance_that_does_not_boot_after_its_restarts_raises(manager_path):
-    fake = FakeManager(boot_polls=1000)
+def test_an_unreadable_state_counts_as_still_running(manager_path):
+    def run(argv):  # a frozen instance makes info hang until its time limit
+        raise subprocess.TimeoutExpired(argv, 20)
 
-    with pytest.raises(EmulatorError, match="did not finish booting"):
-        make(manager_path, fake).ensure_started(timeout=10, restarts=1)
-    assert fake.calls.count("control") == 2  # the launch and one restart
+    clock = [0.0]
+
+    def sleep(seconds):
+        clock[0] += seconds
+
+    mumu = MuMu(manager_path, run=run, clock=lambda: clock[0], sleep=sleep)
+
+    assert not mumu.wait_stopped(timeout=2)
+
+
+def test_a_missing_manager_is_a_failure_no_repair_can_change(tmp_path):
+    with pytest.raises(MuMuNotFoundError):
+        MuMu(tmp_path / "missing.exe", run=FakeManager().run).is_started()

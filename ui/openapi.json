@@ -1176,6 +1176,7 @@
           "account_subdivision",
           "logged_in",
           "screen_saved",
+          "repaired",
           "waiting",
           "booking_started",
           "run_finished",

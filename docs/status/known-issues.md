@@ -10,9 +10,8 @@ Last updated: 2026-11-19.
 
 - **A failure while the run gets ready ended it, 15 minutes before 06:00** (2026-11-19, 1.1.1):
   `MuMuManager control launch` failed once ("nemu-api init failed") and machine 1 booked
-  nothing. Fixed on `fix/startup-repair` (tries again, restarts MuMu or the app), not released.
-  Next: the app hanging or closing and the driver dropping while the run waits or books
-  (`docs/status/next.md`).
+  nothing. Fixed on `fix/startup-repair` and `fix/setup-supervisor` (every layer repaired
+  until 05:58), not released; the rest is planned in [next.md](next.md).
 
 ## Unhandled situations
 

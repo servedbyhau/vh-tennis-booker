@@ -327,6 +327,15 @@ slots and the booked date and time read the same.
   and `MuMuManager control shutdown` answers but does nothing; `MuMuNxDevice` must be ended by
   hand. A running MuMu shuts down with it within 18 s and starts again in about 24 s (42-48 s
   when the run starts it from cold).
+- Each instance runs in its own `MuMuNxDevice.exe --vm MuMuPlayerGlobal-15.0-<index>`; `info`
+  of a running instance gives its `pid`, `player_state` (`start_finished`) and
+  `is_process_started` (survey of 2026-11-19, instance 0). A freeze made by suspending that
+  process: `adb shell echo` gave no answer in 15 s, and **`MuMuManager info` hung too**, so
+  MuMuManager is no use while an instance is frozen. Ending the process (`taskkill /F`) let
+  `info` answer again within 3 s (`is_process_started: false`); a launch then booted Android
+  in 22 s and adb answered. Without a freeze: `control shutdown` stopped it in 4 s, ending the
+  process in 0.8 s, and a launch after either booted in 21-24 s. After a shutdown, `adb
+  devices` keeps the serial as `offline` until it is disconnected.
 - A MuMuManager command can fail at once for no lasting reason: at 05:45:05 on 2026-11-19
   `control launch -v 0` exited with 4294966796 and printed `{"errcode": -500, "errmsg":
   "nemu-api init failed"}` within 0.7 s, while instance 1's process was starting its own

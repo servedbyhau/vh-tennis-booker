@@ -279,6 +279,13 @@
       "plain": "Đã đọc phân khu của tài khoản"
     },
     "logged_in": "App đã bị đăng xuất, đã tự đăng nhập lại",
+    "repaired": {
+      "restart_mumu": "Có lỗi khi chuẩn bị, đã tự khởi động lại MuMu",
+      "reconnect_adb": "Có lỗi khi chuẩn bị, đã tự kết nối lại MuMu",
+      "restart_driver": "Có lỗi khi chuẩn bị, đã tự khởi động lại bộ điều khiển",
+      "restart_app": "Có lỗi khi chuẩn bị, đã tự mở lại app Vinhomes",
+      "other": "Có lỗi khi chuẩn bị, đã tự sửa"
+    },
     "screen_saved": "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
     "waiting": {
       "full": "Chờ đến {{time}}",
@@ -392,6 +399,7 @@
     "loginRefused": "App từ chối tài khoản đã lưu: {{message}}",
     "loginFailed": "Chưa tự đăng nhập lại được",
     "notReady": "App Vinhomes chưa mở được",
+    "appMissing": "App Vinhomes chưa được cài trên MuMu",
     "other": "Có lỗi, xem nhật ký"
   },
   "errors": {

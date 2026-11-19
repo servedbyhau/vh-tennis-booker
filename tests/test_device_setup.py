@@ -170,7 +170,7 @@ class FakeAdb:
     def ensure_server(self):
         pass
 
-    def connect_until(self, serial):
+    def connect_until(self, serial, timeout=30.0):
         if self.fail:
             raise DeviceConnectionError(f"Could not connect to {serial}")
         return serial

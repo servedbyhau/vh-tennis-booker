@@ -11,30 +11,29 @@ Last updated: 2026-11-19.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: a run that repairs itself
+## Next task: getting ready repairs itself
 
-On 2026-11-19 a failed MuMuManager command ended machine 1's run at 05:45. The user asked
-that every part of a run repair what it can instead of stopping. One branch a part:
+On 2026-11-19 a failed MuMuManager command ended machine 1's run at 05:45. Decided with the
+user that day: before 06:00 every passing failure is repaired, only one no repair can change
+ends the run. One branch a part, each stacked on the one before, all PR'd into `develop`:
 
-1. `fix/startup-repair` (done, not merged): before 06:00, MuMuManager commands tried again,
-   MuMu restarted once when Android does not boot, the serial connected once again, the app
-   stopped and opened again when it does not reach its home screen (up to 3 tries). Tested by
-   unit tests; a dry run with both instances started from cold checks that nothing else
-   changed. Then release, so the 06:00 run gets it.
-2. `fix/app-restart`: the app hanging or closing while the run waits or books. Not in the
-   foreground, or the utilities list not opened at the warm-up (05:59:00, as on 2026-11-17):
-   stop and open it again, prepare, go on. A round is run again only when it failed before
-   "Xác nhận" (a failure after it may have booked). A booking flow change: a real booking.
-3. `fix/driver-reconnect`: the driver connection lost (seen on 2026-11-03, every later round
-   then failed at once) is started again and the round goes on; a driver that does not
-   answer in 10 s is checked over adb first: adb answering means the driver hangs (start it
-   again), adb silent means MuMu froze. A real booking.
+1. `fix/startup-repair` (done, not merged): MuMuManager commands tried 3 times (today's
+   failure); a first version of the other repairs, which 2 replaces.
+2. `fix/setup-supervisor` (done, not merged): `ready.py` repairs MuMu, ADB, the driver and the
+   app layer by layer until 05:58, escalating to the layer below, with waits from measured
+   times. Tested by unit tests and a dry run from cold.
+3. `feat/ready-watch`: while the run waits on the home screen, check every 60 s until 05:58
+   (one screen read and the app in front) and repair what broke.
+4. `fix/mumu-freeze-recovery`: a frozen MuMu (no adb answer) is ended by its
+   `MuMuNxDevice` process (field notes), not by MuMuManager, which hangs then, and started
+   again.
 
-Every repair has a limit (about 3 a kind a run), so a broken part cannot loop.
+Then: fault-injection dry runs on the real MuMu (stop the driver, the app, disconnect ADB,
+suspend `MuMuNxDevice`), a real booking (ask the user for free slots), a release.
 
-Decided by the user (2026-11-19): MuMu frozen during a run is only reported (a restart takes
-too long to book after); the run still waits on the home screen and opens the utilities list
-at 05:59, as before.
+Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
+still waits on the home screen and opens the utilities list at 05:59, as before. The check
+every minute before 05:58 replaces the ruled-out "health check before 06:00".
 
 ## After that
 

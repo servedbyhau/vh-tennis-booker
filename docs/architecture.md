@@ -33,21 +33,32 @@ Details live in the docstrings; this page says where things are and what must st
   time, so a reused pid is never taken for the holder). A scheduled run takes over a holder
   2 minutes before the start; a stale lock is cleared. The quiet time refuses a dry run or auto
   setup from `wake_at` to start + 5 min.
-- `runner.connect_device`: start MuMu (`emulator.py`, MuMuManager), find adb and the serial
-  (`adb.py`), then the instrumentation driver (`driver.py`), falling back to uiautomator2 when
-  it does not start (not after a freeze). `--driver` picks one. A run tries each MuMuManager
-  command up to 3 times, 2 s apart (`emulator.CALL_ATTEMPTS`; the setup checks and the backend
-  once), restarts an instance whose Android did not boot in `boot_timeout` once, and connects
-  a serial that did not connect once again after `adb disconnect` of that serial alone
-  (`connect_serial`; the adb server is shared by the instances' processes). Every device call
-  runs on one worker thread (`watchdog.py`) and fails with `DeviceNotRespondingError` after
-  60 s; the run then ends (exit 3, through `os._exit`, as a stuck thread could hold the exit).
-- `runner.run_booking`: `prepare()` (animations and notification banners off in one shell
-  command, app restarted, home screen), tried up to 3 times by `prepare_app`, each try after
-  the first with the app stopped and opened again (`prepare(restart=True)`); a timed run tries
-  again only before `start - warm_up_seconds`, and a logout or refused login is never tried
-  again. Then wait until `start - warm_up_seconds`, measure the clock again, open the
-  utilities list (`locate_entry`),
+- `ready.Supervisor` gets the run ready and repairs what fails, until a minute before the
+  warm-up (`setup_deadline`: 05:58 for 06:00; at least 2 minutes for a run started late, 5 for
+  an untimed one). A run rests on four layers, bottom up: MuMu (`emulator.py`, MuMuManager),
+  its ADB connection (`adb.py`), the driver (`driver.py`; uiautomator2 after `DRIVER_STARTS`
+  failed starts, `--driver` picks one) and the app on its home screen (`Booker.prepare`). Each
+  pass checks every layer and repairs the first that fails: MuMu restarted (shutdown, checked
+  stopped, launched, booted in `BOOT_RETRY_WAIT`; the first boot waits `boot_timeout`), the
+  serial disconnected alone and connected again (the adb server is shared by the instances'
+  processes), the driver started again, the app restarted after growing pauses
+  (`APP_BACKOFF`, as a PC just woken may join its network late). `adb ping` (`shell echo`)
+  tells a frozen Android (no answer in 10 s) from a lost connection; no answer restarts MuMu
+  at once. A layer failing `ESCALATE_AFTER` times in a row gets the one below repaired too.
+  Failures no repair can change end the run at once (`PERMANENT_ERRORS`: config, MuMu or adb
+  missing, the app not installed, a logout without a saved login, a refused login); limits
+  stop a failure that keeps coming back (`MUMU_RESTARTS`, `REPAIRS_MAX`). Each repair logs a
+  warning and a `repaired` step (`layer`, `action`, `error`); the notification counts them.
+  The flow drives a `DeviceHandle`, which a repair points at the new device; a device whose
+  call hung is given up without another call. Each MuMuManager command is tried up to 3 times,
+  2 s apart, within 20 s each (`emulator.CALL_ATTEMPTS`, `MUMU_TIMEOUT`; the setup checks and
+  the backend try once). Every device call runs on one worker thread (`watchdog.py`) and
+  fails with `DeviceNotRespondingError` after 60 s; a run that ends on one, or that gave up a
+  hung device, exits through `os._exit`, as the stuck thread could hold the exit.
+- `runner.run_booking`: `Supervisor.prepare` (above; `prepare()` turns animations and
+  notification banners off in one shell command, restarts the app and stops on its home
+  screen, `prepare(restart=True)` also without `restart_app`). Then wait until
+  `start - warm_up_seconds`, measure the clock again, open the utilities list (`locate_entry`),
   read it again 2 s before the start, wait until start + 0.1 s, then one round per slot.
   A `BookingError` fails its round only, except: `DeviceNotRespondingError` ends the run after
   its round, and `QuotaFullError` leaves the rounds left unrun ("Skipped: the booking quota is
@@ -168,7 +179,7 @@ Details live in the docstrings; this page says where things are and what must st
   and `auto_setup` for the fixable ones (`court-booker setup [--auto]`; `GET /api/setup` only
   checks). The screen and the app are checked on every instance (`[[instances]]` too) as one
   item: the worst status, each instance's detail ("MuMu 1: …"); auto setup sets each wrong
-  screen. Without a button: `runner.connect_device` finds MuMuManager.exe when the configured
+  screen. Without a button: `ready.Supervisor` finds MuMuManager.exe when the configured
   path is wrong (`find_manager`, the config is not rewritten) and calls `prepare_screen`
   before starting each instance (a stopped MuMu gets 540x1600 at 220 DPI; a running one with
   another screen is only logged, never restarted before the start); `schedule install` and

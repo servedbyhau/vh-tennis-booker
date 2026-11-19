@@ -50,6 +50,9 @@ function known<T extends string>(values: readonly T[], value: string | undefined
   return values.find((candidate) => candidate === value);
 }
 
+/** What the engine did to get past a failure while getting ready (ready.py). */
+const REPAIR_ACTIONS = ["restart_mumu", "reconnect_adb", "restart_driver", "restart_app"] as const;
+
 interface Tools {
   t: TFunction;
   f: Formatter;
@@ -87,6 +90,15 @@ const MESSAGES: Record<StepKind, Describe> = {
     };
   },
   logged_in: ({ t }) => ({ text: t("steps.logged_in"), tone: "plain" }),
+  // The failure repaired is the engine's own words: the technical details show it.
+  repaired: ({ t }, data) => {
+    const action = known(REPAIR_ACTIONS, text(data, "action"));
+    return {
+      text: t(`steps.repaired.${action ?? "other"}`),
+      detail: text(data, "error"),
+      tone: "plain",
+    };
+  },
   // The file's path is the engine's own words: the technical details show it.
   screen_saved: ({ t }, data) => ({
     text: t("steps.screen_saved"),

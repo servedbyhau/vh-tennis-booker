@@ -6,7 +6,7 @@ query. Elements are found by accessibility label in that dump, so waiting for th
 screen and locating the next element are the same query: a step costs one dump per poll
 plus one tap. A tap names the element by its label: the driver
 (:class:`~court_booker.driver.DriverDevice`) clicks the element with that label where it is
-then, uiautomator2 (:class:`~court_booker.runner.QuickTap`) taps where the dump showed it.
+then, uiautomator2 (:class:`~court_booker.ready.QuickTap`) taps where the dump showed it.
 No coordinates are kept across screens. ``device`` is one of them or a test double with
 ``dump_hierarchy``, ``click`` (with the label of the element tapped), ``press``, ``swipe``,
 ``shell`` and the app calls.
@@ -75,6 +75,10 @@ _POPUP_WAIT = 2.0
 
 The popup showed 0.3-0.8 s after the home screen (2 restarts, 2026-11-17). Closed then, it
 cannot cover the home screen's button the moment a run taps it."""
+APP_START_TIMEOUT = 45.0
+"""Seconds the started app may take to show a screen the run knows: the home screen showed
+4-11 s after the start (2026-11-10 to 19). Longer means the app hangs or waits on the network;
+the run then restarts it (:mod:`court_booker.ready`)."""
 _START_NOTICES = 3
 """Notices closed while the app starts before the run gives up: the one seen is the logout
 notice over the login screen (2026-11-11)."""
@@ -180,6 +184,8 @@ class Booker:
         self.commands = 0
         """Device commands sent so far; each is a round trip to the emulator."""
         self.last_screen = Screen([])
+        self.app_start_timeout = APP_START_TIMEOUT
+        """Seconds the started app may take to show a screen the run knows."""
         self._entry: Screen | None = None
         self.account_subdivision: str | None = None
         """The subdivision the home screen's apartment code tells, once ``prepare`` read it."""
@@ -281,7 +287,7 @@ class Booker:
         with Back, which is pressed again only while the notice still shows: on the login
         screen Back would leave the app.
         """
-        deadline = time.monotonic() + self.config.boot_timeout
+        deadline = time.monotonic() + self.app_start_timeout
         notices = 0
         while True:
             found = self.wait_for(self._find_language, max(0.0, deadline - time.monotonic()))
@@ -294,7 +300,7 @@ class Booker:
                 ]
                 raise AppNotReadyError(
                     f"The app did not show {', '.join(labels)} or {last} in "
-                    f"{self.config.boot_timeout:.0f} s; check the app on MuMu "
+                    f"{self.app_start_timeout:.0f} s; check the app on MuMu "
                     f"{self.config.mumu_index}"
                 )
             self._use(found[0])

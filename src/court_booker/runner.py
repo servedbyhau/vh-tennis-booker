@@ -9,30 +9,19 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
-from court_booker.adb import AUTO as AUTO_DEVICE
-from court_booker.adb import Adb, find_adb, resolve_device
 from court_booker.clock import NtpClock, wait_until
 from court_booker.config import DAYS_AHEAD, Config
 from court_booker.credentials import Login
-from court_booker.device_setup import find_mumu_manager, prepare_screen
-from court_booker.driver import PACKAGE as DRIVER_PACKAGE
-from court_booker.driver import connect_driver
-from court_booker.emulator import CALL_ATTEMPTS, MuMu
 from court_booker.errors import (
-    AppNotReadyError,
     BookingError,
     BookingRejectedError,
-    DeviceConnectionError,
     DeviceNotRespondingError,
-    ElementNotFoundError,
-    LoggedOutError,
-    LoginFailedError,
     QuotaFullError,
     SlotUnavailableError,
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
-from court_booker.watchdog import GuardedDevice, Watchdog
+from court_booker.ready import Supervisor, setup_deadline
 
 logger = logging.getLogger(__name__)
 
@@ -48,22 +37,8 @@ The 06:00 logs show where the tap fell ("Start reached"); retaps handle a notice
 SCREENS_KEPT = 30
 """Screenshots of failures kept in the log folder's ``screens``; each holds personal data, so
 they stay on this PC and the oldest go."""
-BOOT_RESTARTS = 1
-"""Restarts of a MuMu instance whose Android did not boot in ``boot_timeout``."""
-PREPARE_ATTEMPTS = 3
-"""Tries to make the app ready on its home screen; each after the first stops the app and
-opens it again, as a person would with an app that hangs or shows a screen the run does not
-know. A logout is not tried again: a restart does not log the app in, and the saved login is
-typed once a run. A timed run tries again only before the warm-up, so the booking stays on
-time."""
 QUOTA_SKIPPED = "Skipped: the booking quota is used up"
 """Why a round after the app's quota notice failed without running."""
-AUTO_DRIVER = "auto"
-INSTRUMENTATION = "instrumentation"
-UIAUTOMATOR2 = "uiautomator2"
-DRIVERS = (AUTO_DRIVER, INSTRUMENTATION, UIAUTOMATOR2)
-"""How the run drives the device: the driver (:mod:`court_booker.driver`) when it starts,
-else uiautomator2 (``auto``), or only one of them (for tests by hand)."""
 
 
 @dataclass
@@ -121,127 +96,6 @@ def log_last_screen(booker: Booker) -> None:
     log_screen(booker.last_screen, "Last screen read")
 
 
-class QuickTap:
-    """Pass every call on to ``device``, except taps, sent as a bare touch down and up.
-
-    uiautomator2's ``click`` holds the touch for about 100 ms (Android ``UiDevice.click``):
-    151-165 ms a tap on MuMu, against 83-91 ms for a touch down and up, which the app took
-    every time (2026-10-16).
-    """
-
-    driver = UIAUTOMATOR2
-
-    def __init__(self, device: Any) -> None:
-        self._device = device
-
-    def click(self, x: int, y: int, label: str = "") -> None:
-        """Tap ``(x, y)``; both events in one call, so the watchdog limits the whole tap.
-
-        ``label`` is for the driver, which clicks by label; a tap here goes by position only.
-        """
-        self._device.touch.down(x, y).up(x, y)
-
-    def set_text(self, x: int, y: int, text: str) -> None:
-        """Type ``text`` into the field at ``(x, y)``: tap it, then set the focused field."""
-        self._device.touch.down(x, y).up(x, y)
-        time.sleep(0.3)  # the field takes the focus a few frames after the tap
-        field = self._device(focused=True)
-        if not field.exists:
-            raise ElementNotFoundError("No field took the focus to type into")
-        field.set_text(text)
-
-    def close(self) -> None:
-        """Leave the uiautomator2 server running, as runs always did."""
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self._device, name)
-
-
-def find_manager(configured: str) -> Path:
-    """Return MuMuManager.exe: the configured one, else one found where MuMu is installed.
-
-    The config is not rewritten (that would drop its comments); every run looks again.
-    """
-    found = find_mumu_manager(configured)
-    if found is None:
-        return Path(configured)  # starting MuMu fails with the configured path in the error
-    if found != Path(configured):
-        logger.info("MuMu found at %s; the config has %s", found, configured)
-    return found
-
-
-def connect_device(config: Config, driver: str = AUTO_DRIVER) -> Any:
-    """Start the emulator if configured and return the device the run drives.
-
-    MuMu is found even when its configured path is wrong (:func:`find_manager`), and a
-    stopped MuMu gets the booking screen before it starts
-    (:func:`~court_booker.device_setup.prepare_screen`). The device is the driver
-    (:mod:`court_booker.driver`), installed and started as needed, else uiautomator2 when
-    the driver does not start, whose taps skip its hold (:class:`QuickTap`); ``driver`` can
-    ask for one of them only. The device's ``driver`` attribute names the one
-    used, and ``close()`` ends it after the run. The connection and every command on the
-    device are time-limited (:mod:`court_booker.watchdog`), so a frozen emulator ends the
-    run instead of hanging it.
-    """
-    preferred = None
-    extra_dirs = []
-    if config.mumu_manager:
-        mumu = MuMu(find_manager(config.mumu_manager), config.mumu_index, attempts=CALL_ATTEMPTS)
-        prepare_screen(mumu)
-        mumu.ensure_started(config.boot_timeout, restarts=BOOT_RESTARTS)
-        preferred = mumu.adb_serial()
-        extra_dirs.append(mumu.manager.parent)
-
-    adb = Adb(find_adb(config.adb_path, extra_dirs))
-    serial = connect_serial(adb, config.device, preferred)
-    logger.info("Connecting to %s", serial)
-    watchdog = Watchdog()
-    if driver != UIAUTOMATOR2:
-        try:
-            device = watchdog.run("connect", lambda: connect_driver(adb, serial))
-        except DeviceNotRespondingError:
-            raise
-        except Exception as exc:  # any driver failure, so it never costs the booking
-            if driver == INSTRUMENTATION:
-                raise
-            logger.warning("Driver unavailable (%s); using uiautomator2", exc)
-            # A driver that started and failed after holds UiAutomation, which uiautomator2 needs.
-            adb.shell(serial, "am", "force-stop", DRIVER_PACKAGE)
-        else:
-            return GuardedDevice(device, watchdog)
-    return GuardedDevice(QuickTap(connect_uiautomator2(serial, watchdog)), watchdog)
-
-
-def connect_serial(adb: Adb, device: str, preferred: str | None) -> str:
-    """Return the serial to drive, connected; a connection that fails is made once again.
-
-    Only that serial is disconnected first: the adb server is shared with the other MuMu
-    instances' processes, whose connections and driver forwards a restarted server would drop.
-    """
-    try:
-        return resolve_device(adb, device, preferred)
-    except DeviceConnectionError as exc:
-        serial = device if device != AUTO_DEVICE else preferred
-        if not serial or ":" not in serial:
-            raise
-        logger.warning("%s; disconnecting it and connecting again", exc)
-        adb.disconnect(serial)
-        return resolve_device(adb, device, preferred)
-
-
-def connect_uiautomator2(serial: str, watchdog: Watchdog) -> Any:
-    """Return a uiautomator2 device on ``serial``."""
-    import uiautomator2  # deferred so tests do not require the dependency
-
-    try:
-        device = watchdog.run("connect", lambda: uiautomator2.connect(serial))
-    except DeviceNotRespondingError:
-        raise
-    except Exception as exc:  # uiautomator2 raises several unrelated types
-        raise DeviceConnectionError(f"Could not connect to {serial}: {exc}") from exc
-    return device
-
-
 def run_booking(
     device: Any,
     config: Config,
@@ -253,9 +107,13 @@ def run_booking(
     report: Reporter | None = None,
     login_for: Callable[[], Login | None] | None = None,
     screens: Path | None = None,
+    supervisor: Supervisor | None = None,
 ) -> list[RoundResult]:
-    """Prepare the app, wait for ``start`` if given, then book every configured slot.
+    """Get ready, wait for ``start`` if given, then book every configured slot.
 
+    ``supervisor`` brings MuMu, ADB, the driver and the app up, repairing what fails until a
+    minute before the warm-up (:mod:`court_booker.ready`); without one, ``device`` is driven
+    as it is and only the app is repaired. The rounds drive ``supervisor.device``.
     The wait goes by ``clock`` (the PC clock if not given), measured again at the warm-up,
     and ends :data:`OPENING_MARGIN` after ``start``. The target date is
     :data:`~court_booker.config.DAYS_AHEAD` after the start date. After the app's quota
@@ -271,10 +129,13 @@ def run_booking(
     results = [] if results is None else results
     report = Reporter() if report is None else report
     clock = NtpClock() if clock is None else clock
+    if supervisor is None:
+        supervisor = Supervisor(config, report=report, device=device, now=clock.now)
+    device = supervisor.device
     booker = Booker(device, config, report, login_for=login_for)
     shots = None if dry_run else screens
     try:
-        prepare_app(booker, config, start, clock)
+        supervisor.prepare(booker, setup_deadline(start, config.warm_up_seconds, clock.now()))
         report(EventKind.APP_READY)
         if start is not None:
             report(EventKind.WAITING, until=start.isoformat(timespec="seconds"))
@@ -294,7 +155,7 @@ def run_booking(
             logger.info("Start reached at %s", clock.reading())
     except Exception as exc:  # the caller logs the error itself
         log_last_screen(booker)
-        if not isinstance(exc, DeviceNotRespondingError):
+        if not isinstance(exc, DeviceNotRespondingError) and getattr(device, "connected", True):
             save_screen(device, shots, report, config.mumu_index)
         raise
     target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
@@ -373,36 +234,6 @@ def run_booking(
             skip_rounds(config.slots[index:], results, report)
             break
     return results
-
-
-def prepare_app(booker: Booker, config: Config, start: datetime | None, clock: NtpClock) -> None:
-    """Make the app ready on its home screen, restarting it while that fails.
-
-    Up to :data:`PREPARE_ATTEMPTS` tries, a timed run's only before its warm-up. A logout
-    without a saved login, a refused login and a device failure end the run at once: a
-    restarted app would not change them.
-    """
-    attempt = 1
-    while True:
-        try:
-            booker.prepare(restart=attempt > 1)
-            return
-        except (LoggedOutError, LoginFailedError):
-            raise
-        except (AppNotReadyError, BookingError) as exc:
-            late = start is not None and clock.now() >= start - timedelta(
-                seconds=config.warm_up_seconds
-            )
-            if attempt >= PREPARE_ATTEMPTS or late:
-                raise
-            log_last_screen(booker)
-            attempt += 1
-            logger.warning(
-                "The app is not ready (%s); restarting it (attempt %d of %d)",
-                exc,
-                attempt,
-                PREPARE_ATTEMPTS,
-            )
 
 
 def skip_rounds(slots: list[str], results: list[RoundResult], report: Reporter) -> None:
