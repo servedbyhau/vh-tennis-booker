@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-19.
+Last updated: 2026-11-21.
 
 ## Release and daily run
 
@@ -27,11 +27,14 @@ Last updated: 2026-11-19.
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
+- Open branch: `feat/third-machine` ("Máy 3" on the ticket), for a PR into `develop`.
 
 ## Last 06:00 runs
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-21 | 1.1.2 | Instance 0 2/2 (6.3 s, 6.5 s), instance 1 2/2 (5.5 s, 3.8 s) |
+| 2026-11-20 | 1.1.2 | Instance 0 1/2 (4.4 s): the first slot was taken by someone else at "Xác nhận" (06:00:05); instance 1 2/2 (6.0 s, 3.3 s) |
 | 2026-11-19 | 1.1.1 | Instance 0 0/2: `MuMuManager control launch` failed once at 05:45 ("nemu-api init failed"), the run stopped (fixed in 1.1.2); instance 1 1/1 (6.7 s) |
 | 2026-11-18 | 1.0.1 (by the update button) | Instance 0 1/1 (6.0 s), instance 1 2/2 (5.5 s, 3.9 s); no popup showed |
 | 2026-11-17 | 1.0.0 | Both instances 0: a promotion popup over the home screen, which Back does not close (fixed in 1.0.1) |
@@ -57,7 +60,9 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - From 1.0.0 each version has a GitHub release page with its installer; the pages of
   0.1.0 to 0.9.0 were deleted on 2026-11-03, their tags kept. Releases go ahead without
   asking again.
-- Accounts, quotas, the first login and adding instances to `config.toml` are the user's job.
+- Accounts, quotas, the first login and making MuMu instances are the user's job. "Máy 2"
+  and "Máy 3" are switched on in the UI; a fourth machine needs its `[[instances]]` table
+  in `config.toml` by hand.
   Logging in again after a logout is the app's, with a login the user saved (2026-11-18); the
   "ping-pong" with another device on the same account is the user's to set up.
 - Test tickets booked during development are cancelled by the user.

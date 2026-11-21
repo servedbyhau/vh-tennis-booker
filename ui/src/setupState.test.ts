@@ -12,10 +12,10 @@ function first(done: ManualDone): ManualTicks {
 }
 
 const TWO: Machine[] = [
-  { place: 0, mumuIndex: 0, key: "", enabled: true },
-  { place: 1, mumuIndex: 1, key: "1", enabled: true },
+  { place: 0, mumuIndex: 0, key: "", enabled: true, entry: 0 },
+  { place: 1, mumuIndex: 1, key: "1", enabled: true, entry: 1 },
 ];
-const SECOND_OFF: Machine[] = [TWO[0]!, { ...TWO[1]!, enabled: false }];
+const SECOND_OFF: Machine[] = [TWO[0]!, { ...TWO[1]!, enabled: false, entry: null }];
 
 describe("setupLeft", () => {
   it("counts the steps not ticked", () => {

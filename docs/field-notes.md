@@ -359,6 +359,13 @@ slots and the booked date and time read the same.
   from cold in 23-26 s, connected the driver in 4-5 s and were ready on the home screen in
   6 s, as one alone; both tapped the utility 0.06 s after the start, and both retapped through
   the closed-hours notice at the same pace (43-44 times in 5 s).
+- Three instances side by side (2026-11-21, i7-8750H with 12 threads and 16 GB, each
+  instance custom 4 cores and 3 GB, a third cloned from instance 0 on ADB port 16448):
+  with nothing else open they booked 3/3 for real in 4.8-6.0 s a round, ready 46 s after
+  a cold start. With VS Code and other apps open, free RAM fell to 0.5 GB while booking,
+  CPU stayed at 89-100% and the rounds took 7.6-8.4 s (the court list 3.3-4.6 s after
+  "Tiếp tục" instead of 2.4-3.2 s); three cold starts at once left 0.8 GB free and froze
+  two instances, which the run restarted before the start.
 - Two instances booked for real in parallel at 06:00 on 2026-11-01: Origami and BS each
   reached two tickets for 3/11, with every round finishing within 5 s. The one-day BS
   `[[instances]]` entry was removed at 07:05; the daily task still runs instance 0.

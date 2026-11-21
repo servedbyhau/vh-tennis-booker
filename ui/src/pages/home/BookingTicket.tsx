@@ -159,7 +159,7 @@ interface ChoicesProps {
   save: SaveSettings;
   /** The subdivision each account told last, `undefined` until read. */
   accounts: readonly AccountSubdivision[] | undefined;
-  /** The machine whose choices show (0: the top of the settings). */
+  /** Where the choices shown are in the settings (0: the top, then each instance). */
   instance: number;
 }
 
@@ -465,11 +465,12 @@ export function BookingTicket({ overview, machine, onMachine }: BookingTicketPro
   const save = useSaveSettings();
   const machines = useMachines();
   const shown = machineAt(machines, machine);
+  const { entry } = shown;
   const { schedule, running } = overview;
   const booking =
-    settings.data === undefined || !shown.enabled
+    settings.data === undefined || entry === null
       ? undefined
-      : bookingOf(shownSettings(settings.data, save), machine).booking;
+      : bookingOf(shownSettings(settings.data, save), entry).booking;
   return (
     <TicketFrame
       aria-labelledby="next-title"
@@ -479,16 +480,16 @@ export function BookingTicket({ overview, machine, onMachine }: BookingTicketPro
     >
       <div className={styles.scroll}>
         {shown.place > 0 && <MachineUse machine={shown} running={running !== null} />}
-        {shown.enabled && (
+        {entry !== null && (
           <QueryView query={settings}>
             {(saved) => (
               // Keyed by the machine, so a warning of one is gone on another.
               <Choices
-                key={machine}
+                key={shown.key}
                 saved={saved}
                 save={save}
                 accounts={accounts.data}
-                instance={machine}
+                instance={entry}
               />
             )}
           </QueryView>
