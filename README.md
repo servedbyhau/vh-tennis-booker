@@ -180,8 +180,9 @@ The app is one screen, without a menu:
   by Windows (Credential Manager) for your Windows account and never shown again. It
   opens first, with a count, while anything is left. The Windows notification switch sits on
   the ticket, beside the daily switch.
-- **A tab per machine** on top of the ticket: "Máy 2" (a second MuMu instance, logged in to
-  another account) books alongside the first once its "Dùng máy này" switch is on.
+- **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,
+  each logged in to another account) book alongside the first once their "Dùng máy này"
+  switch is on.
 
 <p>
   <img src="docs/img/home.png" width="49%" alt="Ready for 06:00: the ticket with the daily

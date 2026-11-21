@@ -6,6 +6,11 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- A third machine on the ticket, "Máy 3" (MuMu 2), switched on and off like "Máy 2", so a
+  third account books alongside from the UI. Each machine keeps its tab whichever of the
+  others is on.
+
 ## [1.1.2] - 2026-11-19
 
 ### Added

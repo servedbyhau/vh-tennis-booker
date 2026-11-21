@@ -322,6 +322,41 @@ describe("BookingTicket choices", () => {
     );
   });
 
+  it("shows a third machine, off, and books with MuMu 2 once switched on", async () => {
+    const third = {
+      mumu_index: 2,
+      slots: ["20:00 - 21:00"],
+      subdivision: "",
+      sport: "tennis",
+      court: "S9 - Sân tennis",
+      venue_keyword: "Origami",
+    };
+    const { fetch, replies } = renderTicket();
+    const instances = await screen.findByRole("group", { name: "Máy" });
+
+    fireEvent.click(within(instances).getByRole("button", { name: "Máy 3, đang tắt" }));
+
+    const use = screen.getByRole("switch", { name: "Đặt sân bằng máy 3 (MuMu 2)" });
+    expect(use).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByText(/^Máy 3 đang tắt: lượt chạy không dùng MuMu 2/)).toBeInTheDocument();
+
+    replies["PUT /api/instances/2"] = reply(settings({ instances: [third] }));
+    fireEvent.click(use);
+
+    // Its own choices, while the second machine stays off in its place.
+    const courts = await screen.findByRole("group", { name: "Sân" });
+    expect(within(courts).getByRole("button", { name: "S9" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(await bodies(fetch, "PUT /api/instances/2")).toEqual([{ enabled: true }]);
+    expect(within(instances).getByRole("button", { name: "Máy 2, đang tắt" })).toBeVisible();
+    expect(within(instances).getByRole("button", { name: /^Máy 3/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("shows and saves the choices of each MuMu instance", async () => {
     const other = {
       mumu_index: 1,

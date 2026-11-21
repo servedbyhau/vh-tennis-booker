@@ -10,7 +10,7 @@ import {
 } from "./manualSteps";
 
 /** The first machine alone, as when the settings have not loaded. */
-const ONE: readonly Machine[] = [{ place: 0, mumuIndex: null, key: "", enabled: true }];
+const ONE: readonly Machine[] = [{ place: 0, mumuIndex: null, key: "", enabled: true, entry: 0 }];
 
 /** The steps of one machine's own, not ticked. */
 function ownLeft(done: ManualDone): number {
