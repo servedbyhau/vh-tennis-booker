@@ -15,19 +15,23 @@ from __future__ import annotations
 
 import logging
 import re
+import sqlite3
 import struct
 import time
 import unicodedata
 import zlib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Callable
 
+from court_booker.config import DAYS_AHEAD
 from court_booker.errors import DeviceNotRespondingError, NavigationError
 from court_booker.flow import Booker
 from court_booker.geometry import is_inside
+from court_booker.history import connect
+from court_booker.paths import DataFolder
 from court_booker.screen import Node, Screen
 
 logger = logging.getLogger(__name__)
@@ -37,9 +41,6 @@ PROCESSING = "processing"
 CANCELLED = "cancelled"
 OTHER = "other"
 """A status the app showed in words not known here; its words are kept as well."""
-
-PHOTOS_KEPT = 500
-"""Pictures kept, about 70 KB each; they hold personal data and stay on this PC."""
 
 _CODE = re.compile(r"[^:]+: *(\d{4,})")
 _TIME = re.compile(r".*?(\d{2})/(\d{2})/(\d{4}) +(\d{2}:\d{2}) *- *(\d{2}:\d{2})")
@@ -450,11 +451,26 @@ class TicketReader:
         return min(wait, left)
 
 
-def drop_old_photos(folder: Path, keep: int = PHOTOS_KEPT) -> None:
-    """Delete the oldest pictures in ``folder`` beyond ``keep``; a failure only logs."""
+def forget_expired(data: DataFolder, today: date) -> None:
+    """Delete the tickets played before ``today`` and their pictures; a failure only logs.
+
+    A picture is taken on the day of the booking, :data:`~court_booker.config.DAYS_AHEAD`
+    days before the day of play, so its own date tells when it expires, also one the database
+    does not know of (a run that ended before it recorded its tickets).
+    """
     try:
-        photos = sorted(folder.glob("*.png"), key=lambda path: path.stat().st_mtime)
-        for old in photos[:-keep]:
-            old.unlink(missing_ok=True)
-    except OSError:
-        logger.warning("Could not delete old ticket pictures", exc_info=True)
+        if data.database.exists():
+            connection = connect(data.database)
+            try:
+                with connection:
+                    connection.execute(
+                        "DELETE FROM tickets WHERE play_date < ?", (today.isoformat(),)
+                    )
+            finally:
+                connection.close()
+        oldest = today - timedelta(days=DAYS_AHEAD)
+        for photo in data.tickets.glob("*.png"):
+            if date.fromtimestamp(photo.stat().st_mtime) < oldest:
+                photo.unlink(missing_ok=True)
+    except (sqlite3.Error, OSError):
+        logger.warning("Could not delete the expired tickets", exc_info=True)

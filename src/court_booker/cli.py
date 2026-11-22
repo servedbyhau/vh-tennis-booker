@@ -38,7 +38,7 @@ from court_booker.paths import data_folder
 from court_booker.power import keep_awake
 from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
 from court_booker.runner import RoundResult, run_booking
-from court_booker.tickets import TicketReader, Wanted, drop_old_photos
+from court_booker.tickets import TicketReader, Wanted, forget_expired
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -50,11 +50,13 @@ EXIT_APP_NOT_READY = 4
 EXIT_BUSY = 5
 EXIT_INTERRUPTED = 130
 
-TICKETS_AFTER = timedelta(seconds=60)
-"""When a timed run reads its tickets, from the start: the rounds of November 2026 ended by
-06:00:13, and the app shows a ticket as processing for a while."""
-TICKETS_LATEST = timedelta(seconds=150)
-"""How long past the start another machine may still book; the tickets are skipped then."""
+TICKETS_AFTER = timedelta(seconds=120)
+"""When a timed run reads its tickets, from the start: of the 49 runs on schedule up to
+2026-11-22 the last to end did at 06:01:05, and the app shows a ticket as processing for a
+while."""
+TICKETS_WAIT = timedelta(seconds=90)
+"""How long the tickets then wait for a machine recorded as booking; its run may have been
+killed, so they are read all the same after it."""
 TICKETS_SECONDS = 90.0
 """How long reading the tickets may take; a run so ends before the quiet time does (5 min)."""
 
@@ -243,17 +245,18 @@ def read_tickets(
 ) -> None:
     """Record the account's tickets, with a picture of each one booked, after the rounds.
 
-    A timed run waits until :data:`TICKETS_AFTER` the start and until no other machine is
-    booking, so this takes nothing from the rounds still going on. Raises only
+    Waits until every machine is done booking, a timed run until :data:`TICKETS_AFTER` the
+    start at least, so this takes nothing from the rounds still going on. Raises only
     ``DeviceNotRespondingError`` (a frozen emulator) and ``KeyboardInterrupt``.
     """
     if start is not None:
         wait_until(start + TICKETS_AFTER, clock.now)
-        while history.other_runs_going():
-            if clock.now() >= start + TICKETS_LATEST:
-                logger.warning("Tickets not read: another machine is still booking")
-                return
-            time.sleep(1.0)
+    give_up = clock.now() + TICKETS_WAIT
+    while history.other_runs_going():
+        if clock.now() >= give_up:
+            logger.warning("Another machine is still recorded as booking; reading the tickets")
+            break
+        time.sleep(1.0)
     folder = data_folder().tickets
     wanted = [
         Wanted(play_date.isoformat(), result.slot, result.court or booker.config.court)
@@ -270,7 +273,6 @@ def read_tickets(
                 booker.config.mumu_index, found.tickets, found.photos, datetime.now()
             )
             report(EventKind.TICKETS_SAVED, tickets=len(found.tickets), photos=len(found.photos))
-    drop_old_photos(folder)
 
 
 def run_trigger(args: argparse.Namespace) -> str:
@@ -572,6 +574,8 @@ def main(argv: list[str] | None = None) -> int:
     if not frozen:
         # Holding the lock meanwhile: the run, with its instances, is still going on.
         wait_for_instances(instances)
+        if args.instance is None and not args.dry_run:
+            forget_expired(data_folder(), datetime.now().date())
     if lock is not None:
         lock.release()
     if history is not None:

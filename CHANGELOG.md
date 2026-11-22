@@ -9,8 +9,9 @@ uses [Semantic Versioning](https://semver.org/).
 ### Added
 - After a real run that booked, the app's tickets are read from its history page (code, court,
   time, status) and a picture of each new ticket, with its QR code, is saved in the data
-  folder's `tickets`. It starts a minute after the start, once no machine is booking any
-  more, so MuMu closes a minute or two later than before.
+  folder's `tickets`. It starts at 06:02, once no machine is booking any more, so MuMu closes
+  two minutes or so later than before. A ticket and its picture are deleted once its day of
+  play is over.
 - A third machine on the ticket, "Máy 3" (MuMu 2), switched on and off like "Máy 2", so a
   third account books alongside from the UI. Each machine keeps its tab whichever of the
   others is on.

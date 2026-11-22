@@ -1,8 +1,10 @@
 """Reading the tickets on a scripted app; no device required."""
 
 import logging
+import os
 import struct
 import zlib
+from datetime import date, datetime
 from xml.sax.saxutils import quoteattr
 
 import pytest
@@ -10,7 +12,10 @@ import pytest
 from court_booker import tickets
 from court_booker.config import Config
 from court_booker.errors import DeviceNotRespondingError
+from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker
+from court_booker.history import History, connect
+from court_booker.paths import DataFolder
 from court_booker.screen import Node, Screen
 from court_booker.tickets import Ticket, TicketReader, Wanted, crop_png, parse_card, png_width
 
@@ -478,13 +483,70 @@ def test_a_frozen_emulator_is_raised_with_what_was_read(read):
     assert [ticket.code for ticket in read.reader.collected.tickets] == ["11111"]
 
 
-def test_the_oldest_pictures_go(tmp_path):
-    import os
+@pytest.fixture
+def booked(tmp_path):
+    """A data folder with a ticket booked at 06:02 on each day, 2026-11-20 to 23."""
+    data = DataFolder(tmp_path).ensure()
+    data.tickets.mkdir()
+    store = History(connect(data.database))
+    for day in range(20, 24):
+        taken = datetime(2026, 11, day, 6, 2)
+        ticket = Ticket(
+            f"{day}", "Sân Tennis", "S6", f"2026-11-{day + 2}", "18:00 - 19:00", "Đã huỷ", None
+        )
+        store.save_tickets(0, [ticket], {ticket.code: f"{day}.png"}, taken)
+        photo = data.tickets / f"{day}.png"
+        photo.write_bytes(b"x")
+        os.utime(photo, (taken.timestamp(), taken.timestamp()))
+    store.connection.close()
+    return data
 
-    for number in range(5):
-        path = tmp_path / f"{number}.png"
-        path.write_bytes(b"x")
-        os.utime(path, (number, number))
-    tickets.drop_old_photos(tmp_path, keep=2)
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["3.png", "4.png"]
-    tickets.drop_old_photos(tmp_path / "missing")
+
+def kept(data):
+    """Return the codes still in the database and the pictures still in the folder."""
+    connection = connect(data.database)
+    codes = [row[0] for row in connection.execute("SELECT code FROM tickets ORDER BY code")]
+    connection.close()
+    return codes, sorted(path.stem for path in data.tickets.iterdir())
+
+
+@pytest.mark.parametrize(
+    ("today", "left"),
+    [
+        (date(2026, 11, 22), ["20", "21", "22", "23"]),  # booked the 20th, played today
+        (date(2026, 11, 23), ["21", "22", "23"]),
+        (date(2026, 11, 25), ["23"]),
+        (date(2026, 12, 25), []),
+    ],
+)
+def test_a_ticket_and_its_picture_go_once_its_day_of_play_is_over(booked, today, left):
+    tickets.forget_expired(booked, today)
+    assert kept(booked) == (left, left)
+
+
+def test_a_picture_no_ticket_names_goes_too(booked):
+    connection = connect(booked.database)
+    with connection:
+        connection.execute("DELETE FROM tickets")
+    connection.close()
+    tickets.forget_expired(booked, date(2026, 11, 24))
+    assert kept(booked) == ([], ["22", "23"])
+
+
+def test_the_runs_stay_when_the_tickets_go(booked):
+    store = History(connect(booked.database))
+    Reporter(store)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    tickets.forget_expired(booked, date(2027, 1, 1))
+    assert store.connection.execute("SELECT COUNT(*) FROM runs").fetchone() == (1,)
+    store.connection.close()
+
+
+def test_nothing_is_made_where_no_ticket_was_kept(tmp_path):
+    tickets.forget_expired(DataFolder(tmp_path), date(2026, 11, 22))
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_expired_tickets_that_cannot_be_deleted_only_warn(tmp_path, caplog):
+    (tmp_path / "booker.db").write_bytes(b"no database at all" * 100)
+    tickets.forget_expired(DataFolder(tmp_path), date(2026, 11, 22))
+    assert "Could not delete the expired tickets" in caplog.text
