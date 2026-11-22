@@ -4,7 +4,7 @@ import type { Ticket } from "../../api/types";
 import i18n from "../../i18n";
 import { paths } from "../../paths";
 import { renderApp } from "../../test/app";
-import { reply, requestsTo } from "../../test/backend";
+import { type Reply, reply, requestsTo } from "../../test/backend";
 import { step } from "../../test/liveSocket";
 import { overview } from "../../test/overview";
 import { settings } from "../../test/settings";
@@ -28,12 +28,13 @@ const TICKETS = [
 ];
 
 /** Open the tickets section with `tickets`. */
-async function openTab(tickets: Ticket[] = TICKETS) {
+async function openTab(tickets: Ticket[] = TICKETS, extra: Record<string, Reply> = {}) {
   const app = renderApp(paths.tickets, {
     "GET /api/status": reply(overview()),
     "GET /api/settings": reply(settings()),
     "GET /api/runs": reply([]),
     "GET /api/tickets": reply(tickets),
+    ...extra,
   });
   await screen.findByRole("region", { name: "Vé" });
   return app;
@@ -218,6 +219,56 @@ describe("Ticket dialog", () => {
     expect(save).toHaveAttribute("href", url);
     expect(save).toHaveAttribute("download", "2026-10-16 18h00-19h00 Tennis S6 1000002.png");
     expect(dialog.textContent).toBe("1/3");
+  });
+
+  describe("copy", () => {
+    /** Items written to the clipboard, each by its types. */
+    const write = vi.fn<(items: { parts: Record<string, Promise<Blob>> }[]) => Promise<void>>();
+
+    beforeEach(() => {
+      write.mockReset();
+      vi.stubGlobal(
+        "ClipboardItem",
+        class {
+          readonly parts: Record<string, Promise<Blob>>;
+          constructor(parts: Record<string, Promise<Blob>>) {
+            this.parts = parts;
+          }
+        },
+      );
+      Object.defineProperty(navigator, "clipboard", { value: { write }, configurable: true });
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "clipboard");
+      vi.unstubAllGlobals();
+    });
+
+    it("copies the picture and says so", async () => {
+      await openTab(TICKETS, { "GET /api/tickets/1000002/photo": reply("a picture") });
+      const dialog = await openTicket(/^18:00–19:00 · Tennis/);
+      write.mockResolvedValue();
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "Copy ảnh" }));
+
+      expect(await within(dialog).findByText("Đã copy ảnh, dán vào Zalo")).toBeVisible();
+      const [items] = write.mock.calls[0]!;
+      expect(await (await items[0]!.parts["image/png"]!).text()).toBe('"a picture"');
+    });
+
+    it("says when the picture could not be copied", async () => {
+      await openTab();
+      const dialog = await openTicket(/^18:00–19:00 · Tennis/);
+      write.mockRejectedValue(new Error("denied"));
+      fireEvent.click(within(dialog).getByRole("button", { name: "Copy ảnh" }));
+      expect(await within(dialog).findByText("Không copy được ảnh, hãy dùng Lưu vé")).toBeVisible();
+    });
+
+    it("is not offered without a picture", async () => {
+      await openTab();
+      const dialog = await openTicket(/^19:00–20:00 · Tennis/);
+      expect(within(dialog).queryByRole("button", { name: "Copy ảnh" })).not.toBeInTheDocument();
+    });
   });
 
   it("moves through the tickets listed, with its buttons and the arrow keys", async () => {

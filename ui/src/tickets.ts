@@ -55,6 +55,19 @@ export function photoUrl(ticket: Pick<Ticket, "code" | "seen_at">): string {
   return `/api/tickets/${ticket.code}/photo?seen=${encodeURIComponent(ticket.seen_at)}`;
 }
 
+/** Copy the picture at `url`, to paste it where it is sent; throws when it cannot. */
+export async function copyPicture(url: string): Promise<void> {
+  const picture = fetch(new Request(new URL(url, window.location.href))).then((response) => {
+    if (!response.ok) {
+      throw new Error(`No picture at ${url}`);
+    }
+    return response.blob();
+  });
+  // Written at once, within the press, as the browser asks; the picture follows.
+  const written = navigator.clipboard.write([new ClipboardItem({ "image/png": picture })]);
+  await Promise.all([written, picture]);
+}
+
 /** Characters Windows allows in no file name. */
 const NOT_IN_FILE_NAMES = /[\\/:*?"<>|]/g;
 

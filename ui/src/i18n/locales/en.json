@@ -137,6 +137,9 @@
       "previous": "Previous ticket",
       "next": "Next ticket",
       "save": "Save",
+      "copy": "Copy the picture",
+      "copied": "Picture copied, paste it into Zalo",
+      "copyFailed": "The picture was not copied: save it instead",
       "close": "Close"
     },
     "management": {

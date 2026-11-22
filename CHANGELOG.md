@@ -23,7 +23,7 @@ uses [Semantic Versioning](https://semver.org/).
   press that makes it so.
 - A "Vé" ("Tickets") section: the tickets booked and still to use, of every
   customer in one list by day of play, with their status and whose account they are of; a press
-  opens the ticket's picture, which can be saved as a file.
+  opens the ticket's picture, which can be saved as a file or copied.
 - After a real run that booked, the app's tickets are read from its history page (code, court,
   time, status) and a picture of each new ticket, with its QR code, is saved in the data
   folder's `tickets`. It starts at 06:03, once no machine is booking any more, so MuMu closes

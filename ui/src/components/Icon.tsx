@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Copy,
   Download,
   Image,
   KeyRound,
@@ -62,6 +63,8 @@ const DRAWINGS = {
   check: Check,
   /** Close what is open, give it up. */
   close: X,
+  /** Copy, to paste elsewhere. */
+  copy: Copy,
   /** Save as a file. */
   save: Download,
   /** Open the list under it, to choose another. */

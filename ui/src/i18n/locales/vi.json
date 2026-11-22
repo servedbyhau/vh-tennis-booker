@@ -137,6 +137,9 @@
       "previous": "Vé trước",
       "next": "Vé sau",
       "save": "Lưu vé",
+      "copy": "Copy ảnh",
+      "copied": "Đã copy ảnh, dán vào Zalo",
+      "copyFailed": "Không copy được ảnh, hãy dùng Lưu vé",
       "close": "Đóng"
     },
     "management": {
