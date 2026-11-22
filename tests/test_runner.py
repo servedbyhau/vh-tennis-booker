@@ -400,9 +400,8 @@ def test_a_run_begun_near_its_start_hurries(monkeypatch, ahead, hurry):
 
     monkeypatch.setattr(runner, "Booker", make_booker)
     monkeypatch.setattr(runner, "wait_until", lambda moment, now: None)
-    now = datetime(2026, 11, 23, 5, 45)
-    clock = FakeClock(now)
-    runner.run_booking(FakeDevice(), Config(slots=["a"]), start=now + ahead, clock=clock)
+    clock = FakeClock([])
+    runner.run_booking(FakeDevice(), Config(slots=["a"]), start=clock.now() + ahead, clock=clock)
     assert made[0].hurry is hurry
 
 

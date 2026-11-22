@@ -89,9 +89,11 @@ _LOGIN_SETTLE = 0.3
 """Pause between the login button showing enabled and its tap. On 2026-11-18 a tap 1 ms after
 the read that showed it enabled did nothing for 30 s, as "Xác nhận" a few frames after the
 tick (field notes); the app takes the password a few frames after the button turns."""
-_LOGIN_RETAP_AFTER = 15.0
+_LOGIN_TIMEOUT = 60.0
+"""How long the app may take to answer a login; it is typed in 15 minutes before the start."""
+_LOGIN_RETAP_AFTER = 20.0
 """How long the login screen may stay as it was after a tap before the button is tapped again.
-The screen stays unchanged while the server checks the login: 7-9 s on 2026-11-22, when taps
+The screen stays unchanged while the server checks the login: 7-11 s on 2026-11-22, when taps
 every 3 s sent the login three times."""
 _LOGIN_TAPS = 2
 """Most taps on the login button: each may send the password, and the app locks an account
@@ -506,7 +508,7 @@ class Booker:
             raise LoginFailedError(f"{self.labels.login!r} stayed disabled after typing the login")
         time.sleep(_LOGIN_SETTLE)
         button: Node | None = ready[0]
-        deadline = time.monotonic() + self.config.timeout
+        deadline = time.monotonic() + _LOGIN_TIMEOUT
         taps = 0
         while True:
             if button is not None and taps < _LOGIN_TAPS:
@@ -519,7 +521,7 @@ class Booker:
                 break
             if time.monotonic() >= deadline:
                 raise LoginFailedError(
-                    f"Neither the home screen nor a message showed {self.config.timeout:.0f} s "
+                    f"Neither the home screen nor a message showed {_LOGIN_TIMEOUT:.0f} s "
                     f"after {self.labels.login!r} ({taps} tap(s)); check the app"
                 )
             # Tapped again only while the app shows the same enabled button: one that took
