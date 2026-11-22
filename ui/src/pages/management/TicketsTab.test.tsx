@@ -10,11 +10,19 @@ import { overview } from "../../test/overview";
 import { settings } from "../../test/settings";
 import { ticket } from "../../test/tickets";
 
-/** Two machines' tickets around 15/10, with made-up codes. */
+const AN = { customer: "Anh An", account: "Căn A" };
+const BINH = { customer: "Chị Bình", account: "09••••••44" };
+
+/** Two customers' tickets around 15/10, with made-up codes. */
 const TICKETS = [
-  ticket("1000004", { play_date: "2026-10-17", device: 1, court: "S9 - Sân Pickleball" }),
-  ticket("1000003", { slot: "19:00 - 20:00", has_photo: false, status: "processing" }),
-  ticket("1000002", { slot: "18:00 - 19:00" }),
+  ticket("1000004", {
+    play_date: "2026-10-17",
+    device: 1,
+    court: "S9 - Sân Pickleball",
+    ...BINH,
+  }),
+  ticket("1000003", { slot: "19:00 - 20:00", has_photo: false, status: "processing", ...AN }),
+  ticket("1000002", { slot: "18:00 - 19:00", ...AN }),
   ticket("1000001", { slot: "08:00 - 09:00", status: "cancelled", has_photo: false }),
   ticket("1000000", { play_date: "2026-10-12", status: "other", status_text: "Đã sử dụng" }),
 ];
@@ -63,16 +71,16 @@ afterEach(() => {
 });
 
 describe("Tickets list", () => {
-  it("lists every machine's tickets to use by day, cancelled ones left out", async () => {
+  it("lists every customer's tickets to use by day, cancelled ones left out", async () => {
     await openTab();
 
     expect(await days()).toEqual([
       [
         "Thứ Sáu 16/102 vé",
-        "18:00–19:00 · Tennis S6ĐÃ ĐĂNG KÝMáy 1 · 1000002Xem vé",
-        "19:00–20:00 · Tennis S6ĐANG XỬ LÝMáy 1 · 1000003chưa có ảnh",
+        "18:00–19:00 · Tennis S6ĐÃ ĐĂNG KÝAnh AnCăn AXem vé",
+        "19:00–20:00 · Tennis S6ĐANG XỬ LÝAnh AnCăn Achưa có ảnh",
       ],
-      ["Thứ Bảy 17/101 vé", "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝMáy 2 · 1000004Xem vé"],
+      ["Thứ Bảy 17/101 vé", "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝChị Bình09••••••44Xem vé"],
     ]);
   });
 
@@ -89,36 +97,41 @@ describe("Tickets list", () => {
     expect((await days())[0]?.[1]).toContain("Đã sử dụng");
   });
 
-  it("lists the tickets of one machine", async () => {
-    await openTab();
+  it("lists the tickets of one customer, and those whose holder is not known", async () => {
+    await openTab([...TICKETS, ticket("1000009", { slot: "06:00 - 07:00", device: 1 })]);
     await days();
-    const machines = within(panel()).getByRole("group", { name: "Vé của máy" });
-    expect(
-      within(machines)
-        .getAllByRole("button")
-        .map((button) => button.textContent),
-    ).toEqual(["Mọi máy", "Máy 1", "Máy 2"]);
+    const customers = within(within(panel()).getByRole("group", { name: "Vé của khách" }));
+    expect(customers.getAllByRole("button").map((button) => button.textContent)).toEqual([
+      "Mọi khách",
+      "Anh An",
+      "Chị Bình",
+      "Không rõ khách",
+    ]);
 
-    fireEvent.click(within(machines).getByRole("button", { name: "Máy 2" }));
-
+    fireEvent.click(customers.getByRole("button", { name: "Chị Bình" }));
     expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
+
+    fireEvent.click(customers.getByRole("button", { name: "Không rõ khách" }));
+    expect((await days()).map((day) => day.slice(1))).toEqual([
+      ["06:00–07:00 · Tennis S6ĐÃ ĐĂNG KÝMáy 2Xem vé"], // the machine it was read on
+    ]);
   });
 
-  it("offers no machine to choose with one alone", async () => {
-    await openTab([ticket("1000002")]);
+  it("offers no customer to choose with one alone", async () => {
+    await openTab([ticket("1000002", AN)]);
     await days();
-    expect(within(panel()).queryByRole("group", { name: "Vé của máy" })).not.toBeInTheDocument();
+    expect(within(panel()).queryByRole("group", { name: "Vé của khách" })).not.toBeInTheDocument();
   });
 
   it("names the MuMu instance of a machine that has no tab any more", async () => {
     await openTab([ticket("1000002", { device: 7 })]);
-    expect((await days())[0]?.[1]).toContain("MuMu 7 · 1000002");
+    expect((await days())[0]?.[1]).toContain("MuMu 7");
   });
 
-  it("keeps the machine chosen while another section shows", async () => {
+  it("keeps the customer chosen while another section shows", async () => {
     await openTab();
     await days();
-    fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
+    fireEvent.click(within(panel()).getByRole("button", { name: "Chị Bình" }));
     fireEvent.click(screen.getByRole("link", { name: "Lịch sử" }));
 
     fireEvent.click(screen.getByRole("link", { name: "Vé" }));
@@ -126,10 +139,10 @@ describe("Tickets list", () => {
     expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
   });
 
-  it("lists every machine's once the machine chosen has no ticket left", async () => {
+  it("lists every customer's once the one chosen has no ticket left", async () => {
     const { fetch, live } = await openTab();
     await days();
-    fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
+    fireEvent.click(within(panel()).getByRole("button", { name: "Chị Bình" }));
     const left = TICKETS.filter(({ device }) => device === 0);
     fetch.mockImplementation((input) =>
       Promise.resolve(
@@ -194,7 +207,7 @@ describe("Tickets list", () => {
 describe("Ticket dialog", () => {
   it("shows the ticket's picture alone and saves it under a name that tells it", async () => {
     await openTab();
-    const dialog = await openTicket(/1000002/);
+    const dialog = await openTicket(/^18:00–19:00 · Tennis/);
     const url = "/api/tickets/1000002/photo?seen=2026-10-14T06%3A01%3A12.000";
 
     expect(dialog).toHaveAccessibleName("18:00–19:00 · Tennis S6");
@@ -209,7 +222,7 @@ describe("Ticket dialog", () => {
 
   it("moves through the tickets listed, with its buttons and the arrow keys", async () => {
     await openTab();
-    const dialog = await openTicket(/1000002/);
+    const dialog = await openTicket(/^18:00–19:00 · Tennis/);
     expect(within(dialog).getByText("1/3")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "Vé trước" })).toBeDisabled();
 
@@ -228,7 +241,7 @@ describe("Ticket dialog", () => {
 
   it("says when a ticket has no picture", async () => {
     await openTab();
-    const dialog = await openTicket(/1000003/);
+    const dialog = await openTicket(/^19:00–20:00 · Tennis/);
     expect(within(dialog).queryByRole("img")).not.toBeInTheDocument();
     expect(within(dialog).getByText(/^Vé này chưa có ảnh\./)).toBeInTheDocument();
     expect(within(dialog).queryByRole("link")).not.toBeInTheDocument(); // nothing to save
@@ -236,7 +249,7 @@ describe("Ticket dialog", () => {
 
   it("says when the picture does not open, for that ticket alone", async () => {
     await openTab();
-    const dialog = await openTicket(/1000002/);
+    const dialog = await openTicket(/^18:00–19:00 · Tennis/);
     fireEvent.error(within(dialog).getByRole("img"));
     expect(within(dialog).getByText("Không mở được ảnh vé.")).toBeInTheDocument();
     expect(within(dialog).queryByRole("link")).not.toBeInTheDocument();
@@ -248,7 +261,7 @@ describe("Ticket dialog", () => {
 
   it("closes with its button, Escape and a press beside it, and gives the focus back", async () => {
     await openTab();
-    const row = await within(panel()).findByRole("button", { name: /1000002/ });
+    const row = await within(panel()).findByRole("button", { name: /^18:00–19:00 · Tennis/ });
     row.focus();
     fireEvent.click(row);
     expect(screen.getByRole("dialog")).toHaveFocus();
@@ -273,7 +286,7 @@ describe("Ticket dialog", () => {
 
   it("keeps the keys working when a move takes the control pressed away", async () => {
     await openTab();
-    const dialog = await openTicket(/1000002/);
+    const dialog = await openTicket(/^18:00–19:00 · Tennis/);
     const next = within(dialog).getByRole("button", { name: "Vé sau" });
     next.focus();
     fireEvent.click(next);
@@ -289,7 +302,7 @@ describe("Ticket dialog", () => {
 
   it("keeps Tab inside", async () => {
     await openTab();
-    const dialog = await openTicket(/1000003/);
+    const dialog = await openTicket(/^19:00–20:00 · Tennis/);
     const first = within(dialog).getByRole("button", { name: "Vé trước" });
     const last = within(dialog).getByRole("button", { name: "Vé sau" });
 

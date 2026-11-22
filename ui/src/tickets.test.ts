@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { ticket } from "./test/tickets";
-import { photoFileName, photoUrl, ticketDays, ticketDevices, ticketsToUse } from "./tickets";
+import {
+  photoFileName,
+  photoUrl,
+  ticketCustomers,
+  ticketDays,
+  ticketsToUse,
+  UNKNOWN,
+} from "./tickets";
 
 const TICKETS = [
   ticket("5", { play_date: "2026-10-17" }),
@@ -34,9 +41,13 @@ describe("ticketDays", () => {
   });
 });
 
-describe("ticketDevices", () => {
-  it("names each machine with tickets once", () => {
-    expect(ticketDevices([...TICKETS, ticket("7", { device: 2 })])).toEqual([0, 1, 2]);
+describe("ticketCustomers", () => {
+  it("names each customer with tickets once, those not known last", () => {
+    const list = [null, "Chị Bình", "Anh An", "Đức", "Anh An", null].map((customer, index) =>
+      ticket(String(index), { customer }),
+    );
+    expect(ticketCustomers(list)).toEqual(["Anh An", "Chị Bình", "Đức", UNKNOWN]);
+    expect(ticketCustomers(list.slice(1, 5))).not.toContain(UNKNOWN);
   });
 });
 

@@ -327,8 +327,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   address: `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
   `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes,
   an account's filled with its saved login, read then and kept nowhere else, a removal is beside each edit and
-  asks first, saying which machine loses its account), `TicketsTab` (every machine's tickets still to use by day of play, of
-  one machine or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
+  asks first, saying which machine loses its account), `TicketsTab` (the tickets still to use by day of play, of one customer or
+  all, no cancelled ones; those whose holder is not known name the machine, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`; read
   again after `tickets_saved`) and `HistoryTab` (runs ten days at a time, real bookings unless
   dry runs are ticked; `?run=` shows one run's slots, steps and log beside the list). What a

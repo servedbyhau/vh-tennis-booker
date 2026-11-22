@@ -4,6 +4,7 @@ import type { RunSummary } from "../../api/types";
 import { localToday, relativeDay } from "../../format";
 import { runOrigin } from "../../runs";
 import type { Formatter } from "../../useFormat";
+import { holderText } from "./ticketText";
 
 type RunFacts = Pick<RunSummary, "play_date" | "court" | "started_at">;
 
@@ -22,14 +23,26 @@ export function runShortTitle(t: TFunction, f: Formatter, run: RunFacts): string
 }
 
 /**
+ * Say whose account a run booked with, else the MuMu instance of a run beside the first; empty
+ * for one of the first that is not known.
+ */
+export function runHolder(
+  t: TFunction,
+  run: Pick<RunSummary, "device" | "customer" | "account">,
+): string {
+  return holderText(run) ?? (run.device ? t("pages.ticket.mumuName", { index: run.device }) : "");
+}
+
+/**
  * Say when and how a run went: "đặt sáng nay 24/10 · theo hẹn giờ", "chạy thử chiều hôm qua
- * 23/10". A day further away names itself already ("sáng Thứ Hai 19/10"). A run of another
- * MuMu instance, booking side by side with the first, ends with it ("· MuMu 1").
+ * 23/10". A day further away names itself already ("sáng Thứ Hai 19/10"). It ends with whose
+ * account it booked with ("· Anh An · Căn A"), else with the MuMu instance of a run beside the
+ * first ("· MuMu 1").
  */
 export function runWhen(
   t: TFunction,
   f: Formatter,
-  run: RunFacts & Pick<RunSummary, "dry_run" | "trigger"> & { device?: number | null },
+  run: RunFacts & Pick<RunSummary, "dry_run" | "trigger" | "device" | "customer" | "account">,
   today: string = localToday(),
 ): string {
   const near = relativeDay(run.started_at, today) !== null;
@@ -39,5 +52,5 @@ export function runWhen(
   const text = run.dry_run
     ? t("pages.history.dry", { when })
     : t("pages.history.booked", { when, by: runOrigin(t, run.trigger) });
-  return run.device ? t("pages.history.instance", { text, index: run.device }) : text;
+  return [text, runHolder(t, run)].filter(Boolean).join(" · ");
 }

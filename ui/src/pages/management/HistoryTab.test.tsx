@@ -196,6 +196,20 @@ describe("History list", () => {
     expect(second).toMatch(/theo hẹn giờ 15\/10$/); // the first instance
   });
 
+  it("names whose account a run booked with, the account on hover and in the run", async () => {
+    const holder = { device: 1, customer: "Anh An", account: "Căn A" };
+    const theirs = runSummary(27, holder);
+    renderApp(`${paths.history}?run=27`, {
+      "GET /api/runs": reply([theirs]),
+      "GET /api/runs/27": reply({ ...theirs, steps: [], log_lines: [] }),
+    });
+
+    const [first] = await rows();
+    expect(first).toMatch(/theo hẹn giờ 15\/10 · Anh An$/);
+    expect(screen.getByTitle("Anh An · Căn A")).toBeVisible();
+    expect(await screen.findByText(/theo hẹn giờ · Anh An · Căn A$/)).toBeVisible();
+  });
+
   it("says when there are dry runs only", async () => {
     renderApp(paths.history, { "GET /api/runs": reply([DRY]) });
 

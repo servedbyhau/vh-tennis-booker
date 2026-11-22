@@ -7,44 +7,50 @@ import { PageTitle } from "../../components/PageTitle";
 import { QueryView } from "../../components/QueryView";
 import { localToday } from "../../format";
 import { useMachines } from "../../machines";
-import { ticketDays, ticketDevices, ticketsToUse } from "../../tickets";
+import { ticketCustomer, ticketCustomers, ticketDays, ticketsToUse, UNKNOWN } from "../../tickets";
 import { useFormat } from "../../useFormat";
 import { TicketDialog } from "./TicketDialog";
 import { TicketStamp } from "./TicketStamp";
 import styles from "./TicketsTab.module.css";
 import { useManagement } from "./state";
-import { machineName } from "../home/ticketText";
+import { holderText, machineName } from "../home/ticketText";
 
-interface MachineFilterProps {
-  /** The machines with tickets. */
-  devices: readonly number[];
-  /** The MuMu instance whose tickets show, `null` for every machine's. */
-  device: number | null;
-  onDevice: (device: number | null) => void;
+interface CustomerFilterProps {
+  /** The customers with tickets. */
+  customers: readonly string[];
+  /** The customer whose tickets show, `null` for every customer's. */
+  customer: string | null;
+  onCustomer: (customer: string | null) => void;
 }
 
 /** Whose tickets to list. */
-function MachineFilter({ devices, device, onDevice }: MachineFilterProps) {
+function CustomerFilter({ customers, customer, onCustomer }: CustomerFilterProps) {
   const { t } = useTranslation();
-  const machines = useMachines();
   return (
-    <div role="group" aria-label={t("pages.tickets.machine")} className={styles.chips}>
-      {[null, ...devices].map((choice) => (
+    <div role="group" aria-label={t("pages.tickets.customer")} className={styles.chips}>
+      {[null, ...customers].map((choice) => (
         <button
           key={choice ?? "all"}
           type="button"
-          aria-pressed={device === choice}
+          aria-pressed={customer === choice}
           className={styles.chip}
-          onClick={() => onDevice(choice)}
+          onClick={() => onCustomer(choice)}
         >
-          {choice === null ? t("pages.tickets.all") : machineName(t, machines, choice)}
+          {choice === null
+            ? t("pages.tickets.all")
+            : choice === UNKNOWN
+              ? t("pages.tickets.unknown")
+              : choice}
         </button>
       ))}
     </div>
   );
 }
 
-/** One ticket in two lines: its slot, court and status, then its machine, code and picture. */
+/**
+ * One ticket in two lines: its slot, court and status, then whose it is (the machine, while that is
+ * not known) and its picture.
+ */
 function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
   const { t } = useTranslation();
   const f = useFormat();
@@ -59,11 +65,11 @@ function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
           <TicketStamp ticket={ticket} />
         </span>
         <span className={styles.line}>
-          <span>
-            {t("pages.tickets.where", {
-              machine: machineName(t, machines, ticket.device),
-              code: ticket.code,
-            })}
+          <span className={styles.holder} title={holderText(ticket) ?? undefined}>
+            <span className={styles.customer}>
+              {ticket.customer ?? machineName(t, machines, ticket.device)}
+            </span>
+            {ticket.account !== null && <span className={styles.account}>{ticket.account}</span>}
           </span>
           <span className={ticket.has_photo ? styles.photo : undefined}>
             {ticket.has_photo && <Icon name="picture" />}
@@ -78,25 +84,27 @@ function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
 interface TicketListProps {
   /** The tickets still to use. */
   tickets: Ticket[];
-  device: number | null;
-  onDevice: (device: number | null) => void;
+  customer: string | null;
+  onCustomer: (customer: string | null) => void;
 }
 
-/** The tickets of one machine or all, day by day, and the one opened over them. */
-function TicketList({ tickets, device, onDevice }: TicketListProps) {
+/** The tickets of one customer or all, day by day, and the one opened over them. */
+function TicketList({ tickets, customer, onCustomer }: TicketListProps) {
   const { t } = useTranslation();
   const f = useFormat();
   const [openCode, setOpenCode] = useState<string | null>(null);
-  const devices = ticketDevices(tickets);
-  // A machine chosen before its last ticket went: every machine's.
-  const chosen = device !== null && devices.includes(device) ? device : null;
-  const days = ticketDays(tickets.filter((ticket) => chosen === null || ticket.device === chosen));
+  const customers = ticketCustomers(tickets);
+  // A customer chosen before their last ticket went: every customer's.
+  const chosen = customer !== null && customers.includes(customer) ? customer : null;
+  const days = ticketDays(
+    tickets.filter((ticket) => chosen === null || ticketCustomer(ticket) === chosen),
+  );
   const shown = days.flatMap((day) => day.tickets);
   const open = shown.findIndex((ticket) => ticket.code === openCode);
   return (
     <>
-      {devices.length > 1 && (
-        <MachineFilter devices={devices} device={chosen} onDevice={onDevice} />
+      {customers.length > 1 && (
+        <CustomerFilter customers={customers} customer={chosen} onCustomer={onCustomer} />
       )}
       <div className={styles.scroll}>
         {days.map(({ day, tickets: list }) => (
@@ -132,13 +140,13 @@ function TicketList({ tickets, device, onDevice }: TicketListProps) {
 }
 
 /**
- * The tickets booked and still to use, of every machine's account, as the runs read them in the
+ * The tickets booked and still to use, of every customer's accounts, as the runs read them in the
  * Vinhomes app: by day of play until that day is over, each opening its picture to send. Nothing
  * here asks the app again or changes a ticket.
  */
 export function TicketsTab() {
   const { t } = useTranslation();
-  const { device, onDevice } = useManagement();
+  const { customer, onCustomer } = useManagement();
   const tickets = useTickets();
   const today = localToday();
   return (
@@ -150,7 +158,11 @@ export function TicketsTab() {
         empty={<span className={styles.none}>{t("pages.tickets.empty")}</span>}
       >
         {(list) => (
-          <TicketList tickets={ticketsToUse(list, today)} device={device} onDevice={onDevice} />
+          <TicketList
+            tickets={ticketsToUse(list, today)}
+            customer={customer}
+            onCustomer={onCustomer}
+          />
         )}
       </QueryView>
     </section>

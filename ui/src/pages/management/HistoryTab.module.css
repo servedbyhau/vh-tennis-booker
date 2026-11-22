@@ -136,6 +136,14 @@
   gap: var(--space-1) 10px;
 }
 
+/* A long name ends in dots; the whole of it is in the tooltip. */
+.holder {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
 .when {
   flex: none;
   display: inline-flex;

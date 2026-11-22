@@ -15,8 +15,13 @@ const SECTIONS = [
 export function ManagementPage() {
   const { t } = useTranslation();
   const [withDry, setWithDry] = useState(false);
-  const [device, setDevice] = useState<number | null>(null);
-  const state: ManagementState = { withDry, onWithDry: setWithDry, device, onDevice: setDevice };
+  const [customer, setCustomer] = useState<string | null>(null);
+  const state: ManagementState = {
+    withDry,
+    onWithDry: setWithDry,
+    customer,
+    onCustomer: setCustomer,
+  };
   return (
     <>
       <h1 className="visually-hidden">{t("nav.management")}</h1>

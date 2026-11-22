@@ -103,7 +103,6 @@
       "runOn": "Lần chạy {{day}}",
       "booked": "đặt {{when}} · {{by}}",
       "dry": "chạy thử {{when}}",
-      "instance": "{{text}} · MuMu {{index}}",
       "slot": {
         "booked": "ĐÃ ĐẶT",
         "failed": "KHÔNG ĐẶT ĐƯỢC",
@@ -118,11 +117,11 @@
     },
     "tickets": {
       "title": "Vé",
-      "machine": "Vé của máy",
-      "all": "Mọi máy",
+      "customer": "Vé của khách",
+      "all": "Mọi khách",
+      "unknown": "Không rõ khách",
       "count": "{{count}} vé",
       "row": "{{slot}} · {{court}}",
-      "where": "{{machine}} · {{code}}",
       "view": "Xem vé",
       "noPhoto": "chưa có ảnh",
       "empty": "Chưa có vé nào. Vé đặt được hiện ở đây đến hết ngày chơi.",
