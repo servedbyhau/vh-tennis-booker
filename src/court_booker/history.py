@@ -108,6 +108,11 @@ MIGRATIONS = (
     );
     CREATE INDEX accounts_by_customer ON accounts (customer_id);
     """,
+    # Who speaks for a customer, often one person for a group, and how to reach them.
+    """
+    ALTER TABLE customers ADD COLUMN representative TEXT NOT NULL DEFAULT '';
+    ALTER TABLE customers ADD COLUMN contact TEXT NOT NULL DEFAULT '';
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 

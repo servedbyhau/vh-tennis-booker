@@ -8,7 +8,7 @@ import { StatusLine } from "./StatusLine";
 import { UpdateButton } from "./UpdateButton";
 
 /**
- * Show the app's name with the installed version, the two pages, the status line, the update button (in the
+ * Show the app's name with the installed version, the two pages in the middle, the status line, the update button (in the
  * desktop window, when a newer version is out) and the language switch, ruled off in ink.
  */
 export function SiteHeader() {
@@ -32,15 +32,15 @@ export function SiteHeader() {
         <NavLink to={paths.overview} end className={styles.link}>
           {t("nav.booking")}
         </NavLink>
-        <NavLink to={paths.accounts} className={styles.link}>
-          {t("nav.accounts")}
+        <NavLink to={paths.customers} className={styles.link}>
+          {t("nav.customers")}
         </NavLink>
       </nav>
-      <div className={styles.status}>
+      <div className={styles.end}>
         {overview.data && <StatusLine overview={overview.data} />}
+        <UpdateButton />
+        <LanguageSwitch />
       </div>
-      <UpdateButton />
-      <LanguageSwitch />
     </header>
   );
 }

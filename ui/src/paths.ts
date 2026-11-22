@@ -1,7 +1,7 @@
 /** The address of every screen; paths stay English in both languages. */
 export const paths = {
   overview: "/",
-  accounts: "/accounts",
+  customers: "/customers",
 } as const;
 
 /**

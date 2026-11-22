@@ -26,7 +26,7 @@
   "nav": {
     "label": "Pages",
     "booking": "Booking",
-    "accounts": "Accounts"
+    "customers": "Customers"
   },
   "pages": {
     "overview": {
@@ -156,28 +156,28 @@
       "save": "Save",
       "close": "Close"
     },
-    "accounts": {
-      "title": "Account management",
-      "lead": "Keep the customers with the Vinhomes accounts they gave, and choose the account each machine books with.",
+    "customers": {
+      "title": "Customers",
+      "name": "Customer or group name",
+      "representative": "Representative",
+      "contact": "Contact (phone, Zalo)",
+      "accounts": "Vinhomes accounts",
+      "accountCount": "Accounts: {{count}}",
+      "noFacts": "No contact yet. Press \"Edit customer\" to add it.",
+      "empty": "No customers yet. Press \"Add customer\" to start.",
       "machines": {
-        "title": "Who each machine books for",
-        "off": "off",
-        "none": "No account attached",
-        "noneHint": "Books with the account logged in on MuMu.",
-        "detach": "Detach",
-        "detachFrom": "Detach the account from {{machine}}",
+        "title": "Machines",
+        "off": "{{machine}} (off)",
+        "none": "none attached",
         "hint": "From its next run on, a machine logs in with the account attached. To check it now, go to Booking and press \"{{dryRun}}\"."
       },
-      "customers": "Customers",
       "attach": "Attach to",
       "attachOf": "Attach {{phone}} to a machine",
       "editCustomer": "Edit customer",
-      "empty": "No customers yet. Press \"Add customer\" to start.",
       "label": "Label",
       "attached": "Attached to {{machine}}. Detach it to remove it.",
       "add": "Add customer",
       "edit": "Edit",
-      "name": "Customer name",
       "note": "Note",
       "noAccounts": "No accounts yet.",
       "addAccount": "Add account",
@@ -220,14 +220,14 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "A resident account. Attach one on the Accounts page so the app logs in by itself."
+          "hint": "A resident account. Attach one on the Customers page so the app logs in by itself."
         },
         "off": "off, not counted in the setup"
       },
       "account": {
         "title": "Booking account",
         "none": "None attached: books with the account logged in on MuMu.",
-        "manage": "Manage accounts →"
+        "manage": "Manage customers →"
       },
       "guide": {
         "title": "Guide",
@@ -254,7 +254,7 @@
           },
           "loggedOut": {
             "question": "The app was logged out",
-            "answer": "Attach an account on the Accounts page so a run logs in by itself. If the app says the password is wrong, change it there: the app locks an account after 5 wrong ones."
+            "answer": "Attach an account on the Customers page so a run logs in by itself. If the app says the password is wrong, change it there: the app locks an account after 5 wrong ones."
           }
         }
       }

@@ -64,9 +64,9 @@ function EditForm({ title, pending, error, onSave, onClose, remove, children }: 
       <div className={styles.fields}>{children}</div>
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={pending}>
-          {t("pages.accounts.save")}
+          {t("pages.customers.save")}
         </Button>
-        <Button onClick={onClose}>{t("pages.accounts.cancel")}</Button>
+        <Button onClick={onClose}>{t("pages.customers.cancel")}</Button>
       </div>
       {error !== null && (
         <p role="alert" className={styles.error}>
@@ -89,19 +89,19 @@ function Remove({ machine, remove }: RemoveProps) {
   const { t } = useTranslation();
   const [asked, setAsked] = useState(false);
   if (machine !== null) {
-    return <p className={styles.note}>{t("pages.accounts.attached", { machine })}</p>;
+    return <p className={styles.note}>{t("pages.customers.attached", { machine })}</p>;
   }
   return (
     <div className={styles.actions}>
       {asked ? (
         <>
           <Button disabled={remove.isPending} onClick={remove.mutate}>
-            {t("pages.accounts.removeSure")}
+            {t("pages.customers.removeSure")}
           </Button>
-          <Button onClick={() => setAsked(false)}>{t("pages.accounts.keep")}</Button>
+          <Button onClick={() => setAsked(false)}>{t("pages.customers.keep")}</Button>
         </>
       ) : (
-        <Button onClick={() => setAsked(true)}>{t("pages.accounts.remove")}</Button>
+        <Button onClick={() => setAsked(true)}>{t("pages.customers.remove")}</Button>
       )}
       {remove.error !== null && (
         <p role="alert" className={styles.error}>
@@ -112,28 +112,31 @@ function Remove({ machine, remove }: RemoveProps) {
   );
 }
 
-/** A customer's name and note. */
-export function CustomerForm({
-  customer,
-  onClose,
-}: {
+interface CustomerFormProps {
   customer: Customer | null;
   onClose: () => void;
-}) {
+  /** Gets a new customer once saved, in place of `onClose`. */
+  onSaved?: (customer: Customer) => void;
+}
+
+/** Who a customer is. */
+export function CustomerForm({ customer, onClose, onSaved }: CustomerFormProps) {
   const { t } = useTranslation();
   const machines = useMachines();
   const add = useAddCustomer();
   const change = useChangeCustomer();
   const remove = useRemoveCustomer();
   const [name, setName] = useState(customer?.name ?? "");
+  const [representative, setRepresentative] = useState(customer?.representative ?? "");
+  const [contact, setContact] = useState(customer?.contact ?? "");
   const [note, setNote] = useState(customer?.note ?? "");
   const save = customer === null ? add : change;
   const device = customer?.accounts.find((account) => account.device !== null)?.device ?? null;
 
   function onSave() {
-    const fields = { name, note };
+    const fields = { name, representative, contact, note };
     if (customer === null) {
-      add.mutate(fields, { onSuccess: onClose });
+      add.mutate(fields, { onSuccess: onSaved ?? onClose });
     } else {
       change.mutate({ id: customer.id, fields }, { onSuccess: onClose });
     }
@@ -141,7 +144,7 @@ export function CustomerForm({
 
   return (
     <EditForm
-      title={t(customer === null ? "pages.accounts.add" : "pages.accounts.editCustomer")}
+      title={t(customer === null ? "pages.customers.add" : "pages.customers.editCustomer")}
       pending={save.isPending}
       error={save.error}
       onSave={onSave}
@@ -159,7 +162,7 @@ export function CustomerForm({
         )
       }
     >
-      <Field label={t("pages.accounts.name")}>
+      <Field label={t("pages.customers.name")}>
         <input
           required
           pattern=".*\S.*"
@@ -169,7 +172,23 @@ export function CustomerForm({
           onChange={(event) => setName(event.target.value)}
         />
       </Field>
-      <Field label={t("pages.accounts.note")}>
+      <Field label={t("pages.customers.representative")}>
+        <input
+          maxLength={MAX_NAME}
+          autoComplete="off"
+          value={representative}
+          onChange={(event) => setRepresentative(event.target.value)}
+        />
+      </Field>
+      <Field label={t("pages.customers.contact")}>
+        <input
+          maxLength={MAX_NAME}
+          autoComplete="off"
+          value={contact}
+          onChange={(event) => setContact(event.target.value)}
+        />
+      </Field>
+      <Field label={t("pages.customers.note")}>
         <input
           maxLength={MAX_NOTE}
           autoComplete="off"
@@ -210,7 +229,7 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
 
   return (
     <EditForm
-      title={t(account === null ? "pages.accounts.addAccount" : "pages.accounts.edit")}
+      title={t(account === null ? "pages.customers.addAccount" : "pages.customers.edit")}
       pending={save.isPending}
       error={save.error}
       onSave={onSave}
@@ -229,7 +248,7 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
       }
     >
       {account === null && (
-        <Field label={t("pages.accounts.phone")}>
+        <Field label={t("pages.customers.phone")}>
           <input
             type="tel"
             inputMode="numeric"
@@ -242,7 +261,9 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
           />
         </Field>
       )}
-      <Field label={t(account === null ? "pages.accounts.password" : "pages.accounts.newPassword")}>
+      <Field
+        label={t(account === null ? "pages.customers.password" : "pages.customers.newPassword")}
+      >
         <input
           type="password"
           autoComplete="new-password"
@@ -252,7 +273,7 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
           onChange={(event) => setPassword(event.target.value)}
         />
       </Field>
-      <Field label={t("pages.accounts.label")}>
+      <Field label={t("pages.customers.label")}>
         <input
           maxLength={MAX_NAME}
           autoComplete="off"
@@ -260,7 +281,7 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
           onChange={(event) => setLabel(event.target.value)}
         />
       </Field>
-      <p className={styles.note}>{t("pages.accounts.private")}</p>
+      <p className={styles.note}>{t("pages.customers.private")}</p>
     </EditForm>
   );
 }

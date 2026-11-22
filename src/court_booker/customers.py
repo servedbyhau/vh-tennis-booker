@@ -56,10 +56,14 @@ class Account:
 
 @dataclass(frozen=True)
 class Customer:
-    """A customer with the accounts they gave, the first one first."""
+    """A customer, a person or a group, with the accounts they gave, the first one first."""
 
     id: str
     name: str
+    representative: str
+    """Who speaks for them; may be empty."""
+    contact: str
+    """How to reach them, as the user wrote it; may be empty."""
     note: str
     accounts: tuple[Account, ...]
 
@@ -85,9 +89,10 @@ class CustomerBook:
             device = None if phone is None else devices.get(phone)
             accounts.setdefault(customer_id, []).append(Account(account_id, label, phone, device))
         return [
-            Customer(customer_id, name, note, tuple(accounts.get(customer_id, ())))
-            for customer_id, name, note in self.db.execute(
-                "SELECT id, name, note FROM customers ORDER BY created_at, rowid"
+            Customer(*row, accounts=tuple(accounts.get(row[0], ())))
+            for row in self.db.execute(
+                "SELECT id, name, representative, contact, note FROM customers"
+                " ORDER BY created_at, rowid"
             )
         ]
 
@@ -121,22 +126,29 @@ class CustomerBook:
 
     # Customers ---------------------------------------------------------------
 
-    def add_customer(self, name: str, note: str = "") -> Customer:
+    def add_customer(
+        self, name: str, note: str = "", representative: str = "", contact: str = ""
+    ) -> Customer:
         """Add a customer without accounts."""
         customer_id = _new_id()
         with self.db:
             self.db.execute(
-                "INSERT INTO customers (id, name, note, created_at) VALUES (?, ?, ?, ?)",
-                (customer_id, name, note, _now()),
+                "INSERT INTO customers (id, name, representative, contact, note, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                (customer_id, name, representative, contact, note, _now()),
             )
-        return Customer(customer_id, name, note, ())
+        return Customer(customer_id, name, representative, contact, note, ())
 
-    def change_customer(self, customer_id: str, name: str, note: str) -> Customer:
-        """Give the customer another name and note."""
+    def change_customer(
+        self, customer_id: str, name: str, note: str, representative: str = "", contact: str = ""
+    ) -> Customer:
+        """Change who the customer is; every fact is given."""
         self.customer(customer_id)
         with self.db:
             self.db.execute(
-                "UPDATE customers SET name = ?, note = ? WHERE id = ?", (name, note, customer_id)
+                "UPDATE customers SET name = ?, representative = ?, contact = ?, note = ?"
+                " WHERE id = ?",
+                (name, representative, contact, note, customer_id),
             )
         return self.customer(customer_id)
 

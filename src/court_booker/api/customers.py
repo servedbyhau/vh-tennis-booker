@@ -52,6 +52,8 @@ class CustomerRecord(BaseModel):
 
     id: str
     name: str
+    representative: str
+    contact: str
     note: str
     accounts: list[CustomerAccount]
 
@@ -62,6 +64,8 @@ class CustomerFields(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: Name
+    representative: Label = ""
+    contact: Label = ""
     note: Note = ""
 
 
@@ -120,6 +124,8 @@ def shown(customer: Customer) -> CustomerRecord:
     return CustomerRecord(
         id=customer.id,
         name=customer.name,
+        representative=customer.representative,
+        contact=customer.contact,
         note=customer.note,
         accounts=[shown_account(account) for account in customer.accounts],
     )
@@ -135,14 +141,14 @@ def list_customers(book: Book) -> list[CustomerRecord]:
 def add_customer(book: Book, fields: CustomerFields) -> CustomerRecord:
     """Add a customer without accounts."""
     with _changing:
-        return shown(book.add_customer(fields.name, fields.note))
+        return shown(book.add_customer(**fields.model_dump()))
 
 
 @router.put("/customers/{customer_id}", response_model=CustomerRecord)
 def change_customer(book: Book, customer_id: RecordId, fields: CustomerFields) -> CustomerRecord:
-    """Change a customer's name and note."""
+    """Change who a customer is; every fact not given is emptied."""
     with _changing:
-        return shown(book.change_customer(customer_id, fields.name, fields.note))
+        return shown(book.change_customer(customer_id, **fields.model_dump()))
 
 
 @router.delete("/customers/{customer_id}", status_code=204, response_class=Response)

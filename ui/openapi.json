@@ -824,7 +824,7 @@
           "customers"
         ],
         "summary": "Change Customer",
-        "description": "Change a customer's name and note.",
+        "description": "Change who a customer is; every fact not given is emptied.",
         "operationId": "change_customer_api_customers__customer_id__put",
         "parameters": [
           {
@@ -1696,6 +1696,18 @@
             "minLength": 1,
             "title": "Name"
           },
+          "representative": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Representative",
+            "default": ""
+          },
+          "contact": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Contact",
+            "default": ""
+          },
           "note": {
             "type": "string",
             "maxLength": 500,
@@ -1721,6 +1733,14 @@
             "type": "string",
             "title": "Name"
           },
+          "representative": {
+            "type": "string",
+            "title": "Representative"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
           "note": {
             "type": "string",
             "title": "Note"
@@ -1737,6 +1757,8 @@
         "required": [
           "id",
           "name",
+          "representative",
+          "contact",
           "note",
           "accounts"
         ],

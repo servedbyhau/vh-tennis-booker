@@ -7,5 +7,5 @@ export function account(id: string, fields: Partial<CustomerAccount> = {}): Cust
 
 /** A customer as GET /api/customers gives it, with made-up values. */
 export function customer(id: string, fields: Partial<Customer> = {}): Customer {
-  return { id, name: "Anh An", note: "", accounts: [], ...fields };
+  return { id, name: "Anh An", representative: "", contact: "", note: "", accounts: [], ...fields };
 }

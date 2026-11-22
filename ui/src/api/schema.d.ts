@@ -256,7 +256,7 @@ export interface paths {
         get?: never;
         /**
          * Change Customer
-         * @description Change a customer's name and note.
+         * @description Change who a customer is; every fact not given is emptied.
          */
         put: operations["change_customer_api_customers__customer_id__put"];
         post?: never;
@@ -554,6 +554,16 @@ export interface components {
             /** Name */
             name: string;
             /**
+             * Representative
+             * @default
+             */
+            representative: string;
+            /**
+             * Contact
+             * @default
+             */
+            contact: string;
+            /**
              * Note
              * @default
              */
@@ -568,6 +578,10 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /** Representative */
+            representative: string;
+            /** Contact */
+            contact: string;
             /** Note */
             note: string;
             /** Accounts */

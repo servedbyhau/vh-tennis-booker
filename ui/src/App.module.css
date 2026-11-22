@@ -32,13 +32,6 @@
   min-height: 0;
 }
 
-/* As wide as the home screen, so the header stays where it is; it scrolls as a page. */
-.wide {
-  max-width: calc(var(--home-width) + 2 * var(--space-8));
-  min-width: var(--home-min-width);
-  gap: 0;
-}
-
 /* A narrow window keeps the text clear of its edges without wasting width. */
 @media (max-width: 600px) {
   .page {

@@ -26,7 +26,7 @@
   "nav": {
     "label": "Trang",
     "booking": "Đặt sân",
-    "accounts": "Tài khoản"
+    "customers": "Khách hàng"
   },
   "pages": {
     "overview": {
@@ -156,28 +156,28 @@
       "save": "Lưu vé",
       "close": "Đóng"
     },
-    "accounts": {
-      "title": "Quản lý tài khoản",
-      "lead": "Ghi khách và các tài khoản Vinhomes họ đưa, rồi chọn mỗi máy đặt bằng tài khoản nào.",
+    "customers": {
+      "title": "Khách hàng",
+      "name": "Tên khách hoặc nhóm",
+      "representative": "Người đại diện",
+      "contact": "Liên hệ (SĐT, Zalo)",
+      "accounts": "Tài khoản Vinhomes",
+      "accountCount": "{{count}} tài khoản",
+      "noFacts": "Chưa có thông tin liên hệ. Bấm \"Sửa khách\" để thêm.",
+      "empty": "Chưa có khách nào. Bấm \"Thêm khách\" để bắt đầu.",
       "machines": {
-        "title": "Mỗi máy đặt cho ai",
-        "off": "đang tắt",
-        "none": "Chưa gắn tài khoản",
-        "noneHint": "Đặt bằng tài khoản đang đăng nhập trên MuMu.",
-        "detach": "Gỡ",
-        "detachFrom": "Gỡ tài khoản khỏi {{machine}}",
+        "title": "Các máy",
+        "off": "{{machine}} (tắt)",
+        "none": "chưa gắn",
         "hint": "Lượt chạy sau, máy tự đăng nhập đúng tài khoản đã gắn. Muốn kiểm tra ngay thì sang Đặt sân, bấm \"{{dryRun}}\"."
       },
-      "customers": "Khách hàng",
       "attach": "Gắn vào máy",
       "attachOf": "Gắn {{phone}} vào máy",
       "editCustomer": "Sửa khách",
-      "empty": "Chưa có khách nào. Bấm \"Thêm khách\" để bắt đầu.",
       "label": "Tên gợi nhớ",
       "attached": "Đang gắn vào {{machine}}. Gỡ ra rồi mới xóa được.",
       "add": "Thêm khách",
       "edit": "Sửa",
-      "name": "Tên khách",
       "note": "Ghi chú",
       "noAccounts": "Chưa có tài khoản nào.",
       "addAccount": "Thêm tài khoản",
@@ -220,14 +220,14 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Gắn tài khoản ở trang Tài khoản để app tự đăng nhập."
+          "hint": "Tài khoản cư dân. Gắn tài khoản ở trang Khách hàng để app tự đăng nhập."
         },
         "off": "đang tắt, không tính vào việc thiết lập"
       },
       "account": {
         "title": "Tài khoản đặt sân",
         "none": "Chưa gắn: đặt bằng tài khoản đang đăng nhập trên MuMu.",
-        "manage": "Quản lý tài khoản →"
+        "manage": "Quản lý khách hàng →"
       },
       "guide": {
         "title": "Hướng dẫn",
@@ -254,7 +254,7 @@
           },
           "loggedOut": {
             "question": "App bị đăng xuất",
-            "answer": "Gắn tài khoản ở trang Tài khoản để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở đó: app khóa tài khoản sau 5 lần sai."
+            "answer": "Gắn tài khoản ở trang Khách hàng để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở đó: app khóa tài khoản sau 5 lần sai."
           }
         }
       }
