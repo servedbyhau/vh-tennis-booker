@@ -1,0 +1,29 @@
+/* The foot of the panel. */
+.dryRun {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: var(--border-hairline) solid var(--color-hairline);
+}
+
+.line {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-align: center;
+}
+
+.button {
+  width: 100%;
+}
+
+.passed {
+  color: var(--color-stamp);
+  font-weight: var(--weight-semibold);
+}
+
+.failed {
+  color: var(--color-failed);
+  font-weight: var(--weight-semibold);
+}

@@ -40,7 +40,7 @@ function Card({ id, icon, title, children }: CardProps) {
 /** The three steps of a first use. */
 function Start({ start }: { start: string }) {
   const { t } = useTranslation();
-  const names = { dryRun: t("pages.ticket.dryRun.button"), daily: t("pages.ticket.autoShort") };
+  const names = { dryRun: t("pages.setup.dryRun.button"), daily: t("pages.setup.daily.title") };
   return (
     <section aria-labelledby="start-title" className={styles.start}>
       <h2 id="start-title" className={styles.startTitle}>

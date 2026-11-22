@@ -7,7 +7,7 @@ interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * `danger`: outlined in red, for what cannot be taken back.
    */
   variant?: "primary" | "secondary" | "danger";
-  /** `large` for the action a whole section is about, such as "Chạy thử ngay". */
+  /** `large` for the action a whole section is about, such as "Chạy thử". */
   size?: "normal" | "large";
 }
 

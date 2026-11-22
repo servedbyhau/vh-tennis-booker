@@ -75,7 +75,7 @@ describe("HomePage status line", () => {
       schedule: { ...status.schedule, enabled: true, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Chưa chạy thử đạt · bấm Chạy thử ngay");
+    expect(await statusLine()).toHaveTextContent("Chưa chạy thử đạt · bấm Chạy thử");
   });
 
   it("asks to turn the daily booking on once a dry run passed", async () => {
@@ -312,9 +312,10 @@ describe("HomePage live run", () => {
     );
 
     expect(await screen.findByText("Đang thiết lập tự động")).toBeInTheDocument();
-    const ticket = await screen.findByRole("region", { name: "Lần đặt tiếp theo" });
-    expect(within(ticket).getByText("Chạy thử tạm khóa cho tới khi xong")).toBeInTheDocument();
-    expect(within(ticket).getByRole("button", { name: "Chạy thử ngay" })).toBeDisabled();
+    expect(await screen.findByRole("region", { name: "Lần đặt tiếp theo" })).toBeInTheDocument();
+    const setup = screen.getByRole("region", { name: "Thiết lập" });
+    expect(within(setup).getByText("Chạy thử tạm khóa cho tới khi xong")).toBeInTheDocument();
+    expect(within(setup).getByRole("button", { name: "Chạy thử" })).toBeDisabled();
   });
 });
 

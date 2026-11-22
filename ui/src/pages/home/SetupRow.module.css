@@ -1,0 +1,55 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
+  border-radius: var(--radius-button);
+  background: var(--color-field);
+}
+
+/* Sand yellow: a dry run passed and the daily switch is still off. */
+.remind {
+  background: var(--color-highlight);
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--color-tint);
+  color: var(--color-muted);
+}
+
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: var(--text-control);
+  font-weight: var(--weight-semibold);
+}
+
+.hint,
+.problem {
+  font-size: var(--text-small);
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  color: var(--color-muted);
+}
+
+.remind .hint {
+  color: var(--color-ink);
+}
+
+.problem {
+  color: var(--color-failed);
+}

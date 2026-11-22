@@ -55,7 +55,7 @@ describe("GuidePage", () => {
     ).toEqual([
       "1Làm các việc chuẩn bị bên dưới, một lần.",
       "2Ở trang Đặt sân, chọn tài khoản, môn, sân và khung giờ cho từng máy.",
-      '3Bấm "Chạy thử ngay", đạt thì bật "Tự đặt".',
+      '3Bấm "Chạy thử", đạt thì bật "Tự đặt".',
     ]);
   });
 
