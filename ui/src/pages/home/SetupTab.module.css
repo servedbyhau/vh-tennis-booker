@@ -46,7 +46,7 @@
 }
 
 .item {
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 .check {

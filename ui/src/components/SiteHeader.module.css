@@ -5,7 +5,6 @@
   align-items: center;
   gap: var(--space-2) var(--space-5);
   min-height: var(--header-height);
-  border-bottom: var(--border) solid var(--color-ink);
 }
 
 .brand {
@@ -34,9 +33,9 @@
   display: flex;
   gap: 2px;
   padding: 3px;
-  border: var(--border-hairline) solid var(--color-ink);
   border-radius: var(--radius-pill);
-  background: var(--color-field);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
 }
 
 .link {

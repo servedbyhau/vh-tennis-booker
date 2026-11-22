@@ -33,10 +33,9 @@
   padding: var(--space-6) var(--space-7);
 }
 
-/* The run shown: tinted, with an ink bar at its edge. */
+/* The run shown. */
 .row[aria-current="true"] {
   background: var(--color-tint);
-  box-shadow: inset 4px 0 0 var(--color-ink);
 }
 
 .toolbar {
@@ -46,7 +45,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-1) var(--space-5);
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 .check {
@@ -92,7 +91,7 @@
 }
 
 .item {
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 .row {

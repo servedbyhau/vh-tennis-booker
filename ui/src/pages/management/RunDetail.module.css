@@ -21,7 +21,7 @@
   flex-direction: column;
   gap: var(--space-1);
   padding-bottom: 14px;
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 .heading {
@@ -55,7 +55,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 10px 0;
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 .slotHead {
@@ -107,7 +107,7 @@
   display: flex;
   gap: var(--space-3);
   padding: var(--space-2) 0;
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 .time {
@@ -161,8 +161,7 @@
 
 .technical {
   border-radius: var(--radius-stamp);
-  background: var(--color-ink);
-  color: var(--color-code);
+  background: var(--color-tint);
 }
 
 .technical summary {
@@ -179,6 +178,7 @@
 .technical pre {
   margin: 0;
   padding: var(--space-1) var(--space-3) var(--space-3);
+  color: var(--color-muted);
   overflow-x: auto;
   font-family: var(--font-mono);
   font-size: 11px;

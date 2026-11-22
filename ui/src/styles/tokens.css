@@ -9,12 +9,13 @@
   --color-ground: #e7e6e1; /* page background */
   --color-paper: #f8f7f3; /* cards and tickets */
   --color-field: #ffffff; /* inputs and selects */
-  --color-ink: #1c1b19; /* text, rules, dark fills */
+  --color-ink: #1c1b19; /* text, the main action, the page shown; never a rule */
   --color-muted: #5c5850; /* secondary text */
-  --color-faint: #8f8a7f; /* markers of pending steps, never text */
-  --color-rule: #a9a59a; /* dotted rows of lists and tables */
+  --color-faint: #8f8a7f; /* markers of pending steps, edges of buttons, never text */
+  --color-rule: #a9a59a; /* edges of fields, scroll bars */
   --color-perforation: #b9b5aa; /* dashed ticket stub, steps not reached */
   --color-line: #d6d2c8; /* the edge of a choice not chosen */
+  --color-hairline: #e4e0d6; /* what parts the top of a card from the rest, rows of a list */
   --color-tint: #ecebe4; /* the fill of a chosen choice */
   --color-shadow: #c9c6bc; /* edge under a card */
 
