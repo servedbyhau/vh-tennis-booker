@@ -302,7 +302,9 @@
       "full": "Tài khoản thuộc phân khu {{name}}",
       "plain": "Đã đọc phân khu của tài khoản"
     },
-    "logged_in": "App đã bị đăng xuất, đã tự đăng nhập lại",
+    "logged_in": "Đã đăng nhập bằng tài khoản đã lưu",
+    "account_checked": "Đúng tài khoản {{phone}}",
+    "account_switched": "Đã đổi sang tài khoản {{phone}}",
     "repaired": {
       "restart_mumu": "Có lỗi khi chuẩn bị, đã tự khởi động lại MuMu",
       "reconnect_adb": "Có lỗi khi chuẩn bị, đã tự kết nối lại MuMu",
@@ -423,6 +425,7 @@
     "loggedOut": "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
     "loginRefused": "App từ chối tài khoản đã lưu: {{message}}",
     "loginFailed": "Chưa tự đăng nhập lại được",
+    "wrongAccount": "Không chắc Vinhomes đang ở đúng tài khoản, nên không đặt",
     "notReady": "App Vinhomes chưa mở được",
     "appMissing": "App Vinhomes chưa được cài trên MuMu",
     "other": "Có lỗi, xem nhật ký"

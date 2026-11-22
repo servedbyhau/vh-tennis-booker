@@ -43,6 +43,7 @@ from court_booker.errors import (
     MultipleDevicesError,
     MuMuNotFoundError,
     RequestError,
+    WrongAccountError,
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
@@ -99,6 +100,7 @@ PERMANENT_ERRORS: tuple[type[BaseException], ...] = (
     MultipleDevicesError,
     LoggedOutError,
     LoginFailedError,
+    WrongAccountError,
     AppMissingError,
 )
 """Failures no repair can change; a person must act."""

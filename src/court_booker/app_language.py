@@ -38,6 +38,10 @@ ENGLISH_LABELS = Labels(  # read from the app in English on 2026-10-20
     registered="Registered",
     login="Login",  # read on 2026-11-18
     dont_show_again="Don't show again",  # not seen: the popup was read in Vietnamese only
+    home_tab="Home",  # these four read on 2026-11-22
+    account_tab="Account",
+    log_out="Log out",
+    log_out_yes="Agree",
 )
 """The English labels. The Vietnamese ones are the config's ``[labels]``."""
 

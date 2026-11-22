@@ -22,6 +22,7 @@ from court_booker.errors import (
     NavigationError,
     QuotaFullError,
     SlotUnavailableError,
+    WrongAccountError,
 )
 from court_booker.events import EventKind, MemorySink, Reporter
 from court_booker.flow import Booked, Booker
@@ -258,6 +259,35 @@ class FakeApp:
         self.shells.append(command)
 
 
+HOME_TAB = "Trang chủ\nTab 1 trong tổng số 2"
+ACCOUNT_TAB = "Tài khoản\nTab 2 trong tổng số 2"
+TABS = [node(HOME_TAB, (0, 1524, 270, 1599)), node(ACCOUNT_TAB, (270, 1524, 540, 1599))]
+
+
+def account_page(phone):
+    """Return the account tab as read on 2026-11-22, with a made-up resident."""
+    return [
+        node("Tài khoản", (0, 0, 540, 1523)),
+        node(f"Nguyễn Văn A\n{phone}", (0, 260, 540, 404)),
+        node("S1.0101.01\nVinhomes Grand Park", (0, 660, 540, 774)),
+        node("Thay đổi", (383, 684, 494, 750)),
+        node("Đổi mật khẩu", (0, 797, 540, 879)),
+        node("Xóa tài khoản", (0, 1288, 540, 1370)),
+        node("Đăng xuất", (35, 1418, 505, 1512)),
+        *TABS,
+    ]
+
+
+ACCOUNT_PAGE = account_page("0900000079")
+LOG_OUT_DIALOG = [
+    node("", (0, 0, 540, 1600)),
+    node("Đăng xuất", (0, 33, 540, 1600), False),
+    node("Bạn có muốn đăng xuất khỏi ứng dụng?", (46, 773, 494, 803), False),
+    node("Hủy bỏ", (69, 827, 264, 921)),
+    node("Đồng ý", (276, 827, 471, 921)),
+]
+
+
 def booking_app(
     screen="utilities",
     courts=COURTS,
@@ -269,7 +299,8 @@ def booking_app(
 ):
     screens = {
         "loading": LOADING,
-        "home": [node("Tiện ích", (200, 1500, 340, 1580))],
+        "home": [node("Tiện ích", (200, 1400, 340, 1480)), *TABS],
+        "account": ACCOUNT_PAGE,
         "utilities": [node("Sân Tennis", (35, 300, 505, 360))],
         "calendar": [*DAYS, CONTINUE],
         "calendar_slots": DAYS + SLOTS + [CONTINUE],
@@ -283,6 +314,8 @@ def booking_app(
     }
     taps_to = {
         ("home", "Tiện ích"): "utilities",
+        ("home", ACCOUNT_TAB): "account",
+        ("account", HOME_TAB): "home",
         ("utilities", "Sân Tennis"): "calendar",
         ("calendar", DAY_11): ("calendar_slots", slot_delay),
         ("calendar_slots", "11:00 - 12:00"): "calendar_selected",
@@ -1277,7 +1310,7 @@ def test_a_logged_out_app_logs_in_again_with_the_saved_login(caplog):
         ("login", PHONE_FIELD, SAVED.phone),
         ("login", PASSWORD_FIELD, SAVED.password),
     ]
-    assert app.taps == ["Đăng nhập"]
+    assert app.taps == ["Đăng nhập", ACCOUNT_TAB, HOME_TAB]
     assert app.calls == ["app_stop", "app_start", "back"]  # one Back, for the notice only
     assert EventKind.LOGGED_IN in [event.kind for event in sink.events]
     assert "Closing a notice of the app: Phiên đăng nhập" in caplog.text
@@ -1286,14 +1319,201 @@ def test_a_logged_out_app_logs_in_again_with_the_saved_login(caplog):
     assert SAVED.password not in caplog.text
 
 
-def test_the_login_is_read_only_once_the_app_shows_its_login():
-    reads = []
+def test_the_right_account_is_left_alone(caplog):
+    caplog.set_level(logging.DEBUG, logger="court_booker")
     app = booking_app(screen="loading")
+    sink = MemorySink()
+    booker = Booker(app, Config(), Reporter(sink), login_for=lambda: SAVED)
 
-    Booker(app, Config(), login_for=lambda: reads.append(1) or SAVED).prepare()
+    booker.prepare()
 
-    assert reads == []
+    assert app.screen == "home"
+    assert app.taps == [ACCOUNT_TAB, HOME_TAB]
     assert app.typed == []
+    (checked,) = [event for event in sink.events if event.kind is EventKind.ACCOUNT_CHECKED]
+    assert checked.data == {"phone": "09••••••79", "switched": False}
+    assert SAVED.phone not in caplog.text
+
+    booker.prepare(restart=True)  # a repair: the account cannot have changed
+    assert app.taps == [ACCOUNT_TAB, HOME_TAB]
+
+
+def test_without_a_saved_login_the_account_is_not_read():
+    app = booking_app(screen="loading")
+    Booker(app, Config(), login_for=lambda: None).prepare()
+    assert app.taps == []
+
+
+def wrong_account_app(phone="0911111111", after_login="home"):
+    """Return the booking app logged in with ``phone``, and SAVED's account after a login."""
+    app = booking_app(screen="loading")
+    app.screens.update(login=LOGIN, login_ready=LOGIN_READY, wrong=WRONG_PASSWORD)
+    app.screens["other"] = account_page(phone)
+    app.screens["ask"] = LOG_OUT_DIALOG
+    app.screens["home_after"] = app.screens["home"]
+    app.launches_to = [("loading", 1), "home"]
+    app.taps_to[("home", ACCOUNT_TAB)] = "other"
+    app.taps_to[("other", HOME_TAB)] = "home"
+    app.taps_to[("other", "Đăng xuất")] = ("ask", 2)
+    app.taps_to[("ask", "Đồng ý")] = ("login", 3)
+    app.types_to[("login", PASSWORD_FIELD)] = "login_ready"
+    app.taps_to[("login_ready", "Đăng nhập")] = after_login
+    app.taps_to[("home_after", ACCOUNT_TAB)] = "account"
+    return app
+
+
+def test_another_account_is_logged_out_and_the_saved_one_in(caplog):
+    caplog.set_level(logging.DEBUG, logger="court_booker")
+    app = wrong_account_app(after_login="home_after")
+    sink = MemorySink()
+
+    Booker(app, Config(), Reporter(sink), login_for=lambda: SAVED).prepare()
+
+    assert app.taps == [
+        ACCOUNT_TAB, "Đăng xuất", "Đồng ý", "Đăng nhập", ACCOUNT_TAB, HOME_TAB
+    ]  # fmt: skip
+    assert app.labels == app.taps  # each tap names its element: never a place
+    assert [text for _, _, text in app.typed] == [SAVED.phone, SAVED.password]
+    (checked,) = [event for event in sink.events if event.kind is EventKind.ACCOUNT_CHECKED]
+    assert checked.data == {"phone": "09••••••79", "switched": True}
+    assert "logged in with 09••••••11, not with the saved login (09••••••79)" in caplog.text
+    for secret in ("0911111111", SAVED.phone, SAVED.password):
+        assert secret not in caplog.text
+
+
+def test_an_account_that_stays_another_one_books_nothing():
+    app = wrong_account_app(after_login="home")  # the other account again
+    with pytest.raises(WrongAccountError, match="09••••••11 after logging in") as raised:
+        Booker(app, Config(), login_for=lambda: SAVED).prepare()
+    assert app.taps.count("Đăng nhập") == 1
+    assert failure_reason(str(raised.value)).startswith("Không chắc Vinhomes")
+
+
+def test_a_refused_password_after_the_change_stops_at_once():
+    app = wrong_account_app(after_login="wrong")
+    with pytest.raises(LoginFailedError, match="refused the saved login"):
+        Booker(app, Config(), login_for=lambda: SAVED).prepare()
+    assert app.taps.count("Đăng nhập") == 1
+
+
+def test_the_account_is_never_deleted():
+    """Its button is right above "Đăng xuất"; the dialog of another question is not confirmed."""
+    app = wrong_account_app()
+    app.screens["ask"] = [
+        node("Xóa tài khoản", (0, 33, 540, 1600), False),
+        node("Bạn có muốn xóa tài khoản?", (46, 773, 494, 803), False),
+        node("Đồng ý", (276, 827, 471, 921)),
+    ]
+    with pytest.raises(AppNotReadyError):
+        Booker(app, Config(timeout=0.1), login_for=lambda: SAVED).prepare()
+    assert "Đồng ý" not in app.taps
+    assert "Xóa tài khoản" not in app.taps
+
+
+@pytest.mark.parametrize("shown", ["0900 000 079", "+84900000079", "0900.000.079", "84900000079"])
+def test_the_number_is_the_same_however_it_is_written(shown):
+    app = booking_app(screen="loading")
+    app.screens["account"] = account_page(shown)
+    Booker(app, Config(), login_for=lambda: SAVED).prepare()
+    assert app.taps == [ACCOUNT_TAB, HOME_TAB]
+
+
+def unread(seen, hidden="Chào bạn"):
+    """Prepare twice on an account tab without a number, as the supervisor would."""
+    app = booking_app(screen="loading")
+    app.screens["account"] = account_page(hidden)
+    booker = Booker(app, Config(), login_for=lambda: SAVED, account_seen=lambda: seen)
+    with pytest.raises(AppNotReadyError, match="did not show") as first:
+        booker.prepare()
+    assert not isinstance(first.value, WrongAccountError)  # worth another try
+    return app, booker
+
+
+def test_a_number_not_read_goes_on_with_the_account_seen_before(fake_time):
+    app, booker = unread(SAVED.masked_phone)
+    with pytest.raises(AppNotReadyError, match="Restarting the app"):
+        booker.prepare(restart=True)
+    booker.prepare(restart=True)
+    assert app.screen == "home"
+    assert app.typed == []
+
+
+@pytest.mark.parametrize("seen", [None, "09••••••11"])
+def test_a_number_not_read_books_nothing_with_an_account_never_seen(fake_time, seen):
+    app, booker = unread(seen)
+    with pytest.raises(WrongAccountError, match="no earlier run saw") as raised:
+        booker.prepare(restart=True)
+    assert failure_reason(str(raised.value)).startswith("Không chắc Vinhomes")
+    assert app.typed == []
+
+
+def test_an_account_tab_that_does_not_open_is_like_a_number_not_read(fake_time):
+    app = booking_app(screen="loading")
+    del app.taps_to[("home", ACCOUNT_TAB)]
+    booker = Booker(app, Config(timeout=0.1), login_for=lambda: SAVED)
+    with pytest.raises(AppNotReadyError, match="did not show"):
+        booker.prepare()
+
+
+def test_a_session_found_over_at_the_account_tab_is_made_ready_again():
+    """The home screen shows from the app's store; the notice came seconds later (2026-11-22)."""
+    app = logged_out_app()
+    app.launches_to = [("loading", 1), "home"]
+    app.taps_to[("home", ACCOUNT_TAB)] = "logged_out"
+    booker = Booker(app, Config(), login_for=lambda: SAVED)
+    with pytest.raises(AppNotReadyError, match="logged out while"):
+        booker.prepare()
+    app.launches_to = [("loading", 1), "logged_out"]
+    app.taps_to[("home", ACCOUNT_TAB)] = "account"
+    booker.prepare(restart=True)
+    assert app.screen == "home"
+    assert [text for _, _, text in app.typed] == [SAVED.phone, SAVED.password]
+
+
+@pytest.mark.parametrize(
+    ("seen", "read"), [("09••••••79", False), ("09••••••11", True), (None, True)]
+)
+def test_near_the_start_the_account_seen_before_is_not_read_again(seen, read):
+    app = booking_app(screen="loading")
+    booker = Booker(app, Config(), login_for=lambda: SAVED, account_seen=lambda: seen)
+    booker.hurry = True
+    booker.prepare()
+    assert (ACCOUNT_TAB in app.taps) is read
+
+
+def test_the_account_is_read_in_english_too():
+    app = booking_app(screen="loading", english=True)
+    english = {
+        HOME_TAB: "Home\nTab 1 of 2",
+        ACCOUNT_TAB: "Account\nTab 2 of 2",
+        "Đăng xuất": "Log out",
+        "Xóa tài khoản": "Delete account",
+        "Đồng ý": "Agree",
+        "Đăng nhập": "Login",
+        "Tiện ích": "Utilities",
+    }
+
+    def translated(nodes):
+        return [(english.get(found[0], found[0]), *found[1:]) for found in nodes]
+
+    other = wrong_account_app(after_login="home_after")
+    for name in ("home", "home_after", "other", "account", "ask", "login", "login_ready"):
+        app.screens[name] = translated(other.screens[name])
+    for (screen, label), target in other.taps_to.items():
+        app.taps_to[(screen, english.get(label, label))] = target
+    app.types_to = other.types_to
+    app.launches_to = [("loading", 1), "home"]
+    Booker(app, Config(), login_for=lambda: SAVED).prepare()
+    account_tab, home_tab = english[ACCOUNT_TAB], english[HOME_TAB]
+    assert app.taps == [account_tab, "Log out", "Agree", "Login", account_tab, home_tab]
+
+
+def test_no_log_holds_a_phone_number(caplog):
+    caplog.set_level(logging.DEBUG, logger="court_booker")
+    app = booking_app(screen="account")
+    flow.log_screen(Booker(app, Config()).snapshot(), "Last screen read")
+    assert "09••••••79" in caplog.text
+    assert SAVED.phone not in caplog.text
 
 
 def test_without_a_saved_login_the_run_stops_at_once(fake_time):
@@ -1329,7 +1549,7 @@ def test_a_login_tap_the_app_missed_is_tapped_again(fake_time):
 
     Booker(app, Config(), login_for=lambda: SAVED).prepare()
 
-    assert app.taps == ["Đăng nhập", "Đăng nhập"]
+    assert app.taps == ["Đăng nhập", "Đăng nhập", ACCOUNT_TAB, HOME_TAB]
     assert app.screen == "home"
 
 
@@ -1339,8 +1559,8 @@ def test_a_login_the_server_takes_long_to_answer_is_sent_once(fake_time):
 
     Booker(app, Config(), login_for=lambda: SAVED).prepare()
 
-    assert app.taps == ["Đăng nhập"]
-    assert 7 < fake_time[0] < 15
+    assert app.taps == ["Đăng nhập", ACCOUNT_TAB, HOME_TAB]
+    assert 7 < fake_time[0] < 20
 
 
 def test_a_login_screen_that_never_changes_gets_two_taps_at_most(fake_time):
@@ -1389,7 +1609,7 @@ def test_the_popup_after_logging_in_is_closed_too(monkeypatch):
 
     Booker(app, Config(), login_for=lambda: SAVED).prepare()
 
-    assert app.taps == ["Đăng nhập", POPUP_X]
+    assert app.taps == ["Đăng nhập", POPUP_X, ACCOUNT_TAB, HOME_TAB]
     assert app.screen == "home"
 
 

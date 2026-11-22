@@ -24,7 +24,7 @@ from typing import Any, Callable, Optional, TypeVar
 from court_booker import catalog
 from court_booker.app_language import AppLanguage, app_languages
 from court_booker.config import Config
-from court_booker.credentials import Login
+from court_booker.credentials import Login, mask_phone
 from court_booker.errors import (
     AppNotReadyError,
     BookingNotOpenError,
@@ -36,6 +36,7 @@ from court_booker.errors import (
     NavigationError,
     QuotaFullError,
     SlotUnavailableError,
+    WrongAccountError,
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.geometry import (
@@ -95,6 +96,14 @@ every 3 s sent the login three times."""
 _LOGIN_TAPS = 2
 """Most taps on the login button: each may send the password, and the app locks an account
 after 5 wrong ones. The second one only while the screen stayed unchanged."""
+_ACCOUNT_TRIES = 2
+"""Times the account tab is read before the run goes on without it, each after a restart of
+the app: a page that changed must not cost every machine its bookings."""
+_PHONE_WAIT = 5.0
+"""How long the account tab may show without its phone number, read at once on 2026-11-22."""
+_PHONE = re.compile(r"(?:\+?84|0)(\d{9})")
+"""A phone number as the account tab may write it; it wrote 10 digits on 2026-11-22."""
+_PHONE_IN_TEXT = re.compile(r"(?<!\d)(0\d)\d{6}(\d{2})(?!\d)")
 _LOGIN_READY_WAIT = 2.0
 """How long the login button may stay disabled after the password is typed in: it was enabled
 in the read right after (2026-11-18)."""
@@ -175,13 +184,21 @@ class Booker:
         config: Config,
         report: Reporter | None = None,
         login_for: Callable[[], Login | None] | None = None,
+        account_seen: Callable[[], str | None] | None = None,
     ) -> None:
         self.device = device
         self.config = config
         self.report = Reporter() if report is None else report
         """Receives the steps of each round; reporting sends no device commands."""
         self._login_for = login_for
-        """Read the saved login of this MuMu instance, only once the app shows its login."""
+        """Read the saved login of this MuMu instance, the one its app must be logged in with."""
+        self._account_seen = account_seen
+        """Read the masked phone number an earlier run last saw on this MuMu instance."""
+        self.hurry = False
+        """Whether the start is near: an account an earlier run saw is not read again."""
+        self._account_known = False
+        """Whether this run needs not read the account (again)."""
+        self._account_unread = 0
         self._logged_in = False
         self.commands = 0
         """Device commands sent so far; each is a round trip to the emulator."""
@@ -224,6 +241,12 @@ class Booker:
         self.popup = Match(desc=labels.dont_show_again, clickable=True)
         self.login_ready = Match(desc=labels.login, clickable=True)
         """The login button once a password is typed in: disabled, it is not clickable."""
+        self.home_tab = Match(prefix=f"{labels.home_tab}\n", clickable=True)
+        self.account_tab = Match(prefix=f"{labels.account_tab}\n", clickable=True)
+        # Whole labels only: "Xóa tài khoản" is the button above.
+        self.log_out_button = Match(desc=labels.log_out, clickable=True)
+        self.log_out_title = Match(desc=labels.log_out, clickable=False)
+        self.log_out_yes = Match(desc=labels.log_out_yes, clickable=True)
 
     # Public API -------------------------------------------------------------
 
@@ -255,7 +278,8 @@ class Booker:
 
         An app logged out (on another device) shows a notice over its login screen: the
         notice is closed, and the saved login typed in (:meth:`log_in`); without one the run
-        stops at once with :class:`LoggedOutError`.
+        stops at once with :class:`LoggedOutError`. With a saved login the account logged in must
+        be that one's, and is changed if it is not (:meth:`check_account`).
         """
         package = self.config.package
         self.quiet_device()
@@ -272,14 +296,136 @@ class Booker:
         if self._password_field(screen) is not None:
             screen = self.log_in(screen)
         try:
-            home = self.return_to_home(screen)
-            popup = self.wait_for(self._finder(self.popup), _POPUP_WAIT, home)
-            if popup is not None:
-                home = self.return_to_home(popup[1])
+            home = self.check_account(self._settle_home(screen))
         except NavigationError as exc:
             raise AppNotReadyError(str(exc)) from exc
         self.read_account(home)
         logger.info("Ready on the home screen")
+
+    def _settle_home(self, screen: Screen) -> Screen:
+        """Return the home screen from ``screen``, with the popup that may come over it closed."""
+        home = self.return_to_home(screen)
+        popup = self.wait_for(self._finder(self.popup), _POPUP_WAIT, home)
+        return home if popup is None else self.return_to_home(popup[1])
+
+    def check_account(self, home: Screen) -> Screen:
+        """Have the app logged in with the saved login's account; return the home screen.
+
+        The account tab shows the phone number of the account logged in. Another one than the
+        saved login's is logged out and the saved login typed in, once a run
+        (:meth:`log_in`), and the number read again. Without a saved login nothing is checked.
+
+        A number that cannot be read is no other number: the app may have changed the page.
+        After :data:`_ACCOUNT_TRIES` the run goes on if an earlier run saw this account on
+        this MuMu instance, and stops with :class:`WrongAccountError` if none did. It never
+        books with an account it read to be another one.
+        """
+        login = None if self._login_for is None else self._login_for()
+        if login is None or self._account_known:
+            return home
+        seen = None if self._account_seen is None else self._account_seen()
+        if self.hurry and seen == login.masked_phone:
+            logger.info("The start is near: the account is the one seen before (%s)", seen)
+            self._account_known = True
+            return home
+        page = self._account_page(home)
+        phone = None if page is None else self._phone_on(page)
+        if page is None or phone is None:
+            return self._account_not_read(login, seen)
+        switched = phone != login.phone
+        if switched:
+            logger.warning(
+                "The app is logged in with %s, not with the saved login (%s): changing it",
+                mask_phone(phone),
+                login.masked_phone,
+            )
+            home = self._settle_home(self.log_in(self._log_out(page)))
+            page = self._account_page(home)
+            phone = None if page is None else self._phone_on(page)
+            if page is None or phone != login.phone:
+                shown = "no number" if phone is None else mask_phone(phone)
+                raise WrongAccountError(
+                    f"The app shows {shown} after logging in with the saved login "
+                    f"({login.masked_phone}) on MuMu {self.config.mumu_index}"
+                )
+        self._account_known = True
+        logger.info("Account: %s, the saved login's", login.masked_phone)
+        self.report(EventKind.ACCOUNT_CHECKED, phone=login.masked_phone, switched=switched)
+        _, screen = self.tap_and_advance(
+            page, self.home_tab, self.labels.home_tab, self._either(self.home, self.popup)
+        )
+        return self._settle_home(screen)
+
+    def _account_not_read(self, login: Login, seen: str | None) -> Screen:
+        """Go on without the account's number, or have the app restarted to read it again."""
+        self._account_unread += 1
+        if self._account_unread < _ACCOUNT_TRIES:
+            raise AppNotReadyError("The account tab did not show the account's phone number")
+        if seen != login.masked_phone:
+            raise WrongAccountError(
+                "The account tab did not show the account's phone number, and no earlier run saw "
+                f"the saved login ({login.masked_phone}) on MuMu {self.config.mumu_index}"
+            )
+        logger.warning("Account not read; going on, as an earlier run saw it (%s)", seen)
+        self._account_known = True  # not read again after the restart
+        raise AppNotReadyError("Restarting the app to leave the account tab")
+
+    def _account_page(self, home: Screen) -> Screen | None:
+        """Open the account tab from the home screen; ``None`` if it does not show.
+
+        The home screen may show from the app's store while the session is over: the notice
+        or the login then comes instead, and the app is made ready again from there.
+        """
+
+        def arrived(screen: Screen) -> bool | None:
+            if self._logged_out(screen) or screen.find(self.log_out_button):
+                return True
+            return None
+
+        try:
+            _, page = self.tap_and_advance(home, self.account_tab, self.labels.account_tab, arrived)
+        except (ElementNotFoundError, NavigationError) as exc:
+            logger.warning("The account tab did not open: %s", exc)
+            return None
+        if self._logged_out(page):
+            raise AppNotReadyError("The app logged out while its account was read")
+        return page
+
+    def _logged_out(self, screen: Screen) -> bool:
+        return self.notice_text(screen) is not None or self._password_field(screen) is not None
+
+    def _phone_on(self, page: Screen) -> str | None:
+        """Return the phone number the account tab shows, as ``0`` and 9 digits."""
+
+        def phone(screen: Screen) -> str | None:
+            if self._logged_out(screen):
+                raise AppNotReadyError("The app logged out while its account was read")
+            for node in screen.nodes:
+                found = _PHONE.fullmatch(re.sub(r"[ .\-]", "", node.desc.split("\n")[-1]))
+                if found is not None:
+                    return f"0{found[1]}"
+            return None
+
+        read = self.wait_for(phone, _PHONE_WAIT, page)
+        return None if read is None else read[0]
+
+    def _log_out(self, page: Screen) -> Screen:
+        """Log out from the account tab ``page`` and return the login screen.
+
+        Both buttons are found by their whole labels, the second one only in the dialog that
+        asks whether to log out: a button above deletes the account.
+        """
+
+        def asked(screen: Screen) -> bool | None:
+            if screen.find(self.log_out_title) and screen.find(self.log_out_yes):
+                return True
+            return None
+
+        _, dialog = self.tap_and_advance(page, self.log_out_button, self.labels.log_out, asked)
+        _, login = self.tap_and_advance(
+            dialog, self.log_out_yes, self.labels.log_out_yes, self._password_field
+        )
+        return login
 
     def _first_screen(self) -> Screen:
         """Return the first screen of the started app that tells its language.
@@ -351,9 +497,7 @@ class Booker:
             ),
             None,
         )
-        logger.info(
-            "The app is logged out; logging in with the saved login (%s)", login.masked_phone
-        )
+        logger.info("Logging in with the saved login (%s)", login.masked_phone)
         if phone is not None:
             self.type_text(phone, login.phone)
         self.type_text(password, login.password)
@@ -1327,7 +1471,8 @@ def log_screen(screen: Screen, title: str) -> None:
 
     One record per screen, so the history writes one row for it instead of one per element.
     """
-    lines = screen.describe()
+    # The account tab shows the account's phone number, which no log holds whole.
+    lines = [_PHONE_IN_TEXT.sub(r"\1••••••\2", line) for line in screen.describe()]
     logger.debug("%s (%d elements):%s", title, len(lines), "".join(f"\n  {x}" for x in lines))
 
 

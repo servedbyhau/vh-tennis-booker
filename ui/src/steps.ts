@@ -90,6 +90,12 @@ const MESSAGES: Record<StepKind, Describe> = {
     };
   },
   logged_in: ({ t }) => ({ text: t("steps.logged_in"), tone: "plain" }),
+  account_checked: ({ t }, data) => ({
+    text: t(data.switched === true ? "steps.account_switched" : "steps.account_checked", {
+      phone: text(data, "phone") ?? "",
+    }),
+    tone: "plain",
+  }),
   // The failure repaired is the engine's own words: the technical details show it.
   repaired: ({ t }, data) => {
     const action = known(REPAIR_ACTIONS, text(data, "action"));

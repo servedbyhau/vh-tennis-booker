@@ -49,6 +49,10 @@ export function settings(fields: Partial<Settings> = {}): Settings {
       registered: "Đã đăng ký",
       login: "Đăng nhập",
       dont_show_again: "Không hiện lại",
+      home_tab: "Trang chủ",
+      account_tab: "Tài khoản",
+      log_out: "Đăng xuất",
+      log_out_yes: "Đồng ý",
     },
     ...fields,
   };

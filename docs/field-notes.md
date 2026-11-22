@@ -325,6 +325,10 @@ slots and the booked date and time read the same.
 | `notice` | Thông báo | Notification |
 | `quota_full` | hết hạn mức | registration quota (seen in a dry run, 2026-10-25) |
 | `dont_show_again` | Không hiện lại | Don't show again (a guess, not seen) |
+| `home_tab` | Trang chủ | Home (2026-11-22) |
+| `account_tab` | Tài khoản | Account (2026-11-22) |
+| `log_out` | Đăng xuất | Log out (2026-11-22) |
+| `log_out_yes` | Đồng ý | Agree (2026-11-22) |
 | `login` | Đăng nhập | Login (2026-11-18) |
 | (dialog button) | Đóng | Close |
 
