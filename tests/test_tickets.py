@@ -528,7 +528,7 @@ def test_a_frozen_emulator_is_raised_with_what_was_read(read):
 
 @pytest.fixture
 def booked(tmp_path):
-    """A data folder with a ticket booked at 06:02 on each day, 2026-11-20 to 23."""
+    """A data folder with a ticket booked at 06:00 on each day, 2026-11-20 to 23."""
     data = DataFolder(tmp_path).ensure()
     data.tickets.mkdir()
     store = History(connect(data.database))

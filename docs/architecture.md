@@ -108,8 +108,8 @@ Details live in the docstrings; this page says where things are and what must st
   the app's history page (`TicketReader`, through the run's own `Booker`, which `run_booking`
   hands over by `on_booker`) and saves a picture of each ticket just booked in
   `<data folder>\tickets\<code>.png`, cut under the directions link. `cli.read_tickets` starts
-  it 120 s after the start of a timed run (06:02) and once no other run is recorded as
-  running, 90 s later all the same (a killed run stays recorded so), and limits it to 90 s;
+  it 3 min after the start of a timed run (06:03) and once no other run is recorded as
+  running, 30 s later all the same (a killed run stays recorded so), and limits it to 90 s;
   the lock is held and MuMu stays open meanwhile. Nothing in it changes the run's result or
   exit code. A ticket that does not open costs no other ticket's picture, and what could not be
   read is tried once more. `forget_expired` deletes the tickets whose day of play is over, whatever their
