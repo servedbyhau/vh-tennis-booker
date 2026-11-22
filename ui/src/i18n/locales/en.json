@@ -36,6 +36,8 @@
         "noDryRun": "No dry run passed yet · press Dry run",
         "scheduleOff": "Dry run passed · turn on Auto-book",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
+        "noAccount": "Machine {{machines}}: no account chosen",
+        "clash": "Machine {{machines}}: same {{court}} at {{start}}",
         "ready": "Ready for {{time}} {{when}}"
       },
       "live": {
@@ -59,6 +61,8 @@
       "instanceName": "Machine {{number}}",
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "setup left",
+      "instanceClash": "same court and slot as another machine",
+      "instanceNoAccount": "no account chosen",
       "instanceOff": "off",
       "useOff": "Machine {{number}} is off. Turn it on in the Setup to book with it.",
       "subdivision": "Subdivision",
@@ -72,6 +76,7 @@
       "saved": "✓ Saved",
       "full": "{{max}} slots already: remove one first",
       "oneSlot": "Keep at least one slot",
+      "clash": "Machine {{machines}} has this court at {{slot}} too: one of them gets it",
       "live": {
         "booking": "Booking for {{day}} · court {{court}}",
         "dryRun": "Dry run for {{day}} · court {{court}}",

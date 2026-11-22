@@ -10,6 +10,7 @@ import { Icon, type IconName } from "../../components/Icon";
 import { QueryView } from "../../components/QueryView";
 import { accountOn, useMachines } from "../../machines";
 import { paths } from "../../paths";
+import { useReadiness } from "../../readiness";
 import styles from "./AccountPicker.module.css";
 import { machineName } from "./ticketText";
 
@@ -69,6 +70,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
   const { t } = useTranslation();
   const id = useId();
   const machines = useMachines();
+  const { accountless } = useReadiness();
   const attach = useAttachAccount();
   const detach = useDetachAccount();
   const button = useRef<HTMLButtonElement>(null);
@@ -131,6 +133,8 @@ function Picker({ customers, mumuIndex }: PickerProps) {
     }
   }
 
+  /** It books tomorrow with nobody chosen: the one thing to do here. */
+  const remind = accountless.some((machine) => machine.mumuIndex === mumuIndex);
   const choices = customers.flatMap((customer) =>
     customer.accounts.map((account) => ({ customer, account })),
   );
@@ -141,7 +145,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
         type="button"
         aria-expanded={open}
         aria-controls={`${id}-list`}
-        className={styles.current}
+        className={remind ? `${styles.current} ${styles.remind}` : styles.current}
         onClick={toggle}
       >
         <span className={attached === null ? `${styles.avatar} ${styles.empty}` : styles.avatar}>

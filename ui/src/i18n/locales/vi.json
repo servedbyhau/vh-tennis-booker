@@ -36,6 +36,8 @@
         "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử",
         "scheduleOff": "Chạy thử đạt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
+        "noAccount": "Máy {{machines}} chưa chọn tài khoản",
+        "clash": "Máy {{machines}} trùng {{court}} lúc {{start}}",
         "ready": "Sẵn sàng cho {{time}} {{when}}"
       },
       "live": {
@@ -59,6 +61,8 @@
       "instanceName": "Máy {{number}}",
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "còn việc chuẩn bị",
+      "instanceClash": "trùng sân và giờ với máy khác",
+      "instanceNoAccount": "chưa chọn tài khoản",
       "instanceOff": "đang tắt",
       "useOff": "Máy {{number}} đang tắt. Bật ở Thiết lập để đặt bằng máy này.",
       "subdivision": "Phân khu",
@@ -72,6 +76,7 @@
       "saved": "✓ Đã lưu",
       "full": "Đã đủ {{max}} khung: bỏ một khung trước",
       "oneSlot": "Cần ít nhất một khung giờ",
+      "clash": "Máy {{machines}} cũng chọn sân này lúc {{slot}}: chỉ một máy được",
       "live": {
         "booking": "Đang đặt cho {{day}} · sân {{court}}",
         "dryRun": "Đang chạy thử cho {{day}} · sân {{court}}",

@@ -37,8 +37,8 @@ Last updated: 2026-11-22.
   on three machines at once.
 
 - Customers, their accounts and the account check before a booking were merged on 2026-11-22
-  (#270 to #283); open branches, in this order: `feat/filled-account-form` (the form shows the saved
-  login) and `feat/account-choice` (the account's choice in the Setup). The check
+  (#270 to #285); open branch: `feat/readiness` (what the line at the top looks
+  at). The check
   and a forced change of account were run on one real machine that day; still to do: a real
   timed booking with it, and a change between two different accounts.
 

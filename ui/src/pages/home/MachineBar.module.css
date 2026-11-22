@@ -40,7 +40,7 @@
   opacity: 0.55;
 }
 
-/* Something of this machine's own is left to set up: the red of the Guide's count. */
+/* Something to look at on this machine: the red of the Guide's count. */
 .mark {
   display: inline-grid;
   place-items: center;

@@ -18,6 +18,9 @@ uses [Semantic Versioning](https://semver.org/).
   `/api/machines/{index}/account` in place of `/api/logins`).
 - A guide page ("Hướng dẫn" / "Guide"): the steps to tick for each machine, with the count left in
   the header, and how to use the app, out of the Setup.
+- The line at the top no longer says ready while a machine books with no account chosen, or two
+  machines would book the same court and slot; their tabs are marked, and the second is told at the
+  press that makes it so.
 - A "Vé" ("Tickets") section: the tickets booked and still to use, of every
   machine's account in one list by day of play, with their status and booking code; a press
   opens the ticket's picture, which can be saved as a file.

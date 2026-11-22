@@ -34,6 +34,8 @@ async function openMachine(customers: Customer[], extra: Record<string, Reply> =
     "GET /api/customers": reply(customers),
     ...extra,
   });
+  // The line at the top reads the customers too.
+  await within(screen.getByRole("banner")).findByText(/●/);
   const machine = within(await screen.findByRole("region", { name: "Máy 1" }));
   const button = await machine.findByRole("button", { name: /^Tài khoản/ });
   return { ...app, machine, button };
@@ -79,12 +81,13 @@ describe("AccountPicker", () => {
     const { machine, button, fetch } = await openMachine([AN, FREE], {
       "PUT /api/machines/0/account": reply(FREE),
     });
+    const read = requestsTo(fetch, "GET /api/customers");
     fireEvent.click(button);
     fireEvent.click(machine.getByRole("button", { name: /09••••••55/ }));
 
     await waitFor(() => expect(button).toHaveAttribute("aria-expanded", "false"));
     expect(requestsTo(fetch, "PUT /api/machines/0/account")).toBe(1);
-    expect(requestsTo(fetch, "GET /api/customers")).toBe(2);
+    expect(requestsTo(fetch, "GET /api/customers")).toBe(read + 1);
     expect(button).toHaveFocus();
   });
 

@@ -20,6 +20,17 @@
   background: var(--color-paper);
 }
 
+/* Set off as the daily switch is: the machine books with no account chosen. */
+.remind,
+.remind:hover {
+  background: var(--color-highlight);
+}
+
+.remind .hint,
+.remind .chevron {
+  color: var(--color-ink);
+}
+
 /* At the edge of the card, which clips: the ring is drawn inside. */
 .current:focus-visible {
   outline-offset: -3px;
