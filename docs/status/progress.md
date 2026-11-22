@@ -26,7 +26,7 @@ Last updated: 2026-11-22.
 - Since 2026-11-22 12:00 the installed app on the dev PC is a local build of `feat/tickets-tab`
   (1.1.2 plus the third machine, the ticket reading and the Manage tab), to try it before the
   merge; its first 06:00 run is 2026-11-23. The app before it and the data are in
-  `D:VH-Bookerpp-backup-2026-11-22`.
+  `D:\VH-Booker\app-backup-2026-11-22`.
 - Runner folder: at `v0.18.1`, kept as a way back until 2026-11-10, then removed. To go back:
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
