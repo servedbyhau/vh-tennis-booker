@@ -289,6 +289,7 @@ values 422 `invalid_request`.
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
+| `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |
 | `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine (it moves from another one), or none; refused while a run goes on (409 `lock_held`) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
 | `WS /api/live` | Pushes each new step |
@@ -319,8 +320,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   the problems; the header counts the ticks left) and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose three sections each have an
   address: `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
-  `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes, a
-  password typed in is sent once and never shown again, a removal is beside each edit and
+  `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes,
+  an account's filled with its saved login, read then and kept nowhere else, a removal is beside each edit and
   asks first, saying which machine loses its account), `TicketsTab` (every machine's tickets still to use by day of play, of
   one machine or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`; read

@@ -23,7 +23,7 @@ Last updated: 2026-11-22.
   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
-- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/change-phone` (1.1.2
+- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/account-choice` (1.1.2
   plus the third machine, the tickets and the customers' accounts), to try it before a release;
   its first 06:00 run is 2026-11-23. The app before the tickets is in
   `D:\VH-Booker\app-backup-2026-11-22`.
@@ -37,7 +37,8 @@ Last updated: 2026-11-22.
   on three machines at once.
 
 - Customers, their accounts and the account check before a booking were merged on 2026-11-22
-  (#270 to #282); open branch: `feat/change-phone` (an account's phone number can be changed). The check
+  (#270 to #283); open branches, in this order: `feat/filled-account-form` (the form shows the saved
+  login) and `feat/account-choice` (the account's choice in the Setup). The check
   and a forced change of account were run on one real machine that day; still to do: a real
   timed booking with it, and a change between two different accounts.
 

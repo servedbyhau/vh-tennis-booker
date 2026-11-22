@@ -7,9 +7,11 @@ import {
   useChangeAccount,
   useChangeCustomer,
 } from "../../api/mutations";
-import type { Customer, CustomerAccount } from "../../api/types";
+import { useAccountLogin } from "../../api/queries";
+import type { AccountLogin, Customer, CustomerAccount } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Icon } from "../../components/Icon";
+import { QueryView } from "../../components/QueryView";
 import styles from "./CustomerForms.module.css";
 
 /** A phone number as the Vinhomes app takes it: 10 digits from 0. */
@@ -17,8 +19,6 @@ const PHONE_PATTERN = "0[0-9]{9}";
 const MAX_NAME = 60;
 const MAX_NOTE = 500;
 const MAX_PASSWORD = 128;
-/** In place of the password saved, which nobody sees again; its length tells nothing. */
-const HIDDEN_PASSWORD = "••••••••";
 
 interface FieldProps {
   label: string;
@@ -157,26 +157,30 @@ interface AccountFormProps {
   onClose: () => void;
 }
 
-/**
- * An account's name and login. Of one already saved, the phone number and the password left
- * empty stay as they are; neither comes back from the backend whole.
- */
-export function AccountForm({ customerId, account, onClose }: AccountFormProps) {
+interface AccountFieldsProps extends AccountFormProps {
+  /** The login saved, `null` for a new account. */
+  login: AccountLogin | null;
+}
+
+function AccountFields({ customerId, account, login, onClose }: AccountFieldsProps) {
   const { t } = useTranslation();
   const add = useAddAccount();
   const change = useChangeAccount();
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
   const [label, setLabel] = useState(account?.label ?? "");
+  const [phone, setPhone] = useState(login?.phone ?? "");
+  const [password, setPassword] = useState(login?.password ?? "");
   const save = account === null ? add : change;
-  /** Whether there is a login to keep; one that is gone is typed in again. */
-  const saved = account !== null && account.phone !== null;
 
   function onSave() {
     if (account === null) {
       add.mutate({ customerId, account: { phone, password, label } }, { onSuccess: onClose });
     } else {
-      const fields = { label, phone: phone || null, password: password || null };
+      // A login that stays is not sent: a label alone may change while a run goes on.
+      const fields = {
+        label,
+        phone: phone === login?.phone ? null : phone,
+        password: password === login?.password ? null : password,
+      };
       change.mutate({ id: account.id, fields }, { onSuccess: onClose });
     }
   }
@@ -202,8 +206,7 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
           type="tel"
           inputMode="numeric"
           autoComplete="off"
-          required={!saved}
-          placeholder={account?.phone ?? ""}
+          required
           pattern={PHONE_PATTERN}
           maxLength={10}
           value={phone}
@@ -212,19 +215,35 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
       </Field>
       <Field label={t("pages.customers.password")}>
         <input
-          type="password"
-          autoComplete="new-password"
-          required={!saved}
-          placeholder={saved ? HIDDEN_PASSWORD : ""}
+          autoComplete="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          required
           maxLength={MAX_PASSWORD}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
       </Field>
-      <p className={styles.note}>
-        <Icon name="lock" />
-        {t("pages.customers.private")}
-      </p>
     </EditForm>
+  );
+}
+
+/** The form of an account there is, filled with its saved login. */
+function SavedAccountForm(props: AccountFormProps & { account: CustomerAccount }) {
+  const login = useAccountLogin(props.account.id);
+  return (
+    <QueryView query={login}>{(saved) => <AccountFields {...props} login={saved} />}</QueryView>
+  );
+}
+
+/**
+ * An account's name and login, in plain sight, as the user asked: they are on their own PC and
+ * check what a customer gave them.
+ */
+export function AccountForm({ account, ...props }: AccountFormProps) {
+  return account === null ? (
+    <AccountFields {...props} account={null} login={null} />
+  ) : (
+    <SavedAccountForm {...props} account={account} />
   );
 }

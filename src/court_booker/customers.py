@@ -115,6 +115,10 @@ class CustomerBook:
         accounts = self.owner(account_id).accounts
         return next(account for account in accounts if account.id == account_id)
 
+    def login(self, account_id: str) -> Login | None:
+        """Return the account's saved login, ``None`` once gone; raises for an unknown account."""
+        return self.store.read(self.account(account_id).id)
+
     def _devices(self) -> dict[str, int]:
         """Return the MuMu instance each phone number is attached to."""
         found: dict[str, int] = {}

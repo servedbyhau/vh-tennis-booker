@@ -33,21 +33,6 @@
   font-size: var(--text-control);
 }
 
-/* What is saved: in the place of what is typed, paler than it. */
-.field input::placeholder {
-  color: var(--color-muted);
-  opacity: 1;
-}
-
-.note {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-muted);
-  font-size: var(--text-small);
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;

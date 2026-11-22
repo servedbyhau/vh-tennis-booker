@@ -157,7 +157,6 @@
       "phone": "Phone number",
       "password": "Password",
       "noLogin": "password lost, edit to type it again",
-      "private": "The password stays in Windows and never shows again.",
       "save": "Save",
       "cancel": "Cancel",
       "remove": "Remove",

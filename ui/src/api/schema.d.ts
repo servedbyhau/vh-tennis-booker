@@ -297,6 +297,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customer-accounts/{account_id}/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Login
+         * @description The account's saved login, whole, to fill the form that changes it.
+         *
+         *     The user asked to see it there (2026-11-22). Only this PC reaches the backend
+         *     (``local_only.py``), and no cache keeps the answer.
+         */
+        get: operations["read_login_api_customer_accounts__account_id__login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/customer-accounts/{account_id}": {
         parameters: {
             query?: never;
@@ -518,6 +541,16 @@ export interface components {
             password?: string | null;
         };
         /**
+         * AccountLogin
+         * @description The saved login of an account as it is, ``None`` once it is gone.
+         */
+        AccountLogin: {
+            /** Phone */
+            phone: string | null;
+            /** Password */
+            password: string | null;
+        };
+        /**
          * AccountSubdivision
          * @description The subdivision a MuMu instance's account last told, read from its home screen.
          */
@@ -539,7 +572,7 @@ export interface components {
         };
         /**
          * CustomerAccount
-         * @description A customer's Vinhomes account; never its password.
+         * @description A customer's Vinhomes account, without its password.
          */
         CustomerAccount: {
             /** Id */
@@ -1692,6 +1725,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_login_api_customer_accounts__account_id__login_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLogin"];
                 };
             };
             /** @description Invalid request values, one line per value */

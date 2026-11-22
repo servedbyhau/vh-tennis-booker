@@ -1,6 +1,7 @@
 import { call, client } from "./client";
 import type {
   AccountChange,
+  AccountLogin,
   AccountSubdivision,
   Customer,
   CustomerFields,
@@ -120,7 +121,16 @@ export function addAccount(customerId: string, account: NewAccount): Promise<Cus
   );
 }
 
-/** Change an account's label and, unless `null`, its password. */
+/** Read the saved login of an account, whole, for the form that changes it. */
+export function getAccountLogin(id: string): Promise<AccountLogin> {
+  return call(
+    client.GET("/api/customer-accounts/{account_id}/login", {
+      params: { path: { account_id: id } },
+    }),
+  );
+}
+
+/** Change an account's label and, unless `null`, its phone number and password. */
 export function changeAccount(id: string, change: AccountChange): Promise<Customer> {
   return call(
     client.PUT("/api/customer-accounts/{account_id}", {

@@ -3,6 +3,7 @@ import { DAYS_SHOWN, runDay } from "../days";
 import type { Overview, RunSummary } from "./types";
 import {
   type EventsQuery,
+  getAccountLogin,
   getAccounts,
   getOverview,
   getRun,
@@ -30,6 +31,7 @@ export const queryKeys = {
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
   customers: ["customers"] as const,
+  accountLogin: (id: string) => ["accountLogin", id] as const,
 };
 
 /** How often the Overview is read while a run is starting or letting go of the emulator. */
@@ -120,6 +122,16 @@ export function useAccounts() {
 /** Read every machine's tickets; a run that read them again marks them stale. */
 export function useTickets() {
   return useQuery({ queryKey: queryKeys.tickets, queryFn: listTickets });
+}
+
+/** Read the saved login of an account for its form; nothing keeps it once the form is shut. */
+export function useAccountLogin(id: string) {
+  return useQuery({
+    queryKey: queryKeys.accountLogin(id),
+    queryFn: () => getAccountLogin(id),
+    staleTime: 0,
+    gcTime: 0,
+  });
 }
 
 /** Read the customers, each with their accounts. */

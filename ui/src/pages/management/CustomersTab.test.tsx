@@ -186,12 +186,12 @@ describe("Management customers", () => {
 });
 
 describe("Management accounts", () => {
-  it("adds one and shows its password nowhere", async () => {
+  it("adds one, its password in plain sight until it is saved", async () => {
     const { fetch } = await openPage([BINH], {
       "POST /api/customers/a2/accounts": reply(BINH, 201),
     });
     press("Thêm tài khoản");
-    expect(screen.getByLabelText("Mật khẩu")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("Mật khẩu")).not.toHaveAttribute("type", "password");
     type("Số điện thoại", "0900000022");
     type("Mật khẩu", "mat-khau");
     type("Tên", "Căn C");
@@ -217,19 +217,25 @@ describe("Management accounts", () => {
     expect(screen.getByLabelText("Số điện thoại")).toHaveValue("0900000022");
   });
 
-  it("changes its name, phone number and password, keeping what is left empty", async () => {
-    const { fetch } = await openPage([AN], { "PUT /api/customer-accounts/b2": reply(AN) });
+  const LOGIN = reply({ phone: "0900000022", password: "cu" });
+
+  it("fills the form with what is saved, and sends only what changed", async () => {
+    const { fetch } = await openPage([AN], {
+      "GET /api/customer-accounts/b2/login": LOGIN,
+      "PUT /api/customer-accounts/b2": reply(AN),
+    });
+    expect(requestsTo(fetch, "GET /api/customer-accounts/b2/login")).toBe(0); // not before
     press("Sửa", 2);
-    const form = screen.getByRole("form");
+    const form = await screen.findByRole("form");
     expect(
       [...form.querySelectorAll("label")].map((field) => [
         field.textContent,
-        field.querySelector("input")?.placeholder,
+        field.querySelector("input")?.value,
       ]),
     ).toEqual([
       ["Tên", ""],
-      ["Số điện thoại", "09••••••22"], // the one saved, never whole
-      ["Mật khẩu", "••••••••"],
+      ["Số điện thoại", "0900000022"],
+      ["Mật khẩu", "cu"],
     ]);
     type("Tên", "Căn D");
     press("Lưu");
@@ -239,8 +245,10 @@ describe("Management accounts", () => {
       phone: null,
       password: null,
     });
+    expect(document.body.innerHTML).not.toContain("0900000022");
 
     press("Sửa", 2);
+    await screen.findByRole("form");
     type("Số điện thoại", "0900000033");
     type("Mật khẩu", "moi");
     press("Lưu");
@@ -250,11 +258,16 @@ describe("Management accounts", () => {
       phone: "0900000033",
       password: "moi",
     });
+    // Read anew each time: nothing keeps it.
+    expect(requestsTo(fetch, "GET /api/customer-accounts/b2/login")).toBe(2);
   });
 
   it("asks for the whole login again once it is gone", async () => {
-    await openPage([customer("a1", { accounts: [account("b1", { phone: null })] })]);
+    await openPage([customer("a1", { accounts: [account("b1", { phone: null })] })], {
+      "GET /api/customer-accounts/b1/login": reply({ phone: null, password: null }),
+    });
     press("Sửa", 1);
+    expect(await screen.findByLabelText("Số điện thoại")).toHaveValue("");
     expect(screen.getByLabelText("Số điện thoại")).toBeRequired();
     expect(screen.getByLabelText("Mật khẩu")).toBeRequired();
   });
@@ -273,10 +286,12 @@ describe("Management accounts", () => {
   });
 
   it("opens an account's form under it, and shuts it on a second press", async () => {
-    await openPage([AN]);
+    await openPage([AN], {
+      "GET /api/customer-accounts/b1/login": LOGIN,
+    });
     press("Sửa", 1);
     const [first] = card("Anh An").getAllByRole("listitem");
-    expect(within(first!).getByRole("form")).toBeVisible();
+    expect(await within(first!).findByRole("form")).toBeVisible();
     press("Sửa", 1);
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
   });

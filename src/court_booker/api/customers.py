@@ -1,7 +1,7 @@
 """Customer routes: the customers, their Vinhomes accounts, and the machine of each account.
 
-They take passwords but never answer one, and answer a phone number with its middle hidden.
-Nothing of them is recorded in the history.
+They answer a phone number with its middle hidden and no password, but for the one route the
+form of an account is filled from. Nothing of them is recorded in the history.
 """
 
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
@@ -41,7 +41,7 @@ _changing = threading.Lock()
 
 
 class CustomerAccount(BaseModel):
-    """A customer's Vinhomes account; never its password."""
+    """A customer's Vinhomes account, without its password."""
 
     id: str
     label: str
@@ -71,6 +71,13 @@ class CustomerFields(BaseModel):
     representative: Label = ""
     contact: Label = ""
     note: Note = ""
+
+
+class AccountLogin(BaseModel):
+    """The saved login of an account as it is, ``None`` once it is gone."""
+
+    phone: Optional[str]
+    password: Optional[str]
 
 
 class NewAccount(BaseModel):
@@ -184,6 +191,20 @@ def add_account(book: Book, customer_id: RecordId, account: NewAccount) -> Custo
     with _changing:
         book.add_account(customer_id, login, account.label)
         return shown(book.customer(customer_id))
+
+
+@router.get("/customer-accounts/{account_id}/login", response_model=AccountLogin)
+def read_login(book: Book, account_id: RecordId, response: Response) -> AccountLogin:
+    """The account's saved login, whole, to fill the form that changes it.
+
+    The user asked to see it there (2026-11-22). Only this PC reaches the backend
+    (``local_only.py``), and no cache keeps the answer.
+    """
+    login = book.login(account_id)
+    response.headers["Cache-Control"] = "no-store"
+    if login is None:
+        return AccountLogin(phone=None, password=None)
+    return AccountLogin(phone=login.phone, password=login.password)
 
 
 @router.put("/customer-accounts/{account_id}", response_model=CustomerRecord)
