@@ -91,8 +91,9 @@ court and a clickable `Đặt lịch khác`.
 
 ## History page
 
-Read on 2026-11-22 in Vietnamese, on three accounts (tennis and pickleball); not seen in
-English.
+Read on 2026-11-22 and 23 in Vietnamese, on three accounts (tennis and pickleball); not seen in
+English. It opens at any hour (02:12 to 02:43 on 2026-11-23), while the calendar is closed from
+21:00 to 06:00.
 
 - The icon at the top right of the utilities list (no label, `[472,42][528,100]`) opens
   `Lịch sử tiện ích`: the account's bookings, newest first, one clickable card each (four on
@@ -100,6 +101,26 @@ English.
   `Vị trí: S6 - Sân tennis`, `Thời gian: 03/10/2026 08:00 - 09:00`, `Trạng thái:`, the status
   (`Đã đăng ký`, `Đã huỷ`), `Thời gian tạo: 01/10/2026 - 06:00`. The page has an unlabelled
   filter button where the list has the history icon.
+- It goes back far (486 cards read on the three accounts, the oldest of 2025-01-11, no end
+  reached) and loads as it is scrolled; a swipe of 0.7 of the height moves it about three cards.
+  Cards are in the order they were booked, the play day at most two days later, so a month's
+  cards end at the first one booked more than two days before the month.
+- The filter button opens a sheet, `Bộ lọc`, of three: `Tên tiện ích` (a long list, with the
+  tickets of VinWonders and others; several may be chosen), `Trạng thái tiện ích` (several) and
+  `Thời gian đặt tiện ích`, a calendar of **one day of play**, no range. `Đặt lại` clears it, its
+  `Xác nhận` applies it at once; opened again, it keeps the statuses, not the day.
+- The statuses there: `Đang xử lý`, `Thanh toán thất bại`, `Đã đăng ký`, `Đang sử dụng`,
+  `Đã sử dụng`, `Không sử dụng` (the slot passed without its code being scanned), `Đã huỷ`,
+  `Chờ hoàn tiền`, `Đã hoàn tiền`, `Từ chối hoàn tiền`. Of the courts, which cost nothing, only
+  `Đã đăng ký`, `Đã sử dụng`, `Không sử dụng` and `Đã huỷ` were seen (`Đang xử lý` right after a
+  booking).
+- **Rain**: the management cancels the ticket the morning after (08:52 and 10:51 on the two days
+  seen), so it reads `Đã huỷ` like one the resident cancelled; neither its card nor its page
+  tells them apart. The app's notifications (the bell on the home screen) do: "Tiện ích Sân
+  Tennis Quý cư dân đăng ký sử dụng ngày 03/10/2026 08:00-09:00 đã bị hủy do Hỗ trợ hoàn lượt do
+  trời mưa khung giờ 07:00 - 12:00 ngày 03/10/2026" (made-up day and times).
+- Reading a month's cards and returning to the home screen took 5.0-8.7 s (2-4 swipes, 10-18
+  cards); two reads in a row gave the same on each of three machines.
 - A card opens the ticket, `Chi tiết đặt lịch`, with **`Hủy tiện ích`** at its top right
   (`[376,38][528,104]`, over the place of those icons), an element labelled `qr code`, the
   status, and one element with the details, the booking code on a line of its own. Inside it
@@ -126,7 +147,13 @@ clickable "Đóng"; the page beneath leaves the dump.
   shows "Căn hộ đã hết hạn mức đăng ký tiện ích cho phép." (the same message for the day and the
   month), usually after the calendar's "Tiếp tục" (0.9 s after the tap, 2026-10-24), once after
   "Xác nhận" (0.72 s after the tap). The flow knows it by `quota_full` ("hết hạn mức") and the run skips the rounds left,
-  which book the same day.
+  which book the same day. What counts, from 486 cards of three accounts (2026-11-23, 43
+  months of tennis): the tickets of the **month of play**, of that utility alone, but for those
+  `Đã huỷ`, whoever cancelled them; `Không sử dụng` counts. No month held more than 8, 26 held
+  exactly 8, 18 of those with more tickets cancelled beside them (66 in one month); nine of the
+  26 only reach 8 with their unused tickets. By the month of booking two months would hold 9 and
+  10. No day held more than 2. One account had 8 of 8 tennis used in November and still booked
+  pickleball on 2026-11-21 and 22. Not known: two accounts of one apartment.
 - **Slot taken** (someone booked it first): after "Xác nhận", "Tiện ích đã hết chỗ, vui lòng
   chọn vị trí/thời gian khác".
 
@@ -413,8 +440,9 @@ slots and the booked date and time read the same.
   with nothing else open they booked 3/3 for real in 4.8-6.0 s a round, ready 46 s after
   a cold start. With VS Code and other apps open, free RAM fell to 0.5 GB while booking,
   CPU stayed at 89-100% and the rounds took 7.6-8.4 s (the court list 3.3-4.6 s after
-  "Tiếp tục" instead of 2.4-3.2 s); three cold starts at once left 0.8 GB free and froze
-  two instances, which the run restarted before the start.
+  "Tiếp tục" instead of 2.4-3.2 s). Three cold starts at once that day (15:21) left 0.8 GB
+  free: on all three the driver or Android stopped answering within two minutes, and the runs
+  restarted each MuMu.
 - Two instances booked for real in parallel at 06:00 on 2026-11-01: Origami and BS each
   reached two tickets for 3/11, with every round finishing within 5 s. The one-day BS
   `[[instances]]` entry was removed at 07:05; the daily task still runs instance 0.

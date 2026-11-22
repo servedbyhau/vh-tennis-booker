@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-22.
+Last updated: 2026-11-23.
 
 ## Release and daily run
 
@@ -23,27 +23,24 @@ Last updated: 2026-11-22.
   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
-- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/account-choice` (1.1.2
-  plus the third machine, the tickets and the customers' accounts), to try it before a release;
-  its first 06:00 run is 2026-11-23. The app before the tickets is in
-  `D:\VH-Booker\app-backup-2026-11-22`.
-- Runner folder: at `v0.18.1`, kept as a way back until 2026-11-10, then removed. To go back:
+- Since 2026-11-22 the installed app on the dev PC is a local build of `develop` at #285 (1.1.2
+  plus the third machine, the tickets, the customers' accounts and the new pages), to try it
+  before a release; its first 06:00 run is 2026-11-23. The apps before are in
+  `D:\VH-Booker\app-backup-2026-11-22` (before the tickets) and `...-tickets` (before the account
+  check). #286 to #290 are merged and not installed.
+- Runner folder: at `v0.18.1`, still there as a way back (it was to go after 2026-11-10). To go back:
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
-- Tickets read and pictured after a run, and their Manage tab, were merged on 2026-11-22 (#265
-  to #269), read from 06:03. The reading was tried on three
-  real accounts on 2026-11-22, also after three idle minutes; not yet after a real booking, nor
-  on three machines at once.
-
-- Customers, their accounts and the account check before a booking were merged on 2026-11-22
-  (#270 to #285); open branches, in this order: `feat/readiness` (what the
-  line at the top looks at), `feat/run-account` (whose account a run and a ticket are of),
-  `feat/tickets-by-customer` (the tickets and the History name them),
-  `feat/copy-picture` (a ticket's picture copied),
-  `feat/remove-dialog` (a removal asks over the page); none of them installed. The check
-  and a forced change of account were run on one real machine that day; still to do: a real
-  timed booking with it, and a change between two different accounts.
+- Merged since 1.1.2, not released: the tickets (#265 to #269), the customers, their accounts and
+  the account check (#270 to #272), the pages and their look (#273 to #285), what is ready, whose
+  account a run and a ticket are of, the copied picture and the question before a removal (#286 to
+  #290). No open branch but the docs.
+- Tried on real machines: the ticket reading on three accounts, the account check and a forced change
+  of account on one. Not yet: either after a real 06:00 booking, a change between two different
+  accounts, a changed phone number, whose account a run is of.
+- Since 2026-11-23 pull requests are opened with `gh`, described and seen through CI; the user only
+  merges them.
 
 ## Last 06:00 runs
 

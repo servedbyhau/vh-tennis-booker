@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-22.
+Last updated: 2026-11-23.
 
 ## Start of a session
 
@@ -11,32 +11,34 @@ Last updated: 2026-11-22.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: watch the 06:00 runs of 1.1.2
+## Next task: check the 06:00 run of 2026-11-23
 
-1.1.2 repairs getting ready by itself (`ready.py`, see [architecture](../architecture.md)).
-Check each 06:00 log for `repaired` events and what they fixed; a failure that ended the run
-before 05:58 is a gap to study.
+It is the first of the account check, of the ticket reading at 06:03 and of three machines with
+2 cores each. Check: the account each machine booked with and whether it had to change; that
+each ticket booked has its picture and reads as registered, and when the reading started and
+ended; the time from the slot to the court list (2.1-3.3 s on two machines, 2.9-4.4 s on three
+with 4 cores); whether a launch failed again ([known issues](known-issues.md)).
 
-Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
-still waits on the home screen and opens the utilities list at 05:59, as before. Repairs
-during the rounds come later, in their own task.
+Then install `develop` (#286 to #290: what is ready, whose account a run and a ticket are of, the
+copied picture, the question before a removal), not before 06:05, and look at each in the desktop
+window.
 
-Known limits of the setup repairs: the deadline is checked between repairs, so a MuMu restart
-begun just before 05:58 may end after the warm-up (worst case about two minutes, 41-49 s
-seen); a fault in the last 15 s before the start is not repaired.
+## Under study: the quota
 
-The 06:00 run of 2026-11-23 is also the first of three machines with 2 cores each, and the first
-that reads tickets: check that each ticket booked has its picture and reads as registered, when
-the reading started and ended (06:03 to about 06:05), and that it changed nothing in the rounds.
+What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"): the history
+page tells it, at any hour, in 5-9 s. Counting what the app itself booked would be wrong, as
+residents book and cancel by hand and rain refunds come a day later. The plan to decide with the
+user: read it while getting ready, after the account check (05:46, when no booking can change it
+any more), and again with the tickets; show what is left per account and sport with when it was
+read; go on to another account of the same customer when none is left.
 
-Sending the results and tickets over Zalo is put off by the user (2026-11-22).
-Later, by the user's wish: what a customer asks for (courts, slots, weekdays) kept with the
-customer and applied to a machine, whose settings stay what a run reads; a run books every day
-today, so the weekdays need a change of the engine.
+Put off by the user: the days each machine books on (a schedule), and sending results and tickets
+over Zalo.
 
 ## After that
 
-- Add each 06:00 run to [progress.md](progress.md). After a week without a failure, remove the
+- Add each 06:00 run to [progress.md](progress.md). After a week without a failure (none since
+  2026-11-20), remove the
   runner folder (`git worktree remove ..\runner`) and its sections in CONTRIBUTING and
   CLAUDE.md.
 - Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X

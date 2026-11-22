@@ -5,7 +5,7 @@ packaged app's own exe) books a court in a run of its own; the
 **backend** (`court_booker.api`, FastAPI) serves the app's screens; the **UI** (`ui/`, React)
 is those screens. The 06:00 task runs the engine alone. How the flow reads the app:
 [how-it-works.md](how-it-works.md); facts about the app and MuMu: [field-notes.md](field-notes.md);
-the desktop app's design and the packaging still to do: [specs/0.5.0-desktop-app.md](specs/0.5.0-desktop-app.md).
+the desktop app's design and packaging: [specs/0.5.0-desktop-app.md](specs/0.5.0-desktop-app.md).
 Details live in the docstrings; this page says where things are and what must stay true.
 
 ## Engine: one run
@@ -100,8 +100,8 @@ Details live in the docstrings; this page says where things are and what must st
   while it still shows (Back on the login screen leaves the app); the login screen goes to
   `log_in`, which reads the saved login (`credentials.py`) only then: without one,
   `LoggedOutError` at once. Else it types the phone and the password (`type_text`), taps the
-  enabled login button once, never twice (the app locks an account after 5 wrong passwords),
-  and waits for the home screen (`logged_in` step) or a refusal, a notice or a message inside
+  enabled login button, once more only if nothing changed for 20 s (the app locks an account after
+  5 wrong passwords and was seen to take 11 s to answer), and waits for the home screen (`logged_in` step) or a refusal, a notice or a message inside
   a field: `LoginFailedError`. Both are `AppNotReadyError` (exit 4). The masked phone is
   logged, never the phone or the password; `Node` keeps no field text.
 - `tickets.py`: after a real run that booked, once its result is recorded and notified, reads
@@ -122,8 +122,8 @@ Details live in the docstrings; this page says where things are and what must st
 - `customers.py` (`CustomerBook`): the customers and the Vinhomes accounts each one gave. The
   database holds names and notes only; an account's login is in the vault under its id.
   Attaching an account to a machine saves its login as that instance's, the one a run reads,
-  so a run knows nothing of customers, and an instance's account is the one with its phone
-  number: one account, one machine. Nothing of a machine's login changes while a run holds the
+  so a run needs nothing of customers to book (it only notes whose account it is, `holder_on`),
+  and an instance's account is the one with its phone number: one account, one machine. Nothing of a machine's login changes while a run holds the
   lock. Logins saved before there were customers get one each when the backend starts (`adopt`).
 - `credentials.py`: one `Login` per MuMu instance and per customer account in Windows
   Credential Manager (a data folder set by `COURT_BOOKER_HOME` has names of its own there;
