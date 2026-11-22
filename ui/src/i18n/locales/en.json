@@ -129,22 +129,14 @@
     },
     "tickets": {
       "title": "Manage",
-      "period": "Which tickets",
-      "upcoming": "Upcoming",
-      "past": "Past",
       "machine": "Tickets of machine",
       "all": "All machines",
-      "withCancelled": "Include cancelled tickets",
       "count": "Tickets: {{count}}",
       "row": "{{slot}} · {{court}}",
       "where": "{{machine}} · {{code}}",
       "view": "View ticket",
       "noPhoto": "no picture",
-      "empty": {
-        "none": "No tickets yet. Tickets and their pictures are saved after each real booking.",
-        "upcoming": "No upcoming tickets.",
-        "past": "No past tickets."
-      },
+      "empty": "No tickets yet. A booked ticket shows here until its day of play is over.",
       "status": {
         "registered": "REGISTERED",
         "processing": "PROCESSING",

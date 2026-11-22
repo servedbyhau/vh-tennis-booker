@@ -4,73 +4,40 @@ import { useTickets } from "../../api/queries";
 import type { Ticket } from "../../api/types";
 import { Icon } from "../../components/Icon";
 import { QueryView } from "../../components/QueryView";
-import { EmptyState } from "../../components/States";
 import { localToday } from "../../format";
 import { useMachines } from "../../machines";
-import {
-  type Period,
-  pickTickets,
-  ticketDays,
-  ticketDevices,
-  type TicketFilter,
-} from "../../tickets";
+import { ticketDays, ticketDevices, ticketsToUse } from "../../tickets";
 import { useFormat } from "../../useFormat";
 import { TicketDialog } from "./TicketDialog";
 import { TicketStamp } from "./TicketStamp";
 import styles from "./TicketsTab.module.css";
 import { machineName } from "./ticketText";
 
-const PERIODS: readonly Period[] = ["upcoming", "past"];
-
-interface FilterBarProps {
-  filter: TicketFilter;
-  /** The machines with tickets; one alone has nothing to choose. */
+interface MachineFilterProps {
+  /** The machines with tickets. */
   devices: readonly number[];
-  onFilter: (filter: TicketFilter) => void;
+  /** The MuMu instance whose tickets show, `null` for every machine's. */
+  device: number | null;
+  onDevice: (device: number | null) => void;
 }
 
-/** What to list: the tickets still to play or those past, of which machine, cancelled or not. */
-function FilterBar({ filter, devices, onFilter }: FilterBarProps) {
+/** Whose tickets to list. */
+function MachineFilter({ devices, device, onDevice }: MachineFilterProps) {
   const { t } = useTranslation();
   const machines = useMachines();
   return (
-    <div className={styles.toolbar}>
-      <div role="group" aria-label={t("pages.tickets.period")} className={styles.chips}>
-        {PERIODS.map((period) => (
-          <button
-            key={period}
-            type="button"
-            aria-pressed={filter.period === period}
-            className={styles.chip}
-            onClick={() => onFilter({ ...filter, period })}
-          >
-            {t(`pages.tickets.${period}`)}
-          </button>
-        ))}
-      </div>
-      {devices.length > 1 && (
-        <div role="group" aria-label={t("pages.tickets.machine")} className={styles.chips}>
-          {[null, ...devices].map((device) => (
-            <button
-              key={device ?? "all"}
-              type="button"
-              aria-pressed={filter.device === device}
-              className={styles.chip}
-              onClick={() => onFilter({ ...filter, device })}
-            >
-              {device === null ? t("pages.tickets.all") : machineName(t, machines, device)}
-            </button>
-          ))}
-        </div>
-      )}
-      <label className={styles.check}>
-        <input
-          type="checkbox"
-          checked={filter.withCancelled}
-          onChange={(event) => onFilter({ ...filter, withCancelled: event.target.checked })}
-        />
-        {t("pages.tickets.withCancelled")}
-      </label>
+    <div role="group" aria-label={t("pages.tickets.machine")} className={styles.chips}>
+      {[null, ...devices].map((choice) => (
+        <button
+          key={choice ?? "all"}
+          type="button"
+          aria-pressed={device === choice}
+          className={styles.chip}
+          onClick={() => onDevice(choice)}
+        >
+          {choice === null ? t("pages.tickets.all") : machineName(t, machines, choice)}
+        </button>
+      ))}
     </div>
   );
 }
@@ -107,24 +74,29 @@ function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
 }
 
 interface TicketListProps {
+  /** The tickets still to use. */
   tickets: Ticket[];
-  filter: TicketFilter;
-  onFilter: (filter: TicketFilter) => void;
+  device: number | null;
+  onDevice: (device: number | null) => void;
 }
 
-/** The tickets the filter keeps, day by day, and the one opened over them. */
-function TicketList({ tickets, filter, onFilter }: TicketListProps) {
+/** The tickets of one machine or all, day by day, and the one opened over them. */
+function TicketList({ tickets, device, onDevice }: TicketListProps) {
   const { t } = useTranslation();
   const f = useFormat();
   const [openCode, setOpenCode] = useState<string | null>(null);
-  const days = ticketDays(pickTickets(tickets, filter, localToday()), filter.period);
+  const devices = ticketDevices(tickets);
+  // A machine chosen before its last ticket went: every machine's.
+  const chosen = device !== null && devices.includes(device) ? device : null;
+  const days = ticketDays(tickets.filter((ticket) => chosen === null || ticket.device === chosen));
   const shown = days.flatMap((day) => day.tickets);
   const open = shown.findIndex((ticket) => ticket.code === openCode);
   return (
     <>
-      <FilterBar filter={filter} devices={ticketDevices(tickets)} onFilter={onFilter} />
+      {devices.length > 1 && (
+        <MachineFilter devices={devices} device={chosen} onDevice={onDevice} />
+      )}
       <div className={styles.scroll}>
-        {days.length === 0 && <EmptyState>{t(`pages.tickets.empty.${filter.period}`)}</EmptyState>}
         {days.map(({ day, tickets: list }) => (
           <section key={day} aria-label={f.day(day)}>
             <h3 className={styles.day}>
@@ -158,24 +130,29 @@ function TicketList({ tickets, filter, onFilter }: TicketListProps) {
 }
 
 interface TicketsTabProps {
-  filter: TicketFilter;
-  onFilter: (filter: TicketFilter) => void;
+  /** The MuMu instance whose tickets to list, `null` for every machine's. */
+  device: number | null;
+  onDevice: (device: number | null) => void;
 }
 
 /**
- * The tickets of every machine's account, as the runs read them in the Vinhomes app: by day
- * of play, each opening its picture. Nothing here asks the app again or changes a ticket.
+ * The tickets booked and still to use, of every machine's account, as the runs read them in the
+ * Vinhomes app: by day of play until that day is over, each opening its picture to send. Nothing
+ * here asks the app again or changes a ticket.
  */
-export function TicketsTab({ filter, onFilter }: TicketsTabProps) {
+export function TicketsTab({ device, onDevice }: TicketsTabProps) {
   const { t } = useTranslation();
   const tickets = useTickets();
+  const today = localToday();
   return (
     <QueryView
       query={tickets}
-      isEmpty={(list) => list.length === 0}
-      empty={<span className={styles.none}>{t("pages.tickets.empty.none")}</span>}
+      isEmpty={(list) => ticketsToUse(list, today).length === 0}
+      empty={<span className={styles.none}>{t("pages.tickets.empty")}</span>}
     >
-      {(list) => <TicketList tickets={list} filter={filter} onFilter={onFilter} />}
+      {(list) => (
+        <TicketList tickets={ticketsToUse(list, today)} device={device} onDevice={onDevice} />
+      )}
     </QueryView>
   );
 }

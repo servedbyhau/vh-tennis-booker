@@ -307,10 +307,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   and the dry run;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SidePanel` beside it, three tabs:
-  `TicketsTab` ("Quản lý": every machine's tickets by day of play, upcoming ones unless the past
-  is chosen, of one machine or all, cancelled ones on request, picked in `tickets.ts` without a
-  request; a press opens `TicketDialog` with the picture, which a plain download link saves under
-  `photoFileName`; read again after `tickets_saved`),
+  `TicketsTab` ("Quản lý": every machine's tickets still to use by day of play, of one machine
+  or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
+  `TicketDialog` with the picture, which a plain download link saves under `photoFileName`;
+  read again after `tickets_saved`),
   `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
   opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the saved login
   and the guide, those of the machine chosen on the ticket, which `HomePage` holds). The

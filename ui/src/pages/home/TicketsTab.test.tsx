@@ -65,7 +65,7 @@ afterEach(() => {
 });
 
 describe("Tickets list", () => {
-  it("lists every machine's upcoming tickets by day, cancelled ones left out", async () => {
+  it("lists every machine's tickets to use by day, cancelled ones left out", async () => {
     await openTab();
 
     expect(await days()).toEqual([
@@ -78,25 +78,17 @@ describe("Tickets list", () => {
     ]);
   });
 
-  it("adds the cancelled tickets on request, without asking the backend again", async () => {
-    const { fetch } = await openTab();
-    await days();
-
-    fireEvent.click(within(panel()).getByRole("checkbox", { name: "Gồm cả vé đã hủy" }));
-
-    expect((await days())[0]?.[1]).toBe("08:00–09:00 · Tennis S6ĐÃ HỦYMáy 1 · 1000001chưa có ảnh");
-    expect(requestsTo(fetch, "GET /api/tickets")).toBe(1);
+  it("leaves out the tickets whose day of play is over, today's kept", async () => {
+    await openTab([
+      ticket("1000006", { play_date: "2026-10-15", slot: "06:00 - 07:00" }),
+      ticket("1000005", { play_date: "2026-10-14" }),
+    ]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Năm 15/101 vé"]);
   });
 
-  it("lists the tickets past, a status of the app's own in its words", async () => {
-    await openTab();
-    await days();
-
-    fireEvent.click(within(panel()).getByRole("button", { name: "Đã qua" }));
-
-    expect(await days()).toEqual([
-      ["Thứ Hai 12/101 vé", "18:00–19:00 · Tennis S6Đã sử dụngMáy 1 · 1000000Xem vé"],
-    ]);
+  it("lists a status of the app's own in its words", async () => {
+    await openTab([ticket("1000000", { status: "other", status_text: "Đã sử dụng" })]);
+    expect((await days())[0]?.[1]).toContain("Đã sử dụng");
   });
 
   it("lists the tickets of one machine", async () => {
@@ -125,25 +117,46 @@ describe("Tickets list", () => {
     expect((await days())[0]?.[1]).toContain("MuMu 7 · 1000002");
   });
 
-  it("keeps the filter while another tab is in front", async () => {
+  it("keeps the machine chosen while another tab is in front", async () => {
     await openTab();
     await days();
-    fireEvent.click(within(panel()).getByRole("button", { name: "Đã qua" }));
+    fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
     fireEvent.click(screen.getByRole("tab", { name: "Lịch sử" }));
 
     fireEvent.click(screen.getByRole("tab", { name: "Quản lý" }));
 
-    expect((await days()).map(([day]) => day)).toEqual(["Thứ Hai 12/101 vé"]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
   });
 
-  it("says when there is nothing to list", async () => {
-    await openTab([]);
+  it("lists every machine's once the machine chosen has no ticket left", async () => {
+    const { fetch, live } = await openTab();
+    await days();
+    fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
+    const left = TICKETS.filter(({ device }) => device === 0);
+    fetch.mockImplementation((input) =>
+      Promise.resolve(
+        input instanceof Request && input.url.endsWith("/api/tickets")
+          ? Response.json(left)
+          : Response.json([]),
+      ),
+    );
+
+    act(() => {
+      live.current().open();
+      live.current().send(step(9, { kind: "tickets_saved", category: "step", data: {} }));
+    });
+
+    await waitFor(async () =>
+      expect((await days()).map(([day]) => day)).toEqual(["Thứ Sáu 16/102 vé"]),
+    );
+  });
+
+  it.each([
+    ["there is none", []],
+    ["all are over or cancelled", [TICKETS[3]!, TICKETS[4]!]],
+  ])("says when there is nothing to list: %s", async (_, tickets) => {
+    await openTab(tickets);
     expect(await within(panel()).findByText(/^Chưa có vé nào\./)).toBeInTheDocument();
-  });
-
-  it("says when the period has no ticket", async () => {
-    await openTab([ticket("1000000", { play_date: "2026-10-12" })]);
-    expect(await within(panel()).findByText("Không có vé nào sắp tới.")).toBeInTheDocument();
   });
 
   it("offers to try again when the tickets cannot be read", async () => {
