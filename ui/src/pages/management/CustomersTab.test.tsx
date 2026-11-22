@@ -147,11 +147,17 @@ describe("Management customers", () => {
     const { fetch } = await openPage([AN], { "DELETE /api/customers/a1": reply(null, 204) });
     press("Xóa");
     const question = screen.getByRole("alertdialog", { name: "Xóa Anh An?" });
-    expect(question).toHaveFocus(); // a second press removes nothing
-    expect(question).toHaveTextContent("Mất luôn 2 tài khoản và mật khẩu đã lưu");
-    expect(question).toHaveTextContent(
-      "Máy 2 đang dùng 09••••••11, xóa rồi máy này không còn tài khoản.",
-    );
+    // Over the page, with keeping it in focus: Enter removes nothing.
+    expect(question).toHaveAttribute("aria-modal", "true");
+    expect(within(question).getByRole("button", { name: "Giữ lại" })).toHaveFocus();
+    expect(question).toHaveTextContent("Sẽ mất 2 tài khoản:");
+    expect(
+      within(question)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["09••••••11 · Căn A", "09••••••22"]);
+    expect(question).toHaveTextContent("Mật khẩu đã lưu cũng mất, không lấy lại được.");
+    expect(question).toHaveTextContent("Máy 2 đang dùng, xóa rồi sẽ không còn tài khoản để đặt.");
     fireEvent.click(within(question).getByRole("button", { name: "Giữ lại" }));
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(requestsTo(fetch, "DELETE /api/customers/a1")).toBe(0);
@@ -163,6 +169,28 @@ describe("Management customers", () => {
       .map(([sentRequest]) => sentRequest)
       .filter((r) => r.method === "DELETE");
     expect(new URL(request!.url).search).toBe("?detach=true");
+  });
+
+  it("is kept with Escape, the keys staying in the question, and gives the focus back", async () => {
+    const { fetch } = await openPage([BINH]);
+    const trash = screen.getByRole("button", { name: "Xóa" });
+    trash.focus();
+    press("Xóa");
+    const question = screen.getByRole("alertdialog", { name: "Xóa Chị Bình?" });
+    expect(question).toHaveTextContent("Thông tin của khách cũng mất, không lấy lại được.");
+    const keep = within(question).getByRole("button", { name: "Giữ lại" });
+    const remove = within(question).getByRole("button", { name: "Xóa" });
+    fireEvent.keyDown(keep, { key: "Tab", shiftKey: true });
+    expect(remove).toHaveFocus();
+    fireEvent.keyDown(remove, { key: "Tab" });
+    expect(keep).toHaveFocus();
+    fireEvent.click(question.parentElement!); // beside it: nothing
+    expect(question).toBeVisible();
+
+    fireEvent.keyDown(keep, { key: "Escape" });
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(trash).toHaveFocus();
+    expect(fetch.mock.calls.every(([request]) => request.method === "GET")).toBe(true);
   });
 
   it("says why one was not removed", async () => {
@@ -281,8 +309,9 @@ describe("Management accounts", () => {
     });
     press("Xóa", 2); // the customer's, then one per account
     const question = screen.getByRole("alertdialog", { name: "Xóa 09••••••22?" });
-    expect(question).toHaveTextContent("Mất luôn mật khẩu đã lưu, không lấy lại được.");
+    expect(question).toHaveTextContent("Mật khẩu đã lưu cũng mất, không lấy lại được.");
     expect(question).not.toHaveTextContent("đang dùng");
+    expect(within(question).queryByRole("listitem")).not.toBeInTheDocument(); // named above
     fireEvent.click(within(question).getByRole("button", { name: "Xóa" }));
     await waitFor(() => expect(requestsTo(fetch, "DELETE /api/customer-accounts/b2")).toBe(1));
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());

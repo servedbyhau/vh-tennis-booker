@@ -4,8 +4,6 @@ import { useRemoveAccount, useRemoveCustomer } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Icon, type IconName } from "../../components/Icon";
 import { IconButton } from "../../components/IconButton";
-import { useMachines } from "../../machines";
-import { machineName } from "../home/ticketText";
 import styles from "./CustomerDetail.module.css";
 import { AccountForm, CustomerForm } from "./CustomerForms";
 import { RemoveQuestion } from "./RemoveQuestion";
@@ -44,33 +42,13 @@ function Facts({ customer }: { customer: Customer }) {
   );
 }
 
-/** What a machine loses with an account it books with. */
-function useInUse() {
-  const { t } = useTranslation();
-  const machines = useMachines();
-  return (accounts: readonly CustomerAccount[]): string[] =>
-    accounts.flatMap(({ device, phone }) =>
-      device === null
-        ? []
-        : t("pages.customers.inUse", {
-            machine: machineName(t, machines, device),
-            phone: phone ?? "",
-          }),
-    );
-}
-
 function RemoveCustomer({ customer, onClose }: { customer: Customer; onClose: () => void }) {
   const { t } = useTranslation();
-  const inUse = useInUse();
   const remove = useRemoveCustomer();
-  const count = customer.accounts.length;
   return (
     <RemoveQuestion
       title={t("pages.customers.removeAsk", { name: customer.name })}
-      lost={[
-        ...(count > 0 ? [t("pages.customers.lostAccounts", { count })] : []),
-        ...inUse(customer.accounts),
-      ]}
+      accounts={customer.accounts}
       pending={remove.isPending}
       error={remove.error}
       onRemove={() => remove.mutate(customer.id)}
@@ -81,14 +59,13 @@ function RemoveCustomer({ customer, onClose }: { customer: Customer; onClose: ()
 
 function RemoveAccount({ account, onClose }: { account: CustomerAccount; onClose: () => void }) {
   const { t } = useTranslation();
-  const inUse = useInUse();
   const remove = useRemoveAccount();
+  const name = [account.phone, account.label].filter(Boolean).join(" · ");
   return (
     <RemoveQuestion
-      title={t("pages.customers.removeAsk", {
-        name: [account.phone, account.label].filter(Boolean).join(" · "),
-      })}
-      lost={[t("pages.customers.lostAccount"), ...inUse([account])]}
+      title={t("pages.customers.removeAsk", { name })}
+      accounts={[account]}
+      named
       pending={remove.isPending}
       error={remove.error}
       onRemove={() => remove.mutate(account.id, { onSuccess: onClose })}
@@ -104,7 +81,7 @@ interface AccountRowProps {
   onOpen: (open: Open | null) => void;
 }
 
-/** An account: its phone and label, its form or the question before its removal under it. */
+/** An account: its phone and label, its form under it, or the question before its removal. */
 function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
   const { t } = useTranslation();
   const close = () => onOpen(null);

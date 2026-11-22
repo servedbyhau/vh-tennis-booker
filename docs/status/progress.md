@@ -40,7 +40,8 @@ Last updated: 2026-11-22.
   (#270 to #285); open branches, in this order: `feat/readiness` (what the
   line at the top looks at), `feat/run-account` (whose account a run and a ticket are of),
   `feat/tickets-by-customer` (the tickets and the History name them),
-  `feat/copy-picture` (a ticket's picture copied). The check
+  `feat/copy-picture` (a ticket's picture copied),
+  `feat/remove-dialog` (a removal asks over the page); none of them installed. The check
   and a forced change of account were run on one real machine that day; still to do: a real
   timed booking with it, and a change between two different accounts.
 
