@@ -166,7 +166,7 @@
       "contact": "Contact (phone, Zalo)",
       "accounts": "Vinhomes accounts",
       "accountCount": "Accounts: {{count}}",
-      "noFacts": "No contact yet. Press \"Edit customer\" to add it.",
+      "noFacts": "No contact yet. Press \"Edit\" to add it.",
       "empty": "No customers yet. Press \"Add customer\" to start.",
       "editCustomer": "Edit",
       "label": "Label",
