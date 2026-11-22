@@ -29,7 +29,7 @@
   --color-stamp-strong: #1c3380; /* link hover */
   --color-failed: #b53c0b; /* the mockups' #c2410c, darkened to reach 4.5:1 on the ground */
   --color-highlight: #ecd78f; /* sand yellow: the 06:00 moment, the current step, the order */
-  --color-highlight-soft: #f4ebcc; /* a large area in the same yellow: the setup guide */
+  --color-highlight-soft: #f4ebcc; /* a large area in the same yellow: the first steps in the guide */
 
   /* Type: --font-sans and --font-mono come from fonts.css */
   --text-label: 12px; /* mono capitals above values */

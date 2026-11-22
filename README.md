@@ -132,7 +132,7 @@ Then:
 2. Run it. The installer is not code-signed, so Windows SmartScreen may say it protected your
    PC: choose **More info**, then **Run anyway**. It installs for you alone, without
    administrator rights.
-3. Open **Court Booker** from the Start menu. The **Setup** tab lists what only you can do
+3. Open **Court Booker** from the Start menu. The **Guide** page lists what only you can do
    (install MuMu and the Vinhomes app, log in); tick each step once it is done.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
@@ -158,7 +158,8 @@ remove them too.
 
 ## Using the app
 
-The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**. On the first:
+The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** and
+**Hướng dẫn / Guide**. On the first:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
@@ -166,10 +167,7 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
   and what is set, the play day, court and slots; below, the subdivision, the sport, the
   court and up to two slots to choose, saved on each press, and a dry run. During a run it
   shows the steps as they happen.
-- **Thiết lập / Setup** on the right: the account the machine books with, the steps only you can
-  do (install MuMu and the Vinhomes app, log in), ticked by you and counted while any is left, and
-  a short guide; MuMu's place and screen and waking the PC need no step (the runs and the daily
-  switch see to them). Before booking, a run reads the phone number logged in on the machine's
+- **Thiết lập / Setup** on the right: the account the machine books with. Before booking, a run reads the phone number logged in on the machine's
   Vinhomes app, and logs out and in if it is not the chosen account's, trying the password once; a
   machine that cannot be sure books nothing. The Windows notification switch sits on the ticket,
   beside the daily switch.
@@ -191,6 +189,11 @@ On the second:
   slot booked or not and when it started (real bookings, dry runs on request); a press shows the
   reasons, the steps and the technical log beside the list. A booking that stopped on a failure the
   app did not explain also saved a screenshot of MuMu in `%LOCALAPPDATA%\CourtBooker\logs\screens`.
+
+The third, **Guide**, says how to use the app, what happens every morning and what to do when
+something goes wrong. It also holds the steps only you can do (install MuMu and the Vinhomes app,
+log in), ticked by you for each machine and counted in red while any is left; MuMu's place and
+screen and waking the PC need no step (the runs and the daily switch see to them).
 
 <p>
   <img src="docs/img/home.png" width="49%" alt="Ready for 06:00: the ticket with the daily

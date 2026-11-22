@@ -1,5 +1,4 @@
-/** How far the setup has come: what is left to do, and whether everything is done. */
-import type { Overview } from "./api/types";
+/** How far the setup has come: what is left to do. */
 import { enabledMachines, type Machine } from "./machines";
 import {
   doneOf,
@@ -34,14 +33,4 @@ export function setupLeft(ticks: ManualTicks, machines: readonly Machine[] = ONE
 /** Tell whether `machine` books and has a step of its own left. */
 export function machineLeft(ticks: ManualTicks, machine: Machine): boolean {
   return machine.enabled && ownLeft(doneOf(ticks, machine.key)) > 0;
-}
-
-/** Tell whether nothing is left: the setup done, a dry run passed and the schedule on. */
-export function setupDone(
-  overview: Overview,
-  ticks: ManualTicks,
-  machines: readonly Machine[] = ONE,
-): boolean {
-  const { schedule } = overview;
-  return setupLeft(ticks, machines) === 0 && schedule.dry_run_passed && schedule.enabled;
 }

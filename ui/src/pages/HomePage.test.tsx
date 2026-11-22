@@ -57,7 +57,7 @@ describe("HomePage status line", () => {
       schedule: { ...status.schedule, enabled: false, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Còn 2 việc thiết lập, xem mục Thiết lập");
+    expect(await statusLine()).toHaveTextContent("Còn 2 việc chuẩn bị, xem Hướng dẫn");
   });
 
   it("says when Windows keeps the PC from waking", async () => {
@@ -324,13 +324,5 @@ describe("HomePage panel", () => {
     await statusLine();
     expect(screen.getByRole("region", { name: "Thiết lập" })).toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
-  });
-
-  it("counts the tasks left", async () => {
-    tickSteps({ mumu: true, app: true, login: false });
-    renderOverview(overview());
-    expect(
-      await screen.findByRole("region", { name: "Thiết lập, còn 1 việc" }),
-    ).toBeInTheDocument();
   });
 });

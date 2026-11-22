@@ -26,7 +26,7 @@ function RunningStatus({ running, startAt }: { running: Running; startAt: string
 
 /**
  * One line in the header on whether the next booking can happen, in this order: the run
- * going on; the setup tasks left (the Setup lists them); no dry run passed yet; the
+ * going on; the setup tasks left (the Guide lists them); no dry run passed yet; the
  * daily switch off; Windows keeping the PC from waking; else ready for the next start. The
  * ticket holds what fixes the last three (switching the schedule on allows waking).
  */

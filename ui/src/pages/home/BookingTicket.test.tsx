@@ -404,7 +404,7 @@ describe("BookingTicket choices", () => {
     expect(await bodies(fetch, "PUT /api/settings")).toEqual([{ ...saved, instances: [moved] }]);
   });
 
-  it("shows the setup of the machine chosen, its ticks its own", async () => {
+  it("marks the machines with something left to prepare", async () => {
     const other = {
       mumu_index: 1,
       slots: ["20:00 - 21:00"],
@@ -415,19 +415,11 @@ describe("BookingTicket choices", () => {
     };
     renderTicket({ saved: settings({ instances: [other] }) });
     const instances = await screen.findByRole("group", { name: "Máy" });
-    // Nothing ticked yet: each machine has its own steps left.
     expect(
-      within(instances).getByRole("button", { name: /^Máy 2.*còn việc thiết lập$/ }),
+      within(instances).getByRole("button", { name: /^Máy 2.*còn việc chuẩn bị$/ }),
     ).toBeVisible();
-    const app = () => screen.getByRole("checkbox", { name: /Đã cài app Vinhomes/ });
-    expect(await screen.findByText("Máy 1 · MuMu 0")).toBeInTheDocument();
-    fireEvent.click(app());
-    expect(app()).toBeChecked();
-
-    fireEvent.click(within(instances).getByRole("button", { name: /^Máy 2/ }));
-
-    expect(await screen.findByText("Máy 2 · MuMu 1")).toBeInTheDocument();
-    expect(app()).not.toBeChecked();
+    // Off: not one of those that book.
+    expect(within(instances).getByRole("button", { name: "Máy 3, đang tắt" })).toBeVisible();
   });
 
   it("takes no press while a save is on its way", async () => {

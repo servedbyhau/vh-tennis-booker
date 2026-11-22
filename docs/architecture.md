@@ -301,7 +301,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 
 - Vite, React 19, strict TypeScript, ESLint (type-aware), Prettier, Vitest + Testing Library
   (jsdom). Version holds that need Node 22.22 (jsdom 30, React Router 8) are skipped by Dependabot.
-- `src/paths.ts` names the two pages and the old addresses that lead to it, keeping
+- `src/paths.ts` names the three pages and the old addresses that lead to them, keeping
   `?run=`; `routes.tsx` maps them to `pages/`. `i18n/` (Vietnamese
   default, English; same keys, checked by a test). `styles/` holds the tokens (contrast checked
   by `tokens.test.ts`); components use CSS Modules on them. Every icon is one of Lucide's,
@@ -314,7 +314,9 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 - `steps.ts` words each event kind (a new kind fails the type check); `reasons.ts` turns the
   engine's English reasons into a few words (`notify.REASONS` holds the same words; a test
   compares them).
-- Two pages, a press apart in the middle of the header: the booking and the management
+- Three pages, a press apart in the middle of the header: the booking, the guide
+  (`pages/GuidePage.tsx`: three steps to start, the user's ticks for each machine, the mornings and
+  the problems; the header counts the ticks left) and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose three sections each have an
   address: `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
   `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes, a
@@ -339,8 +341,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   and the dry run;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
-  `SetupTab` (the machine's account, the user's ticks and the guide, those of the machine chosen on
-  the ticket, which `HomePage` holds). `AccountPicker` picks a customer, then one of their
+  the account of the machine chosen on the ticket, which `HomePage` holds. `AccountPicker` picks a customer, then one of their
   accounts, which saves it; an account on another machine is listed but not picked.
   The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
   readers. The header's status line (`components/StatusLine.tsx`)

@@ -32,12 +32,11 @@ describe("routes", () => {
     ["/settings/booking", paths.overview],
     ["/settings/device", paths.overview],
     ["/settings/notifications", paths.overview],
-    ["/guide", paths.overview],
-    ["/welcome?step=2", `${paths.overview}?step=2`],
+    ["/welcome?step=2", `${paths.guide}?step=2`],
   ])("sends the old address %s on to %s", async (path, to) => {
     const router = renderAt(path);
 
-    await screen.findByRole("region", { name: /^(Lịch sử|Thiết lập)/ });
+    await screen.findByRole("region", { name: /^(Lịch sử|Thiết lập|Chuẩn bị)/ });
     const { pathname, search } = router.state.location;
     expect(pathname + search).toBe(to);
     expect(router.state.historyAction).toBe("REPLACE");

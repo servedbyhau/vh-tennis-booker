@@ -13,9 +13,11 @@ uses [Semantic Versioning](https://semver.org/).
 - A management page ("Quản lý" / "Management" in the middle of the header) with three sections: the
   customers (the people or groups booked for, with who speaks for them and the Vinhomes accounts
   they gave), the tickets and the History, which leaves the panel beside the ticket. That panel is
-  the Setup alone, where each machine's account is picked from the customers' in place of typing a
+  the Setup of the machine shown, where its account is picked from the customers' in place of typing a
   login; the logins saved before became customers (`/api/customers`,
   `/api/machines/{index}/account` in place of `/api/logins`).
+- A guide page ("Hướng dẫn" / "Guide"): the steps to tick for each machine, with the count left in
+  the header, and how to use the app, out of the Setup.
 - A "Vé" ("Tickets") section: the tickets booked and still to use, of every
   machine's account in one list by day of play, with their status and booking code; a press
   opens the ticket's picture, which can be saved as a file.
