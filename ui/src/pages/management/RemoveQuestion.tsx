@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { errorMessage } from "../../api/errors";
 import { Button } from "../../components/Button";
+import { Icon } from "../../components/Icon";
 import styles from "./CustomerForms.module.css";
 
 interface RemoveQuestionProps {
@@ -35,6 +36,7 @@ export function RemoveQuestion(props: RemoveQuestionProps) {
       ))}
       <div className={styles.actions}>
         <Button variant="danger" disabled={pending} onClick={onRemove}>
+          <Icon name="remove" />
           {t("pages.customers.remove")}
         </Button>
         <Button onClick={onClose}>{t("pages.customers.keep")}</Button>

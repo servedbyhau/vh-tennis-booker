@@ -26,12 +26,6 @@
   letter-spacing: var(--tracking-heading);
 }
 
-.add {
-  min-height: 36px;
-  padding: 0 var(--space-3);
-  font-size: var(--text-data);
-}
-
 .scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -52,7 +46,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-height: 60px;
   padding: var(--space-2) var(--space-3);
   border: 0;
@@ -92,5 +86,33 @@
 
 .sub {
   color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Who they are, as a round picture would show. */
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: var(--color-tint);
+  color: var(--color-muted);
+  font-size: var(--text-body);
+}
+
+.customer[aria-current="true"] .avatar {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.count {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
   font-size: var(--text-small);
 }

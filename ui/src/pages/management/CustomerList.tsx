@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Customer } from "../../api/types";
-import { Button } from "../../components/Button";
+import { Icon } from "../../components/Icon";
+import { IconButton } from "../../components/IconButton";
 import styles from "./CustomerList.module.css";
 
 interface CustomerListProps {
@@ -9,6 +10,19 @@ interface CustomerListProps {
   shown: string | null;
   onChoose: (id: string) => void;
   onAdd: () => void;
+}
+
+/** How many accounts a customer gave: a key and the number, in words for screen readers. */
+function AccountCount({ count }: { count: number }) {
+  const { t } = useTranslation();
+  const words = t("pages.customers.accountCount", { count });
+  return (
+    <span className={styles.count} title={words}>
+      <Icon name="key" />
+      <span aria-hidden="true">{count}</span>
+      <span className="visually-hidden">{words}</span>
+    </span>
+  );
 }
 
 /** Every customer, with who speaks for them and how many accounts they gave. */
@@ -20,9 +34,7 @@ export function CustomerList({ customers, shown, onChoose, onAdd }: CustomerList
         <h2 id="customers-title" className={styles.title}>
           {t("pages.customers.title")}
         </h2>
-        <Button variant="primary" className={styles.add} onClick={onAdd}>
-          {t("pages.customers.add")}
-        </Button>
+        <IconButton icon="add" variant="solid" label={t("pages.customers.add")} onClick={onAdd} />
       </div>
       <nav aria-labelledby="customers-title" className={styles.scroll}>
         <ul className={styles.list}>
@@ -34,17 +46,16 @@ export function CustomerList({ customers, shown, onChoose, onAdd }: CustomerList
                 className={styles.customer}
                 onClick={() => onChoose(customer.id)}
               >
+                <span className={styles.avatar}>
+                  <Icon name="person" />
+                </span>
                 <span className={styles.who}>
                   <span className={styles.name}>{customer.name}</span>
-                  <span className={styles.sub}>
-                    {[
-                      customer.representative,
-                      t("pages.customers.accountCount", { count: customer.accounts.length }),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
+                  {customer.representative !== "" && (
+                    <span className={styles.sub}>{customer.representative}</span>
+                  )}
                 </span>
+                <AccountCount count={customer.accounts.length} />
               </button>
             </li>
           ))}

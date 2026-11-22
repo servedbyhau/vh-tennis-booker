@@ -37,8 +37,7 @@ Last updated: 2026-11-22.
   on three machines at once.
 
 - Customers, their accounts and the account check before a booking were merged on 2026-11-22
-  (#270 to #277); open branches, in this order: `feat/remove-in-sight` (remove beside edit) and
-  `feat/softer-lines` (the lighter look). The check
+  (#270 to #279); open branch: `feat/customer-icons` (icons for the customers). The check
   and a forced change of account were run on one real machine that day; still to do: a real
   timed booking with it, and a change between two different accounts.
 

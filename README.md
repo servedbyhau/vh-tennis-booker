@@ -247,7 +247,8 @@ The UI ships the fonts [Bricolage Grotesque](https://github.com/ateliertriay/bri
 (© 2022 The Bricolage Grotesque Project Authors) and
 [IBM Plex Mono](https://github.com/IBM/plex) (© 2017 IBM Corp.), both under the
 [SIL Open Font License 1.1](https://openfontlicense.org), through the
-[Fontsource](https://fontsource.org) packages.
+[Fontsource](https://fontsource.org) packages. Its icons are [Lucide](https://lucide.dev)'s
+([ISC](https://lucide.dev/license)), through `lucide-react`.
 
 ## License
 
