@@ -57,8 +57,10 @@ def test_the_database_holds_no_phone_number_and_no_password(book, db):
 
 def test_a_customer_takes_another_name_and_note(book):
     an = book.add_customer("An")
-    assert book.change_customer(an.id, "Anh An", "mới").name == "Anh An"
-    assert book.customer(an.id).note == "mới"
+    book.change_customer(an.id, "Nhóm An", "mới", "Anh An", "Zalo 0900")
+    changed = book.customer(an.id)
+    assert (changed.name, changed.note) == ("Nhóm An", "mới")
+    assert (changed.representative, changed.contact) == ("Anh An", "Zalo 0900")
 
 
 def test_a_phone_number_belongs_to_one_account_only(book):

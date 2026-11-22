@@ -5,17 +5,16 @@ import { SiteHeader } from "./components/SiteHeader";
 import { paths } from "./paths";
 
 /**
- * Lay out every screen: the header, then the current screen in the main area. The home
- * screen fills the window, the accounts page takes its width; the not-found and error pages
- * make one centred column.
+ * Lay out every screen: the header, then the current screen in the main area. The
+ * booking and the customers fill the window; the not-found and error pages make one centred
+ * column.
  */
 export function App() {
   const { t } = useTranslation();
-  const home = useMatch(paths.overview) !== null;
-  const accounts = useMatch(paths.accounts) !== null;
-  const layout = [styles.page, home && styles.fill, accounts && styles.wide];
+  const booking = useMatch(paths.overview) !== null;
+  const customers = useMatch(paths.customers) !== null;
   return (
-    <div className={layout.filter(Boolean).join(" ")}>
+    <div className={booking || customers ? `${styles.page} ${styles.fill}` : styles.page}>
       <a className={styles.skipLink} href="#main">
         {t("app.skipToContent")}
       </a>

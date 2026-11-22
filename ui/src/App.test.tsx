@@ -48,7 +48,7 @@ describe("App", () => {
       within(pages)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Đặt sân", "Tài khoản"]);
+    ).toEqual(["Đặt sân", "Khách hàng"]);
   });
 
   it("starts with a link that skips to the main area", () => {

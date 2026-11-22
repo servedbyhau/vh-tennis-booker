@@ -115,14 +115,14 @@ describe("SetupTab account", () => {
     expect(await within(section).findByText("Anh An · 09••••••11 · Căn A")).toBeVisible();
   });
 
-  it("says when none is attached, and leads to the accounts page", async () => {
+  it("says when none is attached, and leads to the customers page", async () => {
     const { section, router } = await shown([]);
     expect(await within(section).findByText(/^Chưa gắn:/)).toBeVisible();
 
-    fireEvent.click(within(section).getByRole("link", { name: "Quản lý tài khoản →" }));
+    fireEvent.click(within(section).getByRole("link", { name: "Quản lý khách hàng →" }));
 
-    expect(router.state.location.pathname).toBe(paths.accounts);
-    expect(await screen.findByRole("heading", { name: "Quản lý tài khoản" })).toBeVisible();
+    expect(router.state.location.pathname).toBe(paths.customers);
+    expect(await screen.findByRole("button", { name: "Thêm khách" })).toBeVisible();
   });
 });
 

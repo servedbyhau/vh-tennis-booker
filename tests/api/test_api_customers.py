@@ -56,8 +56,11 @@ def test_a_customer_and_their_account_answer_no_password_and_a_masked_phone(
 
 def test_a_customer_is_changed_and_removed(client, customer, account):
     url = f"/api/customers/{customer['id']}"
-    reply = client.put(url, json={"name": "  Anh An ", "note": "ghi chú"})
-    assert (reply.json()["name"], reply.json()["note"]) == ("Anh An", "ghi chú")
+    fields = {"representative": "An", "contact": "Zalo An", "note": "ghi chú"}
+    reply = client.put(url, json={"name": "  Nhóm An ", **fields})
+    shown = reply.json()
+    assert shown["name"] == "Nhóm An"
+    assert {key: shown[key] for key in fields} == fields
     assert len(reply.json()["accounts"]) == 1
     assert client.delete(url).status_code == 204
     assert client.get("/api/customers").json() == []

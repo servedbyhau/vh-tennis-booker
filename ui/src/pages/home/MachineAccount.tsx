@@ -7,7 +7,7 @@ import { accountOn } from "../../machines";
 import { paths } from "../../paths";
 import styles from "./SetupTab.module.css";
 
-/** The account a machine books with, in a line; the accounts page changes it. */
+/** The account a machine books with, in a line; the customers page changes it. */
 export function MachineAccount({ mumuIndex }: { mumuIndex: number }) {
   const { t } = useTranslation();
   const id = useId();
@@ -32,7 +32,7 @@ export function MachineAccount({ mumuIndex }: { mumuIndex: number }) {
         }}
       </QueryView>
       <p className={styles.note}>
-        <Link to={paths.accounts}>{t("pages.setup.account.manage")}</Link>
+        <Link to={paths.customers}>{t("pages.setup.account.manage")}</Link>
       </p>
     </section>
   );
