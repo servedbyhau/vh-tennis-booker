@@ -810,7 +810,7 @@ class FakeReader:
     def read(self, wanted):
         self.wanted = wanted
         ticket = Ticket(
-            "1234567", "Sân Tennis", "S6", "2026-10-07", "18:00 - 19:00", "Đã đăng ký", None
+            "1234567", "Sân Tennis", "S6", "2026-10-10", "18:00 - 19:00", "Đã đăng ký", None
         )
         self.collected.tickets.append(ticket)
         self.collected.photos["1234567"] = "1234567.png"
@@ -959,21 +959,51 @@ def read_after(monkeypatch, looks):
     results = [RoundResult("18:00 - 19:00", True, "booked", 5.0, "S6 - Sân tennis")]
     clock = StepClock(start + cli.TICKETS_AFTER)
     cli.read_tickets(booker, results, start.date(), start, clock, others, lambda kind, **data: None)
-    assert waits == [start + cli.TICKETS_AFTER]
-    return others
+    assert waits == [start + timedelta(minutes=2)]
+    return others, clock.at - start
 
 
 def test_tickets_wait_for_the_other_machines_to_end_their_rounds(monkeypatch, reader):
-    others = read_after(monkeypatch, looks=5)
+    others, _ = read_after(monkeypatch, looks=5)
     assert others.looks < 0
     assert len(others.saved) == 1
     (wanted,) = reader.made[0].wanted
     assert wanted.court == "S6 - Sân tennis"
 
 
-def test_tickets_are_skipped_while_a_machine_books_on(monkeypatch, reader, caplog):
+def test_tickets_are_read_all_the_same_after_a_run_that_was_killed(monkeypatch, reader, caplog):
     with caplog.at_level(logging.WARNING):
-        others = read_after(monkeypatch, looks=10_000)
-    assert reader.made == []
-    assert others.saved == []
-    assert "another machine is still booking" in caplog.text
+        others, after = read_after(monkeypatch, looks=10_000)
+    assert len(others.saved) == 1
+    # Before the quiet time of the start ends, with the time reading may take.
+    assert after + timedelta(seconds=cli.TICKETS_SECONDS) <= timedelta(minutes=5, seconds=5)
+    assert "still recorded as booking" in caplog.text
+
+
+def test_a_run_by_hand_waits_for_the_other_machines_too(monkeypatch, reader):
+    monkeypatch.setattr(cli.time, "sleep", lambda seconds: None)
+    others = OtherRuns(3)
+    results = [RoundResult("18:00 - 19:00", True, "booked", 5.0)]
+    clock = StepClock(datetime(2026, 11, 22, 10, 0))
+    booker = argparse.Namespace(config=Config())
+    day = datetime(2026, 11, 24).date()
+    cli.read_tickets(booker, results, day, None, clock, others, lambda kind, **data: None)
+    assert others.looks < 0
+    assert len(others.saved) == 1
+
+
+@pytest.mark.parametrize(
+    ("args", "times"),
+    [((), 1), (("--dry-run",), 0), (("--instance", "1"), 0)],
+    ids=["real run", "dry run", "a run beside the first"],
+)
+def test_a_real_run_forgets_the_expired_tickets_once_all_is_done(
+    monkeypatch, tmp_path, reader, data_home, closed_mumu, args, times
+):
+    (tmp_path / "missing.toml").write_text("[[instances]]\nmumu_index = 1\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "start_instances", lambda *args, **kwargs: [])
+    order = []
+    monkeypatch.setattr(cli, "wait_for_instances", lambda instances: order.append("all done"))
+    monkeypatch.setattr(cli, "forget_expired", lambda data, today: order.append((data.root, today)))
+    run_with_booker(monkeypatch, tmp_path, BOOKED[:1], args)
+    assert order == ["all done"] + [(data_home, FixedDatetime.now().date())] * times

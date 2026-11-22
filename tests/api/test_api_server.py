@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from datetime import date
 
 import pytest
 import uvicorn
@@ -50,6 +51,15 @@ def test_development_without_a_build_serves_the_api_only(served, monkeypatch, tm
     with TestClient(app, base_url="http://127.0.0.1:8765") as client:
         assert client.get("/").status_code == 404
         assert client.get("/api/health").status_code == 200
+
+
+def test_expired_tickets_go_when_the_app_opens(served, monkeypatch, tmp_path, data_home):
+    forgotten = []
+    monkeypatch.setattr(
+        server, "forget_expired", lambda data, today: forgotten.append((data.root, today))
+    )
+    server.main(["--config", str(tmp_path / "config.toml")])
+    assert forgotten == [(data_home, date.today())]
 
 
 def test_the_console_keeps_uvicorn_s_logging(served, tmp_path):
