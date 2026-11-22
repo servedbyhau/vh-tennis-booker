@@ -150,21 +150,13 @@
         "processing": "PROCESSING",
         "cancelled": "CANCELLED"
       },
-      "facts": {
-        "day": "Play day",
-        "slot": "Slot",
-        "court": "Court",
-        "machine": "Machine",
-        "code": "Booking code",
-        "created": "Booked at"
-      },
-      "seen": "Status in the app at {{time}} on {{day}}.",
       "photo": "Picture of ticket {{name}}",
       "photoNone": "No picture of this ticket. Only a ticket just booked by a run is pictured.",
       "photoFailed": "The picture could not be opened.",
       "place": "{{place}}/{{total}}",
-      "previous": "← Previous",
-      "next": "Next →",
+      "previous": "Previous ticket",
+      "next": "Next ticket",
+      "save": "Save",
       "close": "Close"
     },
     "panel": {

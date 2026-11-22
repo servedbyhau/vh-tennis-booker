@@ -65,3 +65,19 @@ export function ticketDays(tickets: readonly Ticket[], period: Period): TicketDa
 export function photoUrl(ticket: Pick<Ticket, "code" | "seen_at">): string {
   return `/api/tickets/${ticket.code}/photo?seen=${encodeURIComponent(ticket.seen_at)}`;
 }
+
+/** Characters Windows allows in no file name. */
+const NOT_IN_FILE_NAMES = /[\\/:*?"<>|]/g;
+
+/**
+ * Name the file a ticket's picture is saved as, `court` as the list shows it: the day first, so
+ * saved tickets sort by day ("2026-10-16 18h00-19h00 Tennis S6 1234567.png").
+ */
+export function photoFileName(
+  ticket: Pick<Ticket, "code" | "play_date" | "slot">,
+  court: string,
+): string {
+  const slot = ticket.slot.replaceAll(" ", "").replaceAll(":", "h");
+  const name = [ticket.play_date, slot, court, ticket.code].join(" ");
+  return `${name.replace(NOT_IN_FILE_NAMES, "")}.png`;
+}

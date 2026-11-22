@@ -150,21 +150,13 @@
         "processing": "ĐANG XỬ LÝ",
         "cancelled": "ĐÃ HỦY"
       },
-      "facts": {
-        "day": "Ngày chơi",
-        "slot": "Khung giờ",
-        "court": "Sân",
-        "machine": "Máy",
-        "code": "Mã đặt",
-        "created": "Đặt lúc"
-      },
-      "seen": "Trạng thái trong app lúc {{time}} ngày {{day}}.",
       "photo": "Ảnh vé {{name}}",
       "photoNone": "Vé này chưa có ảnh. Ảnh chỉ được chụp cho vé vừa đặt trong lượt chạy.",
       "photoFailed": "Không mở được ảnh vé.",
       "place": "{{place}}/{{total}}",
-      "previous": "← Vé trước",
-      "next": "Vé sau →",
+      "previous": "Vé trước",
+      "next": "Vé sau",
+      "save": "Lưu vé",
       "close": "Đóng"
     },
     "panel": {

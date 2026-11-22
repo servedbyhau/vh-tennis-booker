@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { ticket } from "./test/tickets";
-import { photoUrl, pickTickets, type TicketFilter, ticketDays, ticketDevices } from "./tickets";
+import {
+  photoFileName,
+  photoUrl,
+  pickTickets,
+  type TicketFilter,
+  ticketDays,
+  ticketDevices,
+} from "./tickets";
 
 const TODAY = "2026-10-15";
 const ALL: TicketFilter = { period: "upcoming", device: null, withCancelled: true };
@@ -71,5 +78,17 @@ describe("photoUrl", () => {
     expect(photoUrl({ code: "1234567", seen_at: "2026-10-15T06:01:12.000" })).toBe(
       "/api/tickets/1234567/photo?seen=2026-10-15T06%3A01%3A12.000",
     );
+  });
+});
+
+describe("photoFileName", () => {
+  it("names the day, slot, court and code", () => {
+    expect(photoFileName(ticket("1234567"), "Tennis S6")).toBe(
+      "2026-10-16 18h00-19h00 Tennis S6 1234567.png",
+    );
+  });
+
+  it("leaves out what a Windows file name cannot hold", () => {
+    expect(photoFileName(ticket("1"), 'S1/2: "A"?')).toBe("2026-10-16 18h00-19h00 S12 A 1.png");
   });
 });
