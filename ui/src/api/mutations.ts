@@ -1,10 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Language } from "../i18n";
-import type { NewLogin } from "./types";
+import type { AccountChange, CustomerFields, NewAccount } from "./types";
 import {
-  deleteLogin,
+  addAccount,
+  addCustomer,
+  attachAccount,
+  changeAccount,
+  changeCustomer,
+  detachAccount,
   getNotifications,
-  saveLogin,
+  removeAccount,
+  removeCustomer,
   saveNotifications,
   saveSettings,
   startDryRun,
@@ -74,28 +80,63 @@ export function useSaveNotificationLanguage() {
   });
 }
 
-/** Save a machine's Vinhomes login; the answer tells it saved, never the password. */
-export function useSaveLogin() {
+/** A change of the customers or their machines; the list is read again after it, failed or not. */
+function useCustomerChange<Variables, Result>(
+  mutationFn: (variables: Variables) => Promise<Result>,
+) {
   const cache = useQueryClient();
   return useMutation({
-    mutationFn: ({ mumuIndex, login }: { mumuIndex: number; login: NewLogin }) =>
-      saveLogin(mumuIndex, login),
-    onSuccess: (saved) => cache.setQueryData(queryKeys.login(saved.mumu_index), saved),
+    mutationFn,
+    onSettled: () => cache.invalidateQueries({ queryKey: queryKeys.customers }),
   });
 }
 
-/** Remove a machine's saved login. */
-export function useDeleteLogin() {
-  const cache = useQueryClient();
-  return useMutation({
-    mutationFn: deleteLogin,
-    onSuccess: (_, mumuIndex) =>
-      cache.setQueryData(queryKeys.login(mumuIndex), {
-        mumu_index: mumuIndex,
-        saved: false,
-        phone: null,
-      }),
-  });
+/** Add a customer without accounts. */
+export function useAddCustomer() {
+  return useCustomerChange((fields: CustomerFields) => addCustomer(fields));
+}
+
+/** Change a customer's name and note. */
+export function useChangeCustomer() {
+  return useCustomerChange(({ id, fields }: { id: string; fields: CustomerFields }) =>
+    changeCustomer(id, fields),
+  );
+}
+
+/** Remove a customer with their accounts. */
+export function useRemoveCustomer() {
+  return useCustomerChange((id: string) => removeCustomer(id));
+}
+
+/** Add an account to a customer. */
+export function useAddAccount() {
+  return useCustomerChange(({ customerId, account }: { customerId: string; account: NewAccount }) =>
+    addAccount(customerId, account),
+  );
+}
+
+/** Change an account's label and, unless `null`, its password. */
+export function useChangeAccount() {
+  return useCustomerChange(({ id, fields }: { id: string; fields: AccountChange }) =>
+    changeAccount(id, fields),
+  );
+}
+
+/** Remove an account. */
+export function useRemoveAccount() {
+  return useCustomerChange((id: string) => removeAccount(id));
+}
+
+/** Attach an account to a machine, in place of the one it had. */
+export function useAttachAccount() {
+  return useCustomerChange(({ mumuIndex, accountId }: { mumuIndex: number; accountId: string }) =>
+    attachAccount(mumuIndex, accountId),
+  );
+}
+
+/** Attach no account to a machine. */
+export function useDetachAccount() {
+  return useCustomerChange((mumuIndex: number) => detachAccount(mumuIndex));
 }
 
 /** Switch the daily schedule on or off; the overview shows its new state. */

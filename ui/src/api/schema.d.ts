@@ -354,38 +354,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/logins/{mumu_index}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Login
-         * @description Tell whether a login is saved for the instance, with its phone number masked.
-         */
-        get: operations["read_login_api_logins__mumu_index__get"];
-        /**
-         * Save Login
-         * @description Save the login a run of the instance types in once the app logged out.
-         *
-         *     It replaces the one saved before. The app does not check it here: a wrong one shows at
-         *     the next logout, as a run that stops after one try (the app locks an account after 5
-         *     wrong passwords). Windows refusing to keep it answers 503 ``credentials``.
-         */
-        put: operations["save_login_api_logins__mumu_index__put"];
-        post?: never;
-        /**
-         * Delete Login
-         * @description Remove the saved login of the instance; a run then stops when the app logged out.
-         */
-        delete: operations["delete_login_api_logins__mumu_index__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -760,19 +728,6 @@ export interface components {
             label: string;
         };
         /**
-         * NewLogin
-         * @description The phone number and password of the Vinhomes app, to save for a MuMu instance.
-         */
-        NewLogin: {
-            /** Phone */
-            phone: string;
-            /**
-             * Password
-             * Format: password
-             */
-            password: string;
-        };
-        /**
          * NotificationSettings
          * @description Whether every run ends with a Windows notification, and in which language.
          */
@@ -900,18 +855,6 @@ export interface components {
              * @default []
              */
             runs: number[];
-        };
-        /**
-         * SavedLogin
-         * @description Whether a login is saved for a MuMu instance; never its password.
-         */
-        SavedLogin: {
-            /** Mumu Index */
-            mumu_index: number;
-            /** Saved */
-            saved: boolean;
-            /** Phone */
-            phone?: string | null;
         };
         /**
          * ScheduleState
@@ -1877,131 +1820,6 @@ export interface operations {
         };
     };
     detach_account_api_machines__mumu_index__account_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The MuMu instance */
-                mumu_index: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid request values, one line per value */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description An error with a stable code */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    read_login_api_logins__mumu_index__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The MuMu instance */
-                mumu_index: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SavedLogin"];
-                };
-            };
-            /** @description Invalid request values, one line per value */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description An error with a stable code */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    save_login_api_logins__mumu_index__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The MuMu instance */
-                mumu_index: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NewLogin"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SavedLogin"];
-                };
-            };
-            /** @description Invalid request values, one line per value */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description An error with a stable code */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    delete_login_api_logins__mumu_index__delete: {
         parameters: {
             query?: never;
             header?: never;

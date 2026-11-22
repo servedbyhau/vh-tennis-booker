@@ -128,7 +128,7 @@
       "technical": "Chi tiết kỹ thuật"
     },
     "tickets": {
-      "title": "Quản lý",
+      "title": "Vé",
       "machine": "Vé của máy",
       "all": "Mọi máy",
       "count": "{{count}} vé",
@@ -151,8 +151,30 @@
       "save": "Lưu vé",
       "close": "Đóng"
     },
+    "customers": {
+      "title": "Khách hàng",
+      "add": "Thêm khách",
+      "empty": "Chưa có khách nào. Thêm khách và các tài khoản Vinhomes họ đưa, rồi gắn tài khoản vào máy ở tab Thiết lập.",
+      "edit": "Sửa",
+      "name": "Tên khách",
+      "note": "Ghi chú",
+      "noAccounts": "Chưa có tài khoản nào.",
+      "addAccount": "Thêm tài khoản",
+      "phone": "Số điện thoại",
+      "password": "Mật khẩu",
+      "newPassword": "Mật khẩu mới (để trống nếu giữ nguyên)",
+      "label": "Tên gợi nhớ, ví dụ Căn A",
+      "noLogin": "mất mật khẩu, xóa rồi thêm lại",
+      "private": "Mật khẩu nằm trong Windows, không bao giờ hiện lại.",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "remove": "Xóa",
+      "removeSure": "Xóa thật",
+      "keep": "Giữ lại",
+      "attached": "Đang gắn vào {{machine}}. Gỡ ở tab Thiết lập rồi mới xóa được."
+    },
     "panel": {
-      "title": "Vé, lịch sử và thiết lập",
+      "title": "Vé, khách hàng, lịch sử và thiết lập",
       "setup": "Thiết lập",
       "left": ", còn {{count}} việc"
     },
@@ -179,21 +201,22 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Lưu ở mục bên dưới nếu muốn app tự đăng nhập lại."
+          "hint": "Tài khoản cư dân. Gắn tài khoản ở mục bên dưới để app tự đăng nhập."
         },
         "off": "đang tắt, không tính vào việc thiết lập"
       },
       "login": {
-        "title": "Tự đăng nhập lại",
-        "why": "App Vinhomes đăng xuất khi tài khoản đăng nhập ở máy khác. Đã lưu thì lượt đặt tự đăng nhập lại; mật khẩu nằm trong Windows, không bao giờ hiện lại.",
-        "saved": "Đã lưu cho số {{phone}}",
-        "change": "Đổi",
-        "remove": "Xóa",
-        "phone": "Số điện thoại",
-        "password": "Mật khẩu",
-        "save": "Lưu",
-        "cancel": "Hủy",
-        "failed": "Chưa lưu được, hãy thử lại."
+        "title": "Tài khoản đặt sân",
+        "why": "Trước giờ đặt, app xem số điện thoại đang đăng nhập trên máy này. Khác với tài khoản đã gắn thì tự đổi.",
+        "customer": "Khách hàng",
+        "account": "Tài khoản",
+        "none": "Không gắn",
+        "pick": "Chọn tài khoản",
+        "onMachine": "đang ở {{machine}}",
+        "noCustomers": "Chưa có khách nào. Thêm ở tab Khách hàng.",
+        "attached": "Lượt chạy sau dùng tài khoản này. Bấm \"{{dryRun}}\" để kiểm tra luôn.",
+        "free": "Chưa gắn: máy đặt bằng tài khoản đang đăng nhập trên MuMu, và dừng nếu bị đăng xuất.",
+        "notYet": "Chọn tài khoản để đổi. Chưa chọn thì máy vẫn dùng tài khoản đang gắn."
       },
       "guide": {
         "title": "Hướng dẫn",
@@ -220,7 +243,7 @@
           },
           "loggedOut": {
             "question": "App bị đăng xuất",
-            "answer": "Lưu tài khoản ở mục \"Tự đăng nhập lại\" để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, lưu lại cho đúng: app khóa tài khoản sau 5 lần sai."
+            "answer": "Gắn tài khoản ở mục \"Tài khoản đặt sân\" để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở tab Khách hàng: app khóa tài khoản sau 5 lần sai."
           }
         }
       }
@@ -439,6 +462,9 @@
     "app_not_ready": "App Vinhomes chưa sẵn sàng. Có thể app đã bị đăng xuất.",
     "schedule": "Không đọc hoặc đổi được lịch hẹn giờ của Windows.",
     "notification": "Windows không hiện được thông báo.",
+    "credentials": "Windows chưa lưu được mật khẩu. Hãy thử lại.",
+    "phone_taken": "Số này đã có ở một khách.",
+    "account_attached": "Tài khoản đang gắn vào một máy khác.",
     "engine": "Court Booker gặp lỗi.",
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",

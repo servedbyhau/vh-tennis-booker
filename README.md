@@ -166,11 +166,14 @@ The app is one screen, without a menu:
   and what is set, the play day, court and slots; below, the subdivision, the sport, the
   court and up to two slots to choose, saved on each press, and a dry run. During a run it
   shows the steps as they happen.
-- **Quản lý / Manage** on the right: the tickets booked and still to use, of every machine's
+- **Vé / Tickets** on the right: the tickets booked and still to use, of every machine's
   account in one list, by day of play, with their slot, court, status and booking code; a press
   opens the ticket's picture with its QR code, and a button saves it as a file. They are read
   from the Vinhomes app at 06:03, once every machine has booked, and stay on this PC, the
   pictures in `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
+- **Khách hàng / Customers** beside it: the people you book for, each with the Vinhomes accounts
+  they gave. The passwords are kept by Windows (Credential Manager) for your Windows account
+  and never shown again.
 - **Lịch sử / History** beside it: each run in two lines, its play day, court and count
   ("2/2"), then every slot booked or not and when it started (real bookings, dry runs on
   request); one click opens the reasons, the steps and the technical log. A booking that
@@ -178,11 +181,10 @@ The app is one screen, without a menu:
   `%LOCALAPPDATA%\CourtBooker\logs\screens`.
 - **Thiết lập / Setup** beside it: the steps only you can do (install MuMu and the Vinhomes
   app, log in), ticked by you, and a short guide; MuMu's place and screen and waking the PC
-  need no step (the runs and the daily switch see to them). Under **Tự đăng nhập lại / Log in
-  again by itself** you may save the Vinhomes phone number and password of each machine: the
-  Vinhomes app logs out when the account logs in on another device, and a booking that finds
-  it logged out then logs in again by itself, trying the password once. The password is kept
-  by Windows (Credential Manager) for your Windows account and never shown again. It
+  need no step (the runs and the daily switch see to them). Under **Tài khoản đặt sân /
+  Booking account** you pick the account each machine books with: before booking, a run reads
+  the phone number logged in on the machine's Vinhomes app, and logs out and in if it is another
+  one, trying the password once; a machine that cannot be sure books nothing. It
   opens first, with a count, while anything is left. The Windows notification switch sits on
   the ticket, beside the daily switch.
 - **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,

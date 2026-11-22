@@ -1,10 +1,11 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Overview } from "../../api/types";
+import type { Customer, Overview } from "../../api/types";
 import { STORAGE_KEY } from "../../manualSteps";
 import { paths } from "../../paths";
 import { renderApp } from "../../test/app";
 import { type Reply, reply, requestsTo } from "../../test/backend";
+import { account, customer } from "../../test/customers";
 import { overview } from "../../test/overview";
 import { settings } from "../../test/settings";
 
@@ -100,66 +101,101 @@ describe("SetupTab steps the user does", () => {
   });
 });
 
-describe("SetupTab saved login", () => {
-  const NONE = { mumu_index: 0, saved: false, phone: null };
-  const SAVED = { mumu_index: 0, saved: true, phone: "09••••••79" };
-
-  it("shows a saved login by its masked phone, never its password", async () => {
-    renderSetup(overview(), { "GET /api/logins/0": reply(SAVED) });
-    const tab = await setupTab();
-
-    expect(await within(tab).findByText("Đã lưu cho số 09••••••79")).toBeInTheDocument();
-    expect(within(tab).queryByLabelText("Mật khẩu")).not.toBeInTheDocument();
+describe("SetupTab account", () => {
+  const AN = customer("a1", {
+    accounts: [
+      account("b1", { device: 0 }),
+      account("b2", { label: "Căn B", phone: "09••••••22" }),
+      account("b3", { label: "", phone: "09••••••33", device: 1 }),
+    ],
+  });
+  const BINH = customer("a2", {
+    name: "Chị Bình",
+    accounts: [account("b4", { label: "", phone: "09••••••44" })],
   });
 
-  it("saves a login and empties the form", async () => {
-    const { fetch } = renderSetup(overview(), {
-      "GET /api/logins/0": reply(NONE),
-      "PUT /api/logins/0": reply(SAVED),
-    });
+  async function openPicker(customers: Customer[], extra: Record<string, Reply> = {}) {
+    const app = renderSetup(overview(), { "GET /api/customers": reply(customers), ...extra });
     const tab = await setupTab();
+    return { tab: within(tab), ...app };
+  }
 
-    fireEvent.change(await within(tab).findByLabelText("Số điện thoại"), {
-      target: { value: "0900000079" },
-    });
-    fireEvent.change(within(tab).getByLabelText("Mật khẩu"), {
-      target: { value: "mat-khau-bi-mat" },
-    });
-    fireEvent.click(within(tab).getByRole("button", { name: "Lưu" }));
+  function options(select: HTMLElement) {
+    return within(select)
+      .getAllByRole<HTMLOptionElement>("option")
+      .map((option) => `${option.textContent}${option.disabled ? " (off)" : ""}`);
+  }
 
-    expect(await within(tab).findByText("Đã lưu cho số 09••••••79")).toBeInTheDocument();
-    const put = fetch.mock.calls.find(([request]) => request.method === "PUT");
-    expect(await put?.[0].json()).toEqual({ phone: "0900000079", password: "mat-khau-bi-mat" });
-    expect(within(tab).queryByLabelText("Mật khẩu")).not.toBeInTheDocument();
+  it("shows the customer and the account the machine books with", async () => {
+    const { tab } = await openPicker([AN, BINH]);
+
+    expect(await tab.findByLabelText("Khách hàng")).toHaveValue("a1");
+    expect(tab.getByLabelText("Tài khoản")).toHaveValue("b1");
+    expect(options(tab.getByLabelText("Khách hàng"))).toEqual(["Không gắn", "Anh An", "Chị Bình"]);
+    expect(options(tab.getByLabelText("Tài khoản"))).toEqual([
+      "Chọn tài khoản (off)",
+      "09••••••11 · Căn A",
+      "09••••••22 · Căn B",
+      "09••••••33 · đang ở Máy 2 (off)", // one account, one machine
+    ]);
+    expect(
+      tab.getByText('Lượt chạy sau dùng tài khoản này. Bấm "Chạy thử ngay" để kiểm tra luôn.'),
+    ).toBeVisible();
   });
 
-  it("removes a saved login", async () => {
-    const { fetch } = renderSetup(overview(), {
-      "GET /api/logins/0": reply(SAVED),
-      "DELETE /api/logins/0": reply(null, 204),
+  it("attaches the account picked", async () => {
+    const { tab, fetch } = await openPicker([AN, BINH], {
+      "PUT /api/machines/0/account": reply(AN),
     });
-    const tab = await setupTab();
+    fireEvent.change(await tab.findByLabelText("Tài khoản"), { target: { value: "b2" } });
 
-    fireEvent.click(await within(tab).findByRole("button", { name: "Xóa" }));
-
-    expect(await within(tab).findByLabelText("Mật khẩu")).toHaveValue("");
-    expect(requestsTo(fetch, "DELETE /api/logins/0")).toBe(1);
+    await waitFor(() => expect(requestsTo(fetch, "PUT /api/machines/0/account")).toBe(1));
+    await waitFor(() => expect(requestsTo(fetch, "GET /api/customers")).toBe(2));
   });
 
-  it("says so when Windows did not keep it", async () => {
-    renderSetup(overview(), {
-      "GET /api/logins/0": reply(NONE),
-      "PUT /api/logins/0": reply({ error: "credentials", detail: "error 1312" }, 503),
+  it("attaches nothing while only the customer is chosen", async () => {
+    const { tab, fetch } = await openPicker([AN, BINH], {
+      "PUT /api/machines/0/account": reply(BINH),
     });
-    const tab = await setupTab();
+    fireEvent.change(await tab.findByLabelText("Khách hàng"), { target: { value: "a2" } });
 
-    fireEvent.change(await within(tab).findByLabelText("Số điện thoại"), {
-      target: { value: "0900000079" },
+    expect(tab.getByLabelText("Tài khoản")).toHaveValue("");
+    expect(tab.getByText(/^Chọn tài khoản để đổi\./)).toBeVisible();
+    expect(fetch.mock.calls.every(([request]) => request.method === "GET")).toBe(true);
+
+    fireEvent.change(tab.getByLabelText("Tài khoản"), { target: { value: "b4" } });
+    await waitFor(() => expect(requestsTo(fetch, "PUT /api/machines/0/account")).toBe(1));
+  });
+
+  it("detaches with no customer", async () => {
+    const { tab, fetch } = await openPicker([AN], {
+      "DELETE /api/machines/0/account": reply(null, 204),
     });
-    fireEvent.change(within(tab).getByLabelText("Mật khẩu"), { target: { value: "x" } });
-    fireEvent.click(within(tab).getByRole("button", { name: "Lưu" }));
+    fireEvent.change(await tab.findByLabelText("Khách hàng"), { target: { value: "" } });
+    await waitFor(() => expect(requestsTo(fetch, "DELETE /api/machines/0/account")).toBe(1));
+  });
 
-    expect(await within(tab).findByRole("alert")).toHaveTextContent("Chưa lưu được");
+  it("says what a machine without an account books with", async () => {
+    const { tab } = await openPicker([BINH]);
+    expect(await tab.findByLabelText("Khách hàng")).toHaveValue("");
+    expect(tab.queryByLabelText("Tài khoản")).not.toBeInTheDocument();
+    expect(tab.getByText(/^Chưa gắn: máy đặt bằng tài khoản đang đăng nhập/)).toBeVisible();
+  });
+
+  it("says why an account was not attached", async () => {
+    const { tab } = await openPicker([AN], {
+      "PUT /api/machines/0/account": reply({ error: "lock_held", detail: "running" }, 409),
+    });
+    fireEvent.change(await tab.findByLabelText("Tài khoản"), { target: { value: "b2" } });
+    expect(await tab.findByRole("alert")).toHaveTextContent(
+      "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
+    );
+    expect(tab.getByLabelText("Tài khoản")).toHaveValue("b1"); // as it is
+  });
+
+  it("points to the customers while there are none", async () => {
+    const { tab } = await openPicker([]);
+    expect(await tab.findByText("Chưa có khách nào. Thêm ở tab Khách hàng.")).toBeVisible();
   });
 });
 

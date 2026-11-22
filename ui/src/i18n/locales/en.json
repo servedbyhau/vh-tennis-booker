@@ -128,7 +128,7 @@
       "technical": "Technical details"
     },
     "tickets": {
-      "title": "Manage",
+      "title": "Tickets",
       "machine": "Tickets of machine",
       "all": "All machines",
       "count": "Tickets: {{count}}",
@@ -151,8 +151,30 @@
       "save": "Save",
       "close": "Close"
     },
+    "customers": {
+      "title": "Customers",
+      "add": "Add customer",
+      "empty": "No customers yet. Add one with the Vinhomes accounts they gave, then attach an account to a machine in the Setup tab.",
+      "edit": "Edit",
+      "name": "Customer name",
+      "note": "Note",
+      "noAccounts": "No accounts yet.",
+      "addAccount": "Add account",
+      "phone": "Phone number",
+      "password": "Password",
+      "newPassword": "New password (empty keeps the one saved)",
+      "label": "Label, such as Apartment A",
+      "noLogin": "password lost, remove and add it again",
+      "private": "The password stays in Windows and never shows again.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "removeSure": "Really remove",
+      "keep": "Keep",
+      "attached": "Attached to {{machine}}. Detach it in the Setup tab to remove it."
+    },
     "panel": {
-      "title": "Tickets, history and setup",
+      "title": "Tickets, customers, history and setup",
       "setup": "Setup",
       "left": ", {{count}} left"
     },
@@ -179,21 +201,22 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "The resident account. Save it below to have the app log in again by itself."
+          "hint": "A resident account. Attach an account below so the app logs in by itself."
         },
         "off": "off, not counted in the setup"
       },
       "login": {
-        "title": "Log in again by itself",
-        "why": "The Vinhomes app logs out when the account logs in on another device. Once saved, a booking logs in again by itself; the password stays in Windows and never shows again.",
-        "saved": "Saved for {{phone}}",
-        "change": "Change",
-        "remove": "Remove",
-        "phone": "Phone number",
-        "password": "Password",
-        "save": "Save",
-        "cancel": "Cancel",
-        "failed": "Not saved, please try again."
+        "title": "Booking account",
+        "why": "Before booking, the app reads the phone number logged in on this machine, and changes it if it is not the attached account's.",
+        "customer": "Customer",
+        "account": "Account",
+        "none": "None",
+        "pick": "Pick an account",
+        "onMachine": "on {{machine}}",
+        "noCustomers": "No customers yet. Add one in the Customers tab.",
+        "attached": "The next run uses this account. Press \"{{dryRun}}\" to check it now.",
+        "free": "None attached: the machine books with the account logged in on MuMu, and stops if it is logged out.",
+        "notYet": "Pick an account to change it. Until then the machine keeps the attached one."
       },
       "guide": {
         "title": "Guide",
@@ -220,7 +243,7 @@
           },
           "loggedOut": {
             "question": "The app was logged out",
-            "answer": "Save the account under \"Log in again by itself\" to have a booking log in. If the app says the password is wrong, save the right one: the app locks an account after 5 wrong passwords."
+            "answer": "Attach an account under \"Booking account\" so a run logs in by itself. If the app says the password is wrong, change it in the Customers tab: the app locks an account after 5 wrong ones."
           }
         }
       }
@@ -439,6 +462,9 @@
     "app_not_ready": "The Vinhomes app is not ready. It may have been logged out.",
     "schedule": "Windows Task Scheduler could not be read or changed.",
     "notification": "Windows could not show the notification.",
+    "credentials": "Windows could not keep the password. Try again.",
+    "phone_taken": "A customer already has this number.",
+    "account_attached": "The account is attached to another machine.",
     "engine": "Court Booker hit an error.",
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",

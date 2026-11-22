@@ -29,7 +29,7 @@ The 06:00 run of 2026-11-23 is also the first of three machines with 2 cores eac
 that reads tickets: check that each ticket booked has its picture and reads as registered, when
 the reading started and ended (06:03 to about 06:05), and that it changed nothing in the rounds.
 
-The user's next feature is sending the tickets over Zalo: study the ways first, then a plan.
+Sending the results and tickets over Zalo is put off by the user (2026-11-22).
 
 ## After that
 

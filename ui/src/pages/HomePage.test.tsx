@@ -376,9 +376,12 @@ describe("HomePage panel", () => {
     expect(history).toHaveAttribute("aria-selected", "true");
     expect(history).toHaveFocus();
 
-    // Round the three tabs, past either end.
-    const tickets = screen.getByRole("tab", { name: "Quản lý" });
+    // Round the four tabs, past either end.
+    const customers = screen.getByRole("tab", { name: "Khách hàng" });
+    const tickets = screen.getByRole("tab", { name: "Vé" });
     fireEvent.keyDown(history, { key: "ArrowLeft" });
+    expect(customers).toHaveFocus();
+    fireEvent.keyDown(customers, { key: "ArrowLeft" });
     expect(tickets).toHaveFocus();
     fireEvent.keyDown(tickets, { key: "ArrowLeft" });
     expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveFocus();

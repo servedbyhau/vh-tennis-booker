@@ -1,9 +1,6 @@
-import { type FormEvent, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteLogin, useSaveLogin } from "../../api/mutations";
-import { useLogin, useOverview } from "../../api/queries";
+import { useOverview } from "../../api/queries";
 import type { Overview } from "../../api/types";
-import { Button } from "../../components/Button";
 import { QueryView } from "../../components/QueryView";
 import { type Machine, machineAt, useMachines } from "../../machines";
 import {
@@ -14,6 +11,7 @@ import {
   useManualTicks,
 } from "../../manualSteps";
 import { setupDone } from "../../setupState";
+import { AccountPicker } from "./AccountPicker";
 import styles from "./SetupTab.module.css";
 
 /** The three steps of a first use; shown first until everything is set up. */
@@ -74,105 +72,6 @@ function ManualSteps({ machine, several }: { machine: Machine; several: boolean 
   );
 }
 
-/** A phone number as the Vinhomes app takes it: 10 digits from 0. */
-const PHONE_PATTERN = "0[0-9]{9}";
-
-/**
- * The login a run types in when the Vinhomes app logged out (it does when the account logs
- * in on another device), one per machine. Saved in Windows' vault through the backend,
- * which never answers the password: once saved, only the masked phone number shows.
- */
-function AutoLogin({ mumuIndex }: { mumuIndex: number }) {
-  const { t } = useTranslation();
-  const id = useId();
-  const login = useLogin(mumuIndex);
-  const save = useSaveLogin();
-  const remove = useDeleteLogin();
-  const [editing, setEditing] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const saved = login.data?.saved === true ? login.data : null;
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    save.mutate(
-      { mumuIndex, login: { phone, password } },
-      {
-        onSuccess: () => {
-          setPhone("");
-          setPassword("");
-          setEditing(false);
-        },
-      },
-    );
-  }
-
-  return (
-    <section aria-labelledby={`${id}-title`}>
-      <h3 id={`${id}-title`} className={styles.heading}>
-        {t("pages.setup.login.title")}
-      </h3>
-      <p className={styles.note}>{t("pages.setup.login.why")}</p>
-      {saved !== null && !editing ? (
-        <div className={styles.saved}>
-          <span className={styles.savedText}>
-            {t("pages.setup.login.saved", { phone: saved.phone ?? "" })}
-          </span>
-          <Button onClick={() => setEditing(true)}>{t("pages.setup.login.change")}</Button>
-          <Button disabled={remove.isPending} onClick={() => remove.mutate(mumuIndex)}>
-            {t("pages.setup.login.remove")}
-          </Button>
-        </div>
-      ) : (
-        <form className={styles.form} onSubmit={submit}>
-          <label className={styles.field}>
-            <span className={styles.label}>{t("pages.setup.login.phone")}</span>
-            <input
-              type="tel"
-              inputMode="numeric"
-              autoComplete="off"
-              required
-              pattern={PHONE_PATTERN}
-              maxLength={10}
-              value={phone}
-              onChange={(event) => setPhone(event.target.value.trim())}
-            />
-          </label>
-          <label className={styles.field}>
-            <span className={styles.label}>{t("pages.setup.login.password")}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              required
-              maxLength={128}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <div className={styles.actions}>
-            <Button type="submit" variant="primary" disabled={save.isPending}>
-              {t("pages.setup.login.save")}
-            </Button>
-            {editing && (
-              <Button onClick={() => setEditing(false)}>{t("pages.setup.login.cancel")}</Button>
-            )}
-          </div>
-          {save.isError && (
-            <p role="alert" className={styles.error}>
-              {t("pages.setup.login.failed")}
-            </p>
-          )}
-        </form>
-      )}
-      {remove.isError && (
-        <p role="alert" className={styles.error}>
-          {t("pages.setup.login.failed")}
-        </p>
-      )}
-    </section>
-  );
-}
-
 const TROUBLES = ["notRunning", "slotFull", "quota", "loggedOut"] as const;
 
 /** The guide in rows that open one at a time: how to use it, the mornings, the problems. */
@@ -220,7 +119,7 @@ function Guide({ overview, howto }: { overview: Overview; howto: boolean }) {
 
 /**
  * The Setup tab: how to start while anything is left, the steps the user ticks, the shown
- * machine's saved login and the guide; the notification switch is on the ticket. MuMu's place and screen and waking the
+ * machine's account and the guide; the notification switch is on the ticket. MuMu's place and screen and waking the
  * PC need no step: the runs and the daily switch see to them. It shows the machine chosen
  * on the ticket (`machine`, 0: the first).
  */
@@ -247,7 +146,7 @@ export function SetupTab({ machine }: { machine: number }) {
               )}
               <ManualSteps machine={shown} several={machines.length > 1} />
               {shown.mumuIndex !== null && (
-                <AutoLogin key={shown.mumuIndex} mumuIndex={shown.mumuIndex} />
+                <AccountPicker key={shown.mumuIndex} mumuIndex={shown.mumuIndex} />
               )}
               <Guide overview={data} howto={done} />
             </>
