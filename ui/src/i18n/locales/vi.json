@@ -26,7 +26,7 @@
   "nav": {
     "label": "Trang",
     "booking": "Đặt sân",
-    "customers": "Khách hàng"
+    "management": "Quản lý"
   },
   "pages": {
     "overview": {
@@ -165,17 +165,8 @@
       "accountCount": "{{count}} tài khoản",
       "noFacts": "Chưa có thông tin liên hệ. Bấm \"Sửa khách\" để thêm.",
       "empty": "Chưa có khách nào. Bấm \"Thêm khách\" để bắt đầu.",
-      "machines": {
-        "title": "Các máy",
-        "off": "{{machine}} (tắt)",
-        "none": "chưa gắn",
-        "hint": "Lượt chạy sau, máy tự đăng nhập đúng tài khoản đã gắn. Muốn kiểm tra ngay thì sang Đặt sân, bấm \"{{dryRun}}\"."
-      },
-      "attach": "Gắn vào máy",
-      "attachOf": "Gắn {{phone}} vào máy",
       "editCustomer": "Sửa khách",
       "label": "Tên gợi nhớ",
-      "attached": "Đang gắn vào {{machine}}. Gỡ ra rồi mới xóa được.",
       "add": "Thêm khách",
       "edit": "Sửa",
       "note": "Ghi chú",
@@ -190,7 +181,8 @@
       "cancel": "Hủy",
       "remove": "Xóa",
       "removeSure": "Xóa thật",
-      "keep": "Giữ lại"
+      "keep": "Giữ lại",
+      "inUse": "Đang được dùng để đặt sân, chưa xóa được."
     },
     "panel": {
       "title": "Vé, lịch sử và thiết lập",
@@ -220,7 +212,7 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Gắn tài khoản ở trang Khách hàng để app tự đăng nhập."
+          "hint": "Tài khoản cư dân. Khách hàng và tài khoản của họ nằm ở trang Quản lý."
         },
         "off": "đang tắt, không tính vào việc thiết lập"
       },
@@ -254,7 +246,7 @@
           },
           "loggedOut": {
             "question": "App bị đăng xuất",
-            "answer": "Gắn tài khoản ở trang Khách hàng để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở đó: app khóa tài khoản sau 5 lần sai."
+            "answer": "Nếu app báo sai mật khẩu, sửa tài khoản ở trang Quản lý: app khóa tài khoản sau 5 lần sai."
           }
         }
       }
@@ -475,7 +467,7 @@
     "notification": "Windows không hiện được thông báo.",
     "credentials": "Windows chưa lưu được mật khẩu. Hãy thử lại.",
     "phone_taken": "Số này đã có ở một khách.",
-    "account_attached": "Tài khoản đang gắn vào một máy, hãy gỡ ra trước.",
+    "account_attached": "Tài khoản đang được dùng để đặt sân, chưa xóa được.",
     "engine": "Court Booker gặp lỗi.",
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",

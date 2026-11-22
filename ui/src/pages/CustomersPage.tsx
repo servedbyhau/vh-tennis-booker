@@ -60,7 +60,7 @@ function Columns({ customers, chosen, onChoose }: ColumnsProps) {
 }
 
 /**
- * The customers: the list on the left, with the machine of each, and on the right the one
+ * The management page, for now the customers: the list on the left, and on the right the one
  * chosen: who they are and the Vinhomes accounts they gave. The address keeps the choice.
  */
 export function CustomersPage() {
@@ -69,8 +69,8 @@ export function CustomersPage() {
   const [params, setParams] = useSearchParams();
   return (
     <>
-      <PageTitle>{t("pages.customers.title")}</PageTitle>
-      <h1 className="visually-hidden">{t("pages.customers.title")}</h1>
+      <PageTitle>{t("nav.management")}</PageTitle>
+      <h1 className="visually-hidden">{t("nav.management")}</h1>
       <QueryView query={customers}>
         {(list) => (
           <Columns

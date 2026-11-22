@@ -201,12 +201,12 @@ def test_logins_saved_before_customers_get_one_each_once(tmp_path):
     path = tmp_path / "booker.db"
 
     for _ in range(2):  # every start of the backend
-        adopt_saved_logins(path, store, lambda index: f"Khách Máy {index + 1}")
+        adopt_saved_logins(path, store, "Khách hàng {}".format)
 
     connection = connect(path)
     listed = CustomerBook(connection, store).customers()
     connection.close()
-    assert [c.name for c in listed] == ["Khách Máy 1", "Khách Máy 3"]
+    assert [c.name for c in listed] == ["Khách hàng 1", "Khách hàng 2"]
     assert [a.device for c in listed for a in c.accounts] == [0, 2]
     assert store.read(0) == FIRST  # as it was
 

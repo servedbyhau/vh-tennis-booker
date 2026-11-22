@@ -6,15 +6,15 @@ import { paths } from "./paths";
 
 /**
  * Lay out every screen: the header, then the current screen in the main area. The
- * booking and the customers fill the window; the not-found and error pages make one centred
+ * booking and the management fill the window; the not-found and error pages make one centred
  * column.
  */
 export function App() {
   const { t } = useTranslation();
   const booking = useMatch(paths.overview) !== null;
-  const customers = useMatch(paths.customers) !== null;
+  const management = useMatch(paths.management) !== null;
   return (
-    <div className={booking || customers ? `${styles.page} ${styles.fill}` : styles.page}>
+    <div className={booking || management ? `${styles.page} ${styles.fill}` : styles.page}>
       <a className={styles.skipLink} href="#main">
         {t("app.skipToContent")}
       </a>

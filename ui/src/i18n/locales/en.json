@@ -26,7 +26,7 @@
   "nav": {
     "label": "Pages",
     "booking": "Booking",
-    "customers": "Customers"
+    "management": "Management"
   },
   "pages": {
     "overview": {
@@ -165,17 +165,8 @@
       "accountCount": "Accounts: {{count}}",
       "noFacts": "No contact yet. Press \"Edit customer\" to add it.",
       "empty": "No customers yet. Press \"Add customer\" to start.",
-      "machines": {
-        "title": "Machines",
-        "off": "{{machine}} (off)",
-        "none": "none attached",
-        "hint": "From its next run on, a machine logs in with the account attached. To check it now, go to Booking and press \"{{dryRun}}\"."
-      },
-      "attach": "Attach to",
-      "attachOf": "Attach {{phone}} to a machine",
       "editCustomer": "Edit customer",
       "label": "Label",
-      "attached": "Attached to {{machine}}. Detach it to remove it.",
       "add": "Add customer",
       "edit": "Edit",
       "note": "Note",
@@ -190,7 +181,8 @@
       "cancel": "Cancel",
       "remove": "Remove",
       "removeSure": "Really remove",
-      "keep": "Keep"
+      "keep": "Keep",
+      "inUse": "In use for booking; it cannot be removed."
     },
     "panel": {
       "title": "Tickets, history and setup",
@@ -220,7 +212,7 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "A resident account. Attach one on the Customers page so the app logs in by itself."
+          "hint": "A resident account. The customers and their accounts are on the Management page."
         },
         "off": "off, not counted in the setup"
       },
@@ -254,7 +246,7 @@
           },
           "loggedOut": {
             "question": "The app was logged out",
-            "answer": "Attach an account on the Customers page so a run logs in by itself. If the app says the password is wrong, change it there: the app locks an account after 5 wrong ones."
+            "answer": "If the app says the password is wrong, change the account on the Management page: the app locks an account after 5 wrong ones."
           }
         }
       }
@@ -475,7 +467,7 @@
     "notification": "Windows could not show the notification.",
     "credentials": "Windows could not keep the password. Try again.",
     "phone_taken": "A customer already has this number.",
-    "account_attached": "The account is attached to a machine; detach it first.",
+    "account_attached": "The account is in use for booking; it cannot be removed.",
     "engine": "Court Booker hit an error.",
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",

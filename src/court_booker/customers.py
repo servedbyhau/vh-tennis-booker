@@ -231,7 +231,8 @@ class CustomerBook:
     def adopt(self, name: Callable[[int], str]) -> int:
         """Give each machine's login that belongs to no customer one of its own.
 
-        That is a login saved before there were customers. Returns how many were adopted.
+        That is a login saved before there were customers; ``name`` gets the customer's number
+        in the list. Returns how many were adopted.
         """
         known = {account.phone for customer in self.customers() for account in customer.accounts}
         adopted = 0
@@ -239,7 +240,8 @@ class CustomerBook:
             login = self.store.read(index)
             if login is None or login.phone in known:
                 continue
-            self.add_account(self.add_customer(name(index)).id, login)
+            number = len(self.customers()) + 1
+            self.add_account(self.add_customer(name(number)).id, login)
             known.add(login.phone)
             adopted += 1
         return adopted

@@ -11,9 +11,7 @@ import {
 } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Button } from "../../components/Button";
-import { useMachines } from "../../machines";
 import styles from "./CustomerForms.module.css";
-import { machineName } from "../home/ticketText";
 
 /** A phone number as the Vinhomes app takes it: 10 digits from 0. */
 const PHONE_PATTERN = "0[0-9]{9}";
@@ -79,17 +77,17 @@ function EditForm({ title, pending, error, onSave, onClose, remove, children }: 
 }
 
 interface RemoveProps {
-  /** The machine that keeps the record from being removed, if any. */
-  machine: string | null;
+  /** Whether a machine books with it, which keeps it from being removed. */
+  inUse: boolean;
   remove: { mutate: () => void; isPending: boolean; error: unknown };
 }
 
 /** A removal in two presses: it cannot be taken back, and the password is gone with it. */
-function Remove({ machine, remove }: RemoveProps) {
+function Remove({ inUse, remove }: RemoveProps) {
   const { t } = useTranslation();
   const [asked, setAsked] = useState(false);
-  if (machine !== null) {
-    return <p className={styles.note}>{t("pages.customers.attached", { machine })}</p>;
+  if (inUse) {
+    return <p className={styles.note}>{t("pages.customers.inUse")}</p>;
   }
   return (
     <div className={styles.actions}>
@@ -122,7 +120,6 @@ interface CustomerFormProps {
 /** Who a customer is. */
 export function CustomerForm({ customer, onClose, onSaved }: CustomerFormProps) {
   const { t } = useTranslation();
-  const machines = useMachines();
   const add = useAddCustomer();
   const change = useChangeCustomer();
   const remove = useRemoveCustomer();
@@ -131,7 +128,6 @@ export function CustomerForm({ customer, onClose, onSaved }: CustomerFormProps) 
   const [contact, setContact] = useState(customer?.contact ?? "");
   const [note, setNote] = useState(customer?.note ?? "");
   const save = customer === null ? add : change;
-  const device = customer?.accounts.find((account) => account.device !== null)?.device ?? null;
 
   function onSave() {
     const fields = { name, representative, contact, note };
@@ -152,7 +148,7 @@ export function CustomerForm({ customer, onClose, onSaved }: CustomerFormProps) 
       remove={
         customer !== null && (
           <Remove
-            machine={device === null ? null : machineName(t, machines, device)}
+            inUse={customer.accounts.some((account) => account.device !== null)}
             remove={{
               mutate: () => remove.mutate(customer.id, { onSuccess: onClose }),
               isPending: remove.isPending,
@@ -209,7 +205,6 @@ interface AccountFormProps {
 /** An account's login and label; of one already saved the phone stays, the password is kept. */
 export function AccountForm({ customerId, account, onClose }: AccountFormProps) {
   const { t } = useTranslation();
-  const machines = useMachines();
   const add = useAddAccount();
   const change = useChangeAccount();
   const remove = useRemoveAccount();
@@ -237,7 +232,7 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
       remove={
         account !== null && (
           <Remove
-            machine={account.device === null ? null : machineName(t, machines, account.device)}
+            inUse={account.device !== null}
             remove={{
               mutate: () => remove.mutate(account.id, { onSuccess: onClose }),
               isPending: remove.isPending,
