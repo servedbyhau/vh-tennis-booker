@@ -483,7 +483,7 @@ class Booker:
         if login is None:
             raise LoggedOutError(
                 f"The app is logged out (the account logged in on another device): log in "
-                f"again on MuMu {self.config.mumu_index}, or save the login in the app's "
+                f"again on MuMu {self.config.mumu_index}, or attach an account in the app's "
                 "setup so a run logs in by itself"
             )
         if self._logged_in:

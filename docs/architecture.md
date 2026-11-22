@@ -291,7 +291,6 @@ values 422 `invalid_request`.
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`) |
 | `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine, or none; refused while a run goes on (409 `lock_held`) and for an account on another machine (409 `account_attached`) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
-| `GET`/`PUT`/`DELETE /api/logins/{mumu_index}` | Whether a login is saved for the instance, with its phone masked (`09••••••79`); save one (10-digit phone, password as `SecretStr`) or remove it. No answer or error holds the password; Windows refusing is 503 `credentials`. Not recorded in the history |
 | `WS /api/live` | Pushes each new step |
 
 After a route, model or catalog change: `python tools/export_openapi.py` (writes
@@ -326,16 +325,18 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   books, that machine's subdivision, sport, court and up to two slots, saved on each press,
   and the dry run;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
-  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, three tabs:
-  `TicketsTab` ("Quản lý": every machine's tickets still to use by day of play, of one machine
+  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, four tabs:
+  `TicketsTab` ("Vé": every machine's tickets still to use by day of play, of one machine
   or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`;
   read again after `tickets_saved`),
+  `CustomersTab` (the customers with their accounts, one form open at a time; a password typed
+  in is sent once and never shown again, a removal takes two presses),
   `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
-  opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the saved login
-  and the guide, those of the machine chosen on the ticket, which `HomePage` holds). The
-  saved login shows its masked phone with Change and Remove, else a phone and password form;
-  a password typed in is sent once and never shown again.
+  opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the machine's account
+  and the guide, those of the machine chosen on the ticket, which `HomePage` holds).
+  `AccountPicker` picks a customer, then one of their accounts, which saves it; an account on
+  another machine is listed but not picked.
   The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
   readers. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the

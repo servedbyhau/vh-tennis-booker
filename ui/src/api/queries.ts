@@ -4,13 +4,13 @@ import type { Overview, RunSummary } from "./types";
 import {
   type EventsQuery,
   getAccounts,
-  getLogin,
   getOverview,
   getRun,
   getNotifications,
   getSettings,
   listEvents,
   listRuns,
+  listCustomers,
   listTickets,
   type RunsQuery,
 } from "./endpoints";
@@ -29,7 +29,7 @@ export const queryKeys = {
   notifications: ["notifications"] as const,
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
-  login: (mumuIndex: number) => ["login", mumuIndex] as const,
+  customers: ["customers"] as const,
 };
 
 /** How often the Overview is read while a run is starting or letting go of the emulator. */
@@ -122,11 +122,7 @@ export function useTickets() {
   return useQuery({ queryKey: queryKeys.tickets, queryFn: listTickets });
 }
 
-/** Read whether a login is saved for MuMu instance `mumuIndex`; waits for a known index. */
-export function useLogin(mumuIndex: number | null) {
-  return useQuery({
-    queryKey: queryKeys.login(mumuIndex ?? -1),
-    queryFn: () => getLogin(mumuIndex ?? 0),
-    enabled: mumuIndex !== null,
-  });
+/** Read the customers, each with their accounts. */
+export function useCustomers() {
+  return useQuery({ queryKey: queryKeys.customers, queryFn: listCustomers });
 }

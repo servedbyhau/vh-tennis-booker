@@ -38,10 +38,12 @@ export type Settings = Schemas["Settings"];
 export type LabelSettings = Schemas["LabelSettings"];
 /** Whether every run ends with a Windows notification, and its language. */
 export type NotificationSettings = Schemas["NotificationSettings"];
-/** Whether a Vinhomes login is saved for a MuMu instance, its phone masked; never the password. */
-export type SavedLogin = Schemas["SavedLogin"];
-/** A Vinhomes phone number and password to save for a MuMu instance. */
-export type NewLogin = Schemas["NewLogin"];
+/** A customer with the Vinhomes accounts they gave; phone numbers masked, never a password. */
+export type Customer = Schemas["CustomerRecord"];
+export type CustomerAccount = Schemas["CustomerAccount"];
+export type CustomerFields = Schemas["CustomerFields"];
+export type NewAccount = Schemas["NewAccount"];
+export type AccountChange = Schemas["AccountChange"];
 
 export type SetupItem = Schemas["SetupItem"];
 /** The state of one device setup item (the backend's `Status` enum). */

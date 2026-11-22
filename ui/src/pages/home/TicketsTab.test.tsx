@@ -29,12 +29,12 @@ async function openTab(tickets: Ticket[] = TICKETS) {
   });
   // The panel is built anew once the status comes in.
   await screen.findByRole("region", { name: "Lần đặt tiếp theo" });
-  fireEvent.click(screen.getByRole("tab", { name: "Quản lý" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Vé" }));
   return app;
 }
 
 function panel() {
-  return screen.getByRole("tabpanel", { name: "Quản lý" });
+  return screen.getByRole("tabpanel", { name: "Vé" });
 }
 
 /** Each day listed, with the text of its tickets. */
@@ -123,7 +123,7 @@ describe("Tickets list", () => {
     fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
     fireEvent.click(screen.getByRole("tab", { name: "Lịch sử" }));
 
-    fireEvent.click(screen.getByRole("tab", { name: "Quản lý" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Vé" }));
 
     expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
   });
@@ -162,7 +162,7 @@ describe("Tickets list", () => {
   it("offers to try again when the tickets cannot be read", async () => {
     renderApp(paths.overview, { "GET /api/status": reply(overview()) });
     await screen.findByRole("region", { name: "Lần đặt tiếp theo" });
-    fireEvent.click(screen.getByRole("tab", { name: "Quản lý" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Vé" }));
     expect(await within(panel()).findByRole("button", { name: "Thử lại" })).toBeInTheDocument();
   });
 
@@ -189,7 +189,7 @@ describe("Tickets list", () => {
       "GET /api/tickets": reply(TICKETS),
     });
     await screen.findByRole("region", { name: "Next booking" });
-    fireEvent.click(screen.getByRole("tab", { name: "Manage" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Tickets" }));
     expect(
       await screen.findByRole("button", { name: /^18:00–19:00 · Tennis S6 ?REGISTERED/ }),
     ).toBeInTheDocument();

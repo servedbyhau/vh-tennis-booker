@@ -1,14 +1,16 @@
 import { call, client } from "./client";
 import type {
+  AccountChange,
   AccountSubdivision,
+  Customer,
+  CustomerFields,
   DryRunStarted,
   Health,
-  NewLogin,
+  NewAccount,
   NotificationSettings,
   Overview,
   RunDetail,
   RunSummary,
-  SavedLogin,
   ScheduleState,
   Settings,
   Step,
@@ -79,27 +81,76 @@ export function getAccounts(): Promise<AccountSubdivision[]> {
   return call(client.GET("/api/accounts"));
 }
 
-/** Tell whether a login is saved for MuMu instance `mumuIndex`, its phone number masked. */
-export function getLogin(mumuIndex: number): Promise<SavedLogin> {
-  return call(
-    client.GET("/api/logins/{mumu_index}", { params: { path: { mumu_index: mumuIndex } } }),
-  );
+/** Read the customers, each with their accounts. */
+export function listCustomers(): Promise<Customer[]> {
+  return call(client.GET("/api/customers"));
 }
 
-/** Save the login a run types in once the app logged out; the answer never holds it. */
-export function saveLogin(mumuIndex: number, login: NewLogin): Promise<SavedLogin> {
+/** Add a customer without accounts. */
+export function addCustomer(fields: CustomerFields): Promise<Customer> {
+  return call(client.POST("/api/customers", { body: fields }));
+}
+
+/** Change a customer's name and note. */
+export function changeCustomer(id: string, fields: CustomerFields): Promise<Customer> {
   return call(
-    client.PUT("/api/logins/{mumu_index}", {
-      params: { path: { mumu_index: mumuIndex } },
-      body: login,
+    client.PUT("/api/customers/{customer_id}", {
+      params: { path: { customer_id: id } },
+      body: fields,
     }),
   );
 }
 
-/** Remove the saved login of MuMu instance `mumuIndex`. */
-export async function deleteLogin(mumuIndex: number): Promise<void> {
+/** Remove a customer with their accounts; refused while one is attached to a machine. */
+export async function removeCustomer(id: string): Promise<void> {
   await call(
-    client.DELETE("/api/logins/{mumu_index}", { params: { path: { mumu_index: mumuIndex } } }),
+    client.DELETE("/api/customers/{customer_id}", { params: { path: { customer_id: id } } }),
+  );
+}
+
+/** Add an account to a customer; the answer never holds its password. */
+export function addAccount(customerId: string, account: NewAccount): Promise<Customer> {
+  return call(
+    client.POST("/api/customers/{customer_id}/accounts", {
+      params: { path: { customer_id: customerId } },
+      body: account,
+    }),
+  );
+}
+
+/** Change an account's label and, unless `null`, its password. */
+export function changeAccount(id: string, change: AccountChange): Promise<Customer> {
+  return call(
+    client.PUT("/api/customer-accounts/{account_id}", {
+      params: { path: { account_id: id } },
+      body: change,
+    }),
+  );
+}
+
+/** Remove an account; refused while it is attached to a machine. */
+export async function removeAccount(id: string): Promise<void> {
+  await call(
+    client.DELETE("/api/customer-accounts/{account_id}", { params: { path: { account_id: id } } }),
+  );
+}
+
+/** Let MuMu instance `mumuIndex` book with the account from its next run on. */
+export function attachAccount(mumuIndex: number, accountId: string): Promise<Customer> {
+  return call(
+    client.PUT("/api/machines/{mumu_index}/account", {
+      params: { path: { mumu_index: mumuIndex } },
+      body: { account_id: accountId },
+    }),
+  );
+}
+
+/** Let MuMu instance `mumuIndex` book with whichever account its app has logged in. */
+export async function detachAccount(mumuIndex: number): Promise<void> {
+  await call(
+    client.DELETE("/api/machines/{mumu_index}/account", {
+      params: { path: { mumu_index: mumuIndex } },
+    }),
   );
 }
 

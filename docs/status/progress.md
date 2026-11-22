@@ -32,9 +32,15 @@ Last updated: 2026-11-22.
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
 - Tickets read and pictured after a run, and their Manage tab, were merged on 2026-11-22 (#265
-  to #268); open branch: `fix/tickets-at-0603` (read from 06:03). The reading was tried on three
+  to #269), read from 06:03. The reading was tried on three
   real accounts on 2026-11-22, also after three idle minutes; not yet after a real booking, nor
   on three machines at once.
+
+- Open branches, stacked, for PRs into `develop` in this order: `fix/login-taps` (a login sent
+  once), `feat/customers` (customers, accounts, the machine of each), `feat/account-check` (a run
+  makes sure of the account), `feat/customers-ui` (the tab and the picker). The check and a
+  forced change of account were run on one real machine on 2026-11-22; a real timed booking
+  with it is still to do before the merge, and a change between two different accounts.
 
 ## Last 06:00 runs
 
