@@ -1333,16 +1333,26 @@ def test_a_login_tap_the_app_missed_is_tapped_again(fake_time):
     assert app.screen == "home"
 
 
-def test_a_login_screen_that_never_changes_gets_three_taps_at_most(fake_time):
+def test_a_login_the_server_takes_long_to_answer_is_sent_once(fake_time):
+    """On 2026-11-22 the login screen stayed as it was for 7-9 s after the tap."""
+    app = logged_out_app(after_login=[("home", 450)])  # a read each 0.02 s: 9 s
+
+    Booker(app, Config(), login_for=lambda: SAVED).prepare()
+
+    assert app.taps == ["Đăng nhập"]
+    assert 7 < fake_time[0] < 15
+
+
+def test_a_login_screen_that_never_changes_gets_two_taps_at_most(fake_time):
     app = logged_out_app()
     app.swallow["Đăng nhập"] = 99
 
-    with pytest.raises(LoginFailedError, match=r"\(3 tap\(s\)\)") as raised:
+    with pytest.raises(LoginFailedError, match=r"\(2 tap\(s\)\)") as raised:
         Booker(app, Config(), login_for=lambda: SAVED).prepare()
 
     assert failure_reason(str(raised.value)) == "Chưa tự đăng nhập lại được"
 
-    assert app.taps == ["Đăng nhập"] * 3
+    assert app.taps == ["Đăng nhập"] * 2
 
 
 def test_a_notice_after_the_login_refuses_it():

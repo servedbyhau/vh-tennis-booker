@@ -19,6 +19,11 @@ uses [Semantic Versioning](https://semver.org/).
   third account books alongside from the UI. Each machine keeps its tab whichever of the
   others is on.
 
+### Fixed
+- Logging in again waits 15 s for the app to answer instead of 3 s before "Đăng nhập" is
+  tapped again, and taps it twice at most: the app was seen to take 9 s, so one login was
+  sent three times (the app locks an account after 5 wrong passwords).
+
 ## [1.1.2] - 2026-11-19
 
 ### Added

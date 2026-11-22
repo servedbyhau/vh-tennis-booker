@@ -88,11 +88,13 @@ _LOGIN_SETTLE = 0.3
 """Pause between the login button showing enabled and its tap. On 2026-11-18 a tap 1 ms after
 the read that showed it enabled did nothing for 30 s, as "Xác nhận" a few frames after the
 tick (field notes); the app takes the password a few frames after the button turns."""
-_LOGIN_RETAP_AFTER = 3.0
-"""How long the login screen may stay as it was after a tap before the button is tapped again."""
-_LOGIN_TAPS = 3
-"""Most taps on the login button. Each further one only while the screen stayed unchanged, so
-a refused password (a message) is never sent twice: the app locks after 5."""
+_LOGIN_RETAP_AFTER = 15.0
+"""How long the login screen may stay as it was after a tap before the button is tapped again.
+The screen stays unchanged while the server checks the login: 7-9 s on 2026-11-22, when taps
+every 3 s sent the login three times."""
+_LOGIN_TAPS = 2
+"""Most taps on the login button: each may send the password, and the app locks an account
+after 5 wrong ones. The second one only while the screen stayed unchanged."""
 _LOGIN_READY_WAIT = 2.0
 """How long the login button may stay disabled after the password is typed in: it was enabled
 in the read right after (2026-11-18)."""
