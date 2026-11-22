@@ -1,6 +1,7 @@
 import type { RouteObject } from "react-router";
 import { App } from "./App";
 import { Redirect } from "./components/Redirect";
+import { AccountsPage } from "./pages/AccountsPage";
 import { ErrorPage } from "./pages/ErrorPage";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -14,6 +15,7 @@ export const routes: RouteObject[] = [
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: paths.accounts, element: <AccountsPage /> },
       ...OLD_PATHS.map((path) => ({ path, element: <Redirect to={paths.overview} /> })),
       { path: "*", element: <NotFoundPage /> },
     ],

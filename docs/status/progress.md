@@ -23,7 +23,7 @@ Last updated: 2026-11-22.
   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
-- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/customers-ui` (1.1.2
+- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/accounts-page` (1.1.2
   plus the third machine, the tickets and the customers' accounts), to try it before a release;
   its first 06:00 run is 2026-11-23. The app before the tickets is in
   `D:\VH-Booker\app-backup-2026-11-22`.
@@ -36,11 +36,10 @@ Last updated: 2026-11-22.
   real accounts on 2026-11-22, also after three idle minutes; not yet after a real booking, nor
   on three machines at once.
 
-- Open branches, stacked, for PRs into `develop` in this order: `fix/login-taps` (a login sent
-  once), `feat/customers` (customers, accounts, the machine of each), `feat/account-check` (a run
-  makes sure of the account), `feat/customers-ui` (the tab and the picker). The check and a
-  forced change of account were run on one real machine on 2026-11-22; a real timed booking
-  with it is still to do before the merge, and a change between two different accounts.
+- Customers, their accounts and the account check before a booking were merged on 2026-11-22
+  (#270 to #273); open branch: `feat/accounts-page` (the page in place of the tab). The check
+  and a forced change of account were run on one real machine that day; still to do: a real
+  timed booking with it, and a change between two different accounts.
 
 ## Last 06:00 runs
 
@@ -63,7 +62,7 @@ Last updated: 2026-11-22.
 
 These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 
-- UI: for end users, ready-made choices only; one screen without menus; light theme, desktop
+- UI: for end users, ready-made choices only; two pages, the booking and the accounts; light theme, desktop
   width and Vietnamese by default. It sends no request per step while a run is going, and does
   not check MuMu while the run lock is held.
 - The installed app is the daily run; a release reaches it through the installer built from

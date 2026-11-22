@@ -1,0 +1,123 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.who {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-3);
+}
+
+.name {
+  font-size: var(--text-heading-xs);
+  font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  color: var(--color-muted);
+  font-size: var(--text-data);
+  overflow-wrap: anywhere;
+}
+
+.small {
+  flex: none;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-data);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table th {
+  padding: 0 var(--space-3) var(--space-1) 0;
+  color: var(--color-muted);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+}
+
+.table th:nth-child(1) {
+  width: 200px;
+}
+
+.table th:nth-child(3) {
+  width: 320px;
+}
+
+.table th:nth-child(4) {
+  width: 72px;
+}
+
+.table td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  border-top: var(--border-hairline) dotted var(--color-rule);
+  vertical-align: middle;
+}
+
+.phone {
+  font-family: var(--font-mono);
+  font-size: var(--text-data);
+}
+
+.attached .phone {
+  font-weight: var(--weight-bold);
+}
+
+.label {
+  color: var(--color-muted);
+  font-size: var(--text-data);
+  overflow-wrap: anywhere;
+}
+
+.table .end {
+  padding-right: 0;
+  text-align: right;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.chip {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: var(--border-hairline) solid var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-field);
+  font-size: var(--text-data);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--color-stamp);
+  background: var(--color-stamp);
+  color: var(--color-on-ink);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

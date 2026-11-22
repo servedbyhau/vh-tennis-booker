@@ -4,26 +4,23 @@ import { useOverview } from "../../api/queries";
 import { useMachines } from "../../machines";
 import { useManualTicks } from "../../manualSteps";
 import { setupLeft } from "../../setupState";
-import { CustomersTab } from "./CustomersTab";
 import { HistoryTab } from "./HistoryTab";
 import { SetupTab } from "./SetupTab";
 import styles from "./SidePanel.module.css";
 import { TicketsTab } from "./TicketsTab";
 
-export type PanelTab = "tickets" | "customers" | "history" | "setup";
+export type PanelTab = "tickets" | "history" | "setup";
 
-const TABS: readonly PanelTab[] = ["tickets", "customers", "history", "setup"];
+const TABS: readonly PanelTab[] = ["tickets", "history", "setup"];
 
 const TITLES = {
   tickets: "pages.tickets.title",
-  customers: "pages.customers.title",
   history: "pages.history.title",
   setup: "pages.panel.setup",
 } as const;
 
 /**
- * The panel beside the ticket: the tickets booked, the customers, the History and the Setup, one
- * tab each.
+ * The panel beside the ticket: the tickets booked, the History and the Setup, one tab each.
  * The Setup tab counts the tasks left in red. Arrow keys move between the tabs, as in any
  * tab list.
  */
@@ -95,7 +92,6 @@ export function SidePanel({ initialTab, machine }: { initialTab: PanelTab; machi
         className={styles.body}
       >
         {tab === "tickets" && <TicketsTab device={ticketDevice} onDevice={setTicketDevice} />}
-        {tab === "customers" && <CustomersTab />}
         {tab === "history" && <HistoryTab withDry={withDry} onWithDry={setWithDry} />}
         {tab === "setup" && <SetupTab machine={machine} />}
       </div>

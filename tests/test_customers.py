@@ -88,14 +88,25 @@ def test_attaching_another_account_replaces_the_one_before(book):
     assert book.store.read(first.id) == FIRST  # kept for the next time
 
 
-def test_an_account_is_on_one_machine_only(book):
+def test_an_account_moves_to_the_machine_it_is_attached_to(book):
     account = book.add_account(book.add_customer("An").id, FIRST)
     book.attach(account.id, 1)
-    with pytest.raises(AccountAttachedError, match="MuMu 1"):
-        book.attach(account.id, 2)
-    assert book.store.read(2) is None
-    book.detach(1)
     assert book.attach(account.id, 2).device == 2
+    assert book.store.read(1) is None  # one account, one machine
+    assert book.store.read(2) == FIRST
+
+
+def test_a_move_the_vault_refuses_changes_nothing(book, monkeypatch):
+    account = book.add_account(book.add_customer("An").id, FIRST)
+    book.attach(account.id, 1)
+
+    def refuse(key, login):
+        raise CredentialError("Windows could not keep the login (error 5)")
+
+    monkeypatch.setattr(book.store, "save", refuse)
+    with pytest.raises(CredentialError):
+        book.attach(account.id, 2)
+    assert book.account(account.id).device == 1
 
 
 def test_a_new_password_reaches_the_machine_too(book):

@@ -37,13 +37,18 @@ describe("App", () => {
     expect(within(screen.getByRole("main")).getByText("Home screen")).toBeInTheDocument();
   });
 
-  it("shows the name and the language switch in the header, and no menu", () => {
+  it("shows the name, the two pages and the language switch in the header", () => {
     renderAt(paths.overview);
 
     const header = screen.getByRole("banner");
     expect(header).toHaveTextContent("court booker");
     expect(within(header).getByRole("group", { name: "Ngôn ngữ" })).toBeInTheDocument();
-    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    const pages = within(header).getByRole("navigation", { name: "Trang" });
+    expect(
+      within(pages)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Đặt sân", "Tài khoản"]);
   });
 
   it("starts with a link that skips to the main area", () => {

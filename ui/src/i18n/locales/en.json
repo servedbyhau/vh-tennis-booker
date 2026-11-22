@@ -23,11 +23,16 @@
     "locked": "Update when no run is going on, outside {{from}}–{{to}}",
     "failed": "The update did not go through; try again later"
   },
+  "nav": {
+    "label": "Pages",
+    "booking": "Booking",
+    "accounts": "Accounts"
+  },
   "pages": {
     "overview": {
       "title": "Overview",
       "status": {
-        "setupLeft": "Setup: {{count}} left, see the panel on the right",
+        "setupLeft": "Setup: {{count}} left, see the Setup tab",
         "noDryRun": "No dry run passed yet · press Dry run now",
         "scheduleOff": "Dry run passed · turn on Auto-book",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
@@ -151,10 +156,26 @@
       "save": "Save",
       "close": "Close"
     },
-    "customers": {
-      "title": "Customers",
+    "accounts": {
+      "title": "Account management",
+      "lead": "Keep the customers with the Vinhomes accounts they gave, and choose the account each machine books with.",
+      "machines": {
+        "title": "Who each machine books for",
+        "off": "off",
+        "none": "No account attached",
+        "noneHint": "Books with the account logged in on MuMu.",
+        "detach": "Detach",
+        "detachFrom": "Detach the account from {{machine}}",
+        "hint": "From its next run on, a machine logs in with the account attached. To check it now, go to Booking and press \"{{dryRun}}\"."
+      },
+      "customers": "Customers",
+      "attach": "Attach to",
+      "attachOf": "Attach {{phone}} to a machine",
+      "editCustomer": "Edit customer",
+      "empty": "No customers yet. Press \"Add customer\" to start.",
+      "label": "Label",
+      "attached": "Attached to {{machine}}. Detach it to remove it.",
       "add": "Add customer",
-      "empty": "No customers yet. Add one with the Vinhomes accounts they gave, then attach an account to a machine in the Setup tab.",
       "edit": "Edit",
       "name": "Customer name",
       "note": "Note",
@@ -163,18 +184,16 @@
       "phone": "Phone number",
       "password": "Password",
       "newPassword": "New password (empty keeps the one saved)",
-      "label": "Label, such as Apartment A",
       "noLogin": "password lost, remove and add it again",
       "private": "The password stays in Windows and never shows again.",
       "save": "Save",
       "cancel": "Cancel",
       "remove": "Remove",
       "removeSure": "Really remove",
-      "keep": "Keep",
-      "attached": "Attached to {{machine}}. Detach it in the Setup tab to remove it."
+      "keep": "Keep"
     },
     "panel": {
-      "title": "Tickets, customers, history and setup",
+      "title": "Tickets, history and setup",
       "setup": "Setup",
       "left": ", {{count}} left"
     },
@@ -201,22 +220,14 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "A resident account. Attach an account below so the app logs in by itself."
+          "hint": "A resident account. Attach one on the Accounts page so the app logs in by itself."
         },
         "off": "off, not counted in the setup"
       },
-      "login": {
+      "account": {
         "title": "Booking account",
-        "why": "Before booking, the app reads the phone number logged in on this machine, and changes it if it is not the attached account's.",
-        "customer": "Customer",
-        "account": "Account",
-        "none": "None",
-        "pick": "Pick an account",
-        "onMachine": "on {{machine}}",
-        "noCustomers": "No customers yet. Add one in the Customers tab.",
-        "attached": "The next run uses this account. Press \"{{dryRun}}\" to check it now.",
-        "free": "None attached: the machine books with the account logged in on MuMu, and stops if it is logged out.",
-        "notYet": "Pick an account to change it. Until then the machine keeps the attached one."
+        "none": "None attached: books with the account logged in on MuMu.",
+        "manage": "Manage accounts →"
       },
       "guide": {
         "title": "Guide",
@@ -243,7 +254,7 @@
           },
           "loggedOut": {
             "question": "The app was logged out",
-            "answer": "Attach an account under \"Booking account\" so a run logs in by itself. If the app says the password is wrong, change it in the Customers tab: the app locks an account after 5 wrong ones."
+            "answer": "Attach an account on the Accounts page so a run logs in by itself. If the app says the password is wrong, change it there: the app locks an account after 5 wrong ones."
           }
         }
       }
@@ -464,7 +475,7 @@
     "notification": "Windows could not show the notification.",
     "credentials": "Windows could not keep the password. Try again.",
     "phone_taken": "A customer already has this number.",
-    "account_attached": "The account is attached to another machine.",
+    "account_attached": "The account is attached to a machine; detach it first.",
     "engine": "Court Booker hit an error.",
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",

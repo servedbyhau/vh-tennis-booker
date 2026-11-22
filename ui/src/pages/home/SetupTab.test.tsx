@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Customer, Overview } from "../../api/types";
 import { STORAGE_KEY } from "../../manualSteps";
@@ -102,100 +102,27 @@ describe("SetupTab steps the user does", () => {
 });
 
 describe("SetupTab account", () => {
-  const AN = customer("a1", {
-    accounts: [
-      account("b1", { device: 0 }),
-      account("b2", { label: "Căn B", phone: "09••••••22" }),
-      account("b3", { label: "", phone: "09••••••33", device: 1 }),
-    ],
-  });
-  const BINH = customer("a2", {
-    name: "Chị Bình",
-    accounts: [account("b4", { label: "", phone: "09••••••44" })],
-  });
+  const AN = customer("a1", { accounts: [account("b1", { device: 0 })] });
 
-  async function openPicker(customers: Customer[], extra: Record<string, Reply> = {}) {
-    const app = renderSetup(overview(), { "GET /api/customers": reply(customers), ...extra });
+  async function shown(customers: Customer[]) {
+    const { router } = renderSetup(overview(), { "GET /api/customers": reply(customers) });
     const tab = await setupTab();
-    return { tab: within(tab), ...app };
+    return { section: within(tab).getByRole("region", { name: "Tài khoản đặt sân" }), router };
   }
 
-  function options(select: HTMLElement) {
-    return within(select)
-      .getAllByRole<HTMLOptionElement>("option")
-      .map((option) => `${option.textContent}${option.disabled ? " (off)" : ""}`);
-  }
-
-  it("shows the customer and the account the machine books with", async () => {
-    const { tab } = await openPicker([AN, BINH]);
-
-    expect(await tab.findByLabelText("Khách hàng")).toHaveValue("a1");
-    expect(tab.getByLabelText("Tài khoản")).toHaveValue("b1");
-    expect(options(tab.getByLabelText("Khách hàng"))).toEqual(["Không gắn", "Anh An", "Chị Bình"]);
-    expect(options(tab.getByLabelText("Tài khoản"))).toEqual([
-      "Chọn tài khoản (off)",
-      "09••••••11 · Căn A",
-      "09••••••22 · Căn B",
-      "09••••••33 · đang ở Máy 2 (off)", // one account, one machine
-    ]);
-    expect(
-      tab.getByText('Lượt chạy sau dùng tài khoản này. Bấm "Chạy thử ngay" để kiểm tra luôn.'),
-    ).toBeVisible();
+  it("says whose account the machine books with", async () => {
+    const { section } = await shown([AN]);
+    expect(await within(section).findByText("Anh An · 09••••••11 · Căn A")).toBeVisible();
   });
 
-  it("attaches the account picked", async () => {
-    const { tab, fetch } = await openPicker([AN, BINH], {
-      "PUT /api/machines/0/account": reply(AN),
-    });
-    fireEvent.change(await tab.findByLabelText("Tài khoản"), { target: { value: "b2" } });
+  it("says when none is attached, and leads to the accounts page", async () => {
+    const { section, router } = await shown([]);
+    expect(await within(section).findByText(/^Chưa gắn:/)).toBeVisible();
 
-    await waitFor(() => expect(requestsTo(fetch, "PUT /api/machines/0/account")).toBe(1));
-    await waitFor(() => expect(requestsTo(fetch, "GET /api/customers")).toBe(2));
-  });
+    fireEvent.click(within(section).getByRole("link", { name: "Quản lý tài khoản →" }));
 
-  it("attaches nothing while only the customer is chosen", async () => {
-    const { tab, fetch } = await openPicker([AN, BINH], {
-      "PUT /api/machines/0/account": reply(BINH),
-    });
-    fireEvent.change(await tab.findByLabelText("Khách hàng"), { target: { value: "a2" } });
-
-    expect(tab.getByLabelText("Tài khoản")).toHaveValue("");
-    expect(tab.getByText(/^Chọn tài khoản để đổi\./)).toBeVisible();
-    expect(fetch.mock.calls.every(([request]) => request.method === "GET")).toBe(true);
-
-    fireEvent.change(tab.getByLabelText("Tài khoản"), { target: { value: "b4" } });
-    await waitFor(() => expect(requestsTo(fetch, "PUT /api/machines/0/account")).toBe(1));
-  });
-
-  it("detaches with no customer", async () => {
-    const { tab, fetch } = await openPicker([AN], {
-      "DELETE /api/machines/0/account": reply(null, 204),
-    });
-    fireEvent.change(await tab.findByLabelText("Khách hàng"), { target: { value: "" } });
-    await waitFor(() => expect(requestsTo(fetch, "DELETE /api/machines/0/account")).toBe(1));
-  });
-
-  it("says what a machine without an account books with", async () => {
-    const { tab } = await openPicker([BINH]);
-    expect(await tab.findByLabelText("Khách hàng")).toHaveValue("");
-    expect(tab.queryByLabelText("Tài khoản")).not.toBeInTheDocument();
-    expect(tab.getByText(/^Chưa gắn: máy đặt bằng tài khoản đang đăng nhập/)).toBeVisible();
-  });
-
-  it("says why an account was not attached", async () => {
-    const { tab } = await openPicker([AN], {
-      "PUT /api/machines/0/account": reply({ error: "lock_held", detail: "running" }, 409),
-    });
-    fireEvent.change(await tab.findByLabelText("Tài khoản"), { target: { value: "b2" } });
-    expect(await tab.findByRole("alert")).toHaveTextContent(
-      "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
-    );
-    expect(tab.getByLabelText("Tài khoản")).toHaveValue("b1"); // as it is
-  });
-
-  it("points to the customers while there are none", async () => {
-    const { tab } = await openPicker([]);
-    expect(await tab.findByText("Chưa có khách nào. Thêm ở tab Khách hàng.")).toBeVisible();
+    expect(router.state.location.pathname).toBe(paths.accounts);
+    expect(await screen.findByRole("heading", { name: "Quản lý tài khoản" })).toBeVisible();
   });
 });
 

@@ -23,11 +23,16 @@
     "locked": "Cập nhật khi không có lần chạy nào và ngoài {{from}}–{{to}}",
     "failed": "Chưa cập nhật được, hãy thử lại sau"
   },
+  "nav": {
+    "label": "Trang",
+    "booking": "Đặt sân",
+    "accounts": "Tài khoản"
+  },
   "pages": {
     "overview": {
       "title": "Tổng quan",
       "status": {
-        "setupLeft": "Còn {{count}} việc thiết lập, xem khung bên phải",
+        "setupLeft": "Còn {{count}} việc thiết lập, xem tab Thiết lập",
         "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử ngay",
         "scheduleOff": "Chạy thử đạt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
@@ -151,10 +156,26 @@
       "save": "Lưu vé",
       "close": "Đóng"
     },
-    "customers": {
-      "title": "Khách hàng",
+    "accounts": {
+      "title": "Quản lý tài khoản",
+      "lead": "Ghi khách và các tài khoản Vinhomes họ đưa, rồi chọn mỗi máy đặt bằng tài khoản nào.",
+      "machines": {
+        "title": "Mỗi máy đặt cho ai",
+        "off": "đang tắt",
+        "none": "Chưa gắn tài khoản",
+        "noneHint": "Đặt bằng tài khoản đang đăng nhập trên MuMu.",
+        "detach": "Gỡ",
+        "detachFrom": "Gỡ tài khoản khỏi {{machine}}",
+        "hint": "Lượt chạy sau, máy tự đăng nhập đúng tài khoản đã gắn. Muốn kiểm tra ngay thì sang Đặt sân, bấm \"{{dryRun}}\"."
+      },
+      "customers": "Khách hàng",
+      "attach": "Gắn vào máy",
+      "attachOf": "Gắn {{phone}} vào máy",
+      "editCustomer": "Sửa khách",
+      "empty": "Chưa có khách nào. Bấm \"Thêm khách\" để bắt đầu.",
+      "label": "Tên gợi nhớ",
+      "attached": "Đang gắn vào {{machine}}. Gỡ ra rồi mới xóa được.",
       "add": "Thêm khách",
-      "empty": "Chưa có khách nào. Thêm khách và các tài khoản Vinhomes họ đưa, rồi gắn tài khoản vào máy ở tab Thiết lập.",
       "edit": "Sửa",
       "name": "Tên khách",
       "note": "Ghi chú",
@@ -163,18 +184,16 @@
       "phone": "Số điện thoại",
       "password": "Mật khẩu",
       "newPassword": "Mật khẩu mới (để trống nếu giữ nguyên)",
-      "label": "Tên gợi nhớ, ví dụ Căn A",
       "noLogin": "mất mật khẩu, xóa rồi thêm lại",
       "private": "Mật khẩu nằm trong Windows, không bao giờ hiện lại.",
       "save": "Lưu",
       "cancel": "Hủy",
       "remove": "Xóa",
       "removeSure": "Xóa thật",
-      "keep": "Giữ lại",
-      "attached": "Đang gắn vào {{machine}}. Gỡ ở tab Thiết lập rồi mới xóa được."
+      "keep": "Giữ lại"
     },
     "panel": {
-      "title": "Vé, khách hàng, lịch sử và thiết lập",
+      "title": "Vé, lịch sử và thiết lập",
       "setup": "Thiết lập",
       "left": ", còn {{count}} việc"
     },
@@ -201,22 +220,14 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Gắn tài khoản ở mục bên dưới để app tự đăng nhập."
+          "hint": "Tài khoản cư dân. Gắn tài khoản ở trang Tài khoản để app tự đăng nhập."
         },
         "off": "đang tắt, không tính vào việc thiết lập"
       },
-      "login": {
+      "account": {
         "title": "Tài khoản đặt sân",
-        "why": "Trước giờ đặt, app xem số điện thoại đang đăng nhập trên máy này. Khác với tài khoản đã gắn thì tự đổi.",
-        "customer": "Khách hàng",
-        "account": "Tài khoản",
-        "none": "Không gắn",
-        "pick": "Chọn tài khoản",
-        "onMachine": "đang ở {{machine}}",
-        "noCustomers": "Chưa có khách nào. Thêm ở tab Khách hàng.",
-        "attached": "Lượt chạy sau dùng tài khoản này. Bấm \"{{dryRun}}\" để kiểm tra luôn.",
-        "free": "Chưa gắn: máy đặt bằng tài khoản đang đăng nhập trên MuMu, và dừng nếu bị đăng xuất.",
-        "notYet": "Chọn tài khoản để đổi. Chưa chọn thì máy vẫn dùng tài khoản đang gắn."
+        "none": "Chưa gắn: đặt bằng tài khoản đang đăng nhập trên MuMu.",
+        "manage": "Quản lý tài khoản →"
       },
       "guide": {
         "title": "Hướng dẫn",
@@ -243,7 +254,7 @@
           },
           "loggedOut": {
             "question": "App bị đăng xuất",
-            "answer": "Gắn tài khoản ở mục \"Tài khoản đặt sân\" để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở tab Khách hàng: app khóa tài khoản sau 5 lần sai."
+            "answer": "Gắn tài khoản ở trang Tài khoản để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở đó: app khóa tài khoản sau 5 lần sai."
           }
         }
       }
@@ -464,7 +475,7 @@
     "notification": "Windows không hiện được thông báo.",
     "credentials": "Windows chưa lưu được mật khẩu. Hãy thử lại.",
     "phone_taken": "Số này đã có ở một khách.",
-    "account_attached": "Tài khoản đang gắn vào một máy khác.",
+    "account_attached": "Tài khoản đang gắn vào một máy, hãy gỡ ra trước.",
     "engine": "Court Booker gặp lỗi.",
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",

@@ -34,7 +34,7 @@ class PhoneTakenError(CourtBookerError):
 
 
 class AccountAttachedError(CourtBookerError):
-    """The account is attached to a machine: it is neither removed nor attached to another."""
+    """The account is attached to a machine, so it is not removed."""
 
 
 class UnknownRecordError(CourtBookerError):
@@ -198,14 +198,18 @@ class CustomerBook:
     # Machines ----------------------------------------------------------------
 
     def attach(self, account_id: str, device: int) -> Account:
-        """Let MuMu instance ``device`` book with the account, in place of the one it had."""
+        """Let MuMu instance ``device`` book with the account, in place of the one it had.
+
+        An account attached to another machine moves: that one is left without any.
+        """
         account = self.account(account_id)
         login = self.store.read(account_id)
         if login is None:
             raise CredentialError("The account's saved login is gone: add the account again")
-        if account.device not in (None, device):
-            raise AccountAttachedError(f"The account is attached to MuMu {account.device}")
+        # Saved there before it is taken from here: a vault that refuses changes nothing.
         self.store.save(device, login)
+        if account.device not in (None, device):
+            self.store.delete(account.device)
         return self.account(account_id)
 
     def detach(self, device: int) -> None:

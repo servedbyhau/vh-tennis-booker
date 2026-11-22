@@ -289,7 +289,7 @@ values 422 `invalid_request`.
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`) |
-| `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine, or none; refused while a run goes on (409 `lock_held`) and for an account on another machine (409 `account_attached`) |
+| `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine (it moves from another one), or none; refused while a run goes on (409 `lock_held`) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
 | `WS /api/live` | Pushes each new step |
 
@@ -301,7 +301,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 
 - Vite, React 19, strict TypeScript, ESLint (type-aware), Prettier, Vitest + Testing Library
   (jsdom). Version holds that need Node 22.22 (jsdom 30, React Router 8) are skipped by Dependabot.
-- `src/paths.ts` names the one screen and the old addresses that lead to it, keeping
+- `src/paths.ts` names the two pages and the old addresses that lead to it, keeping
   `?run=`; `routes.tsx` maps them to `pages/`. `i18n/` (Vietnamese
   default, English; same keys, checked by a test). `styles/` holds the tokens (contrast checked
   by `tokens.test.ts`); components use CSS Modules on them.
@@ -312,7 +312,13 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 - `steps.ts` words each event kind (a new kind fails the type check); `reasons.ts` turns the
   engine's English reasons into a few words (`notify.REASONS` holds the same words; a test
   compares them).
-- One screen (`pages/HomePage.tsx`, parts in `pages/home/`): the ticket (`BookingTicket`:
+- Two pages, a press apart in the header: the booking page and the accounts page
+  (`pages/AccountsPage.tsx`, parts in `pages/accounts/`): `MachineCards` (who each machine books
+  for) and a `CustomerCard` per customer, whose accounts each offer the machines as buttons: a
+  press attaches the account there (it moves if it was on another), a second one frees it. One
+  form is open at a time (`CustomerForms`); a password typed in is sent once and never shown
+  again, a removal takes two presses.
+- The booking page (`pages/HomePage.tsx`, parts in `pages/home/`): the ticket (`BookingTicket`:
   on top the daily switch and what is set: the play day and court side by side, the slots
   on a row of their own (fixed rows, whatever the court's name), and a line only while the
   switch is off, for the machine chosen on its tabs on top (`MachineBar`, "Máy 1", "Máy 2",
@@ -325,18 +331,15 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   books, that machine's subdivision, sport, court and up to two slots, saved on each press,
   and the dry run;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
-  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, four tabs:
+  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, three tabs:
   `TicketsTab` ("Vé": every machine's tickets still to use by day of play, of one machine
   or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`;
   read again after `tickets_saved`),
-  `CustomersTab` (the customers with their accounts, one form open at a time; a password typed
-  in is sent once and never shown again, a removal takes two presses),
   `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
   opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the machine's account
   and the guide, those of the machine chosen on the ticket, which `HomePage` holds).
-  `AccountPicker` picks a customer, then one of their accounts, which saves it; an account on
-  another machine is listed but not picked.
+  `MachineAccount` says the machine's account and leads to the accounts page.
   The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
   readers. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the

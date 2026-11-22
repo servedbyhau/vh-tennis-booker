@@ -11,7 +11,7 @@ import {
   useManualTicks,
 } from "../../manualSteps";
 import { setupDone } from "../../setupState";
-import { AccountPicker } from "./AccountPicker";
+import { MachineAccount } from "./MachineAccount";
 import styles from "./SetupTab.module.css";
 
 /** The three steps of a first use; shown first until everything is set up. */
@@ -145,9 +145,7 @@ export function SetupTab({ machine }: { machine: number }) {
                 </section>
               )}
               <ManualSteps machine={shown} several={machines.length > 1} />
-              {shown.mumuIndex !== null && (
-                <AccountPicker key={shown.mumuIndex} mumuIndex={shown.mumuIndex} />
-              )}
+              {shown.mumuIndex !== null && <MachineAccount mumuIndex={shown.mumuIndex} />}
               <Guide overview={data} howto={done} />
             </>
           );
