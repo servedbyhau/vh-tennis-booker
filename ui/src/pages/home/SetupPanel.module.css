@@ -12,15 +12,15 @@
   padding-bottom: var(--space-2);
 }
 
-/* As high as the machines' tabs beside it, so the two rules line up. */
+/* As high as the machines beside it, so the two hairlines line up. */
 .title {
   flex: none;
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: calc(var(--touch-target) + var(--space-3) + var(--border));
-  padding: var(--space-2) var(--space-5) 0;
-  border-bottom: var(--border) solid var(--color-ink);
+  min-height: 64px;
+  padding: 0 var(--space-5);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
   font-size: var(--text-heading-xs);
   font-weight: var(--weight-bold);
 }

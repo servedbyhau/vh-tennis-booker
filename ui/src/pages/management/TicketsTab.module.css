@@ -18,7 +18,7 @@
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-2);
   padding: var(--space-3) var(--space-5);
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
 /* The choices of the ticket, smaller: a list is picked here, nothing is saved. */
@@ -36,7 +36,6 @@
 .chip[aria-pressed="true"] {
   border-color: var(--color-ink);
   background: var(--color-tint);
-  box-shadow: inset 0 0 0 var(--border-hairline) var(--color-ink);
 }
 
 .scroll {

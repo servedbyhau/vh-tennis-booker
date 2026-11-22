@@ -28,6 +28,10 @@ uses [Semantic Versioning](https://semver.org/).
   third account books alongside from the UI. Each machine keeps its tab whichever of the
   others is on.
 
+### Changed
+- A lighter look: space, soft fills and hairlines part things in place of dark rules; ink is for the
+  main action and the page shown.
+
 ### Fixed
 - Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is
   tapped again, and taps it twice at most: the app was seen to take 11 s, so one login was

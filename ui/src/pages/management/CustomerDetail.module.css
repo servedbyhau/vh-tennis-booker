@@ -33,7 +33,7 @@
 .head:has(.section) {
   margin-top: var(--space-4);
   padding-top: var(--space-5);
-  border-top: var(--border) dashed var(--color-perforation);
+  border-top: var(--border-hairline) solid var(--color-hairline);
 }
 
 .facts {
@@ -91,7 +91,7 @@
 
 .table td {
   padding: var(--space-2) var(--space-3) var(--space-2) 0;
-  border-top: var(--border-hairline) dotted var(--color-rule);
+  border-top: var(--border-hairline) solid var(--color-hairline);
   vertical-align: middle;
 }
 

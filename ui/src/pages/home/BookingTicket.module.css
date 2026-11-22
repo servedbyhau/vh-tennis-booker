@@ -143,7 +143,6 @@
 .slot[aria-pressed="true"] {
   border-color: var(--color-ink);
   background: var(--color-tint);
-  box-shadow: inset 0 0 0 1px var(--color-ink);
 }
 
 .choice {
@@ -243,7 +242,7 @@
 .dryRun {
   margin-top: auto;
   padding: 14px 0 18px;
-  border-top: var(--border-hairline) dotted var(--color-rule);
+  border-top: var(--border-hairline) solid var(--color-hairline);
   display: flex;
   align-items: center;
   justify-content: space-between;
