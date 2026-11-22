@@ -204,8 +204,8 @@ def attach_account(
 ) -> CustomerRecord:
     """Let a machine book with an account from its next run on; answers the customer.
 
-    The run logs the machine's Vinhomes app in with it. Refused while a run goes on (409
-    ``lock_held``) and for an account attached to another machine (409 ``account_attached``).
+    The run logs the machine's Vinhomes app in with it. An account on another machine moves.
+    Refused while a run goes on (409 ``lock_held``).
     """
     with _changing:
         check_no_run(context)

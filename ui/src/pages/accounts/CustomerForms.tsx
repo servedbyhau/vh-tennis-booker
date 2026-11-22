@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { errorMessage } from "../../api/errors";
 import {
@@ -9,25 +9,17 @@ import {
   useRemoveAccount,
   useRemoveCustomer,
 } from "../../api/mutations";
-import { useCustomers } from "../../api/queries";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Button } from "../../components/Button";
-import { QueryView } from "../../components/QueryView";
-import { EmptyState } from "../../components/States";
 import { useMachines } from "../../machines";
-import styles from "./CustomersTab.module.css";
-import { machineName } from "./ticketText";
+import styles from "./CustomerForms.module.css";
+import { machineName } from "../home/ticketText";
 
 /** A phone number as the Vinhomes app takes it: 10 digits from 0. */
 const PHONE_PATTERN = "0[0-9]{9}";
 const MAX_NAME = 60;
 const MAX_NOTE = 500;
 const MAX_PASSWORD = 128;
-
-/** The one form open: a customer's or an account's, a new one without `id`. */
-type Open =
-  | { form: "customer"; id: string | null }
-  | { form: "account"; customerId: string; id: string | null };
 
 interface FieldProps {
   label: string;
@@ -57,18 +49,24 @@ interface FormProps {
 /** The frame of both forms: the fields, Save and Cancel, and why a save failed. */
 function EditForm({ title, pending, error, onSave, onClose, remove, children }: FormProps) {
   const { t } = useTranslation();
+  const form = useRef<HTMLFormElement>(null);
+  // It may open below the window's edge.
+  useEffect(() => {
+    form.current?.querySelector("input")?.focus({ preventScroll: true });
+    form.current?.scrollIntoView?.({ block: "nearest" });
+  }, []);
   function submit(event: FormEvent) {
     event.preventDefault();
     onSave();
   }
   return (
-    <form className={styles.form} aria-label={title} onSubmit={submit}>
-      {children}
+    <form ref={form} className={styles.form} aria-label={title} onSubmit={submit}>
+      <div className={styles.fields}>{children}</div>
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={pending}>
-          {t("pages.customers.save")}
+          {t("pages.accounts.save")}
         </Button>
-        <Button onClick={onClose}>{t("pages.customers.cancel")}</Button>
+        <Button onClick={onClose}>{t("pages.accounts.cancel")}</Button>
       </div>
       {error !== null && (
         <p role="alert" className={styles.error}>
@@ -91,19 +89,19 @@ function Remove({ machine, remove }: RemoveProps) {
   const { t } = useTranslation();
   const [asked, setAsked] = useState(false);
   if (machine !== null) {
-    return <p className={styles.note}>{t("pages.customers.attached", { machine })}</p>;
+    return <p className={styles.note}>{t("pages.accounts.attached", { machine })}</p>;
   }
   return (
     <div className={styles.actions}>
       {asked ? (
         <>
           <Button disabled={remove.isPending} onClick={remove.mutate}>
-            {t("pages.customers.removeSure")}
+            {t("pages.accounts.removeSure")}
           </Button>
-          <Button onClick={() => setAsked(false)}>{t("pages.customers.keep")}</Button>
+          <Button onClick={() => setAsked(false)}>{t("pages.accounts.keep")}</Button>
         </>
       ) : (
-        <Button onClick={() => setAsked(true)}>{t("pages.customers.remove")}</Button>
+        <Button onClick={() => setAsked(true)}>{t("pages.accounts.remove")}</Button>
       )}
       {remove.error !== null && (
         <p role="alert" className={styles.error}>
@@ -114,7 +112,14 @@ function Remove({ machine, remove }: RemoveProps) {
   );
 }
 
-function CustomerForm({ customer, onClose }: { customer: Customer | null; onClose: () => void }) {
+/** A customer's name and note. */
+export function CustomerForm({
+  customer,
+  onClose,
+}: {
+  customer: Customer | null;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const machines = useMachines();
   const add = useAddCustomer();
@@ -136,7 +141,7 @@ function CustomerForm({ customer, onClose }: { customer: Customer | null; onClos
 
   return (
     <EditForm
-      title={t(customer === null ? "pages.customers.add" : "pages.customers.edit")}
+      title={t(customer === null ? "pages.accounts.add" : "pages.accounts.editCustomer")}
       pending={save.isPending}
       error={save.error}
       onSave={onSave}
@@ -154,7 +159,7 @@ function CustomerForm({ customer, onClose }: { customer: Customer | null; onClos
         )
       }
     >
-      <Field label={t("pages.customers.name")}>
+      <Field label={t("pages.accounts.name")}>
         <input
           required
           pattern=".*\S.*"
@@ -164,7 +169,7 @@ function CustomerForm({ customer, onClose }: { customer: Customer | null; onClos
           onChange={(event) => setName(event.target.value)}
         />
       </Field>
-      <Field label={t("pages.customers.note")}>
+      <Field label={t("pages.accounts.note")}>
         <input
           maxLength={MAX_NOTE}
           autoComplete="off"
@@ -183,7 +188,7 @@ interface AccountFormProps {
 }
 
 /** An account's login and label; of one already saved the phone stays, the password is kept. */
-function AccountForm({ customerId, account, onClose }: AccountFormProps) {
+export function AccountForm({ customerId, account, onClose }: AccountFormProps) {
   const { t } = useTranslation();
   const machines = useMachines();
   const add = useAddAccount();
@@ -205,7 +210,7 @@ function AccountForm({ customerId, account, onClose }: AccountFormProps) {
 
   return (
     <EditForm
-      title={t(account === null ? "pages.customers.addAccount" : "pages.customers.edit")}
+      title={t(account === null ? "pages.accounts.addAccount" : "pages.accounts.edit")}
       pending={save.isPending}
       error={save.error}
       onSave={onSave}
@@ -224,7 +229,7 @@ function AccountForm({ customerId, account, onClose }: AccountFormProps) {
       }
     >
       {account === null && (
-        <Field label={t("pages.customers.phone")}>
+        <Field label={t("pages.accounts.phone")}>
           <input
             type="tel"
             inputMode="numeric"
@@ -237,9 +242,7 @@ function AccountForm({ customerId, account, onClose }: AccountFormProps) {
           />
         </Field>
       )}
-      <Field
-        label={t(account === null ? "pages.customers.password" : "pages.customers.newPassword")}
-      >
+      <Field label={t(account === null ? "pages.accounts.password" : "pages.accounts.newPassword")}>
         <input
           type="password"
           autoComplete="new-password"
@@ -249,7 +252,7 @@ function AccountForm({ customerId, account, onClose }: AccountFormProps) {
           onChange={(event) => setPassword(event.target.value)}
         />
       </Field>
-      <Field label={t("pages.customers.label")}>
+      <Field label={t("pages.accounts.label")}>
         <input
           maxLength={MAX_NAME}
           autoComplete="off"
@@ -257,117 +260,7 @@ function AccountForm({ customerId, account, onClose }: AccountFormProps) {
           onChange={(event) => setLabel(event.target.value)}
         />
       </Field>
-      <p className={styles.note}>{t("pages.customers.private")}</p>
+      <p className={styles.note}>{t("pages.accounts.private")}</p>
     </EditForm>
-  );
-}
-
-/** An account in one line: its number, its label and the machine it is attached to. */
-function AccountRow({ account, onEdit }: { account: CustomerAccount; onEdit: () => void }) {
-  const { t } = useTranslation();
-  const machines = useMachines();
-  return (
-    <div className={styles.account}>
-      <span className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</span>
-      <span className={styles.accountLabel}>{account.label}</span>
-      {account.device !== null && (
-        <span className={styles.machine}>{machineName(t, machines, account.device)}</span>
-      )}
-      <Button className={styles.small} onClick={onEdit}>
-        {t("pages.customers.edit")}
-      </Button>
-    </div>
-  );
-}
-
-interface CustomerSectionProps {
-  customer: Customer;
-  open: Open | null;
-  onOpen: (open: Open | null) => void;
-}
-
-function CustomerSection({ customer, open, onOpen }: CustomerSectionProps) {
-  const { t } = useTranslation();
-  const close = () => onOpen(null);
-  const account = open?.form === "account" && open.customerId === customer.id ? open : null;
-  return (
-    <section aria-label={customer.name} className={styles.customer}>
-      {open?.form === "customer" && open.id === customer.id ? (
-        <CustomerForm customer={customer} onClose={close} />
-      ) : (
-        <div className={styles.head}>
-          <div>
-            <h3 className={styles.name}>{customer.name}</h3>
-            {customer.note !== "" && <p className={styles.note}>{customer.note}</p>}
-          </div>
-          <Button
-            className={styles.small}
-            onClick={() => onOpen({ form: "customer", id: customer.id })}
-          >
-            {t("pages.customers.edit")}
-          </Button>
-        </div>
-      )}
-      {customer.accounts.length === 0 && (
-        <p className={styles.note}>{t("pages.customers.noAccounts")}</p>
-      )}
-      <ul className={styles.accounts}>
-        {customer.accounts.map((item) => (
-          <li key={item.id}>
-            {account?.id === item.id ? (
-              <AccountForm customerId={customer.id} account={item} onClose={close} />
-            ) : (
-              <AccountRow
-                account={item}
-                onEdit={() => onOpen({ form: "account", customerId: customer.id, id: item.id })}
-              />
-            )}
-          </li>
-        ))}
-      </ul>
-      {account !== null && account.id === null ? (
-        <AccountForm customerId={customer.id} account={null} onClose={close} />
-      ) : (
-        <Button
-          className={styles.small}
-          onClick={() => onOpen({ form: "account", customerId: customer.id, id: null })}
-        >
-          {t("pages.customers.addAccount")}
-        </Button>
-      )}
-    </section>
-  );
-}
-
-/**
- * The customers and the Vinhomes accounts each one gave. The phone numbers show with their
- * middle hidden and a password never again; the Setup tab attaches an account to a machine.
- */
-export function CustomersTab() {
-  const { t } = useTranslation();
-  const customers = useCustomers();
-  const [open, setOpen] = useState<Open | null>(null);
-  return (
-    <div className={styles.tab}>
-      <QueryView query={customers}>
-        {(list) => (
-          <>
-            {open?.form === "customer" && open.id === null ? (
-              <CustomerForm customer={null} onClose={() => setOpen(null)} />
-            ) : (
-              <div className={styles.top}>
-                <Button variant="primary" onClick={() => setOpen({ form: "customer", id: null })}>
-                  {t("pages.customers.add")}
-                </Button>
-              </div>
-            )}
-            {list.length === 0 && <EmptyState>{t("pages.customers.empty")}</EmptyState>}
-            {list.map((customer) => (
-              <CustomerSection key={customer.id} customer={customer} open={open} onOpen={setOpen} />
-            ))}
-          </>
-        )}
-      </QueryView>
-    </div>
   );
 }

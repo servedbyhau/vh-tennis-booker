@@ -10,10 +10,10 @@ uses [Semantic Versioning](https://semver.org/).
 - While getting ready, a run reads the phone number on the Vinhomes app's account tab, and logs
   out and in again if it is not the account saved for the machine. It never books with another
   one: a machine that stays in it, or cannot tell, books nothing and says so.
-- A "Khách hàng" ("Customers") tab: the people booked for, each with the Vinhomes accounts they
-  gave. The Setup tab picks the account each machine books with, in place of typing a login
-  there; the logins saved before became customers of their own (`/api/customers`,
-  `/api/machines/{index}/account` in place of `/api/logins`).
+- An account management page ("Tài khoản" / "Accounts" in the header): the customers with the
+  Vinhomes accounts they gave, and who each machine books for; a press attaches an account to a
+  machine, in place of typing a login in the Setup tab. The logins saved before became customers
+  of their own (`/api/customers`, `/api/machines/{index}/account` in place of `/api/logins`).
 - A "Vé" ("Tickets") tab beside the History: the tickets booked and still to use, of every
   machine's account in one list by day of play, with their status and booking code; a press
   opens the ticket's picture, which can be saved as a file.

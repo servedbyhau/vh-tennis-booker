@@ -57,7 +57,7 @@ describe("HomePage status line", () => {
       schedule: { ...status.schedule, enabled: false, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Còn 2 việc thiết lập, xem khung bên phải");
+    expect(await statusLine()).toHaveTextContent("Còn 2 việc thiết lập, xem tab Thiết lập");
   });
 
   it("says when Windows keeps the PC from waking", async () => {
@@ -376,12 +376,9 @@ describe("HomePage panel", () => {
     expect(history).toHaveAttribute("aria-selected", "true");
     expect(history).toHaveFocus();
 
-    // Round the four tabs, past either end.
-    const customers = screen.getByRole("tab", { name: "Khách hàng" });
+    // Round the three tabs, past either end.
     const tickets = screen.getByRole("tab", { name: "Vé" });
     fireEvent.keyDown(history, { key: "ArrowLeft" });
-    expect(customers).toHaveFocus();
-    fireEvent.keyDown(customers, { key: "ArrowLeft" });
     expect(tickets).toHaveFocus();
     fireEvent.keyDown(tickets, { key: "ArrowLeft" });
     expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveFocus();

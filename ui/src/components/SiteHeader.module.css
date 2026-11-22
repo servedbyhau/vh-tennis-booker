@@ -28,6 +28,34 @@
   color: var(--color-muted);
 }
 
+/* The two pages; the one shown is underlined in ink, on the header's rule. */
+.nav {
+  align-self: stretch;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  border-bottom: 4px solid transparent;
+  color: var(--color-muted);
+  font-size: var(--text-control);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-ink);
+}
+
+.link[aria-current="page"] {
+  border-bottom-color: var(--color-ink);
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+}
+
 /* The status line takes the room left, set against the language switch. */
 .status {
   flex: 1 1 auto;

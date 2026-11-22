@@ -1,12 +1,14 @@
 import { useTranslation } from "react-i18next";
+import { NavLink } from "react-router";
 import { useOverview } from "../api/queries";
+import { paths } from "../paths";
 import { LanguageSwitch } from "./LanguageSwitch";
 import styles from "./SiteHeader.module.css";
 import { StatusLine } from "./StatusLine";
 import { UpdateButton } from "./UpdateButton";
 
 /**
- * Show the app's name with the installed version, the status line, the update button (in the
+ * Show the app's name with the installed version, the two pages, the status line, the update button (in the
  * desktop window, when a newer version is out) and the language switch, ruled off in ink.
  */
 export function SiteHeader() {
@@ -26,6 +28,14 @@ export function SiteHeader() {
           </span>
         )}
       </span>
+      <nav aria-label={t("nav.label")} className={styles.nav}>
+        <NavLink to={paths.overview} end className={styles.link}>
+          {t("nav.booking")}
+        </NavLink>
+        <NavLink to={paths.accounts} className={styles.link}>
+          {t("nav.accounts")}
+        </NavLink>
+      </nav>
       <div className={styles.status}>
         {overview.data && <StatusLine overview={overview.data} />}
       </div>

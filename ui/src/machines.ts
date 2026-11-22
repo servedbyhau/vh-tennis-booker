@@ -6,7 +6,7 @@
  */
 import { useMemo } from "react";
 import { useSettings } from "./api/queries";
-import type { Settings } from "./api/types";
+import type { Customer, Settings } from "./api/types";
 
 /** The machines shown at least: the first, and two beside it. */
 const MIN_MACHINES = 3;
@@ -85,4 +85,15 @@ export function enabledMachines(machines: readonly Machine[]): Machine[] {
 export function useMachines(): Machine[] {
   const settings = useSettings();
   return useMemo(() => machinesOf(settings.data), [settings.data]);
+}
+
+/** Return the account MuMu instance `mumuIndex` books with and its customer, or `null`. */
+export function accountOn(customers: readonly Customer[], mumuIndex: number) {
+  for (const customer of customers) {
+    const account = customer.accounts.find((item) => item.device === mumuIndex);
+    if (account !== undefined) {
+      return { customer, account };
+    }
+  }
+  return null;
 }

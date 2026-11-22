@@ -83,10 +83,10 @@ def test_an_account_is_attached_and_detached(client, account, saved_logins):
     assert saved_logins.read(1) is None
 
 
-def test_an_attached_account_is_neither_moved_nor_removed(client, customer, account):
+def test_an_attached_account_moves_but_is_not_removed(client, customer, account):
     attach(client, account, 1)
+    assert attach(client, account, 2).json()["accounts"][0]["device"] == 2
     refused = [
-        attach(client, account, 2),
         client.delete(f"/api/customer-accounts/{account['id']}"),
         client.delete(f"/api/customers/{customer['id']}"),
     ]

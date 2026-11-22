@@ -337,8 +337,8 @@ export interface paths {
          * Attach Account
          * @description Let a machine book with an account from its next run on; answers the customer.
          *
-         *     The run logs the machine's Vinhomes app in with it. Refused while a run goes on (409
-         *     ``lock_held``) and for an account attached to another machine (409 ``account_attached``).
+         *     The run logs the machine's Vinhomes app in with it. An account on another machine moves.
+         *     Refused while a run goes on (409 ``lock_held``).
          */
         put: operations["attach_account_api_machines__mumu_index__account_put"];
         post?: never;
