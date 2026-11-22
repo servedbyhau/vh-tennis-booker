@@ -50,13 +50,13 @@ EXIT_APP_NOT_READY = 4
 EXIT_BUSY = 5
 EXIT_INTERRUPTED = 130
 
-TICKETS_AFTER = timedelta(seconds=120)
+TICKETS_AFTER = timedelta(minutes=3)
 """When a timed run reads its tickets, from the start: of the 49 runs on schedule up to
-2026-11-22 the last to end did at 06:01:05, and the app shows a ticket as processing for a
-while."""
-TICKETS_WAIT = timedelta(seconds=90)
-"""How long the tickets then wait for a machine recorded as booking; its run may have been
-killed, so they are read all the same after it."""
+2026-11-22 the last to end did at 06:01:05, the other residents have booked and left the
+app, and a ticket shows as processing for a while."""
+TICKETS_LATEST = timedelta(minutes=3, seconds=30)
+"""How long past the start the tickets wait for a machine recorded as booking; its run may
+have been killed, so they are read all the same after it."""
 TICKETS_SECONDS = 90.0
 """How long reading the tickets may take; a run so ends about when the quiet time does (5 min
 after the start), holding the lock until then."""
@@ -250,9 +250,9 @@ def read_tickets(
     start at least, so this takes nothing from the rounds still going on. Raises only
     ``DeviceNotRespondingError`` (a frozen emulator) and ``KeyboardInterrupt``.
     """
+    give_up = (start or clock.now()) + TICKETS_LATEST
     if start is not None:
         wait_until(start + TICKETS_AFTER, clock.now)
-    give_up = clock.now() + TICKETS_WAIT
     while history.other_runs_going():
         if clock.now() >= give_up:
             logger.warning("Another machine is still recorded as booking; reading the tickets")

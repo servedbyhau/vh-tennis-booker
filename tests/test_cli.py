@@ -959,7 +959,7 @@ def read_after(monkeypatch, looks):
     results = [RoundResult("18:00 - 19:00", True, "booked", 5.0, "S6 - Sân tennis")]
     clock = StepClock(start + cli.TICKETS_AFTER)
     cli.read_tickets(booker, results, start.date(), start, clock, others, lambda kind, **data: None)
-    assert waits == [start + timedelta(minutes=2)]
+    assert waits == [start + timedelta(minutes=3)]
     return others, clock.at - start
 
 
@@ -975,6 +975,7 @@ def test_tickets_are_read_all_the_same_after_a_run_that_was_killed(monkeypatch, 
     with caplog.at_level(logging.WARNING):
         others, after = read_after(monkeypatch, looks=10_000)
     assert len(others.saved) == 1
+    assert after >= timedelta(minutes=3, seconds=30)
     # Before the quiet time of the start ends, with the time reading may take.
     assert after + timedelta(seconds=cli.TICKETS_SECONDS) <= timedelta(minutes=5, seconds=5)
     assert "still recorded as booking" in caplog.text

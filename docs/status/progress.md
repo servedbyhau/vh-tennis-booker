@@ -23,20 +23,18 @@ Last updated: 2026-11-22.
   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
-- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/tickets-tab` (1.1.2
-  plus the third machine, the ticket reading and the Manage tab), to try it before the merge;
+- Since 2026-11-22 the installed app on the dev PC is a local build of `fix/tickets-at-0603` (1.1.2
+  plus the third machine, the ticket reading and the Manage tab), to try it before a release;
   its first 06:00 run is 2026-11-23. The app before it and the data are in
   `D:\VH-Booker\app-backup-2026-11-22`.
 - Runner folder: at `v0.18.1`, kept as a way back until 2026-11-10, then removed. To go back:
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
-- Tickets read and pictured after a run, and their Manage tab, were merged on 2026-11-22 (#265,
-  #266). Open branches with what followed, stacked, for PRs into `develop` in this order:
-  `feat/ticket-records` (from 06:02, expired tickets deleted, a second try) and
-  `feat/tickets-tab` (tickets still to use, the picture saved as a file). The reading was tried
-  on three real accounts on 2026-11-22, also after two idle minutes; not yet after a real
-  booking, nor on three machines at once.
+- Tickets read and pictured after a run, and their Manage tab, were merged on 2026-11-22 (#265
+  to #268); open branch: `fix/tickets-at-0603` (read from 06:03). The reading was tried on three
+  real accounts on 2026-11-22, also after three idle minutes; not yet after a real booking, nor
+  on three machines at once.
 
 ## Last 06:00 runs
 
