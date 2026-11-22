@@ -105,9 +105,9 @@ const RUN_26 = {
 
 const REPLIES = { "GET /api/runs": reply(RUNS), "GET /api/runs/26": reply(RUN_26) };
 
-/** The History tab of the panel beside the next booking. */
+/** The list of the runs. */
 function panel() {
-  return screen.findByRole("tabpanel", { name: "Lịch sử" });
+  return screen.findByRole("region", { name: "Lịch sử" });
 }
 
 /** The rows of the list, as their text. */
@@ -130,7 +130,7 @@ afterEach(() => {
 
 describe("History list", () => {
   it("lists the real bookings: what they booked, each slot and why it failed", async () => {
-    const { fetch } = renderApp(paths.overview, REPLIES);
+    const { fetch } = renderApp(paths.history, REPLIES);
 
     expect(await rows()).toEqual([
       // The hidden words after the mark and a failed slot are for screen readers.
@@ -142,7 +142,7 @@ describe("History list", () => {
   });
 
   it("adds the dry runs on request, without asking the backend again", async () => {
-    const { fetch } = renderApp(paths.overview, REPLIES);
+    const { fetch } = renderApp(paths.history, REPLIES);
     await rows();
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Gồm cả chạy thử" }));
@@ -165,7 +165,7 @@ describe("History list", () => {
       runSummary(104, { started_at: "2026-10-02T05:50:02.120" }),
     ];
     const replies = { "GET /api/runs": reply(newest) };
-    const { fetch } = renderApp(paths.overview, replies);
+    const { fetch } = renderApp(paths.history, replies);
     expect(await rows()).toHaveLength(10);
     const history = await panel();
     expect(within(history).getByText("10 ngày gần nhất")).toBeInTheDocument();
@@ -182,14 +182,14 @@ describe("History list", () => {
   });
 
   it("says when there is no run yet", async () => {
-    renderApp(paths.overview, { "GET /api/runs": reply([]) });
+    renderApp(paths.history, { "GET /api/runs": reply([]) });
 
     expect(await within(await panel()).findByText("Chưa có lần chạy nào.")).toBeInTheDocument();
   });
 
   it("names the MuMu instance of a run that booked beside the first one", async () => {
     const other = runSummary(27, { device: 1, court: "S9 - Sân tennis", booked: 2 });
-    renderApp(paths.overview, { "GET /api/runs": reply([other, { ...PARTIAL, device: 0 }]) });
+    renderApp(paths.history, { "GET /api/runs": reply([other, { ...PARTIAL, device: 0 }]) });
 
     const [first, second] = await rows();
     expect(first).toMatch(/theo hẹn giờ 15\/10 · MuMu 1$/);
@@ -197,7 +197,7 @@ describe("History list", () => {
   });
 
   it("says when there are dry runs only", async () => {
-    renderApp(paths.overview, { "GET /api/runs": reply([DRY]) });
+    renderApp(paths.history, { "GET /api/runs": reply([DRY]) });
 
     const history = await panel();
     expect(await within(history).findByText("Chưa có lần đặt thật nào.")).toBeInTheDocument();
@@ -205,9 +205,9 @@ describe("History list", () => {
 
   it("reads in English", async () => {
     await i18n.changeLanguage("en");
-    renderApp(paths.overview, REPLIES);
+    renderApp(paths.history, REPLIES);
 
-    const history = await screen.findByRole("tabpanel", { name: "History" });
+    const history = await screen.findByRole("region", { name: "History" });
     const list = await within(history).findByRole("list");
     expect(within(list).getAllByRole("link")[0]).toHaveTextContent(
       "Sat 17 Oct · Tennis S61/2BOOKED 1/2✓ 15:00✕ 16:00 Fully bookedon schedule 15 Oct",
@@ -216,8 +216,15 @@ describe("History list", () => {
 });
 
 describe("History run", () => {
-  it("opens a run in place of the list, and goes back to it", async () => {
-    const { router } = renderApp(paths.overview, REPLIES);
+  it("asks to choose one first", async () => {
+    renderApp(paths.history, REPLIES);
+    expect(
+      await screen.findByText("Chọn một lượt ở bên trái để xem chi tiết."),
+    ).toBeInTheDocument();
+  });
+
+  it("opens a run beside the list, which keeps its choice", async () => {
+    const { router } = renderApp(paths.history, REPLIES);
     await rows();
     fireEvent.click(screen.getByRole("checkbox", { name: "Gồm cả chạy thử" }));
 
@@ -231,15 +238,15 @@ describe("History run", () => {
     expect(booked).toHaveTextContent("15:00–16:00ĐÃ ĐẶTXong lúc 06:00:06 · mất 6,0 giây");
     expect(failed).toHaveTextContent("16:00–17:00KHÔNG ĐẶT ĐƯỢCHết chỗ");
 
-    fireEvent.click(screen.getByRole("link", { name: "← Lịch sử" }));
-
     expect(await rows()).toHaveLength(3);
-    expect(router.state.location.search).toBe("");
+    expect(
+      screen.getByRole("link", { name: /^T7 17\/10 · Tennis S6\s*ĐẶT ĐƯỢC 1\/2/ }),
+    ).toHaveAttribute("aria-current", "true");
     expect(screen.getByRole("checkbox", { name: "Gồm cả chạy thử" })).toBeChecked();
   });
 
   it("shows every step of the run and the engine's reason", async () => {
-    renderApp(`${paths.overview}?run=26`, REPLIES);
+    renderApp(`${paths.history}?run=26`, REPLIES);
 
     const run = await screen.findByRole("article", { name: "Chơi Thứ Bảy 17/10 · Tennis S6" });
     const steps = within(run).getAllByRole("list")[1]!.querySelectorAll("li");
@@ -255,7 +262,7 @@ describe("History run", () => {
   });
 
   it("keeps the technical log closed until asked for", async () => {
-    renderApp(`${paths.overview}?run=26`, REPLIES);
+    renderApp(`${paths.history}?run=26`, REPLIES);
 
     const summary = await screen.findByText("Chi tiết kỹ thuật");
     const details = summary.closest("details");
@@ -265,7 +272,7 @@ describe("History run", () => {
   });
 
   it("says a dry run booked nothing", async () => {
-    renderApp(`${paths.overview}?run=25`, {
+    renderApp(`${paths.history}?run=25`, {
       "GET /api/runs/25": reply({ ...DRY, steps: [], log_lines: [] }),
     });
 
@@ -278,7 +285,7 @@ describe("History run", () => {
   });
 
   it("says why a run stopped before any slot", async () => {
-    renderApp(`${paths.overview}?run=24`, {
+    renderApp(`${paths.history}?run=24`, {
       "GET /api/runs/24": reply({ ...STOPPED, steps: [], log_lines: [] }),
     });
 
@@ -287,7 +294,7 @@ describe("History run", () => {
   });
 
   it("adds the steps of a running run as the live feed brings them", async () => {
-    const { live } = renderApp(`${paths.overview}?run=26`, REPLIES);
+    const { live } = renderApp(`${paths.history}?run=26`, REPLIES);
     await screen.findByText("Bắt đầu theo hẹn giờ");
 
     act(() => {
@@ -306,9 +313,10 @@ describe("History run", () => {
   });
 
   it("says when the run asked for does not exist", async () => {
-    renderApp(`${paths.overview}?run=99`, REPLIES);
+    renderApp(`${paths.history}?run=99`, REPLIES);
 
-    const history = await panel();
+    await panel();
+    const history = screen.getByRole("main");
     expect(await within(history).findByRole("alert")).toHaveTextContent(
       "Không tìm thấy dữ liệu này.",
     );

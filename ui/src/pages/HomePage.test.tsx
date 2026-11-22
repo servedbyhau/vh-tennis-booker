@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Overview } from "../api/types";
 import { paths } from "../paths";
@@ -57,7 +57,7 @@ describe("HomePage status line", () => {
       schedule: { ...status.schedule, enabled: false, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Còn 2 việc thiết lập, xem tab Thiết lập");
+    expect(await statusLine()).toHaveTextContent("Còn 2 việc thiết lập, xem mục Thiết lập");
   });
 
   it("says when Windows keeps the PC from waking", async () => {
@@ -319,70 +319,18 @@ describe("HomePage live run", () => {
 });
 
 describe("HomePage panel", () => {
-  it("opens on the History once everything is set up", async () => {
+  it("is the Setup alone, with no tabs", async () => {
     renderOverview(overview());
     await statusLine();
-
-    expect(screen.getByRole("tab", { name: "Lịch sử" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
+    expect(screen.getByRole("region", { name: "Thiết lập" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
   });
 
-  it("opens on the Setup while a task is left, with their count", async () => {
+  it("counts the tasks left", async () => {
     tickSteps({ mumu: true, app: true, login: false });
     renderOverview(overview());
-
-    expect(await screen.findByRole("tab", { name: "Thiết lập, còn 1 việc" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(screen.getByRole("tabpanel", { name: "Thiết lập, còn 1 việc" })).toBeInTheDocument();
-  });
-
-  it("opens on the Setup until the daily booking is on", async () => {
-    const status = overview();
-    renderOverview({ ...status, schedule: { ...status.schedule, enabled: false } });
-
-    // The panel waits on the History until the status comes in.
-    await waitFor(() =>
-      expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveAttribute(
-        "aria-selected",
-        "true",
-      ),
-    );
-  });
-
-  it("opens on the History when the address asks for a run", async () => {
-    tickSteps({ mumu: false, app: false, login: false });
-    renderApp(`${paths.overview}?run=26`, { "GET /api/status": reply(overview()) });
-
-    expect(await screen.findByRole("tab", { name: /^Lịch sử/ })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-  });
-
-  it("changes tabs on a press and with the arrow keys", async () => {
-    renderOverview(overview());
-    await statusLine();
-    const history = screen.getByRole("tab", { name: "Lịch sử" });
-
-    fireEvent.click(screen.getByRole("tab", { name: "Thiết lập" }));
-    expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveAttribute("aria-selected", "true");
-
-    fireEvent.keyDown(screen.getByRole("tab", { name: "Thiết lập" }), { key: "ArrowLeft" });
-    expect(history).toHaveAttribute("aria-selected", "true");
-    expect(history).toHaveFocus();
-
-    // Round the three tabs, past either end.
-    const tickets = screen.getByRole("tab", { name: "Vé" });
-    fireEvent.keyDown(history, { key: "ArrowLeft" });
-    expect(tickets).toHaveFocus();
-    fireEvent.keyDown(tickets, { key: "ArrowLeft" });
-    expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveFocus();
-    fireEvent.keyDown(screen.getByRole("tab", { name: "Thiết lập" }), { key: "ArrowRight" });
-    expect(tickets).toHaveFocus();
+    expect(
+      await screen.findByRole("region", { name: "Thiết lập, còn 1 việc" }),
+    ).toBeInTheDocument();
   });
 });

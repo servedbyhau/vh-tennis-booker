@@ -10,12 +10,13 @@ uses [Semantic Versioning](https://semver.org/).
 - While getting ready, a run reads the phone number on the Vinhomes app's account tab, and logs
   out and in again if it is not the account saved for the machine. It never books with another
   one: a machine that stays in it, or cannot tell, books nothing and says so.
-- A management page ("Quản lý" / "Management" in the middle of the header) with the customers: the
-  people or groups booked for, with who speaks for them and the Vinhomes accounts they gave, in
-  place of typing a login in the Setup tab. The logins saved before became customers of their own,
-  their machines' accounts as they were (`/api/customers`, `/api/machines/{index}/account` in place
-  of `/api/logins`).
-- A "Vé" ("Tickets") tab beside the History: the tickets booked and still to use, of every
+- A management page ("Quản lý" / "Management" in the middle of the header) with three sections: the
+  customers (the people or groups booked for, with who speaks for them and the Vinhomes accounts
+  they gave), the tickets and the History, which leaves the panel beside the ticket. That panel is
+  the Setup alone, where each machine's account is picked from the customers' in place of typing a
+  login; the logins saved before became customers (`/api/customers`,
+  `/api/machines/{index}/account` in place of `/api/logins`).
+- A "Vé" ("Tickets") section: the tickets booked and still to use, of every
   machine's account in one list by day of play, with their status and booking code; a press
   opens the ticket's picture, which can be saved as a file.
 - After a real run that booked, the app's tickets are read from its history page (code, court,

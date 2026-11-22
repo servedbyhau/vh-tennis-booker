@@ -32,7 +32,7 @@
     "overview": {
       "title": "Tổng quan",
       "status": {
-        "setupLeft": "Còn {{count}} việc thiết lập, xem tab Thiết lập",
+        "setupLeft": "Còn {{count}} việc thiết lập, xem mục Thiết lập",
         "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử ngay",
         "scheduleOff": "Chạy thử đạt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
@@ -120,7 +120,6 @@
       "booked": "đặt {{when}} · {{by}}",
       "dry": "chạy thử {{when}}",
       "instance": "{{text}} · MuMu {{index}}",
-      "back": "← Lịch sử",
       "slot": {
         "booked": "ĐÃ ĐẶT",
         "failed": "KHÔNG ĐẶT ĐƯỢC",
@@ -130,7 +129,8 @@
       "done": "Xong lúc {{time}} · mất {{seconds}}",
       "through": "Dừng trước nút \"Xác nhận\", không đặt thật",
       "steps": "Từng bước",
-      "technical": "Chi tiết kỹ thuật"
+      "technical": "Chi tiết kỹ thuật",
+      "choose": "Chọn một lượt ở bên trái để xem chi tiết."
     },
     "tickets": {
       "title": "Vé",
@@ -155,6 +155,9 @@
       "next": "Vé sau",
       "save": "Lưu vé",
       "close": "Đóng"
+    },
+    "management": {
+      "sections": "Các mục quản lý"
     },
     "customers": {
       "title": "Khách hàng",
@@ -182,10 +185,9 @@
       "remove": "Xóa",
       "removeSure": "Xóa thật",
       "keep": "Giữ lại",
-      "inUse": "Đang được dùng để đặt sân, chưa xóa được."
+      "inUse": "Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được."
     },
     "panel": {
-      "title": "Vé, lịch sử và thiết lập",
       "setup": "Thiết lập",
       "left": ", còn {{count}} việc"
     },
@@ -212,14 +214,22 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Khách hàng và tài khoản của họ nằm ở trang Quản lý."
+          "hint": "Tài khoản cư dân. Chọn tài khoản ở mục bên trên để app tự đăng nhập."
         },
         "off": "đang tắt, không tính vào việc thiết lập"
       },
       "account": {
-        "title": "Tài khoản đặt sân",
-        "none": "Chưa gắn: đặt bằng tài khoản đang đăng nhập trên MuMu.",
-        "manage": "Quản lý khách hàng →"
+        "title": "Chọn tài khoản",
+        "why": "Trước giờ đặt, app xem số điện thoại đang đăng nhập trên máy này. Khác với tài khoản đã chọn thì tự đổi.",
+        "customer": "Khách hàng",
+        "account": "Tài khoản",
+        "none": "Không chọn",
+        "pick": "Chọn tài khoản",
+        "onMachine": "đang ở {{machine}}",
+        "noCustomers": "Chưa có khách nào. Thêm ở trang Quản lý.",
+        "attached": "Lượt chạy sau dùng tài khoản này. Bấm \"{{dryRun}}\" để kiểm tra luôn.",
+        "free": "Chưa chọn: máy đặt bằng tài khoản đang đăng nhập trên MuMu, và dừng nếu bị đăng xuất.",
+        "notYet": "Chọn tài khoản để đổi. Chưa chọn thì máy vẫn dùng tài khoản cũ."
       },
       "guide": {
         "title": "Hướng dẫn",
@@ -246,7 +256,7 @@
           },
           "loggedOut": {
             "question": "App bị đăng xuất",
-            "answer": "Nếu app báo sai mật khẩu, sửa tài khoản ở trang Quản lý: app khóa tài khoản sau 5 lần sai."
+            "answer": "Chọn tài khoản cho máy ở mục \"Chọn tài khoản\" để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở trang Quản lý: app khóa tài khoản sau 5 lần sai."
           }
         }
       }
@@ -467,7 +477,7 @@
     "notification": "Windows không hiện được thông báo.",
     "credentials": "Windows chưa lưu được mật khẩu. Hãy thử lại.",
     "phone_taken": "Số này đã có ở một khách.",
-    "account_attached": "Tài khoản đang được dùng để đặt sân, chưa xóa được.",
+    "account_attached": "Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được.",
     "engine": "Court Booker gặp lỗi.",
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",

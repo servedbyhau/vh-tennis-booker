@@ -1,16 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
 import { useRunSteps } from "../../api/runSteps";
 import type { LogLine, RunDetail as Run, SlotResult, Step } from "../../api/types";
 import { QueryView } from "../../components/QueryView";
 import { Stamp } from "../../components/Stamp";
-import { paths } from "../../paths";
 import { failureReason } from "../../reasons";
 import { runStamp } from "../../runs";
 import { stepMessage } from "../../steps";
 import { useFormat } from "../../useFormat";
 import styles from "./RunDetail.module.css";
-import { runTitle, runWhen } from "./runText";
+import { runTitle, runWhen } from "../home/runText";
 
 /** One step: its time, a ✓ or ✕, its words, the time a slot took and the engine's reason. */
 function StepLine({ step }: { step: Step }) {
@@ -118,9 +116,6 @@ export function RunDetail({ runId }: { runId: number }) {
   const { run, steps } = useRunSteps(runId);
   return (
     <div className={styles.detail}>
-      <Link to={paths.overview} className={styles.back}>
-        {t("pages.history.back")}
-      </Link>
       <QueryView query={run}>
         {(detail) => (
           <article aria-labelledby="run-title" className={styles.run}>

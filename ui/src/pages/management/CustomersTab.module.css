@@ -4,7 +4,7 @@
   min-height: 0;
   display: flex;
   gap: var(--space-6);
-  padding-top: var(--space-5);
+  padding-top: var(--space-3);
 }
 
 /* A paper card; it scrolls inside, its corners kept. */

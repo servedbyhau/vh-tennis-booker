@@ -12,7 +12,7 @@ import { paths } from "./paths";
 export function App() {
   const { t } = useTranslation();
   const booking = useMatch(paths.overview) !== null;
-  const management = useMatch(paths.management) !== null;
+  const management = useMatch(`${paths.management}/*`) !== null;
   return (
     <div className={booking || management ? `${styles.page} ${styles.fill}` : styles.page}>
       <a className={styles.skipLink} href="#main">

@@ -166,30 +166,31 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
   and what is set, the play day, court and slots; below, the subdivision, the sport, the
   court and up to two slots to choose, saved on each press, and a dry run. During a run it
   shows the steps as they happen.
-- **Vé / Tickets** on the right: the tickets booked and still to use, of every machine's
-  account in one list, by day of play, with their slot, court, status and booking code; a press
-  opens the ticket's picture with its QR code, and a button saves it as a file. They are read
-  from the Vinhomes app at 06:03, once every machine has booked, and stay on this PC, the
-  pictures in `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
-- **Lịch sử / History** beside it: each run in two lines, its play day, court and count
-  ("2/2"), then every slot booked or not and when it started (real bookings, dry runs on
-  request); one click opens the reasons, the steps and the technical log. A booking that
-  stopped on a failure the app did not explain also saved a screenshot of MuMu in
-  `%LOCALAPPDATA%\CourtBooker\logs\screens`.
-- **Thiết lập / Setup** beside it: the steps only you can do (install MuMu and the Vinhomes
-  app, log in), ticked by you, and a short guide; MuMu's place and screen and waking the PC
-  need no step (the runs and the daily switch see to them). It also says the account the
-  machine books with. It opens first, with a count, while anything is left. The Windows notification switch sits on
-  the ticket, beside the daily switch.
-- **Quản lý / Management**, the second page: the customers, people or groups you book for, each
-  with who speaks for them and the Vinhomes accounts they gave. Before booking, a run reads the
-  phone number logged in on the machine's Vinhomes app, and logs out and in if it is not the
-  machine's account, trying the password once; a machine that cannot be sure books nothing. The
-  passwords are kept by Windows (Credential Manager) for your Windows account and never shown
-  again.
+- **Thiết lập / Setup** on the right: the account the machine books with, the steps only you can
+  do (install MuMu and the Vinhomes app, log in), ticked by you and counted while any is left, and
+  a short guide; MuMu's place and screen and waking the PC need no step (the runs and the daily
+  switch see to them). Before booking, a run reads the phone number logged in on the machine's
+  Vinhomes app, and logs out and in if it is not the chosen account's, trying the password once; a
+  machine that cannot be sure books nothing. The Windows notification switch sits on the ticket,
+  beside the daily switch.
 - **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,
   each logged in to another account) book alongside the first once their "Dùng máy này"
   switch is on.
+
+On the second:
+
+- **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
+  the Vinhomes accounts they gave. The passwords are kept by Windows (Credential Manager) for your
+  Windows account and never shown again.
+- **Vé / Tickets**: the tickets booked and still to use, of every machine's account in one list, by
+  day of play, with their slot, court, status and booking code; a press opens the ticket's picture
+  with its QR code, and a button saves it as a file. They are read from the Vinhomes app at 06:03,
+  once every machine has booked, and stay on this PC, the pictures in
+  `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
+- **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every
+  slot booked or not and when it started (real bookings, dry runs on request); a press shows the
+  reasons, the steps and the technical log beside the list. A booking that stopped on a failure the
+  app did not explain also saved a screenshot of MuMu in `%LOCALAPPDATA%\CourtBooker\logs\screens`.
 
 <p>
   <img src="docs/img/home.png" width="49%" alt="Ready for 06:00: the ticket with the daily

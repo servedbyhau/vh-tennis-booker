@@ -19,22 +19,20 @@ const TICKETS = [
   ticket("1000000", { play_date: "2026-10-12", status: "other", status_text: "Đã sử dụng" }),
 ];
 
-/** Open the home screen with `tickets` and its tickets tab in front. */
+/** Open the tickets section with `tickets`. */
 async function openTab(tickets: Ticket[] = TICKETS) {
-  const app = renderApp(paths.overview, {
+  const app = renderApp(paths.tickets, {
     "GET /api/status": reply(overview()),
     "GET /api/settings": reply(settings()),
     "GET /api/runs": reply([]),
     "GET /api/tickets": reply(tickets),
   });
-  // The panel is built anew once the status comes in.
-  await screen.findByRole("region", { name: "Lần đặt tiếp theo" });
-  fireEvent.click(screen.getByRole("tab", { name: "Vé" }));
+  await screen.findByRole("region", { name: "Vé" });
   return app;
 }
 
 function panel() {
-  return screen.getByRole("tabpanel", { name: "Vé" });
+  return screen.getByRole("region", { name: "Vé" });
 }
 
 /** Each day listed, with the text of its tickets. */
@@ -117,13 +115,13 @@ describe("Tickets list", () => {
     expect((await days())[0]?.[1]).toContain("MuMu 7 · 1000002");
   });
 
-  it("keeps the machine chosen while another tab is in front", async () => {
+  it("keeps the machine chosen while another section shows", async () => {
     await openTab();
     await days();
     fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Lịch sử" }));
+    fireEvent.click(screen.getByRole("link", { name: "Lịch sử" }));
 
-    fireEvent.click(screen.getByRole("tab", { name: "Vé" }));
+    fireEvent.click(screen.getByRole("link", { name: "Vé" }));
 
     expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
   });
@@ -160,9 +158,7 @@ describe("Tickets list", () => {
   });
 
   it("offers to try again when the tickets cannot be read", async () => {
-    renderApp(paths.overview, { "GET /api/status": reply(overview()) });
-    await screen.findByRole("region", { name: "Lần đặt tiếp theo" });
-    fireEvent.click(screen.getByRole("tab", { name: "Vé" }));
+    renderApp(paths.tickets, { "GET /api/status": reply(overview()) });
     expect(await within(panel()).findByRole("button", { name: "Thử lại" })).toBeInTheDocument();
   });
 
@@ -184,12 +180,10 @@ describe("Tickets list", () => {
 
   it("is worded in English too", async () => {
     await i18n.changeLanguage("en");
-    renderApp(paths.overview, {
+    renderApp(paths.tickets, {
       "GET /api/status": reply(overview()),
       "GET /api/tickets": reply(TICKETS),
     });
-    await screen.findByRole("region", { name: "Next booking" });
-    fireEvent.click(screen.getByRole("tab", { name: "Tickets" }));
     expect(
       await screen.findByRole("button", { name: /^18:00–19:00 · Tennis S6 ?REGISTERED/ }),
     ).toBeInTheDocument();

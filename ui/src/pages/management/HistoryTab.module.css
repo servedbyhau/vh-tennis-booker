@@ -1,3 +1,44 @@
+/* The runs on the left, the one chosen beside them; both fill the height of the window. */
+.columns {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: var(--space-6);
+  padding-top: var(--space-3);
+}
+
+.runs,
+.run {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-2);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.runs {
+  flex: 0 0 400px;
+}
+
+.run {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* What to do while no run is chosen keeps clear of the card's edges. */
+.run > p {
+  padding: var(--space-6) var(--space-7);
+}
+
+/* The run shown: tinted, with an ink bar at its edge. */
+.row[aria-current="true"] {
+  background: var(--color-tint);
+  box-shadow: inset 4px 0 0 var(--color-ink);
+}
+
 .toolbar {
   flex: none;
   display: flex;

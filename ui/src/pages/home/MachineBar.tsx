@@ -13,7 +13,7 @@ interface MachineBarProps {
 
 /**
  * The machines on top of the ticket, as index cards like the panel's tabs: the one pressed
- * shows its choices on the ticket and its setup in the Setup tab. A red mark tells a
+ * shows its choices on the ticket and its setup beside it. A red mark tells a
  * machine that books with something of its own left to set up; a machine switched off is
  * pale. Nothing shows with one machine.
  */

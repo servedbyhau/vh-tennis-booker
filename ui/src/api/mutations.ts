@@ -4,8 +4,10 @@ import type { AccountChange, CustomerFields, NewAccount } from "./types";
 import {
   addAccount,
   addCustomer,
+  attachAccount,
   changeAccount,
   changeCustomer,
+  detachAccount,
   getNotifications,
   removeAccount,
   removeCustomer,
@@ -123,6 +125,18 @@ export function useChangeAccount() {
 /** Remove an account. */
 export function useRemoveAccount() {
   return useCustomerChange((id: string) => removeAccount(id));
+}
+
+/** Attach an account to a machine, in place of the one it had. */
+export function useAttachAccount() {
+  return useCustomerChange(({ mumuIndex, accountId }: { mumuIndex: number; accountId: string }) =>
+    attachAccount(mumuIndex, accountId),
+  );
+}
+
+/** Attach no account to a machine. */
+export function useDetachAccount() {
+  return useCustomerChange((mumuIndex: number) => detachAccount(mumuIndex));
 }
 
 /** Switch the daily schedule on or off; the overview shows its new state. */
