@@ -21,6 +21,8 @@ uses [Semantic Versioning](https://semver.org/).
 - The line at the top no longer says ready while a machine books with no account chosen, or two
   machines would book the same court and slot; their tabs are marked, and the second is told at the
   press that makes it so.
+- Removing a customer or an account asks first over the page, naming the accounts and saved passwords
+  lost for good and the machines left without one.
 - A "Vé" ("Tickets") section: the tickets booked and still to use, of every
   customer in one list by day of play, with their status and whose account they are of; a press
   opens the ticket's picture, which can be saved as a file or copied.

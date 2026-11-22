@@ -168,11 +168,12 @@
       "cancel": "Hủy",
       "remove": "Xóa",
       "keep": "Giữ lại",
-      "inUse": "{{machine}} đang dùng {{phone}}, xóa rồi máy này không còn tài khoản.",
+      "inUse": "{{machines}} đang dùng, xóa rồi sẽ không còn tài khoản để đặt.",
       "removeCustomer": "Xóa",
       "removeAsk": "Xóa {{name}}?",
-      "lostAccounts": "Mất luôn {{count}} tài khoản và mật khẩu đã lưu, không lấy lại được.",
-      "lostAccount": "Mất luôn mật khẩu đã lưu, không lấy lại được."
+      "lostAccounts": "Sẽ mất {{count}} tài khoản:",
+      "lostPasswords": "Mật khẩu đã lưu cũng mất, không lấy lại được.",
+      "lostFacts": "Thông tin của khách cũng mất, không lấy lại được."
     },
     "guide": {
       "title": "Hướng dẫn",

@@ -168,11 +168,12 @@
       "cancel": "Cancel",
       "remove": "Remove",
       "keep": "Keep",
-      "inUse": "{{machine}} books with {{phone}} and will have no account.",
+      "inUse": "{{machines}} would have no account to book with.",
       "removeCustomer": "Remove",
       "removeAsk": "Remove {{name}}?",
-      "lostAccounts": "Accounts lost with their saved passwords, for good: {{count}}.",
-      "lostAccount": "Its saved password is lost for good."
+      "lostAccounts": "Accounts lost: {{count}}",
+      "lostPasswords": "The saved password goes too, for good.",
+      "lostFacts": "What is known of the customer goes too, for good."
     },
     "guide": {
       "title": "Guide",
