@@ -157,6 +157,9 @@ limit, and no apartment to choose after a login (the user, 2026-11-18).
   button stayed disabled). One tap on "Đăng nhập" 0.3 s after it turned enabled; the home
   screen showed 3 s later, then the rounds ran. An earlier try's screen stayed unchanged for
   30 s after the tap while MuMu was freezing, yet the account was logged in afterwards.
+- The login screen stays as it was while the server checks the login, its button enabled:
+  the home screen showed 7-9 s after the tap (3 logins on 2026-11-22, one with a single tap),
+  so a tap repeated sooner sends the password again.
 
 ### Promotion popup over the home screen
 

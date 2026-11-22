@@ -37,7 +37,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 
 | Area | Situation | Today |
 |---|---|---|
-| App | Logged out (the account logged in on another device) | Closes the notice and types the login saved in the app's setup, tapping "Đăng nhập" once; refused, or none saved, the run stops at once (exit 4) with what to do |
+| App | Logged out (the account logged in on another device) | Closes the notice and types the login saved in the app's setup, tapping "Đăng nhập" once, again only if nothing changed for 15 s; refused, or none saved, the run stops at once (exit 4) with what to do |
 | App | App set to English | Works: the language is found on the first screen |
 | App | Closed-hours notice (tap before 06:00) | Closed with Back and the utility tapped again until `open_retry_seconds`; the wait goes by NTP time on a counter, the first tap 0.1 s after the start |
 | App | Promotion popup over the home screen | Closed with its X before the utilities list is opened (field notes); Back does not close it |
