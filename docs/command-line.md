@@ -46,7 +46,7 @@ log the clone in to another account, and add an `[[instances]]` table for it (ex
 `config.example.toml`): its `mumu_index`, and any of `slots`, `subdivision`, `sport`, `court` and
 `venue_keyword` that differ. The UI shows a tab for each machine on top of the ticket, with its
 own settings and its own setup; "Máy 2" (MuMu 1) and "Máy 3" (MuMu 2) are always there, and each
-one's "Dùng máy này" switch adds or removes its `[[instances]]` table; a fourth machine on
+one's switch in the Setup adds or removes its `[[instances]]` table; a fourth machine on
 needs its table added by hand.
 
 ## Set up the PC and the emulator

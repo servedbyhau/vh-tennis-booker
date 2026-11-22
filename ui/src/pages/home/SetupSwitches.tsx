@@ -69,9 +69,9 @@ export function NotifyRow() {
 }
 
 /**
- * The switch of a machine beside the first: on, the runs book with it too (it gets its
- * `[[instances]]` table, taking the first machine's choices until changed); off, they leave
- * its MuMu alone and its choices are hidden.
+ * The machine shown and, beside the first, which always books, its switch: on, the runs book
+ * with it too (it gets its `[[instances]]` table, taking the first machine's choices until
+ * changed); off, they leave its MuMu alone and its choices are hidden.
  */
 export function MachineRow({ machine, running }: { machine: Machine; running: boolean }) {
   const { t } = useTranslation();
@@ -80,19 +80,21 @@ export function MachineRow({ machine, running }: { machine: Machine; running: bo
   return (
     <SetupRow
       icon="machine"
-      title={t("pages.setup.use")}
+      title={t("pages.ticket.instanceName", { number: machine.place + 1 })}
       problem={use.isError ? errorMessage(t, use.error) : null}
     >
-      <Switch
-        label={t("pages.setup.useLabel", { number: machine.place + 1, index: mumuIndex })}
-        checked={machine.enabled}
-        disabled={mumuIndex === null || running || use.isPending}
-        onChange={(enabled) => {
-          if (mumuIndex !== null) {
-            use.mutate({ mumuIndex, enabled });
-          }
-        }}
-      />
+      {machine.place > 0 && (
+        <Switch
+          label={t("pages.setup.useLabel", { number: machine.place + 1, index: mumuIndex })}
+          checked={machine.enabled}
+          disabled={mumuIndex === null || running || use.isPending}
+          onChange={(enabled) => {
+            if (mumuIndex !== null) {
+              use.mutate({ mumuIndex, enabled });
+            }
+          }}
+        />
+      )}
     </SetupRow>
   );
 }

@@ -31,22 +31,21 @@
   position: relative; /* holds its hidden screen reader text, which would grow the page */
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
   /* The bar's place is kept, so nothing moves as the list opens. */
   scrollbar-gutter: stable;
   padding: var(--space-4) var(--space-2) var(--space-4) var(--space-4); /* 8 px of it the bar */
 }
 
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+/* Lines that belong together, parted by hairlines that start under their words. */
+.card {
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-field);
 }
 
-/* Whose account and switch these are. */
-.machine {
-  padding: 0 var(--space-1);
-  color: var(--color-muted);
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
+.card > * + * {
+  background: linear-gradient(var(--color-hairline), var(--color-hairline)) no-repeat right top /
+    calc(100% - 60px) var(--border-hairline);
 }

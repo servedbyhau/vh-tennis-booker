@@ -60,7 +60,7 @@
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "còn việc chuẩn bị",
       "instanceOff": "đang tắt",
-      "useOff": "Máy {{number}} đang tắt. Bật \"Dùng máy này\" ở Thiết lập để đặt bằng máy này.",
+      "useOff": "Máy {{number}} đang tắt. Bật ở Thiết lập để đặt bằng máy này.",
       "subdivision": "Phân khu",
       "byAccount": "Theo tài khoản",
       "sport": "Môn",
@@ -235,18 +235,17 @@
         "locked": "Chạy thử đạt một lần thì mới bật được"
       },
       "notify": "Thông báo kết quả",
-      "use": "Dùng máy này",
       "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
       "account": {
         "title": "Tài khoản",
-        "empty": "Chưa chọn tài khoản",
+        "empty": "Chọn tài khoản",
+        "emptyHint": "Đang theo tài khoản có sẵn trong MuMu",
         "none": "Không chọn",
-        "noneHint": "Dùng tài khoản đang đăng nhập trên MuMu",
-        "onMachine": "{{machine}} đang dùng",
-        "move": "{{from}} đang dùng tài khoản này. Chuyển sang {{to}}?",
+        "onMachine": "đang ở {{machine}}",
+        "move": "Chuyển từ {{from}} sang {{to}}?",
         "moveYes": "Chuyển",
         "moveNo": "Thôi",
-        "add": "Thêm tài khoản"
+        "manage": "Quản lý khách hàng"
       },
       "dryRun": {
         "button": "Chạy thử",

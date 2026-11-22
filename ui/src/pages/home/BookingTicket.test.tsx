@@ -251,7 +251,9 @@ describe("BookingTicket choices", () => {
     const use = screen.getByRole("switch", { name: "Đặt sân bằng máy 2 (MuMu 1)" });
     expect(use).toHaveAttribute("aria-checked", "false");
     expect(screen.queryByRole("group", { name: "Sân" })).not.toBeInTheDocument();
-    expect(screen.getByText(/^Máy 2 đang tắt\. Bật "Dùng máy này"/)).toBeInTheDocument();
+    expect(
+      screen.getByText("Máy 2 đang tắt. Bật ở Thiết lập để đặt bằng máy này."),
+    ).toBeInTheDocument();
 
     replies["PUT /api/instances/1"] = reply(settings({ instances: [other] }));
     fireEvent.click(use);
@@ -280,7 +282,9 @@ describe("BookingTicket choices", () => {
 
     const use = screen.getByRole("switch", { name: "Đặt sân bằng máy 3 (MuMu 2)" });
     expect(use).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByText(/^Máy 3 đang tắt\. Bật "Dùng máy này"/)).toBeInTheDocument();
+    expect(
+      screen.getByText("Máy 3 đang tắt. Bật ở Thiết lập để đặt bằng máy này."),
+    ).toBeInTheDocument();
 
     replies["PUT /api/instances/2"] = reply(settings({ instances: [third] }));
     fireEvent.click(use);

@@ -1,8 +1,9 @@
 import {
   AlarmClock,
+  ArrowRight,
   Bell,
   Check,
-  ChevronDown,
+  ChevronsUpDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -20,6 +21,7 @@ import {
   StickyNote,
   Trash2,
   UserRound,
+  UserRoundX,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -62,8 +64,12 @@ const DRAWINGS = {
   close: X,
   /** Save as a file. */
   save: Download,
-  /** Open the list under it. */
-  down: ChevronDown,
+  /** Open the list under it, to choose another. */
+  choose: ChevronsUpDown,
+  /** Nothing chosen. */
+  none: UserRoundX,
+  /** Go to another page. */
+  go: ArrowRight,
   /** The one before, the one after. */
   back: ChevronLeft,
   forward: ChevronRight,

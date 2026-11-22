@@ -24,18 +24,19 @@ export function SetupPanel({ machine }: { machine: number }) {
       </h2>
       <div className={styles.scroll}>
         {overview.data !== undefined && (
-          <div className={styles.group}>
+          <div className={styles.card}>
             <DailyRow schedule={overview.data.schedule} running={running} />
             <NotifyRow />
           </div>
         )}
         {shown.mumuIndex !== null && (
           // Another machine starts with nothing open and no error of the last.
-          <section key={shown.mumuIndex} aria-labelledby="machine-title" className={styles.group}>
-            <h3 id="machine-title" className={styles.machine}>
-              {t("pages.ticket.instanceName", { number: shown.place + 1 })}
-            </h3>
-            {shown.place > 0 && <MachineRow machine={shown} running={running} />}
+          <section
+            key={shown.mumuIndex}
+            aria-label={t("pages.ticket.instanceName", { number: shown.place + 1 })}
+            className={styles.card}
+          >
+            <MachineRow machine={shown} running={running} />
             <AccountPicker mumuIndex={shown.mumuIndex} />
           </section>
         )}
