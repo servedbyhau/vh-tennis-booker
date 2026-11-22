@@ -172,9 +172,7 @@ class CustomerBook:
     def add_account(self, customer_id: str, login: Login, label: str = "") -> Account:
         """Add an account to the customer; its phone number must be no other account's."""
         self.customer(customer_id)
-        for customer in self.customers():
-            if any(account.phone == login.phone for account in customer.accounts):
-                raise PhoneTakenError(f"{customer.name} already has the account")
+        self._check_free(login.phone)
         account_id = _new_id()
         # The login first: an account in the list always had one.
         self.store.save(account_id, login)
@@ -189,16 +187,35 @@ class CustomerBook:
             raise
         return self.account(account_id)
 
-    def change_account(self, account_id: str, label: str, password: str | None = None) -> Account:
-        """Give the account another label and, if given, password, also on its machine."""
+    def change_account(
+        self,
+        account_id: str,
+        label: str,
+        password: str | None = None,
+        phone: str | None = None,
+    ) -> Account:
+        """Give the account another label and, if given, phone number and password.
+
+        What is not given stays, and an attached account stays on its machine, which logs in
+        with the new login. One whose saved login is gone needs both again.
+        """
         account = self.account(account_id)
-        if password is not None:
-            if account.phone is None:
-                raise CredentialError("The account's saved login is gone: add the account again")
-            login = Login(account.phone, password)
+        if phone is not None:
+            self._check_free(phone, account_id)
+        if phone is not None or password is not None:
+            saved = self.store.read(account_id)
+            if saved is None and (phone is None or password is None):
+                raise CredentialError("The account's saved login is gone: give both again")
+            old = saved or Login("", "")
+            login = Login(phone or old.phone, password or old.password)
             self.store.save(account_id, login)
             if account.device is not None:
-                self.store.save(account.device, login)
+                try:
+                    self.store.save(account.device, login)
+                except CredentialError:
+                    # Its machine is the one with its phone number: the two stay the same.
+                    self.store.save(account_id, old)
+                    raise
         with self.db:
             self.db.execute("UPDATE accounts SET label = ? WHERE id = ?", (label, account_id))
         return self.account(account_id)
@@ -212,6 +229,13 @@ class CustomerBook:
         self.store.delete(account_id)
         with self.db:
             self.db.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+
+    def _check_free(self, phone: str, account_id: str | None = None) -> None:
+        """Raise :class:`PhoneTakenError` if an account but ``account_id`` has the number."""
+        for customer in self.customers():
+            for account in customer.accounts:
+                if account.phone == phone and account.id != account_id:
+                    raise PhoneTakenError(f"{customer.name} already has the account")
 
     def _free(self, account: Account, detach: bool) -> None:
         if account.device is None:

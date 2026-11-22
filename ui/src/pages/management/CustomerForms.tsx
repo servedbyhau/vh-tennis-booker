@@ -17,6 +17,8 @@ const PHONE_PATTERN = "0[0-9]{9}";
 const MAX_NAME = 60;
 const MAX_NOTE = 500;
 const MAX_PASSWORD = 128;
+/** In place of the password saved, which nobody sees again; its length tells nothing. */
+const HIDDEN_PASSWORD = "••••••••";
 
 interface FieldProps {
   label: string;
@@ -155,7 +157,10 @@ interface AccountFormProps {
   onClose: () => void;
 }
 
-/** An account's login and label; of one already saved the phone stays, the password is kept. */
+/**
+ * An account's name and login. Of one already saved, the phone number and the password left
+ * empty stay as they are; neither comes back from the backend whole.
+ */
 export function AccountForm({ customerId, account, onClose }: AccountFormProps) {
   const { t } = useTranslation();
   const add = useAddAccount();
@@ -164,12 +169,14 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
   const [password, setPassword] = useState("");
   const [label, setLabel] = useState(account?.label ?? "");
   const save = account === null ? add : change;
+  /** Whether there is a login to keep; one that is gone is typed in again. */
+  const saved = account !== null && account.phone !== null;
 
   function onSave() {
     if (account === null) {
       add.mutate({ customerId, account: { phone, password, label } }, { onSuccess: onClose });
     } else {
-      const fields = { label, password: password === "" ? null : password };
+      const fields = { label, phone: phone || null, password: password || null };
       change.mutate({ id: account.id, fields }, { onSuccess: onClose });
     }
   }
@@ -182,38 +189,36 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
       onSave={onSave}
       onClose={onClose}
     >
-      {account === null && (
-        <Field label={t("pages.customers.phone")}>
-          <input
-            type="tel"
-            inputMode="numeric"
-            autoComplete="off"
-            required
-            pattern={PHONE_PATTERN}
-            maxLength={10}
-            value={phone}
-            onChange={(event) => setPhone(event.target.value.trim())}
-          />
-        </Field>
-      )}
-      <Field
-        label={t(account === null ? "pages.customers.password" : "pages.customers.newPassword")}
-      >
-        <input
-          type="password"
-          autoComplete="new-password"
-          required={account === null}
-          maxLength={MAX_PASSWORD}
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-      </Field>
       <Field label={t("pages.customers.label")}>
         <input
           maxLength={MAX_NAME}
           autoComplete="off"
           value={label}
           onChange={(event) => setLabel(event.target.value)}
+        />
+      </Field>
+      <Field label={t("pages.customers.phone")}>
+        <input
+          type="tel"
+          inputMode="numeric"
+          autoComplete="off"
+          required={!saved}
+          placeholder={account?.phone ?? ""}
+          pattern={PHONE_PATTERN}
+          maxLength={10}
+          value={phone}
+          onChange={(event) => setPhone(event.target.value.trim())}
+        />
+      </Field>
+      <Field label={t("pages.customers.password")}>
+        <input
+          type="password"
+          autoComplete="new-password"
+          required={!saved}
+          placeholder={saved ? HIDDEN_PASSWORD : ""}
+          maxLength={MAX_PASSWORD}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
         />
       </Field>
       <p className={styles.note}>

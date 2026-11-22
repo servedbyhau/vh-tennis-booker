@@ -194,7 +194,7 @@ describe("Management accounts", () => {
     expect(screen.getByLabelText("Mật khẩu")).toHaveAttribute("type", "password");
     type("Số điện thoại", "0900000022");
     type("Mật khẩu", "mat-khau");
-    type("Tên gợi nhớ", "Căn C");
+    type("Tên", "Căn C");
     press("Lưu");
     await waitFor(() => expect(screen.queryByRole("form")).not.toBeInTheDocument());
     expect(await sent(fetch, "POST /api/customers/a2/accounts")).toEqual({
@@ -217,26 +217,46 @@ describe("Management accounts", () => {
     expect(screen.getByLabelText("Số điện thoại")).toHaveValue("0900000022");
   });
 
-  it("keeps the password unless a new one is typed", async () => {
+  it("changes its name, phone number and password, keeping what is left empty", async () => {
     const { fetch } = await openPage([AN], { "PUT /api/customer-accounts/b2": reply(AN) });
     press("Sửa", 2);
-    expect(screen.queryByRole("textbox", { name: "Số điện thoại" })).not.toBeInTheDocument();
-    type("Tên gợi nhớ", "Căn D");
+    const form = screen.getByRole("form");
+    expect(
+      [...form.querySelectorAll("label")].map((field) => [
+        field.textContent,
+        field.querySelector("input")?.placeholder,
+      ]),
+    ).toEqual([
+      ["Tên", ""],
+      ["Số điện thoại", "09••••••22"], // the one saved, never whole
+      ["Mật khẩu", "••••••••"],
+    ]);
+    type("Tên", "Căn D");
     press("Lưu");
     await waitFor(() => expect(screen.queryByRole("form")).not.toBeInTheDocument());
     expect(await sent(fetch, "PUT /api/customer-accounts/b2")).toEqual({
       label: "Căn D",
+      phone: null,
       password: null,
     });
 
     press("Sửa", 2);
-    type("Mật khẩu mới (để trống nếu giữ nguyên)", "moi");
+    type("Số điện thoại", "0900000033");
+    type("Mật khẩu", "moi");
     press("Lưu");
     await waitFor(() => expect(screen.queryByRole("form")).not.toBeInTheDocument());
     expect(await sent(fetch, "PUT /api/customer-accounts/b2")).toEqual({
       label: "",
+      phone: "0900000033",
       password: "moi",
     });
+  });
+
+  it("asks for the whole login again once it is gone", async () => {
+    await openPage([customer("a1", { accounts: [account("b1", { phone: null })] })]);
+    press("Sửa", 1);
+    expect(screen.getByLabelText("Số điện thoại")).toBeRequired();
+    expect(screen.getByLabelText("Mật khẩu")).toBeRequired();
   });
 
   it("removes one after a question", async () => {

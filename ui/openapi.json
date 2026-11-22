@@ -1009,7 +1009,7 @@
           "customers"
         ],
         "summary": "Change Account",
-        "description": "Change an account's label and, if given, password; answers the customer.\n\nA new password of an attached account is the one its machine logs in with, so it is\nrefused (409 ``lock_held``) while a run goes on.",
+        "description": "Change an account's label and, if given, phone number and password; answers the customer.\n\nA new login of an attached account is the one its machine logs in with, so it is refused\n(409 ``lock_held``) while a run goes on. A phone number belongs to one account only\n(409 ``phone_taken``).",
         "operationId": "change_account_api_customer_accounts__account_id__put",
         "parameters": [
           {
@@ -1598,6 +1598,18 @@
             "maxLength": 60,
             "title": "Label"
           },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^0\\d{9}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
           "password": {
             "anyOf": [
               {
@@ -1620,7 +1632,7 @@
           "label"
         ],
         "title": "AccountChange",
-        "description": "Another label and, if given, password; the phone number stays."
+        "description": "Another label and, if given, phone number and password; what is not given stays."
       },
       "AccountSubdivision": {
         "properties": {
