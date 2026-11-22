@@ -15,19 +15,23 @@ from __future__ import annotations
 
 import logging
 import re
+import sqlite3
 import struct
 import time
 import unicodedata
 import zlib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Callable
 
+from court_booker.config import DAYS_AHEAD
 from court_booker.errors import DeviceNotRespondingError, NavigationError
 from court_booker.flow import Booker
 from court_booker.geometry import is_inside
+from court_booker.history import connect
+from court_booker.paths import DataFolder
 from court_booker.screen import Node, Screen
 
 logger = logging.getLogger(__name__)
@@ -37,9 +41,6 @@ PROCESSING = "processing"
 CANCELLED = "cancelled"
 OTHER = "other"
 """A status the app showed in words not known here; its words are kept as well."""
-
-PHOTOS_KEPT = 500
-"""Pictures kept, about 70 KB each; they hold personal data and stay on this PC."""
 
 _CODE = re.compile(r"[^:]+: *(\d{4,})")
 _TIME = re.compile(r".*?(\d{2})/(\d{2})/(\d{4}) +(\d{2}:\d{2}) *- *(\d{2}:\d{2})")
@@ -65,6 +66,8 @@ _PICTURE_TRIES = 6
 """Pictures taken of a ticket until its layout held still. A ticket moves its lower half
 while its description loads: on 2026-11-22 the directions link moved up by 230 px between
 a read 0.5 s after the ticket showed and the picture."""
+_PASSES = 2
+"""Times the tickets are gone through, the second for what the first could not read."""
 _RELOAD_PAUSE = 5.0
 """Seconds before the history is read again for a ticket missing or still processing."""
 REGISTER_WAIT = 45.0
@@ -314,20 +317,25 @@ class TicketReader:
 
         Starts from any screen a round leaves. The page is read again while a ticket wanted is
         missing or still processing, for :data:`REGISTER_WAIT` at most. A failure keeps what
-        was read so far and is only logged; a frozen emulator is raised, as nothing more can
-        be asked of it.
+        was read so far, is logged and tried once more while there is time; a frozen emulator
+        is raised, as nothing more can be asked of it.
         """
-        try:
-            self._read(wanted)
-        except DeviceNotRespondingError:
-            raise
-        except Exception:  # the bookings are made and reported: a ticket not read only logs
-            logger.warning("Could not read the tickets", exc_info=True)
+        give_up = min(self._clock() + REGISTER_WAIT, self.deadline)
+        for _ in range(_PASSES):
+            try:
+                if self._read(wanted, give_up):
+                    break
+            except DeviceNotRespondingError:
+                raise
+            except Exception:  # the bookings are made and reported: this only logs
+                logger.warning("Could not read the tickets", exc_info=True)
+            if self._clock() >= self.deadline:
+                break
         return self.collected
 
-    def _read(self, wanted: Sequence[Wanted]) -> None:
+    def _read(self, wanted: Sequence[Wanted], give_up: float) -> bool:
+        """Go through the tickets ``wanted`` once; return whether each one opened."""
         screen = self._open_history()
-        give_up = min(self._clock() + REGISTER_WAIT, self.deadline)
         while True:
             listed = [ticket for ticket, _ in cards(screen)]
             self.collected.tickets = listed
@@ -337,11 +345,18 @@ class TicketReader:
                 break
             self._sleep(_RELOAD_PAUSE)
             screen = self._open_history()
+        opened = True
         for want, ticket in zip(wanted, found):
             if ticket is None:
                 logger.warning("No ticket for %s %s on the history page", want.play_date, want.slot)
             elif ticket.code not in self.collected.photos:
-                self._take_picture(ticket)
+                try:
+                    self._take_picture(ticket)
+                except NavigationError as exc:
+                    logger.warning("No picture of ticket %s: %s", ticket.code, exc)
+                    opened = opened and ticket.code in self.collected.photos
+                    self._open_history()  # for the next one
+        return opened
 
     def _find(self, want: Wanted, listed: Sequence[Ticket]) -> Ticket | None:
         # Newest first: the one just booked comes before an older one of the same slot.
@@ -450,11 +465,26 @@ class TicketReader:
         return min(wait, left)
 
 
-def drop_old_photos(folder: Path, keep: int = PHOTOS_KEPT) -> None:
-    """Delete the oldest pictures in ``folder`` beyond ``keep``; a failure only logs."""
+def forget_expired(data: DataFolder, today: date) -> None:
+    """Delete the tickets played before ``today`` and their pictures; a failure only logs.
+
+    A picture is taken on the day of the booking, :data:`~court_booker.config.DAYS_AHEAD`
+    days before the day of play, so its own date tells when it expires, also one the database
+    does not know of (a run that ended before it recorded its tickets).
+    """
     try:
-        photos = sorted(folder.glob("*.png"), key=lambda path: path.stat().st_mtime)
-        for old in photos[:-keep]:
-            old.unlink(missing_ok=True)
-    except OSError:
-        logger.warning("Could not delete old ticket pictures", exc_info=True)
+        if data.database.exists():
+            connection = connect(data.database)
+            try:
+                with connection:
+                    connection.execute(
+                        "DELETE FROM tickets WHERE play_date < ?", (today.isoformat(),)
+                    )
+            finally:
+                connection.close()
+        oldest = today - timedelta(days=DAYS_AHEAD)
+        for photo in data.tickets.glob("*.png"):
+            if date.fromtimestamp(photo.stat().st_mtime) < oldest:
+                photo.unlink(missing_ok=True)
+    except (sqlite3.Error, OSError):
+        logger.warning("Could not delete the expired tickets", exc_info=True)

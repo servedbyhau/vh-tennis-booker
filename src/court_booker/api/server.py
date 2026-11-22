@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,7 @@ from court_booker.api.context import AppContext
 from court_booker.config import ensure_config, load_config
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
 from court_booker.paths import data_folder
+from court_booker.tickets import forget_expired
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -57,6 +59,7 @@ def main(argv: list[str]) -> int:
     logger.info(
         "Backend on http://%s:%d, config %s, data %s", HOST, args.port, config_path, data.root
     )
+    forget_expired(data, date.today())
     log_config: dict[str, Any] | None = uvicorn.config.LOGGING_CONFIG
     if sys.stdout is None:
         # The packaged app has no console: uvicorn's formatter would fail on it, and only the
