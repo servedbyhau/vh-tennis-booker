@@ -36,7 +36,7 @@ uses [Semantic Versioning](https://semver.org/).
   customers' buttons and facts.
 - The Setup beside the ticket holds the daily switch, the notification's, each machine's and the
   dry run, which leave the ticket; the account is picked from one list of every customer's, and one
-  that another machine books with moves after a question.
+  that another machine books with moves after a question. An account's form shows its saved login.
 
 ### Fixed
 - Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is

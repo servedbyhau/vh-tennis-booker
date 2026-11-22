@@ -11,11 +11,11 @@ interface SetupRowProps {
   problem?: string | null;
   /** Set off: the one thing to do next. */
   remind?: boolean;
-  /** Its switch, named after the title. */
-  children: ReactNode;
+  /** Its switch, named after the title, if it has one. */
+  children?: ReactNode;
 }
 
-/** One thing of the Setup to turn on and off: its icon, its name and its switch. */
+/** A line of a card of the Setup: its icon, its name and its switch. */
 export function SetupRow({ icon, title, hint, problem, remind, children }: SetupRowProps) {
   return (
     <div className={remind ? `${styles.row} ${styles.remind}` : styles.row}>
@@ -23,9 +23,7 @@ export function SetupRow({ icon, title, hint, problem, remind, children }: Setup
         <Icon name={icon} />
       </span>
       <div className={styles.text}>
-        <span aria-hidden="true" className={styles.title}>
-          {title}
-        </span>
+        <span className={styles.title}>{title}</span>
         {problem ? (
           <span role="alert" className={styles.problem}>
             {problem}

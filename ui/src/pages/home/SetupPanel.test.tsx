@@ -95,7 +95,7 @@ describe("SetupPanel", () => {
     fireEvent.click(tabs.getByRole("button", { name: /^Máy 1/ }));
     const first = within(panel.getByRole("region", { name: "Máy 1" }));
     expect(first.queryByRole("switch")).not.toBeInTheDocument();
-    expect(panel.queryByText("Dùng máy này")).not.toBeInTheDocument();
+    expect(panel.queryByText("Máy 3")).not.toBeInTheDocument();
   });
 
   it("has no tasks and no guide: they have a page of their own", async () => {

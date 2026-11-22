@@ -60,7 +60,7 @@
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "setup left",
       "instanceOff": "off",
-      "useOff": "Machine {{number}} is off. Turn on \"Use this machine\" in the Setup to book with it.",
+      "useOff": "Machine {{number}} is off. Turn it on in the Setup to book with it.",
       "subdivision": "Subdivision",
       "byAccount": "From the account",
       "sport": "Sport",
@@ -235,18 +235,17 @@
         "locked": "It turns on once a dry run has passed"
       },
       "notify": "Result notifications",
-      "use": "Use this machine",
       "useLabel": "Book with machine {{number}} (MuMu {{index}})",
       "account": {
         "title": "Account",
-        "empty": "No account chosen",
+        "empty": "Choose an account",
+        "emptyHint": "Books with the one logged in on MuMu",
         "none": "None",
-        "noneHint": "Books with the one logged in on MuMu",
         "onMachine": "on {{machine}}",
-        "move": "{{from}} books with this account. Move it to {{to}}?",
+        "move": "Move it from {{from}} to {{to}}?",
         "moveYes": "Move",
         "moveNo": "No",
-        "add": "Add an account"
+        "manage": "Manage customers"
       },
       "dryRun": {
         "button": "Dry run",

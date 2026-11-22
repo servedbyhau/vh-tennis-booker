@@ -341,10 +341,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
   `SetupSwitches.tsx` (the daily booking, the result notification and, for a machine beside the
-  first, "Dùng máy này", `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
+  first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
-  (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's; a press
-  saves one, and one that another machine books with moves only after a question. The header's status line (`components/StatusLine.tsx`)
+  (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's, a line
+  each; a press saves one, and one that another machine books with moves only after a question. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the
   settings. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
   fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the
