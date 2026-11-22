@@ -24,6 +24,8 @@ async function openPage(customers: Customer[] = [AN, BINH], extra: Record<string
     "GET /api/customers": reply(customers),
     ...extra,
   });
+  // The line at the top reads the customers too.
+  await within(screen.getByRole("banner")).findByText(/●/);
   await screen.findByRole("button", { name: "Thêm khách" });
   return app;
 }
@@ -99,6 +101,7 @@ describe("Management customers", () => {
 
   it("adds one, its name ready to type, and shows it", async () => {
     const { fetch, router } = await openPage([AN], { "POST /api/customers": reply(BINH, 201) });
+    const read = requestsTo(fetch, "GET /api/customers");
     press("Thêm khách");
     expect(screen.getByLabelText("Tên khách hoặc nhóm")).toHaveFocus();
     expect(listed()).toEqual(["Anh AnNguyễn Văn An22 tài khoản"]); // none shown meanwhile
@@ -114,7 +117,7 @@ describe("Management customers", () => {
       contact: "Zalo Bình",
       note: "mới",
     });
-    expect(requestsTo(fetch, "GET /api/customers")).toBe(2);
+    expect(requestsTo(fetch, "GET /api/customers")).toBe(read + 1);
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
   });
 

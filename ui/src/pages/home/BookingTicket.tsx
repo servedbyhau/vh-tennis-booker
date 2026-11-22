@@ -21,6 +21,7 @@ import { Overline } from "../../components/Overline";
 import { QueryView } from "../../components/QueryView";
 import { localToday } from "../../format";
 import { machineAt, useMachines } from "../../machines";
+import { clashes } from "../../readiness";
 import { useFormat } from "../../useFormat";
 import styles from "./BookingTicket.module.css";
 import { MachineBar } from "./MachineBar";
@@ -144,6 +145,12 @@ function Choices({ saved, save, accounts, instance }: ChoicesProps) {
   const told = toldBy(accounts, shown.mumu_index);
   const subdivision = shownSubdivision(shown.subdivision, told);
   const byAccount = shown.subdivision === "" && told !== undefined;
+  const machines = useMachines();
+  const place = machines.find((machine) => machine.entry === index)?.place;
+  // As the choices hold it: told at the press that makes two machines book the same.
+  const clash = clashes(settings, machines).find(
+    ({ places }) => place !== undefined && places.includes(place),
+  );
 
   function choose(change: Partial<Booking>) {
     if (busy) {
@@ -172,6 +179,18 @@ function Choices({ saved, save, accounts, instance }: ChoicesProps) {
     note = <span className={styles.warning}>{warning}</span>;
   } else if (save.isError) {
     note = <span className={styles.warning}>{errorMessage(t, save.error)}</span>;
+  } else if (clash !== undefined) {
+    note = (
+      <span className={styles.warning}>
+        {t("pages.ticket.clash", {
+          machines: clash.places
+            .filter((other) => other !== place)
+            .map((other) => other + 1)
+            .join(", "),
+          slot: f.slot(clash.slot),
+        })}
+      </span>
+    );
   } else if (busy) {
     note = <span className={styles.note}>{t("pages.ticket.saving")}</span>;
   } else if (save.isSuccess) {

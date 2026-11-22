@@ -345,7 +345,9 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
   (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's, a line
   each; a press saves one, and one that another machine books with moves only after a question. The header's status line (`components/StatusLine.tsx`)
-  shows the run going on, else the one thing to do. `machines.ts` lists the machines from the
+  shows the run going on, else the one thing to do; `readiness.ts` finds the machines that book
+  without an account (while a customer has one to choose) and the courts and slots that two would
+  book, marked on their tabs too. `machines.ts` lists the machines from the
   settings. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
   fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the
   setup tasks left over the machines that book. `booking.ts` holds the slots and the two-slot limit, and reads

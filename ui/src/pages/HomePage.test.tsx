@@ -1,9 +1,10 @@
-import { act, screen, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Overview } from "../api/types";
 import { paths } from "../paths";
 import { renderApp } from "../test/app";
 import { reply, requestsTo } from "../test/backend";
+import { account, customer } from "../test/customers";
 import { step } from "../test/liveSocket";
 import { overview } from "../test/overview";
 import { runSummary } from "../test/runs";
@@ -76,6 +77,66 @@ describe("HomePage status line", () => {
     });
 
     expect(await statusLine()).toHaveTextContent("Chưa chạy thử đạt · bấm Chạy thử");
+  });
+
+  it("names the machines that book without an account, once there are some to choose", async () => {
+    const an = customer("a1", { accounts: [account("b1"), account("b2")] });
+    renderApp(paths.overview, {
+      "GET /api/status": reply(overview()),
+      "GET /api/settings": reply(settings()),
+      "GET /api/runs": reply([]),
+      "GET /api/customers": reply([an]),
+    });
+
+    await waitFor(async () =>
+      expect(await statusLine()).toHaveTextContent("● Máy 1 chưa chọn tài khoản"),
+    );
+    const tabs = within(screen.getByRole("group", { name: "Máy" }));
+    expect(tabs.getByRole("button", { name: "Máy 1, chưa chọn tài khoản" })).toBeVisible();
+    // Off: it books nothing.
+    expect(tabs.getByRole("button", { name: "Máy 2, đang tắt" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Tài khoản/ }).className).toMatch(/remind/);
+  });
+
+  it("names the machines that would book the same court and slot, first", async () => {
+    const same = {
+      mumu_index: 1,
+      slots: ["16:00 - 17:00"],
+      subdivision: "",
+      sport: "tennis",
+      court: "S6 - Sân tennis",
+      venue_keyword: "Origami",
+    };
+    tickSteps({ mumu: true, app: true, login: true });
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        mumu: true,
+        app: true,
+        login: true,
+        machines: { "1": { app: true, login: true } },
+      }),
+    );
+    renderApp(paths.overview, {
+      "GET /api/status": reply(overview()),
+      "GET /api/settings": reply(settings({ instances: [same] })),
+      "GET /api/runs": reply([]),
+      "GET /api/customers": reply([customer("a1", { accounts: [account("b1")] })]),
+    });
+
+    await waitFor(async () =>
+      expect(await statusLine()).toHaveTextContent("● Máy 1, 2 trùng Tennis S6 lúc 16:00"),
+    );
+    const tabs = within(screen.getByRole("group", { name: "Máy" }));
+    expect(
+      tabs.getByRole("button", {
+        name: "Máy 2, trùng sân và giờ với máy khác, chưa chọn tài khoản",
+      }),
+    ).toBeVisible();
+    // Where the choice is made too.
+    expect(
+      screen.getByText("Máy 2 cũng chọn sân này lúc 16:00–17:00: chỉ một máy được"),
+    ).toBeVisible();
   });
 
   it("asks to turn the daily booking on once a dry run passed", async () => {
