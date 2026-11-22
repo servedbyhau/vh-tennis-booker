@@ -4,6 +4,7 @@ export const paths = {
   management: "/management",
   tickets: "/management/tickets",
   history: "/management/history",
+  guide: "/guide",
 } as const;
 
 /**
@@ -15,6 +16,5 @@ export const OLD_PATHS = [
   ["/history/*", paths.history],
   ["/activity", paths.history],
   ["/settings/*", paths.overview],
-  ["/guide", paths.overview],
-  ["/welcome", paths.overview],
+  ["/welcome", paths.guide],
 ] as const;

@@ -25,17 +25,11 @@
   font-weight: var(--weight-bold);
 }
 
-/* The tasks left, a red count. */
-.badge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--color-failed);
-  color: var(--color-on-ink);
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
-  font-weight: var(--weight-semibold);
+/* It scrolls inside the panel. */
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative; /* holds its hidden screen reader text, which would grow the page */
+  padding: 0 var(--space-5) var(--space-4);
 }

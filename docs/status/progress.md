@@ -37,7 +37,8 @@ Last updated: 2026-11-22.
   on three machines at once.
 
 - Customers, their accounts and the account check before a booking were merged on 2026-11-22
-  (#270 to #279); open branch: `feat/customer-icons` (icons for the customers). The check
+  (#270 to #279); open branches, in this order: `feat/customer-icons` (icons for the customers) and
+  `feat/guide-page` (the guide out of the Setup). The check
   and a forced change of account were run on one real machine that day; still to do: a real
   timed booking with it, and a change between two different accounts.
 
@@ -62,7 +63,7 @@ Last updated: 2026-11-22.
 
 These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 
-- UI: for end users, ready-made choices only; two pages, the booking and the management; light theme, desktop
+- UI: for end users, ready-made choices only; three pages, the booking, the management and the guide; light theme, desktop
   width and Vietnamese by default. It sends no request per step while a run is going, and does
   not check MuMu while the run lock is held.
 - The installed app is the daily run; a release reaches it through the installer built from

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Machine } from "./machines";
 import type { ManualDone, ManualTicks } from "./manualSteps";
-import { machineLeft, setupDone, setupLeft } from "./setupState";
-import { overview } from "./test/overview";
+import { machineLeft, setupLeft } from "./setupState";
 
 const ALL = { mumu: true, app: true, login: true };
 
@@ -43,20 +42,5 @@ describe("machineLeft", () => {
     expect(machineLeft(ticks, TWO[1]!)).toBe(true);
     expect(machineLeft(ticks, SECOND_OFF[1]!)).toBe(false);
     expect(machineLeft({ first: ALL, machines: { "1": ALL } }, TWO[1]!)).toBe(false);
-  });
-});
-
-describe("setupDone", () => {
-  it("needs the setup, a passed dry run and the schedule on", () => {
-    const status = overview();
-
-    expect(setupDone(status, first(ALL))).toBe(true);
-    expect(setupDone(status, first({ ...ALL, login: false }))).toBe(false);
-    expect(
-      setupDone({ ...status, schedule: { ...status.schedule, enabled: false } }, first(ALL)),
-    ).toBe(false);
-    expect(
-      setupDone({ ...status, schedule: { ...status.schedule, dry_run_passed: false } }, first(ALL)),
-    ).toBe(false);
   });
 });

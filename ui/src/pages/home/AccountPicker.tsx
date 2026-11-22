@@ -6,7 +6,7 @@ import { useCustomers } from "../../api/queries";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { QueryView } from "../../components/QueryView";
 import { accountOn, useMachines } from "../../machines";
-import styles from "./SetupTab.module.css";
+import styles from "./AccountPicker.module.css";
 import { machineName } from "./ticketText";
 
 interface PickerProps {

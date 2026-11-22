@@ -37,7 +37,7 @@ describe("App", () => {
     expect(within(screen.getByRole("main")).getByText("Home screen")).toBeInTheDocument();
   });
 
-  it("shows the name, the two pages and the language switch in the header", () => {
+  it("shows the name, the pages and the language switch in the header", () => {
     renderAt(paths.overview);
 
     const header = screen.getByRole("banner");
@@ -48,7 +48,7 @@ describe("App", () => {
       within(pages)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Đặt sân", "Quản lý"]);
+    ).toEqual(["Đặt sân", "Quản lý", "Hướng dẫn"]);
   });
 
   it("starts with a link that skips to the main area", () => {

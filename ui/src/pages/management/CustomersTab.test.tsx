@@ -269,7 +269,7 @@ describe("Management accounts", () => {
   });
 });
 
-describe("the two pages", () => {
+describe("the pages", () => {
   it("are a press apart in the header", async () => {
     await openPage();
     const pages = within(screen.getByRole("navigation", { name: "Trang" }));

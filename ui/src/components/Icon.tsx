@@ -1,4 +1,5 @@
 import {
+  AlarmClock,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -6,6 +7,8 @@ import {
   Download,
   Image,
   KeyRound,
+  LifeBuoy,
+  ListChecks,
   Lock,
   Pencil,
   Phone,
@@ -34,6 +37,12 @@ const DRAWINGS = {
   picture: Image,
   /** Something locked, or kept to itself. */
   lock: Lock,
+  /** Tasks to tick. */
+  tasks: ListChecks,
+  /** What happens by itself every morning. */
+  alarm: AlarmClock,
+  /** What to do when something goes wrong. */
+  help: LifeBuoy,
   add: Plus,
   edit: Pencil,
   remove: Trash2,
