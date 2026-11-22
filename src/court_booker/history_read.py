@@ -14,6 +14,7 @@ from typing import Any
 from court_booker.history import SCHEMA_VERSION, connect
 
 DEFAULT_LIMIT = 50
+DEFAULT_TICKETS = 500
 
 _RUN_COLUMNS = """
     runs.id, runs.trigger, runs.dry_run, runs.version, runs.started_at, runs.finished_at,
@@ -200,6 +201,32 @@ def account_subdivisions(db: sqlite3.Connection) -> list[dict[str, Any]]:
                 "seen_at": row["time"],
             }
     return list(found.values())
+
+
+_TICKET_COLUMNS = (
+    "code, device, utility, court, play_date, slot, status, status_text, created_at, seen_at, photo"
+)
+
+
+def list_tickets(
+    db: sqlite3.Connection, *, since: str | None = None, limit: int = DEFAULT_TICKETS
+) -> list[dict[str, Any]]:
+    """Return every machine's tickets, the latest day of play first, by slot within a day.
+
+    ``since`` (``YYYY-MM-DD``) keeps the tickets played that day or later.
+    """
+    rows = db.execute(
+        f"SELECT {_TICKET_COLUMNS} FROM tickets WHERE play_date >= ?"
+        " ORDER BY play_date DESC, slot, device, code LIMIT ?",
+        (since or "", limit),
+    )
+    return [dict(row) for row in rows]
+
+
+def ticket_photo(db: sqlite3.Connection, code: str) -> str | None:
+    """Return the file name of the picture of ticket ``code``, if it has one."""
+    row = db.execute("SELECT photo FROM tickets WHERE code = ?", (code,)).fetchone()
+    return None if row is None else row["photo"]
 
 
 def dry_run_passed(db: sqlite3.Connection) -> bool:

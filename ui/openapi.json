@@ -1180,6 +1180,7 @@
           "waiting",
           "booking_started",
           "run_finished",
+          "tickets_saved",
           "slot_started",
           "calendar_opened",
           "date_selected",

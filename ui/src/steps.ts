@@ -105,6 +105,13 @@ const MESSAGES: Record<StepKind, Describe> = {
     detail: text(data, "path"),
     tone: "plain",
   }),
+  tickets_saved: ({ t }, data) => ({
+    text: t("steps.tickets_saved", {
+      tickets: number(data, "tickets") ?? 0,
+      photos: number(data, "photos") ?? 0,
+    }),
+    tone: "plain",
+  }),
   waiting: ({ t, f }, data) => {
     const until = text(data, "until");
     return {

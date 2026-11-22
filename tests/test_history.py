@@ -10,6 +10,7 @@ import pytest
 
 from court_booker import history, history_read
 from court_booker.events import EventKind, Reporter
+from court_booker.tickets import Ticket
 
 START = datetime(2026, 10, 13, 5, 50, 3, 257000)
 
@@ -73,7 +74,7 @@ def tables(connection):
 def test_connect_creates_the_tables(tmp_path):
     connection = history.connect(tmp_path / "data" / "booker.db")
 
-    assert tables(connection) == {"runs", "run_slots", "events", "log_lines"}
+    assert tables(connection) == {"runs", "run_slots", "events", "log_lines", "tickets"}
     assert connection.execute("PRAGMA user_version").fetchone()[0] == history.SCHEMA_VERSION
     assert connection.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     connection.close()
@@ -88,7 +89,7 @@ def test_newer_database_is_left_as_it_is(connection):
     connection.execute(f"PRAGMA user_version = {history.SCHEMA_VERSION + 1}")
 
     assert history.migrate(connection) == history.SCHEMA_VERSION + 1
-    assert tables(connection) == {"runs", "run_slots", "events", "log_lines"}
+    assert tables(connection) == {"runs", "run_slots", "events", "log_lines", "tickets"}
 
 
 def test_runs_of_the_first_schema_keep_no_device(tmp_path):
@@ -359,3 +360,51 @@ def test_a_database_error_turns_history_off_once(connection, caplog):
     assert store.failed
     assert caplog.text.count("History database failed") == 1
     assert "Event sink failed" not in caplog.text
+
+
+def ticket(code="1234567", status_text="Đã đăng ký", **fields):
+    values = {
+        "code": code,
+        "utility": "Sân Tennis",
+        "court": "S6 - Sân tennis",
+        "play_date": "2026-10-03",
+        "slot": "19:00 - 20:00",
+        "status_text": status_text,
+        "created_at": "2026-10-01T06:00",
+    }
+    return Ticket(**{**values, **fields})
+
+
+SEEN = datetime(2026, 11, 22, 6, 1, 12)
+
+
+def test_a_ticket_keeps_its_picture_and_takes_its_new_status(connection):
+    store = history.History(connection)
+    store.save_tickets(1, [ticket()], {"1234567": "1234567.png"}, SEEN)
+    store.save_tickets(2, [ticket(status_text="Đã huỷ")], {}, SEEN + timedelta(days=1))
+    rows = connection.execute("SELECT code, device, status, seen_at, photo FROM tickets").fetchall()
+    assert rows == [("1234567", 2, "cancelled", "2026-11-23T06:01:12.000", "1234567.png")]
+
+
+def test_tickets_that_cannot_be_saved_only_warn(connection, caplog):
+    store = history.History(connection)
+    connection.execute("DROP TABLE tickets")
+    with caplog.at_level(logging.WARNING):
+        store.save_tickets(1, [ticket()], {}, SEEN)
+    assert "History database failed" in caplog.text
+
+
+def test_another_run_going_on_is_told(connection):
+    first, second = history.History(connection), history.History(connection)
+    Reporter(first)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    assert not first.other_runs_going()
+    Reporter(second)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    assert first.other_runs_going()
+    Reporter(second)(EventKind.RUN_FINISHED, status="ok", error=None)
+    assert not first.other_runs_going()
+
+
+def test_a_database_that_cannot_be_read_tells_of_no_other_run(connection):
+    store = history.History(connection)
+    connection.close()
+    assert not store.other_runs_going()

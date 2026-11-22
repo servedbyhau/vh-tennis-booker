@@ -41,6 +41,8 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
     "plain",
   ],
   ["repaired", {}, "Có lỗi khi chuẩn bị, đã tự sửa", "plain"],
+  ["tickets_saved", { tickets: 4, photos: 2 }, "Đã đọc 4 vé trong app, lưu 2 ảnh vé", "plain"],
+  ["tickets_saved", {}, "Đã đọc 0 vé trong app, lưu 0 ảnh vé", "plain"],
   [
     "screen_saved",
     { path: "C:\\logs\\screens\\2026-11-19-060012-mumu0.png" },

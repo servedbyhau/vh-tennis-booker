@@ -7,7 +7,7 @@ import os
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import ClassVar
 
@@ -26,6 +26,7 @@ from court_booker.history import HistoryHandler
 from court_booker.lock import Holder
 from court_booker.ready import DeviceHandle
 from court_booker.runner import RoundResult
+from court_booker.tickets import Collected, Ticket
 
 
 def fake_run(outcomes):
@@ -793,3 +794,186 @@ def test_run_status():
     assert cli.run_status([failed], None, interrupted=False) == "failed"
     assert cli.run_status([], "MuMu did not start", interrupted=False) == "failed"
     assert cli.run_status([ok], "interrupted", interrupted=True) == "interrupted"
+
+
+class FakeReader:
+    """Reads one ticket and one picture, or fails as ``error`` says."""
+
+    error: ClassVar = None
+    made: ClassVar = []
+
+    def __init__(self, booker, folder, deadline):
+        self.booker, self.folder = booker, folder
+        self.collected = Collected()
+        FakeReader.made.append(self)
+
+    def read(self, wanted):
+        self.wanted = wanted
+        ticket = Ticket(
+            "1234567", "Sân Tennis", "S6", "2026-10-07", "18:00 - 19:00", "Đã đăng ký", None
+        )
+        self.collected.tickets.append(ticket)
+        self.collected.photos["1234567"] = "1234567.png"
+        if FakeReader.error is not None:
+            raise FakeReader.error
+        return self.collected
+
+
+@pytest.fixture
+def reader(monkeypatch):
+    """Read the tickets with :class:`FakeReader`, and record what the run did, in order."""
+    monkeypatch.setattr(FakeReader, "error", None)
+    monkeypatch.setattr(FakeReader, "made", [])
+    monkeypatch.setattr(cli, "TicketReader", FakeReader)
+    return FakeReader
+
+
+def run_with_booker(monkeypatch, tmp_path, outcomes, args=(), connect=fake_connect):
+    """Run the CLI with rounds that hand a booker over, as the real ones do."""
+    inner = fake_run(outcomes)
+
+    def run_booking(device, config, *, on_booker=None, **kwargs):
+        on_booker(argparse.Namespace(config=config, device=device))
+        return inner(device, config, **kwargs)
+
+    use_connect(monkeypatch, connect)
+    monkeypatch.setattr(cli, "run_booking", run_booking)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+    return cli.main(["--config", str(tmp_path / "missing.toml"), *args])
+
+
+BOOKED = [("18:00 - 19:00", True), ("19:00 - 20:00", False)]
+
+
+def test_a_real_run_reads_the_tickets_of_the_slots_it_booked(
+    monkeypatch, tmp_path, reader, data_home, closed_mumu
+):
+    assert run_with_booker(monkeypatch, tmp_path, BOOKED) == cli.EXIT_ROUND_FAILED
+    (made,) = reader.made
+    assert made.folder == data_home / "tickets"
+    (wanted,) = made.wanted
+    assert (wanted.slot, wanted.court) == ("18:00 - 19:00", Config().court)
+    with sqlite3.connect(data_home / "booker.db") as db:
+        assert db.execute("SELECT code, device, photo FROM tickets").fetchall() == [
+            ("1234567", 0, "1234567.png")
+        ]
+        kinds = [row[0] for row in db.execute("SELECT kind FROM events ORDER BY id")]
+    # After the run's own result, never before it.
+    assert kinds[-2:] == ["run_finished", "tickets_saved"]
+
+
+def test_the_tickets_come_after_the_notification_and_before_the_driver_stops(
+    monkeypatch, tmp_path, reader
+):
+    order = []
+    devices = []
+
+    def connect(config, driver):
+        device = fake_connect(config, driver)
+        device.close = lambda: order.append("close")
+        devices.append(device)
+        return device
+
+    monkeypatch.setattr(cli, "send_windows", lambda title, body: order.append("notify"))
+    read = FakeReader.read
+    monkeypatch.setattr(
+        FakeReader, "read", lambda self, wanted: order.append("tickets") or read(self, wanted)
+    )
+    monkeypatch.setattr(cli, "close_emulator", lambda config: order.append("mumu"))
+    manager = tmp_path / "MuMuManager.exe"
+    (tmp_path / "missing.toml").write_text(f"mumu_manager = '{manager}'", encoding="utf-8")
+    run_with_booker(monkeypatch, tmp_path, BOOKED, connect=connect)
+    assert order == ["notify", "tickets", "close", "mumu"]
+
+
+@pytest.mark.parametrize(
+    ("outcomes", "args"),
+    [
+        ([("18:00 - 19:00", False)], ()),
+        (BOOKED, ("--dry-run",)),
+        ([("18:00 - 19:00", True), ("19:00 - 20:00", KeyboardInterrupt)], ()),
+    ],
+    ids=["nothing booked", "dry run", "interrupted"],
+)
+def test_no_tickets_are_read(monkeypatch, tmp_path, reader, outcomes, args):
+    run_with_booker(monkeypatch, tmp_path, outcomes, args)
+    assert reader.made == []
+
+
+@pytest.mark.parametrize("error", [RuntimeError("boom"), KeyboardInterrupt()])
+def test_tickets_that_fail_do_not_change_the_result(
+    monkeypatch, tmp_path, reader, closed_mumu, error
+):
+    monkeypatch.setattr(FakeReader, "error", error)
+    (tmp_path / "missing.toml").write_text("mumu_manager = 'MuMuManager.exe'", encoding="utf-8")
+    assert run_with_booker(monkeypatch, tmp_path, BOOKED[:1]) == cli.EXIT_OK
+    assert len(closed_mumu) == 1
+
+
+def test_an_emulator_frozen_at_the_tickets_keeps_the_result(
+    monkeypatch, tmp_path, reader, closed_mumu, data_home
+):
+    monkeypatch.setattr(FakeReader, "error", DeviceNotRespondingError("screenshot hung"))
+    (tmp_path / "missing.toml").write_text("mumu_manager = 'MuMuManager.exe'", encoding="utf-8")
+    assert run_with_booker(monkeypatch, tmp_path, BOOKED[:1]) == cli.EXIT_OK
+    assert closed_mumu == []  # MuMuManager does not shut a frozen instance down
+    with sqlite3.connect(data_home / "booker.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM tickets").fetchone() == (1,)
+        assert db.execute("SELECT status FROM runs").fetchall() == [("ok",)]
+
+
+class StepClock:
+    """A clock that moves one second with each look at it."""
+
+    def __init__(self, at):
+        self.at = at
+
+    def now(self):
+        self.at += timedelta(seconds=1)
+        return self.at
+
+
+class OtherRuns:
+    """A history in which another machine books for the first ``looks`` looks."""
+
+    def __init__(self, looks):
+        self.looks = looks
+        self.saved = []
+
+    def other_runs_going(self):
+        self.looks -= 1
+        return self.looks >= 0
+
+    def save_tickets(self, *args):
+        self.saved.append(args)
+
+
+def read_after(monkeypatch, looks):
+    """Read the tickets of a 06:00 run while another machine books; return what was saved."""
+    start = datetime(2026, 11, 22, 6, 0)
+    waits = []
+    monkeypatch.setattr(cli, "wait_until", lambda moment, now: waits.append(moment))
+    monkeypatch.setattr(cli.time, "sleep", lambda seconds: None)
+    others = OtherRuns(looks)
+    booker = argparse.Namespace(config=Config())
+    results = [RoundResult("18:00 - 19:00", True, "booked", 5.0, "S6 - Sân tennis")]
+    clock = StepClock(start + cli.TICKETS_AFTER)
+    cli.read_tickets(booker, results, start.date(), start, clock, others, lambda kind, **data: None)
+    assert waits == [start + cli.TICKETS_AFTER]
+    return others
+
+
+def test_tickets_wait_for_the_other_machines_to_end_their_rounds(monkeypatch, reader):
+    others = read_after(monkeypatch, looks=5)
+    assert others.looks < 0
+    assert len(others.saved) == 1
+    (wanted,) = reader.made[0].wanted
+    assert wanted.court == "S6 - Sân tennis"
+
+
+def test_tickets_are_skipped_while_a_machine_books_on(monkeypatch, reader, caplog):
+    with caplog.at_level(logging.WARNING):
+        others = read_after(monkeypatch, looks=10_000)
+    assert reader.made == []
+    assert others.saved == []
+    assert "another machine is still booking" in caplog.text

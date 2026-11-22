@@ -111,6 +111,7 @@ def run_booking(
     login_for: Callable[[], Login | None] | None = None,
     screens: Path | None = None,
     supervisor: Supervisor | None = None,
+    on_booker: Callable[[Booker], None] | None = None,
 ) -> list[RoundResult]:
     """Get ready, wait for ``start`` if given, then book every configured slot.
 
@@ -128,6 +129,9 @@ def run_booking(
     ``screens`` (:func:`save_screen`): when the app is not made ready, or when such a failure
     ends the last round. One in an earlier round saves none, to keep the next round on time;
     a dry run and a frozen emulator save none.
+
+    ``on_booker`` gets the booker before anything runs, for a caller that goes on with
+    the app after the rounds (:mod:`court_booker.tickets`).
     """
     results = [] if results is None else results
     report = Reporter() if report is None else report
@@ -136,6 +140,8 @@ def run_booking(
         supervisor = Supervisor(config, report=report, device=device, now=clock.now)
     device = supervisor.device
     booker = Booker(device, config, report, login_for=login_for)
+    if on_booker is not None:
+        on_booker(booker)
     shots = None if dry_run else screens
     deadline = setup_deadline(start, config.warm_up_seconds, clock.now())
     try:
