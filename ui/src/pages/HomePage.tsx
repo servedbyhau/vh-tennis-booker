@@ -14,7 +14,7 @@ import { SidePanel } from "./home/SidePanel";
 
 /**
  * Show the next booking as a ticket that holds its settings, or the run as it goes, with
- * the History and the Setup beside it. The panel opens on the Setup while anything is left
+ * the tickets booked, the History and the Setup beside it. The panel opens on the Setup while anything is left
  * to set up, else on the History; a `?run=` in the address opens that run. With several
  * MuMu instances, the machine chosen on the ticket is the one the Setup shows.
  */

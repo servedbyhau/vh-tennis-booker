@@ -4,17 +4,33 @@ import { useOverview } from "../../api/queries";
 import { useMachines } from "../../machines";
 import { useManualTicks } from "../../manualSteps";
 import { setupLeft } from "../../setupState";
+import type { TicketFilter } from "../../tickets";
 import { HistoryTab } from "./HistoryTab";
 import { SetupTab } from "./SetupTab";
 import styles from "./SidePanel.module.css";
+import { TicketsTab } from "./TicketsTab";
 
-export type PanelTab = "history" | "setup";
+export type PanelTab = "tickets" | "history" | "setup";
 
-const TABS: readonly PanelTab[] = ["history", "setup"];
+const TABS: readonly PanelTab[] = ["tickets", "history", "setup"];
+
+const TITLES = {
+  tickets: "pages.tickets.title",
+  history: "pages.history.title",
+  setup: "pages.panel.setup",
+} as const;
+
+/** What the tickets list shows first: every machine's tickets still to play. */
+const FIRST_FILTER: TicketFilter = {
+  period: "upcoming",
+  device: null,
+  withCancelled: false,
+};
 
 /**
- * The panel beside the ticket: the History and the Setup, one tab each. The Setup tab
- * counts the tasks left in red. Arrow keys move between the tabs, as in any tab list.
+ * The panel beside the ticket: the tickets booked, the History and the Setup, one tab each.
+ * The Setup tab counts the tasks left in red. Arrow keys move between the tabs, as in any
+ * tab list.
  */
 export function SidePanel({ initialTab, machine }: { initialTab: PanelTab; machine: number }) {
   const { t } = useTranslation();
@@ -24,6 +40,7 @@ export function SidePanel({ initialTab, machine }: { initialTab: PanelTab; machi
   const [tab, setTab] = useState(initialTab);
   // Kept here, so it survives opening a run, going back and changing tabs.
   const [withDry, setWithDry] = useState(false);
+  const [ticketFilter, setTicketFilter] = useState(FIRST_FILTER);
   const buttons = useRef<Partial<Record<PanelTab, HTMLButtonElement | null>>>({});
   const left = overview.data === undefined ? 0 : setupLeft(ticks, machines);
 
@@ -31,7 +48,8 @@ export function SidePanel({ initialTab, machine }: { initialTab: PanelTab; machi
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
       return;
     }
-    const other = tab === "history" ? "setup" : "history";
+    const step = event.key === "ArrowRight" ? 1 : TABS.length - 1;
+    const other = TABS[(TABS.indexOf(tab) + step) % TABS.length] ?? tab;
     setTab(other);
     buttons.current[other]?.focus();
   }
@@ -62,7 +80,7 @@ export function SidePanel({ initialTab, machine }: { initialTab: PanelTab; machi
             className={styles.tab}
             onClick={() => setTab(name)}
           >
-            {name === "history" ? t("pages.history.title") : t("pages.panel.setup")}
+            {t(TITLES[name])}
             {name === "setup" && left > 0 && (
               <>
                 <span aria-hidden="true" className={styles.badge}>
@@ -80,11 +98,9 @@ export function SidePanel({ initialTab, machine }: { initialTab: PanelTab; machi
         aria-labelledby={`tab-${tab}`}
         className={styles.body}
       >
-        {tab === "history" ? (
-          <HistoryTab withDry={withDry} onWithDry={setWithDry} />
-        ) : (
-          <SetupTab machine={machine} />
-        )}
+        {tab === "tickets" && <TicketsTab filter={ticketFilter} onFilter={setTicketFilter} />}
+        {tab === "history" && <HistoryTab withDry={withDry} onWithDry={setWithDry} />}
+        {tab === "setup" && <SetupTab machine={machine} />}
       </div>
     </section>
   );

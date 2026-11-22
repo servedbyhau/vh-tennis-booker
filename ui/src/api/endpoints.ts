@@ -12,6 +12,7 @@ import type {
   ScheduleState,
   Settings,
   Step,
+  Ticket,
   paths,
 } from "./types";
 
@@ -38,6 +39,11 @@ export function listRuns(query: RunsQuery = {}): Promise<RunSummary[]> {
 /** Read one run with its slots, steps and technical log lines. */
 export function getRun(runId: number): Promise<RunDetail> {
   return call(client.GET("/api/runs/{run_id}", { params: { path: { run_id: runId } } }));
+}
+
+/** List every machine's tickets, the latest day of play first. */
+export function listTickets(): Promise<Ticket[]> {
+  return call(client.GET("/api/tickets"));
 }
 
 /** List activity log steps newest first. */

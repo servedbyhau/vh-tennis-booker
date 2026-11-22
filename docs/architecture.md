@@ -266,6 +266,7 @@ values 422 `invalid_request`.
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
+| `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
 | `GET`/`PUT`/`DELETE /api/logins/{mumu_index}` | Whether a login is saved for the instance, with its phone masked (`09••••••79`); save one (10-digit phone, password as `SecretStr`) or remove it. No answer or error holds the password; Windows refusing is 503 `credentials`. Not recorded in the history |
 | `WS /api/live` | Pushes each new step |
@@ -302,7 +303,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   books, that machine's subdivision, sport, court and up to two slots, saved on each press,
   and the dry run;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
-  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, two tabs:
+  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, three tabs:
+  `TicketsTab` ("Quản lý": every machine's tickets by day of play, upcoming ones unless the past
+  is chosen, of one machine or all, cancelled ones on request, picked in `tickets.ts` without a
+  request; a press opens `TicketDialog` with the picture; read again after `tickets_saved`),
   `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
   opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the saved login
   and the guide, those of the machine chosen on the ticket, which `HomePage` holds). The

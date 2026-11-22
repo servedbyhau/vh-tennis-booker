@@ -108,6 +108,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tickets
+         * @description List every machine's tickets, the latest day of play first, by slot within a day.
+         *
+         *     ``since`` keeps the tickets played that day or later.
+         */
+        get: operations["list_tickets_api_tickets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickets/{code}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ticket Photo
+         * @description Answer with the picture of a ticket, down to its directions link.
+         */
+        get: operations["ticket_photo_api_tickets__code__photo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -800,6 +842,35 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * Ticket
+         * @description One ticket of an account, as the app's history page last showed it.
+         */
+        Ticket: {
+            /** Code */
+            code: string;
+            /** Device */
+            device: number;
+            /** Court */
+            court: string;
+            /** Play Date */
+            play_date: string;
+            /** Slot */
+            slot: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "registered" | "processing" | "cancelled" | "other";
+            /** Status Text */
+            status_text: string;
+            /** Created At */
+            created_at: string | null;
+            /** Seen At */
+            seen_at: string;
+            /** Has Photo */
+            has_photo: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -990,6 +1061,87 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Step"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_tickets_api_tickets_get: {
+        parameters: {
+            query?: {
+                since?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ticket"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ticket_photo_api_tickets__code__photo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The ticket's picture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
                 };
             };
             /** @description Invalid request values, one line per value */

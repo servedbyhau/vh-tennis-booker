@@ -130,7 +130,8 @@ the one in the data folder).
 - **Logs**: each run appends to `logs/court-booker-YYYY-MM-DD.log` beside its `config.toml`,
   with every screen it read and every tap; each other MuMu instance to its own
   `…-mumuN.log`.
-- **Data folder**: the history database `booker.db` and the run lock `run.lock` (and
+- **Data folder**: the history database `booker.db`, the ticket pictures (`tickets`, personal
+  data) and the run lock `run.lock` (and
   `run-mumuN.lock` for each other instance) are in `%LOCALAPPDATA%\CourtBooker`, where the
   installed app also keeps its `config.toml` and `logs`; set `COURT_BOOKER_HOME` to move them.
 - **One run at a time**: a second run is refused (exit code 5), and the scheduled run waits

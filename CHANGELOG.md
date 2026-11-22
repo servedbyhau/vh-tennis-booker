@@ -7,6 +7,8 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A "Quản lý" ("Manage") tab beside the History: the tickets of every machine's account in one
+  list by day of play, with their status and booking code; a press opens the ticket's picture.
 - After a real run that booked, the app's tickets are read from its history page (code, court,
   time, status) and a picture of each new ticket, with its QR code, is saved in the data
   folder's `tickets`. It starts a minute after the start, once no machine is booking any
