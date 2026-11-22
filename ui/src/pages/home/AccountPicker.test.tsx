@@ -64,7 +64,7 @@ describe("AccountPicker", () => {
       "[09••••••11Căn A]",
       "09••••••22Căn B",
       "09••••••33Máy 2 đang dùng",
-      "mất mật khẩu, xóa rồi thêm lại (off)",
+      "mất mật khẩu, bấm sửa để nhập lại (off)",
       "Không chọnDùng tài khoản đang đăng nhập trên MuMu",
     ]);
     // By customer, those without accounts left out.

@@ -123,6 +123,47 @@ def test_a_new_password_reaches_the_machine_too(book):
     assert book.store.read(0).password == "mat-khau-moi"
 
 
+def test_a_new_phone_number_keeps_the_password_and_the_machine(book):
+    account = book.add_account(book.add_customer("An").id, FIRST)
+    book.attach(account.id, 1)
+
+    changed = book.change_account(account.id, "", phone=SECOND.phone)
+
+    assert (changed.phone, changed.device) == (SECOND.phone, 1)
+    assert book.store.read(1) == book.store.read(account.id)
+    assert book.store.read(1) == Login(SECOND.phone, FIRST.password)
+    both = book.change_account(account.id, "", "mat-khau-moi", FIRST.phone)
+    assert both.device == 1
+    assert book.store.read(1) == Login(FIRST.phone, "mat-khau-moi")
+
+
+def test_a_new_phone_number_is_no_other_accounts(book):
+    an = book.add_customer("An")
+    first = book.add_account(an.id, FIRST)
+    second = book.add_account(book.add_customer("Bình").id, SECOND)
+    with pytest.raises(PhoneTakenError, match="An already has"):
+        book.change_account(second.id, "", phone=FIRST.phone)
+    assert book.store.read(second.id) == SECOND
+    assert book.change_account(first.id, "Căn A", phone=FIRST.phone).label == "Căn A"  # its own
+
+
+def test_a_phone_number_the_machine_refuses_changes_nothing(book, monkeypatch):
+    account = book.add_account(book.add_customer("An").id, FIRST)
+    book.attach(account.id, 1)
+    save = book.store.save
+
+    def refuse(key, login):
+        if key == 1:
+            raise CredentialError("Windows could not keep the login (error 5)")
+        save(key, login)
+
+    monkeypatch.setattr(book.store, "save", refuse)
+    with pytest.raises(CredentialError):
+        book.change_account(account.id, "", phone=SECOND.phone)
+    assert book.account(account.id).phone == FIRST.phone
+    assert book.account(account.id).device == 1
+
+
 def test_what_is_attached_is_not_removed(book):
     an = book.add_customer("An")
     account = book.add_account(an.id, FIRST)
@@ -162,7 +203,7 @@ def test_a_removed_account_leaves_the_others(book):
     assert book.store.read(first.id) is None
 
 
-def test_an_account_whose_login_is_gone_is_shown_but_not_attached(book):
+def test_an_account_whose_login_is_gone_is_shown_and_needs_it_whole_again(book):
     an = book.add_customer("An")
     account = book.add_account(an.id, FIRST)
     book.store.delete(account.id)
@@ -171,6 +212,10 @@ def test_an_account_whose_login_is_gone_is_shown_but_not_attached(book):
         book.attach(account.id, 0)
     with pytest.raises(CredentialError):
         book.change_account(account.id, "", "mới")
+    with pytest.raises(CredentialError):
+        book.change_account(account.id, "", phone=SECOND.phone)
+    both = book.change_account(account.id, "", SECOND.password, SECOND.phone)
+    assert both.phone == SECOND.phone
     book.remove_account(account.id)
 
 

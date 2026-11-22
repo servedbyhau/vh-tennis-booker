@@ -84,11 +84,12 @@ class NewAccount(BaseModel):
 
 
 class AccountChange(BaseModel):
-    """Another label and, if given, password; the phone number stays."""
+    """Another label and, if given, phone number and password; what is not given stays."""
 
     model_config = ConfigDict(extra="forbid")
 
     label: Label
+    phone: Optional[str] = Field(default=None, pattern=PHONE_PATTERN)
     password: Optional[Password] = None
 
 
@@ -189,16 +190,17 @@ def add_account(book: Book, customer_id: RecordId, account: NewAccount) -> Custo
 def change_account(
     context: Context, book: Book, account_id: RecordId, change: AccountChange
 ) -> CustomerRecord:
-    """Change an account's label and, if given, password; answers the customer.
+    """Change an account's label and, if given, phone number and password; answers the customer.
 
-    A new password of an attached account is the one its machine logs in with, so it is
-    refused (409 ``lock_held``) while a run goes on.
+    A new login of an attached account is the one its machine logs in with, so it is refused
+    (409 ``lock_held``) while a run goes on. A phone number belongs to one account only
+    (409 ``phone_taken``).
     """
     password = None if change.password is None else change.password.get_secret_value()
     with _changing:
-        if password is not None:
+        if password is not None or change.phone is not None:
             check_no_run(context)
-        book.change_account(account_id, change.label, password)
+        book.change_account(account_id, change.label, password, change.phone)
         return shown(book.owner(account_id))
 
 

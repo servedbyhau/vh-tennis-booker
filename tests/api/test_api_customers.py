@@ -76,6 +76,24 @@ def test_an_account_takes_a_label_and_a_password(client, account, saved_logins):
     assert saved_logins.read(2).password == "moi"
 
 
+def test_an_account_takes_another_phone_number(client, customer, account, saved_logins):
+    attach(client, account, 2)
+    url = f"/api/customer-accounts/{account['id']}"
+    reply = client.put(url, json={"label": "Căn A", "phone": "0900000080"})
+    (shown,) = reply.json()["accounts"]
+    assert (shown["phone"], shown["device"]) == ("09••••••80", 2)
+    assert "0900000080" not in reply.text
+    assert saved_logins.read(2) == Login("0900000080", ACCOUNT["password"])
+
+    other = client.post(f"/api/customers/{customer['id']}/accounts", json=ACCOUNT)
+    taken = client.put(
+        f"/api/customer-accounts/{other.json()['accounts'][1]['id']}",
+        json={"label": "", "phone": "0900000080"},
+    )
+    assert (taken.status_code, taken.json()["error"]) == (409, "phone_taken")
+    assert client.put(url, json={"label": "", "phone": "090000008"}).status_code == 422
+
+
 def test_an_account_is_attached_and_detached(client, account, saved_logins):
     reply = attach(client, account, 1)
     assert reply.status_code == 200
@@ -125,6 +143,7 @@ def test_nothing_of_a_machine_changes_while_a_run_goes_on(client, account, saved
         attach(client, account, 1),
         client.delete("/api/machines/1/account"),
         client.put(url, json={"label": "", "password": "moi"}),
+        client.put(url, json={"label": "", "phone": "0900000080"}),
         client.delete(url, params={"detach": True}),
     ]
     assert {(reply.status_code, reply.json()["error"]) for reply in refused} == {(409, "lock_held")}

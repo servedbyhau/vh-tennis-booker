@@ -307,10 +307,11 @@ export interface paths {
         get?: never;
         /**
          * Change Account
-         * @description Change an account's label and, if given, password; answers the customer.
+         * @description Change an account's label and, if given, phone number and password; answers the customer.
          *
-         *     A new password of an attached account is the one its machine logs in with, so it is
-         *     refused (409 ``lock_held``) while a run goes on.
+         *     A new login of an attached account is the one its machine logs in with, so it is refused
+         *     (409 ``lock_held``) while a run goes on. A phone number belongs to one account only
+         *     (409 ``phone_taken``).
          */
         put: operations["change_account_api_customer_accounts__account_id__put"];
         post?: never;
@@ -506,11 +507,13 @@ export interface components {
     schemas: {
         /**
          * AccountChange
-         * @description Another label and, if given, password; the phone number stays.
+         * @description Another label and, if given, phone number and password; what is not given stays.
          */
         AccountChange: {
             /** Label */
             label: string;
+            /** Phone */
+            phone?: string | null;
             /** Password */
             password?: string | null;
         };
