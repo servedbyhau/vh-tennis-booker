@@ -168,7 +168,7 @@
       "accountCount": "Accounts: {{count}}",
       "noFacts": "No contact yet. Press \"Edit customer\" to add it.",
       "empty": "No customers yet. Press \"Add customer\" to start.",
-      "editCustomer": "Edit customer",
+      "editCustomer": "Edit",
       "label": "Label",
       "add": "Add customer",
       "edit": "Edit",
@@ -183,9 +183,12 @@
       "save": "Save",
       "cancel": "Cancel",
       "remove": "Remove",
-      "removeSure": "Really remove",
       "keep": "Keep",
-      "inUse": "A machine books with it. Choose another one on the Booking page to remove it."
+      "inUse": "{{machine}} books with {{phone}} and will have no account.",
+      "removeCustomer": "Remove",
+      "removeAsk": "Remove {{name}}?",
+      "lostAccounts": "Accounts lost with their saved passwords, for good: {{count}}.",
+      "lostAccount": "Its saved password is lost for good."
     },
     "panel": {
       "setup": "Setup",

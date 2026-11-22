@@ -886,7 +886,7 @@
           "customers"
         ],
         "summary": "Remove Customer",
-        "description": "Remove a customer with their accounts and saved logins.\n\nRefused (409 ``account_attached``) while one of the accounts is attached to a machine.",
+        "description": "Remove a customer with their accounts and saved logins.\n\nRefused (409 ``account_attached``) while one of the accounts is attached to a machine, unless\n``detach`` takes it from there; not while a run goes on (409 ``lock_held``).",
         "operationId": "remove_customer_api_customers__customer_id__delete",
         "parameters": [
           {
@@ -898,6 +898,18 @@
               "pattern": "^[0-9a-f]{32}$",
               "title": "Customer Id"
             }
+          },
+          {
+            "name": "detach",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether an account attached to a machine is taken from it",
+              "default": false,
+              "title": "Detach"
+            },
+            "description": "Whether an account attached to a machine is taken from it"
           }
         ],
         "responses": {
@@ -1059,7 +1071,7 @@
           "customers"
         ],
         "summary": "Remove Account",
-        "description": "Remove an account with its saved login.\n\nRefused (409 ``account_attached``) while it is attached to a machine.",
+        "description": "Remove an account with its saved login.\n\nRefused (409 ``account_attached``) while it is attached to a machine, unless ``detach`` takes\nit from there; not while a run goes on (409 ``lock_held``).",
         "operationId": "remove_account_api_customer_accounts__account_id__delete",
         "parameters": [
           {
@@ -1071,6 +1083,18 @@
               "pattern": "^[0-9a-f]{32}$",
               "title": "Account Id"
             }
+          },
+          {
+            "name": "detach",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether an account attached to a machine is taken from it",
+              "default": false,
+              "title": "Detach"
+            },
+            "description": "Whether an account attached to a machine is taken from it"
           }
         ],
         "responses": {

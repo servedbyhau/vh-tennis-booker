@@ -10,7 +10,7 @@ import threading
 from collections.abc import Iterator
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Path, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints
 
 from court_booker import credentials
@@ -31,6 +31,10 @@ Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max
 Label = Annotated[str, StringConstraints(strip_whitespace=True, max_length=60)]
 Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
 Password = Annotated[SecretStr, Field(min_length=1, max_length=credentials.MAX_PASSWORD)]
+
+Detach = Annotated[
+    bool, Query(description="Whether an account attached to a machine is taken from it")
+]
 
 _changing = threading.Lock()
 """One change at a time: each one checks the others' phone numbers and machines first."""
@@ -152,13 +156,18 @@ def change_customer(book: Book, customer_id: RecordId, fields: CustomerFields) -
 
 
 @router.delete("/customers/{customer_id}", status_code=204, response_class=Response)
-def remove_customer(book: Book, customer_id: RecordId) -> Response:
+def remove_customer(
+    context: Context, book: Book, customer_id: RecordId, detach: Detach = False
+) -> Response:
     """Remove a customer with their accounts and saved logins.
 
-    Refused (409 ``account_attached``) while one of the accounts is attached to a machine.
+    Refused (409 ``account_attached``) while one of the accounts is attached to a machine, unless
+    ``detach`` takes it from there; not while a run goes on (409 ``lock_held``).
     """
     with _changing:
-        book.remove_customer(customer_id)
+        if detach:
+            check_no_run(context)
+        book.remove_customer(customer_id, detach)
     return Response(status_code=204)
 
 
@@ -194,13 +203,18 @@ def change_account(
 
 
 @router.delete("/customer-accounts/{account_id}", status_code=204, response_class=Response)
-def remove_account(book: Book, account_id: RecordId) -> Response:
+def remove_account(
+    context: Context, book: Book, account_id: RecordId, detach: Detach = False
+) -> Response:
     """Remove an account with its saved login.
 
-    Refused (409 ``account_attached``) while it is attached to a machine.
+    Refused (409 ``account_attached``) while it is attached to a machine, unless ``detach`` takes
+    it from there; not while a run goes on (409 ``lock_held``).
     """
     with _changing:
-        book.remove_account(account_id)
+        if detach:
+            check_no_run(context)
+        book.remove_account(account_id, detach)
     return Response(status_code=204)
 
 
