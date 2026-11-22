@@ -9,13 +9,20 @@ const PATHS = {
   /** A picture: something that opens as one. */
   picture:
     "M2.5 3h11v10h-11zM2.5 11l3.2-3.2l2.6 2.6l2-2l3.2 3.2M10.6 5.2a.9 .9 0 1 0 0 1.8a.9 .9 0 1 0 0-1.8z",
+  /** A cross: close what is open. */
+  close: "M4 4l8 8M12 4l-8 8",
+  /** An arrow down into a tray: save as a file. */
+  save: "M8 2.5v7.5M4.8 6.8l3.2 3.2l3.2-3.2M2.8 11v2.5h10.4v-2.5",
+  /** Arrow heads: the one before, the one after. */
+  back: "M10 3.5l-4.5 4.5l4.5 4.5",
+  forward: "M6 3.5l4.5 4.5l-4.5 4.5",
 } as const;
 
 export type IconName = keyof typeof PATHS;
 
 /**
- * A small icon before a word or a value, sized to the text. It only adds to the words next
- * to it, so screen readers skip it.
+ * A small icon, sized to the text. Screen readers skip it: it only adds to the words next to
+ * it, and a button of an icon alone has a label of its own.
  */
 export function Icon({ name }: { name: IconName }) {
   return (

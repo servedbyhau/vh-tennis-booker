@@ -4,106 +4,119 @@
   inset: 0;
   z-index: 10;
   display: grid;
-  place-items: center;
+  place-items: start center;
   padding: var(--space-6);
-  background: rgb(28 27 25 / 60%);
+  background: rgb(28 27 25 / 78%);
 }
 
+/*
+ * The picture between two columns of round buttons, at the top and no taller than this: a
+ * window taller than the screen hides its lower part under the taskbar, and the whole picture
+ * must show.
+ */
 .dialog {
-  display: flex;
-  max-width: 100%;
-  max-height: 100%;
-  overflow: hidden;
-  border-radius: var(--radius-card);
-  background: var(--color-paper);
+  --picture: min(720px, 100vh - 2 * var(--space-6));
+  display: grid;
+  grid-template-columns: var(--touch-target) auto var(--touch-target);
+  gap: var(--space-5);
+  height: var(--picture);
 }
 
 .dialog:focus {
   outline: none;
 }
 
-/* As tall as the window allows, whole: the picture is 540 by about 1150. */
-.picture {
-  flex: none;
+/* What is at the top, then the arrow halfway down. */
+.side {
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  align-items: center;
-  width: 372px;
-  height: min(792px, calc(100vh - 2 * var(--space-6)));
-  background: var(--color-field);
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
 }
 
+.top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.place {
+  min-width: var(--touch-target);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: rgb(248 247 243 / 16%);
+  line-height: var(--touch-target);
+  color: var(--color-on-ink);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+}
+
+/* Whole, and as wide as that makes it; about this shape until it is loaded. */
 .photo {
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: auto;
+  max-width: 400px;
+  height: var(--picture);
+  aspect-ratio: auto 540 / 1150;
+  border-radius: var(--radius-card);
+  background: var(--color-field);
   object-fit: contain;
 }
 
 .noPhoto {
-  padding: var(--space-6);
-  color: var(--color-muted);
-  text-align: center;
-}
-
-.side {
-  flex: none;
+  align-self: center;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-4);
-  width: 340px;
-  padding: var(--space-6);
-  overflow-y: auto;
-}
-
-.title {
-  font-size: var(--text-heading-sm);
-  font-weight: var(--weight-heavy);
-  letter-spacing: var(--tracking-heading);
-}
-
-.facts {
-  display: flex;
-  flex-direction: column;
-}
-
-.fact {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
-  border-bottom: var(--border-hairline) dotted var(--color-rule);
-}
-
-.fact dt {
+  width: 338px;
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
   color: var(--color-muted);
-}
-
-.fact dd {
-  font-weight: var(--weight-semibold);
-  text-align: right;
-}
-
-.note {
-  color: var(--color-muted);
-  font-size: var(--text-small);
-}
-
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: auto;
-}
-
-.place {
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
   text-align: center;
 }
 
-.move {
+.noPhoto svg {
+  font-size: 32px;
+}
+
+.round {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
+  place-items: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: rgb(248 247 243 / 16%);
+  color: var(--color-on-ink);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.round:hover {
+  background: rgb(248 247 243 / 32%);
+  color: var(--color-on-ink);
+}
+
+/* The page's blue ring does not show on the dimmed page. */
+.round:focus-visible {
+  outline-color: var(--color-on-ink);
+}
+
+/* An arrow with no ticket that way keeps its place. */
+.round:disabled {
+  visibility: hidden;
+}
+
+/* The one thing to do here. */
+.save,
+.save:hover {
+  background: var(--color-highlight);
+  color: var(--color-ink);
+}
+
+.save:hover {
+  background: var(--color-highlight-soft);
 }

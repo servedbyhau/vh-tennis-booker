@@ -65,7 +65,7 @@ afterEach(() => {
 });
 
 describe("Tickets list", () => {
-  it("lists every machine's upcoming tickets by day, cancelled ones left out", async () => {
+  it("lists every machine's tickets to use by day, cancelled ones left out", async () => {
     await openTab();
 
     expect(await days()).toEqual([
@@ -78,25 +78,17 @@ describe("Tickets list", () => {
     ]);
   });
 
-  it("adds the cancelled tickets on request, without asking the backend again", async () => {
-    const { fetch } = await openTab();
-    await days();
-
-    fireEvent.click(within(panel()).getByRole("checkbox", { name: "Gồm cả vé đã hủy" }));
-
-    expect((await days())[0]?.[1]).toBe("08:00–09:00 · Tennis S6ĐÃ HỦYMáy 1 · 1000001chưa có ảnh");
-    expect(requestsTo(fetch, "GET /api/tickets")).toBe(1);
+  it("leaves out the tickets whose day of play is over, today's kept", async () => {
+    await openTab([
+      ticket("1000006", { play_date: "2026-10-15", slot: "06:00 - 07:00" }),
+      ticket("1000005", { play_date: "2026-10-14" }),
+    ]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Năm 15/101 vé"]);
   });
 
-  it("lists the tickets past, a status of the app's own in its words", async () => {
-    await openTab();
-    await days();
-
-    fireEvent.click(within(panel()).getByRole("button", { name: "Đã qua" }));
-
-    expect(await days()).toEqual([
-      ["Thứ Hai 12/101 vé", "18:00–19:00 · Tennis S6Đã sử dụngMáy 1 · 1000000Xem vé"],
-    ]);
+  it("lists a status of the app's own in its words", async () => {
+    await openTab([ticket("1000000", { status: "other", status_text: "Đã sử dụng" })]);
+    expect((await days())[0]?.[1]).toContain("Đã sử dụng");
   });
 
   it("lists the tickets of one machine", async () => {
@@ -125,25 +117,46 @@ describe("Tickets list", () => {
     expect((await days())[0]?.[1]).toContain("MuMu 7 · 1000002");
   });
 
-  it("keeps the filter while another tab is in front", async () => {
+  it("keeps the machine chosen while another tab is in front", async () => {
     await openTab();
     await days();
-    fireEvent.click(within(panel()).getByRole("button", { name: "Đã qua" }));
+    fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
     fireEvent.click(screen.getByRole("tab", { name: "Lịch sử" }));
 
     fireEvent.click(screen.getByRole("tab", { name: "Quản lý" }));
 
-    expect((await days()).map(([day]) => day)).toEqual(["Thứ Hai 12/101 vé"]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
   });
 
-  it("says when there is nothing to list", async () => {
-    await openTab([]);
+  it("lists every machine's once the machine chosen has no ticket left", async () => {
+    const { fetch, live } = await openTab();
+    await days();
+    fireEvent.click(within(panel()).getByRole("button", { name: "Máy 2" }));
+    const left = TICKETS.filter(({ device }) => device === 0);
+    fetch.mockImplementation((input) =>
+      Promise.resolve(
+        input instanceof Request && input.url.endsWith("/api/tickets")
+          ? Response.json(left)
+          : Response.json([]),
+      ),
+    );
+
+    act(() => {
+      live.current().open();
+      live.current().send(step(9, { kind: "tickets_saved", category: "step", data: {} }));
+    });
+
+    await waitFor(async () =>
+      expect((await days()).map(([day]) => day)).toEqual(["Thứ Sáu 16/102 vé"]),
+    );
+  });
+
+  it.each([
+    ["there is none", []],
+    ["all are over or cancelled", [TICKETS[3]!, TICKETS[4]!]],
+  ])("says when there is nothing to list: %s", async (_, tickets) => {
+    await openTab(tickets);
     expect(await within(panel()).findByText(/^Chưa có vé nào\./)).toBeInTheDocument();
-  });
-
-  it("says when the period has no ticket", async () => {
-    await openTab([ticket("1000000", { play_date: "2026-10-12" })]);
-    expect(await within(panel()).findByText("Không có vé nào sắp tới.")).toBeInTheDocument();
   });
 
   it("offers to try again when the tickets cannot be read", async () => {
@@ -185,36 +198,35 @@ describe("Tickets list", () => {
 });
 
 describe("Ticket dialog", () => {
-  it("shows the ticket's picture and what is known of it", async () => {
+  it("shows the ticket's picture alone and saves it under a name that tells it", async () => {
     await openTab();
     const dialog = await openTicket(/1000002/);
+    const url = "/api/tickets/1000002/photo?seen=2026-10-14T06%3A01%3A12.000";
 
     expect(dialog).toHaveAccessibleName("18:00–19:00 · Tennis S6");
     expect(
       within(dialog).getByRole("img", { name: "Ảnh vé 18:00–19:00 · Tennis S6" }),
-    ).toHaveAttribute("src", "/api/tickets/1000002/photo?seen=2026-10-14T06%3A01%3A12.000");
-    expect(
-      within(dialog)
-        .getAllByRole("definition")
-        .map((fact) => fact.textContent),
-    ).toEqual(["Thứ Sáu 16/10", "18:00–19:00", "Tennis S6", "Máy 1", "1000002", "06:00 14/10"]);
-    expect(within(dialog).getByText("Trạng thái trong app lúc 06:01 ngày 14/10.")).toBeVisible();
+    ).toHaveAttribute("src", url);
+    const save = within(dialog).getByRole("link", { name: "Lưu vé" });
+    expect(save).toHaveAttribute("href", url);
+    expect(save).toHaveAttribute("download", "2026-10-16 18h00-19h00 Tennis S6 1000002.png");
+    expect(dialog.textContent).toBe("1/3");
   });
 
   it("moves through the tickets listed, with its buttons and the arrow keys", async () => {
     await openTab();
     const dialog = await openTicket(/1000002/);
     expect(within(dialog).getByText("1/3")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "← Vé trước" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Vé trước" })).toBeDisabled();
 
-    fireEvent.click(within(dialog).getByRole("button", { name: "Vé sau →" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Vé sau" }));
     expect(dialog).toHaveAccessibleName("19:00–20:00 · Tennis S6");
 
     fireEvent.keyDown(dialog, { key: "ArrowRight" });
     expect(dialog).toHaveAccessibleName("18:00–19:00 · Pickleball S9");
     fireEvent.keyDown(dialog, { key: "ArrowRight" }); // the last one stays
     expect(within(dialog).getByText("3/3")).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Vé sau →" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Vé sau" })).toBeDisabled();
 
     fireEvent.keyDown(dialog, { key: "ArrowLeft" });
     expect(within(dialog).getByText("2/3")).toBeInTheDocument();
@@ -225,6 +237,7 @@ describe("Ticket dialog", () => {
     const dialog = await openTicket(/1000003/);
     expect(within(dialog).queryByRole("img")).not.toBeInTheDocument();
     expect(within(dialog).getByText(/^Vé này chưa có ảnh\./)).toBeInTheDocument();
+    expect(within(dialog).queryByRole("link")).not.toBeInTheDocument(); // nothing to save
   });
 
   it("says when the picture does not open, for that ticket alone", async () => {
@@ -232,6 +245,7 @@ describe("Ticket dialog", () => {
     const dialog = await openTicket(/1000002/);
     fireEvent.error(within(dialog).getByRole("img"));
     expect(within(dialog).getByText("Không mở được ảnh vé.")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("link")).not.toBeInTheDocument();
 
     fireEvent.keyDown(dialog, { key: "ArrowRight" });
     fireEvent.keyDown(dialog, { key: "ArrowRight" });
@@ -253,22 +267,42 @@ describe("Ticket dialog", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     fireEvent.click(row);
-    fireEvent.click(within(screen.getByRole("dialog")).getByText("1000002"));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("img"));
     expect(screen.getByRole("dialog")).toBeInTheDocument(); // a press inside keeps it
+    fireEvent.click(screen.getByRole("dialog")); // between the picture and the buttons
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(row);
     fireEvent.click(screen.getByRole("dialog").parentElement!);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("keeps Tab inside", async () => {
+  it("keeps the keys working when a move takes the control pressed away", async () => {
     await openTab();
     const dialog = await openTicket(/1000002/);
-    const close = within(dialog).getByRole("button", { name: "Đóng" });
-    const next = within(dialog).getByRole("button", { name: "Vé sau →" });
+    const next = within(dialog).getByRole("button", { name: "Vé sau" });
+    next.focus();
+    fireEvent.click(next);
+    expect(next).toHaveFocus(); // there to press again
+    fireEvent.click(next); // the last ticket: disabled from here on
+    expect(dialog).toHaveFocus();
 
-    close.focus();
-    fireEvent.keyDown(close, { key: "Tab" });
-    expect(next).toHaveFocus(); // the first one enabled
-    fireEvent.keyDown(next, { key: "Tab", shiftKey: true });
-    expect(close).toHaveFocus();
+    const save = within(dialog).getByRole("link", { name: "Lưu vé" });
+    save.focus();
+    fireEvent.keyDown(save, { key: "ArrowLeft" }); // a ticket with nothing to save
+    expect(dialog).toHaveFocus();
+  });
+
+  it("keeps Tab inside", async () => {
+    await openTab();
+    const dialog = await openTicket(/1000003/);
+    const first = within(dialog).getByRole("button", { name: "Vé trước" });
+    const last = within(dialog).getByRole("button", { name: "Vé sau" });
+
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(first).toHaveFocus();
+    fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+    expect(last).toHaveFocus();
   });
 });

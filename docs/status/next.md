@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-19.
+Last updated: 2026-11-22.
 
 ## Start of a session
 
@@ -24,6 +24,12 @@ during the rounds come later, in their own task.
 Known limits of the setup repairs: the deadline is checked between repairs, so a MuMu restart
 begun just before 05:58 may end after the warm-up (worst case about two minutes, 41-49 s
 seen); a fault in the last 15 s before the start is not repaired.
+
+The 06:00 run of 2026-11-23 is also the first of three machines with 2 cores each, and the first
+that reads tickets: check that each ticket booked has its picture and reads as registered, when
+the reading started and ended (06:02 to about 06:05), and that it changed nothing in the rounds.
+
+The user's next feature is sending the tickets over Zalo: study the ways first, then a plan.
 
 ## After that
 
