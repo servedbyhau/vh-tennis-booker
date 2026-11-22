@@ -2,8 +2,7 @@ import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { Ticket } from "../../api/types";
-import { Button } from "../../components/Button";
-import { ButtonLink } from "../../components/ButtonLink";
+import { Icon } from "../../components/Icon";
 import { photoFileName, photoUrl } from "../../tickets";
 import { useFormat } from "../../useFormat";
 import styles from "./TicketDialog.module.css";
@@ -85,7 +84,8 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
     <div
       className={styles.backdrop}
       onClick={(event) => {
-        if (event.target === event.currentTarget) {
+        // Beside the picture and the buttons, between them too.
+        if (event.target instanceof Element && !event.target.closest("img, p, a, button")) {
           onClose();
         }
       }}
@@ -99,55 +99,74 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
         className={styles.dialog}
         onKeyDown={onKeyDown}
       >
-        <button
-          type="button"
-          aria-label={t("pages.tickets.previous")}
-          disabled={place === 0}
-          className={styles.move}
-          onClick={() => onPlace(place - 1)}
-        >
-          ←
-        </button>
-        <div className={styles.sheet}>
-          <div className={styles.bar}>
-            <span className={styles.place}>
-              {t("pages.tickets.place", { place: place + 1, total: tickets.length })}
-            </span>
+        <div className={styles.side}>
+          <div className={styles.top}>
+            {tickets.length > 1 && (
+              <span className={styles.place}>
+                {t("pages.tickets.place", { place: place + 1, total: tickets.length })}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label={t("pages.tickets.previous")}
+            title={t("pages.tickets.previous")}
+            disabled={place === 0}
+            className={styles.round}
+            onClick={() => onPlace(place - 1)}
+          >
+            <Icon name="back" />
+          </button>
+        </div>
+        {hasPicture ? (
+          <img
+            // An element per ticket: the last one's picture never shows while this one loads.
+            key={ticket.code}
+            src={photoUrl(ticket)}
+            alt={t("pages.tickets.photo", { name })}
+            className={styles.photo}
+            onError={() => setFailedCode(ticket.code)}
+          />
+        ) : (
+          <p className={styles.noPhoto}>
+            <Icon name="picture" />
+            {t(failed ? "pages.tickets.photoFailed" : "pages.tickets.photoNone")}
+          </p>
+        )}
+        <div className={styles.side}>
+          <div className={styles.top}>
+            <button
+              type="button"
+              aria-label={t("pages.tickets.close")}
+              title={t("pages.tickets.close")}
+              className={styles.round}
+              onClick={onClose}
+            >
+              <Icon name="close" />
+            </button>
             {hasPicture && (
-              <ButtonLink
-                variant="primary"
+              <a
                 href={photoUrl(ticket)}
                 download={photoFileName(ticket, court)}
+                aria-label={t("pages.tickets.save")}
+                title={t("pages.tickets.save")}
+                className={`${styles.round} ${styles.save}`}
               >
-                {t("pages.tickets.save")}
-              </ButtonLink>
+                <Icon name="save" />
+              </a>
             )}
-            <Button onClick={onClose}>{t("pages.tickets.close")}</Button>
           </div>
-          {hasPicture ? (
-            <img
-              // An element per ticket: the last one's picture never shows while this one loads.
-              key={ticket.code}
-              src={photoUrl(ticket)}
-              alt={t("pages.tickets.photo", { name })}
-              className={styles.photo}
-              onError={() => setFailedCode(ticket.code)}
-            />
-          ) : (
-            <p className={styles.noPhoto}>
-              {t(failed ? "pages.tickets.photoFailed" : "pages.tickets.photoNone")}
-            </p>
-          )}
+          <button
+            type="button"
+            aria-label={t("pages.tickets.next")}
+            title={t("pages.tickets.next")}
+            disabled={place === tickets.length - 1}
+            className={styles.round}
+            onClick={() => onPlace(place + 1)}
+          >
+            <Icon name="forward" />
+          </button>
         </div>
-        <button
-          type="button"
-          aria-label={t("pages.tickets.next")}
-          disabled={place === tickets.length - 1}
-          className={styles.move}
-          onClick={() => onPlace(place + 1)}
-        >
-          →
-        </button>
       </div>
     </div>,
     document.body,

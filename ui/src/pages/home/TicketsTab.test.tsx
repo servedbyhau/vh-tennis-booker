@@ -197,7 +197,7 @@ describe("Ticket dialog", () => {
     const save = within(dialog).getByRole("link", { name: "Lưu vé" });
     expect(save).toHaveAttribute("href", url);
     expect(save).toHaveAttribute("download", "2026-10-16 18h00-19h00 Tennis S6 1000002.png");
-    expect(dialog.textContent).toBe("←1/3Lưu véĐóng→");
+    expect(dialog.textContent).toBe("1/3");
   });
 
   it("moves through the tickets listed, with its buttons and the arrow keys", async () => {
@@ -256,6 +256,10 @@ describe("Ticket dialog", () => {
     fireEvent.click(row);
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("img"));
     expect(screen.getByRole("dialog")).toBeInTheDocument(); // a press inside keeps it
+    fireEvent.click(screen.getByRole("dialog")); // between the picture and the buttons
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    fireEvent.click(row);
     fireEvent.click(screen.getByRole("dialog").parentElement!);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

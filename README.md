@@ -168,7 +168,7 @@ The app is one screen, without a menu:
   shows the steps as they happen.
 - **Quản lý / Manage** on the right: the tickets of every machine's account in one list, by day
   of play, with their slot, court, status and booking code; a press opens the ticket's picture
-  with its QR code, and "Lưu vé" saves it as a file. They are read from the Vinhomes app a
+  with its QR code, and a button saves it as a file. They are read from the Vinhomes app a
   minute after each booking; the pictures stay on this PC, in
   `%LOCALAPPDATA%\CourtBooker\tickets`.
 - **Lịch sử / History** beside it: each run in two lines, its play day, court and count

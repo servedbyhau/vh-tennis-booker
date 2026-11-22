@@ -6,78 +6,117 @@
   display: grid;
   place-items: start center;
   padding: var(--space-6);
-  background: rgb(28 27 25 / 60%);
+  background: rgb(28 27 25 / 78%);
 }
 
 /*
- * At the top and no taller than this: a window taller than the screen hides its lower part
- * under the taskbar, and the whole picture with its buttons must show.
+ * The picture between two columns of round buttons, at the top and no taller than this: a
+ * window taller than the screen hides its lower part under the taskbar, and the whole picture
+ * must show.
  */
 .dialog {
-  --bar: calc(var(--touch-target) + 2 * var(--space-2));
-  --picture: calc(min(720px, 100vh - 2 * var(--space-6)) - var(--bar));
-  display: flex;
-  align-items: center;
+  --picture: min(720px, 100vh - 2 * var(--space-6));
+  display: grid;
+  grid-template-columns: var(--touch-target) auto var(--touch-target);
   gap: var(--space-5);
+  height: var(--picture);
 }
 
 .dialog:focus {
   outline: none;
 }
 
-.sheet {
-  overflow: hidden;
-  width: 320px;
-  border-radius: var(--radius-card);
-  background: var(--color-field);
+/* What is at the top, then the arrow halfway down. */
+.side {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
 }
 
-.bar {
+.top {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  height: var(--bar);
-  padding: 0 var(--space-2) 0 var(--space-4);
-  background: var(--color-paper);
+  gap: var(--space-3);
 }
 
 .place {
-  margin-right: auto;
-  color: var(--color-muted);
+  min-width: var(--touch-target);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: rgb(248 247 243 / 16%);
+  line-height: var(--touch-target);
+  color: var(--color-on-ink);
+  text-align: center;
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: var(--text-small);
 }
 
-/* Whole: the picture is 540 by about 1150. */
+/* Whole, and as wide as that makes it; about this shape until it is loaded. */
 .photo {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 400px;
   height: var(--picture);
+  aspect-ratio: auto 540 / 1150;
+  border-radius: var(--radius-card);
+  background: var(--color-field);
   object-fit: contain;
 }
 
 .noPhoto {
-  display: grid;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  height: var(--picture);
-  padding: var(--space-6);
+  gap: var(--space-4);
+  width: 338px;
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
   color: var(--color-muted);
   text-align: center;
 }
 
-.move {
-  flex: none;
+.noPhoto svg {
+  font-size: 32px;
+}
+
+.round {
+  display: grid;
+  place-items: center;
   width: var(--touch-target);
   height: var(--touch-target);
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-size: var(--text-body);
+  background: rgb(248 247 243 / 16%);
+  color: var(--color-on-ink);
+  font-size: 20px;
   cursor: pointer;
 }
 
-.move:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.round:hover {
+  background: rgb(248 247 243 / 32%);
+  color: var(--color-on-ink);
+}
+
+/* The page's blue ring does not show on the dimmed page. */
+.round:focus-visible {
+  outline-color: var(--color-on-ink);
+}
+
+/* An arrow with no ticket that way keeps its place. */
+.round:disabled {
+  visibility: hidden;
+}
+
+/* The one thing to do here. */
+.save,
+.save:hover {
+  background: var(--color-highlight);
+  color: var(--color-ink);
+}
+
+.save:hover {
+  background: var(--color-highlight-soft);
 }
