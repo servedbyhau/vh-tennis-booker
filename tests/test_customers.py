@@ -139,6 +139,21 @@ def test_what_is_attached_is_not_removed(book):
     assert book.store.logins == {}
 
 
+def test_what_is_attached_is_taken_from_its_machine_when_asked(book):
+    an = book.add_customer("An")
+    first, second = book.add_account(an.id, FIRST), book.add_account(an.id, SECOND)
+    book.attach(first.id, 0)
+    book.attach(second.id, 2)
+
+    book.remove_account(first.id, detach=True)
+    assert book.store.read(0) is None
+    assert book.store.read(2) == SECOND  # the other machine keeps its account
+
+    book.remove_customer(an.id, detach=True)
+    assert book.customers() == []
+    assert book.store.logins == {}
+
+
 def test_a_removed_account_leaves_the_others(book):
     an = book.add_customer("An")
     first, second = book.add_account(an.id, FIRST), book.add_account(an.id, SECOND)

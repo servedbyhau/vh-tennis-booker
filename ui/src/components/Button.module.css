@@ -29,6 +29,19 @@
   background: var(--color-paper);
 }
 
+/* What cannot be taken back. */
+.danger {
+  border: var(--border-hairline) solid var(--color-failed);
+  background: transparent;
+  color: var(--color-failed);
+  font-weight: var(--weight-semibold);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-failed);
+  color: var(--color-on-ink);
+}
+
 .large {
   min-height: 48px;
   padding: 0 var(--space-6);

@@ -287,7 +287,7 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), and a ticket's picture from the data folder's `tickets`, by its code alone |
-| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) |
+| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`) |
 | `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine (it moves from another one), or none; refused while a run goes on (409 `lock_held`) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
@@ -316,8 +316,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose three sections each have an
   address: `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
   `?customer=`, else the first: who they are and their accounts; one form is open at a time, a
-  password typed in is sent once and never shown again, a removal takes two presses, an account
-  in use is not removed), `TicketsTab` (every machine's tickets still to use by day of play, of
+  password typed in is sent once and never shown again, a removal is beside each edit and
+  asks first, saying which machine loses its account), `TicketsTab` (every machine's tickets still to use by day of play, of
   one machine or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`; read
   again after `tickets_saved`) and `HistoryTab` (runs ten days at a time, real bookings unless

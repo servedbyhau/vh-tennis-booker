@@ -152,11 +152,14 @@ class CustomerBook:
             )
         return self.customer(customer_id)
 
-    def remove_customer(self, customer_id: str) -> None:
-        """Remove the customer, their accounts and logins; refused while one is attached."""
+    def remove_customer(self, customer_id: str, detach: bool = False) -> None:
+        """Remove the customer, their accounts and logins.
+
+        Refused while an account is attached to a machine, unless ``detach`` takes it from there.
+        """
         customer = self.customer(customer_id)
         for account in customer.accounts:
-            _refuse_attached(account)
+            self._free(account, detach)
         # The logins first: a vault that refuses leaves the customer to remove again.
         for account in customer.accounts:
             self.store.delete(account.id)
@@ -200,12 +203,22 @@ class CustomerBook:
             self.db.execute("UPDATE accounts SET label = ? WHERE id = ?", (label, account_id))
         return self.account(account_id)
 
-    def remove_account(self, account_id: str) -> None:
-        """Remove the account and its login; refused while it is attached to a machine."""
-        _refuse_attached(self.account(account_id))
+    def remove_account(self, account_id: str, detach: bool = False) -> None:
+        """Remove the account and its login.
+
+        Refused while it is attached to a machine, unless ``detach`` takes it from there.
+        """
+        self._free(self.account(account_id), detach)
         self.store.delete(account_id)
         with self.db:
             self.db.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+
+    def _free(self, account: Account, detach: bool) -> None:
+        if account.device is None:
+            return
+        if not detach:
+            raise AccountAttachedError(f"The account is attached to MuMu {account.device}")
+        self.store.delete(account.device)
 
     # Machines ----------------------------------------------------------------
 
@@ -259,11 +272,6 @@ def adopt_saved_logins(path: Path, store: CredentialStore, name: Callable[[int],
             logger.info("Gave %d saved login(s) a customer", adopted)
     except (sqlite3.Error, CourtBookerError):
         logger.warning("Could not give the saved logins customers", exc_info=True)
-
-
-def _refuse_attached(account: Account) -> None:
-    if account.device is not None:
-        raise AccountAttachedError(f"The account is attached to MuMu {account.device}")
 
 
 def _new_id() -> str:

@@ -6,8 +6,6 @@ import {
   useAddCustomer,
   useChangeAccount,
   useChangeCustomer,
-  useRemoveAccount,
-  useRemoveCustomer,
 } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Button } from "../../components/Button";
@@ -39,13 +37,11 @@ interface FormProps {
   error: unknown;
   onSave: () => void;
   onClose: () => void;
-  /** What removes the record, under the fields. */
-  remove?: ReactNode;
   children: ReactNode;
 }
 
 /** The frame of both forms: the fields, Save and Cancel, and why a save failed. */
-function EditForm({ title, pending, error, onSave, onClose, remove, children }: FormProps) {
+function EditForm({ title, pending, error, onSave, onClose, children }: FormProps) {
   const { t } = useTranslation();
   const form = useRef<HTMLFormElement>(null);
   // It may open below the window's edge.
@@ -71,42 +67,7 @@ function EditForm({ title, pending, error, onSave, onClose, remove, children }: 
           {errorMessage(t, error)}
         </p>
       )}
-      {remove}
     </form>
-  );
-}
-
-interface RemoveProps {
-  /** Whether a machine books with it, which keeps it from being removed. */
-  inUse: boolean;
-  remove: { mutate: () => void; isPending: boolean; error: unknown };
-}
-
-/** A removal in two presses: it cannot be taken back, and the password is gone with it. */
-function Remove({ inUse, remove }: RemoveProps) {
-  const { t } = useTranslation();
-  const [asked, setAsked] = useState(false);
-  if (inUse) {
-    return <p className={styles.note}>{t("pages.customers.inUse")}</p>;
-  }
-  return (
-    <div className={styles.actions}>
-      {asked ? (
-        <>
-          <Button disabled={remove.isPending} onClick={remove.mutate}>
-            {t("pages.customers.removeSure")}
-          </Button>
-          <Button onClick={() => setAsked(false)}>{t("pages.customers.keep")}</Button>
-        </>
-      ) : (
-        <Button onClick={() => setAsked(true)}>{t("pages.customers.remove")}</Button>
-      )}
-      {remove.error !== null && (
-        <p role="alert" className={styles.error}>
-          {errorMessage(t, remove.error)}
-        </p>
-      )}
-    </div>
   );
 }
 
@@ -122,7 +83,6 @@ export function CustomerForm({ customer, onClose, onSaved }: CustomerFormProps) 
   const { t } = useTranslation();
   const add = useAddCustomer();
   const change = useChangeCustomer();
-  const remove = useRemoveCustomer();
   const [name, setName] = useState(customer?.name ?? "");
   const [representative, setRepresentative] = useState(customer?.representative ?? "");
   const [contact, setContact] = useState(customer?.contact ?? "");
@@ -145,18 +105,6 @@ export function CustomerForm({ customer, onClose, onSaved }: CustomerFormProps) 
       error={save.error}
       onSave={onSave}
       onClose={onClose}
-      remove={
-        customer !== null && (
-          <Remove
-            inUse={customer.accounts.some((account) => account.device !== null)}
-            remove={{
-              mutate: () => remove.mutate(customer.id, { onSuccess: onClose }),
-              isPending: remove.isPending,
-              error: remove.error,
-            }}
-          />
-        )
-      }
     >
       <Field label={t("pages.customers.name")}>
         <input
@@ -207,7 +155,6 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
   const { t } = useTranslation();
   const add = useAddAccount();
   const change = useChangeAccount();
-  const remove = useRemoveAccount();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [label, setLabel] = useState(account?.label ?? "");
@@ -229,18 +176,6 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
       error={save.error}
       onSave={onSave}
       onClose={onClose}
-      remove={
-        account !== null && (
-          <Remove
-            inUse={account.device !== null}
-            remove={{
-              mutate: () => remove.mutate(account.id, { onSuccess: onClose }),
-              isPending: remove.isPending,
-              error: remove.error,
-            }}
-          />
-        )
-      }
     >
       {account === null && (
         <Field label={t("pages.customers.phone")}>

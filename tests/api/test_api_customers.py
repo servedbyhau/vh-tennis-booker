@@ -98,6 +98,20 @@ def test_an_attached_account_moves_but_is_not_removed(client, customer, account)
     }
 
 
+def test_what_is_attached_is_removed_when_asked(client, customer, account, saved_logins):
+    attach(client, account, 1)
+    url = f"/api/customer-accounts/{account['id']}"
+    assert client.delete(url, params={"detach": True}).status_code == 204
+    assert saved_logins.read(1) is None
+
+    client.post(f"/api/customers/{customer['id']}/accounts", json=ACCOUNT)
+    other = client.get("/api/customers").json()[0]["accounts"][0]
+    attach(client, other, 2)
+    reply = client.delete(f"/api/customers/{customer['id']}", params={"detach": True})
+    assert reply.status_code == 204
+    assert saved_logins.logins == {}
+
+
 def test_a_phone_number_is_taken_once(client, account):
     other = client.post("/api/customers", json={"name": "Bình"}).json()
     reply = client.post(f"/api/customers/{other['id']}/accounts", json=ACCOUNT)
@@ -111,6 +125,7 @@ def test_nothing_of_a_machine_changes_while_a_run_goes_on(client, account, saved
         attach(client, account, 1),
         client.delete("/api/machines/1/account"),
         client.put(url, json={"label": "", "password": "moi"}),
+        client.delete(url, params={"detach": True}),
     ]
     assert {(reply.status_code, reply.json()["error"]) for reply in refused} == {(409, "lock_held")}
     assert saved_logins.read(1) is None

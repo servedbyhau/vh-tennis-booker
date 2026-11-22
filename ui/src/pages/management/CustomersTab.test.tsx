@@ -79,7 +79,7 @@ describe("Management customers", () => {
         .getAllByRole("row")
         .slice(1)
         .map((row) => row.textContent),
-    ).toEqual(["09••••••11Căn ASửa", "09••••••22Sửa"]);
+    ).toEqual(["09••••••11Căn ASửaXóa", "09••••••22SửaXóa"]);
   });
 
   it("shows the one pressed, with no form left open, and keeps it in the address", async () => {
@@ -128,7 +128,7 @@ describe("Management customers", () => {
 
   it("changes one", async () => {
     const { fetch } = await openPage([AN], { "PUT /api/customers/a1": reply(AN) });
-    press("Sửa khách");
+    press("Sửa");
     expect(screen.getByLabelText("Tên khách hoặc nhóm")).toHaveValue("Anh An");
     type("Tên khách hoặc nhóm", "An");
     press("Lưu");
@@ -141,24 +141,37 @@ describe("Management customers", () => {
     });
   });
 
-  it("does not remove one whose account is in use", async () => {
-    await openPage([AN]);
-    press("Sửa khách");
-    expect(
-      screen.getByText("Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được."),
-    ).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Xóa" })).not.toBeInTheDocument();
+  it("asks before it removes one, and says what is lost", async () => {
+    const { fetch } = await openPage([AN], { "DELETE /api/customers/a1": reply(null, 204) });
+    press("Xóa");
+    const question = screen.getByRole("alertdialog", { name: "Xóa Anh An?" });
+    expect(question).toHaveFocus(); // a second press removes nothing
+    expect(question).toHaveTextContent("Mất luôn 2 tài khoản và mật khẩu đã lưu");
+    expect(question).toHaveTextContent(
+      "Máy 2 đang dùng 09••••••11, xóa rồi máy này không còn tài khoản.",
+    );
+    fireEvent.click(within(question).getByRole("button", { name: "Giữ lại" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(requestsTo(fetch, "DELETE /api/customers/a1")).toBe(0);
+
+    press("Xóa");
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Xóa" }));
+    await waitFor(() => expect(requestsTo(fetch, "DELETE /api/customers/a1")).toBe(1));
+    const [request] = fetch.mock.calls
+      .map(([sentRequest]) => sentRequest)
+      .filter((r) => r.method === "DELETE");
+    expect(new URL(request!.url).search).toBe("?detach=true");
   });
 
-  it("removes one in two presses", async () => {
-    const { fetch } = await openPage([BINH], { "DELETE /api/customers/a2": reply(null, 204) });
-    press("Sửa khách");
+  it("says why one was not removed", async () => {
+    await openPage([AN], {
+      "DELETE /api/customers/a1": reply({ error: "lock_held", detail: "running" }, 409),
+    });
     press("Xóa");
-    expect(requestsTo(fetch, "DELETE /api/customers/a2")).toBe(0);
-    press("Giữ lại");
-    press("Xóa");
-    press("Xóa thật");
-    await waitFor(() => expect(requestsTo(fetch, "DELETE /api/customers/a2")).toBe(1));
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Xóa" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
+    );
   });
 
   it("is worded in English too", async () => {
@@ -207,7 +220,7 @@ describe("Management accounts", () => {
 
   it("keeps the password unless a new one is typed", async () => {
     const { fetch } = await openPage([AN], { "PUT /api/customer-accounts/b2": reply(AN) });
-    press("Sửa", 1);
+    press("Sửa", 2);
     expect(screen.queryByRole("textbox", { name: "Số điện thoại" })).not.toBeInTheDocument();
     type("Tên gợi nhớ", "Căn D");
     press("Lưu");
@@ -217,7 +230,7 @@ describe("Management accounts", () => {
       password: null,
     });
 
-    press("Sửa", 1);
+    press("Sửa", 2);
     type("Mật khẩu mới (để trống nếu giữ nguyên)", "moi");
     press("Lưu");
     await waitFor(() => expect(screen.queryByRole("form")).not.toBeInTheDocument());
@@ -227,24 +240,23 @@ describe("Management accounts", () => {
     });
   });
 
-  it("removes only one that is not in use", async () => {
+  it("removes one after a question", async () => {
     const { fetch } = await openPage([AN], {
       "DELETE /api/customer-accounts/b2": reply(null, 204),
     });
-    press("Sửa", 0);
-    expect(
-      screen.getByText("Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được."),
-    ).toBeVisible();
-    press("Sửa", 1); // the other account's form in its place
-    press("Xóa");
-    press("Xóa thật");
+    press("Xóa", 2); // the customer's, then one per account
+    const question = screen.getByRole("alertdialog", { name: "Xóa 09••••••22?" });
+    expect(question).toHaveTextContent("Mất luôn mật khẩu đã lưu, không lấy lại được.");
+    expect(question).not.toHaveTextContent("đang dùng");
+    fireEvent.click(within(question).getByRole("button", { name: "Xóa" }));
     await waitFor(() => expect(requestsTo(fetch, "DELETE /api/customer-accounts/b2")).toBe(1));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
   });
 
   it("opens one form at a time", async () => {
     await openPage();
     press("Thêm tài khoản");
-    press("Sửa khách");
+    press("Sửa");
     expect(screen.getAllByRole("form")).toHaveLength(1);
   });
 });

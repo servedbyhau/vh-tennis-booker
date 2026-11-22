@@ -101,10 +101,12 @@ export function changeCustomer(id: string, fields: CustomerFields): Promise<Cust
   );
 }
 
-/** Remove a customer with their accounts; refused while one is attached to a machine. */
+/** Remove a customer with their accounts, taken from the machines they are attached to. */
 export async function removeCustomer(id: string): Promise<void> {
   await call(
-    client.DELETE("/api/customers/{customer_id}", { params: { path: { customer_id: id } } }),
+    client.DELETE("/api/customers/{customer_id}", {
+      params: { path: { customer_id: id }, query: { detach: true } },
+    }),
   );
 }
 
@@ -128,10 +130,12 @@ export function changeAccount(id: string, change: AccountChange): Promise<Custom
   );
 }
 
-/** Remove an account; refused while it is attached to a machine. */
+/** Remove an account, taken from the machine it is attached to. */
 export async function removeAccount(id: string): Promise<void> {
   await call(
-    client.DELETE("/api/customer-accounts/{account_id}", { params: { path: { account_id: id } } }),
+    client.DELETE("/api/customer-accounts/{account_id}", {
+      params: { path: { account_id: id }, query: { detach: true } },
+    }),
   );
 }
 

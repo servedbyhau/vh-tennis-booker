@@ -168,7 +168,7 @@
       "accountCount": "{{count}} tài khoản",
       "noFacts": "Chưa có thông tin liên hệ. Bấm \"Sửa khách\" để thêm.",
       "empty": "Chưa có khách nào. Bấm \"Thêm khách\" để bắt đầu.",
-      "editCustomer": "Sửa khách",
+      "editCustomer": "Sửa",
       "label": "Tên gợi nhớ",
       "add": "Thêm khách",
       "edit": "Sửa",
@@ -183,9 +183,12 @@
       "save": "Lưu",
       "cancel": "Hủy",
       "remove": "Xóa",
-      "removeSure": "Xóa thật",
       "keep": "Giữ lại",
-      "inUse": "Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được."
+      "inUse": "{{machine}} đang dùng {{phone}}, xóa rồi máy này không còn tài khoản.",
+      "removeCustomer": "Xóa",
+      "removeAsk": "Xóa {{name}}?",
+      "lostAccounts": "Mất luôn {{count}} tài khoản và mật khẩu đã lưu, không lấy lại được.",
+      "lostAccount": "Mất luôn mật khẩu đã lưu, không lấy lại được."
     },
     "panel": {
       "setup": "Thiết lập",

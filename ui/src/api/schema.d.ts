@@ -264,7 +264,8 @@ export interface paths {
          * Remove Customer
          * @description Remove a customer with their accounts and saved logins.
          *
-         *     Refused (409 ``account_attached``) while one of the accounts is attached to a machine.
+         *     Refused (409 ``account_attached``) while one of the accounts is attached to a machine, unless
+         *     ``detach`` takes it from there; not while a run goes on (409 ``lock_held``).
          */
         delete: operations["remove_customer_api_customers__customer_id__delete"];
         options?: never;
@@ -317,7 +318,8 @@ export interface paths {
          * Remove Account
          * @description Remove an account with its saved login.
          *
-         *     Refused (409 ``account_attached``) while it is attached to a machine.
+         *     Refused (409 ``account_attached``) while it is attached to a machine, unless ``detach`` takes
+         *     it from there; not while a run goes on (409 ``lock_held``).
          */
         delete: operations["remove_account_api_customer_accounts__account_id__delete"];
         options?: never;
@@ -1626,7 +1628,10 @@ export interface operations {
     };
     remove_customer_api_customers__customer_id__delete: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Whether an account attached to a machine is taken from it */
+                detach?: boolean;
+            };
             header?: never;
             path: {
                 customer_id: string;
@@ -1752,7 +1757,10 @@ export interface operations {
     };
     remove_account_api_customer_accounts__account_id__delete: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Whether an account attached to a machine is taken from it */
+                detach?: boolean;
+            };
             header?: never;
             path: {
                 account_id: string;
