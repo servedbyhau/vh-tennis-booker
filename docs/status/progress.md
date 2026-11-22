@@ -23,9 +23,9 @@ Last updated: 2026-11-22.
   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
-- Since 2026-11-22 the installed app on the dev PC is a local build of `fix/tickets-at-0603` (1.1.2
-  plus the third machine, the ticket reading and the Manage tab), to try it before a release;
-  its first 06:00 run is 2026-11-23. The app before it and the data are in
+- Since 2026-11-22 the installed app on the dev PC is a local build of `feat/customers-ui` (1.1.2
+  plus the third machine, the tickets and the customers' accounts), to try it before a release;
+  its first 06:00 run is 2026-11-23. The app before the tickets is in
   `D:\VH-Booker\app-backup-2026-11-22`.
 - Runner folder: at `v0.18.1`, kept as a way back until 2026-11-10, then removed. To go back:
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
