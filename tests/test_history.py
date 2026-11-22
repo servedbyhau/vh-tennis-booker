@@ -140,6 +140,9 @@ def test_a_run_and_its_slots_are_recorded(connection):
             "status": "partial",
             "error": None,
             "device": 1,
+            "account_id": None,
+            "customer": None,
+            "account": None,
         }
     ]
     assert rows(connection, "SELECT * FROM run_slots") == [
@@ -387,6 +390,21 @@ def test_a_ticket_keeps_its_picture_and_takes_its_new_status(connection):
     store.save_tickets(2, [ticket(status_text="Đã huỷ")], {}, SEEN + timedelta(days=1))
     rows = connection.execute("SELECT code, device, status, seen_at, photo FROM tickets").fetchall()
     assert rows == [("1234567", 2, "cancelled", "2026-11-23T06:01:12.000", "1234567.png")]
+
+
+def test_a_run_and_its_tickets_are_of_their_accounts_holder(connection):
+    names = "account_id, customer, account"
+    run = history.History(connection)
+    Reporter(run)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    run.set_holder(history.Holder("a1", "An", "Căn A"))
+    run.save_tickets(1, [ticket()], {}, SEEN)
+
+    assert connection.execute(f"SELECT {names} FROM runs").fetchall() == [("a1", "An", "Căn A")]
+    assert connection.execute(f"SELECT {names} FROM tickets").fetchall() == [("a1", "An", "Căn A")]
+
+    # Read again on a machine without a chosen account: it stays theirs.
+    history.History(connection).save_tickets(1, [ticket()], {}, SEEN)
+    assert connection.execute(f"SELECT {names} FROM tickets").fetchall() == [("a1", "An", "Căn A")]
 
 
 def test_tickets_that_cannot_be_saved_only_warn(connection, caplog):

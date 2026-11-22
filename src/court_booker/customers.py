@@ -22,9 +22,10 @@ from court_booker.credentials import (
     CredentialError,
     CredentialStore,
     Login,
+    mask_phone,
 )
 from court_booker.errors import CourtBookerError
-from court_booker.history import connect
+from court_booker.history import Holder, connect
 
 logger = logging.getLogger(__name__)
 
@@ -286,6 +287,24 @@ class CustomerBook:
             known.add(login.phone)
             adopted += 1
         return adopted
+
+
+def holder_on(path: Path, store: CredentialStore, device: int) -> Holder | None:
+    """Return whose account MuMu instance ``device`` books with, ``None`` without a chosen one.
+
+    ``path`` is the database.
+    """
+    connection = connect(path)
+    try:
+        customers = CustomerBook(connection, store).customers()
+    finally:
+        connection.close()
+    for customer in customers:
+        for account in customer.accounts:
+            if account.device == device and account.phone is not None:
+                name = account.label or mask_phone(account.phone)
+                return Holder(account.id, customer.name, name)
+    return None
 
 
 def adopt_saved_logins(path: Path, store: CredentialStore, name: Callable[[int], str]) -> None:

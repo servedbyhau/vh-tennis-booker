@@ -28,6 +28,10 @@ class Ticket(BaseModel):
     """The app's booking code."""
     device: int
     """The MuMu instance whose account holds it."""
+    customer: Optional[str]
+    """Whose account holds it; empty if no run that read it had a chosen one."""
+    account: Optional[str]
+    """The account's name, else its phone number with the middle hidden."""
     court: str
     play_date: str
     slot: str

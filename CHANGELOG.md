@@ -29,6 +29,8 @@ uses [Semantic Versioning](https://semver.org/).
   folder's `tickets`. It starts at 06:03, once no machine is booking any more, so MuMu closes
   three minutes or so later than before. A ticket and its picture are deleted once its day of
   play is over.
+- Each run and each ticket is recorded with whose account it is of, the customer and the account, so
+  it stays known when the accounts change machines.
 - A third machine on the ticket, "Máy 3" (MuMu 2), switched on and off like "Máy 2", so a
   third account books alongside from the UI. Each machine keeps its tab whichever of the
   others is on.

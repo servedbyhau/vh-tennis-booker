@@ -2426,6 +2426,28 @@
             ],
             "title": "Device"
           },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
           "booked": {
             "type": "integer",
             "title": "Booked"
@@ -2469,6 +2491,8 @@
           "status",
           "error",
           "device",
+          "customer",
+          "account",
           "booked",
           "total",
           "slots",
@@ -2559,6 +2583,28 @@
             ],
             "title": "Device"
           },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
           "booked": {
             "type": "integer",
             "title": "Booked"
@@ -2588,6 +2634,8 @@
           "status",
           "error",
           "device",
+          "customer",
+          "account",
           "booked",
           "total",
           "slots"
@@ -2987,6 +3035,28 @@
             "type": "integer",
             "title": "Device"
           },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
           "court": {
             "type": "string",
             "title": "Court"
@@ -3037,6 +3107,8 @@
         "required": [
           "code",
           "device",
+          "customer",
+          "account",
           "court",
           "play_date",
           "slot",

@@ -42,6 +42,8 @@ def test_a_ticket_comes_with_what_the_app_showed(client, context, save):
         {
             "code": "1234567",
             "device": 1,
+            "customer": None,
+            "account": None,
             "court": "S6 - Sân tennis",
             "play_date": "2026-10-03",
             "slot": "08:00 - 09:00",

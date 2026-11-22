@@ -16,11 +16,30 @@ from court_booker.history import SCHEMA_VERSION, connect
 DEFAULT_LIMIT = 50
 DEFAULT_TICKETS = 500
 
-_RUN_COLUMNS = """
+
+def _holder_columns(table: str) -> str:
+    """Return the columns that name whose account a row of ``table`` is of.
+
+    The names of today, so a customer or account that takes another name shows under it;
+    those of then once it is removed.
+    """
+    return f"""
+    COALESCE(
+        (SELECT customers.name FROM accounts
+         JOIN customers ON customers.id = accounts.customer_id
+         WHERE accounts.id = {table}.account_id), {table}.customer) AS customer,
+    COALESCE(
+        (SELECT NULLIF(accounts.label, '') FROM accounts
+         WHERE accounts.id = {table}.account_id), {table}.account) AS account
+"""
+
+
+_RUN_COLUMNS = f"""
     runs.id, runs.trigger, runs.dry_run, runs.version, runs.started_at, runs.finished_at,
     runs.play_date, runs.court, runs.status, runs.error, runs.device,
     (SELECT COUNT(*) FROM run_slots WHERE run_slots.run_id = runs.id AND run_slots.ok) AS booked,
-    (SELECT COUNT(*) FROM run_slots WHERE run_slots.run_id = runs.id) AS total
+    (SELECT COUNT(*) FROM run_slots WHERE run_slots.run_id = runs.id) AS total,
+    {_holder_columns("runs")}
 """
 
 _RUN_DAY = "substr(runs.started_at, 1, 10)"
@@ -203,9 +222,10 @@ def account_subdivisions(db: sqlite3.Connection) -> list[dict[str, Any]]:
     return list(found.values())
 
 
-_TICKET_COLUMNS = (
-    "code, device, utility, court, play_date, slot, status, status_text, created_at, seen_at, photo"
-)
+_TICKET_COLUMNS = f"""
+    code, device, utility, court, play_date, slot, status, status_text, created_at, seen_at,
+    photo, {_holder_columns("tickets")}
+"""
 
 
 def list_tickets(
