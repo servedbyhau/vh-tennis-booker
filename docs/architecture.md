@@ -111,7 +111,8 @@ Details live in the docstrings; this page says where things are and what must st
   it 120 s after the start of a timed run (06:02) and once no other run is recorded as
   running, 90 s later all the same (a killed run stays recorded so), and limits it to 90 s;
   the lock is held and MuMu stays open meanwhile. Nothing in it changes the run's result or
-  exit code. `forget_expired` deletes the tickets whose day of play is over, whatever their
+  exit code. A ticket that does not open costs no other ticket's picture, and what could not be
+  read is tried once more. `forget_expired` deletes the tickets whose day of play is over, whatever their
   status, and their pictures: at the end of a real run, once every machine's has ended, and
   when the backend starts. The runs in the history stay.
   It taps two things only, the history icon (on a list that two reads show alike, as a

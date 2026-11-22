@@ -58,7 +58,8 @@ TICKETS_WAIT = timedelta(seconds=90)
 """How long the tickets then wait for a machine recorded as booking; its run may have been
 killed, so they are read all the same after it."""
 TICKETS_SECONDS = 90.0
-"""How long reading the tickets may take; a run so ends before the quiet time does (5 min)."""
+"""How long reading the tickets may take; a run so ends about when the quiet time does (5 min
+after the start), holding the lock until then."""
 
 
 def build_parser() -> argparse.ArgumentParser:
