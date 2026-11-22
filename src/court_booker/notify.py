@@ -94,6 +94,7 @@ REASONS = {
         "loggedOut": "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
         "loginRefused": "App từ chối tài khoản đã lưu: {message}",
         "loginFailed": "Chưa tự đăng nhập lại được",
+        "wrongAccount": "Không chắc Vinhomes đang ở đúng tài khoản, nên không đặt",
         "notReady": "App Vinhomes chưa mở được",
         "appMissing": "App Vinhomes chưa được cài trên MuMu",
         "other": "Có lỗi, xem nhật ký",
@@ -111,6 +112,7 @@ REASONS = {
         "loggedOut": "The Vinhomes app is logged out and no login is saved",
         "loginRefused": "The app refused the saved login: {message}",
         "loginFailed": "Could not log in again",
+        "wrongAccount": "Not sure Vinhomes is in the right account, so nothing was booked",
         "notReady": "The Vinhomes app did not open",
         "appMissing": "The Vinhomes app is not installed on MuMu",
         "other": "Error, see the activity log",
@@ -139,6 +141,10 @@ _PATTERNS = [
             r"|^The app logged out again"
         ),
         "loginFailed",
+    ),
+    (
+        re.compile(r"after logging in with the saved login|no earlier run saw the saved login"),
+        "wrongAccount",
     ),
     # Runs before the saved login asked to check the login; a logout is told apart since.
     (re.compile(r"check that it is logged in$|; check the app on MuMu \d+$"), "notReady"),

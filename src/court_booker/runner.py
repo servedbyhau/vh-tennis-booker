@@ -37,6 +37,8 @@ The app answered an early tap with a notice on 2026-10-19 (up to 0.76 s early). 
 0.1 s margin reduces that risk, but a notice still appeared on 2026-10-20 with the PC
 clock behind NTP. Which clock the app uses for opening hours remains unverified.
 The 06:00 logs show where the tap fell ("Start reached"); retaps handle a notice."""
+NEAR_START = timedelta(minutes=2)
+"""How near the start a run begins for the account not to be read again: that takes 3-5 s."""
 SCREENS_KEPT = 30
 """Screenshots of failures kept in the log folder's ``screens``; each holds personal data, so
 they stay on this PC and the oldest go."""
@@ -109,6 +111,7 @@ def run_booking(
     results: list[RoundResult] | None = None,
     report: Reporter | None = None,
     login_for: Callable[[], Login | None] | None = None,
+    account_seen: Callable[[], str | None] | None = None,
     screens: Path | None = None,
     supervisor: Supervisor | None = None,
     on_booker: Callable[[Booker], None] | None = None,
@@ -123,7 +126,8 @@ def run_booking(
     :data:`~court_booker.config.DAYS_AHEAD` after the start date. After the app's quota
     notice the slots left fail unrun. Results are appended to ``results`` as rounds finish,
     so an interrupted caller still sees them; progress goes to ``report`` as events.
-    ``login_for`` reads the saved login, typed in if the app logged out.
+    ``login_for`` reads the saved login: the app is logged in with it if it is logged out or
+    with another account. ``account_seen`` reads the masked phone number an earlier run saw.
 
     A real run that stops on a failure the app did not explain saves the screen in
     ``screens`` (:func:`save_screen`): when the app is not made ready, or when such a failure
@@ -139,11 +143,14 @@ def run_booking(
     if supervisor is None:
         supervisor = Supervisor(config, report=report, device=device, now=clock.now)
     device = supervisor.device
-    booker = Booker(device, config, report, login_for=login_for)
+    booker = Booker(device, config, report, login_for=login_for, account_seen=account_seen)
     if on_booker is not None:
         on_booker(booker)
     shots = None if dry_run else screens
     deadline = setup_deadline(start, config.warm_up_seconds, clock.now())
+    # Started with less time than getting ready is given: the account is not read again if
+    # an earlier run saw it.
+    booker.hurry = start is not None and start - clock.now() < NEAR_START
     try:
         supervisor.prepare(booker, deadline)
         report(EventKind.APP_READY)

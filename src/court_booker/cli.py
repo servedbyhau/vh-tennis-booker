@@ -492,6 +492,9 @@ def main(argv: list[str] | None = None) -> int:
                 results=results,
                 report=report,
                 login_for=lambda: credentials.default_store().read(config.mumu_index),
+                account_seen=lambda: (
+                    None if history is None else history.last_account(config.mumu_index)
+                ),
                 screens=None if log_dir is None else log_dir / "screens",
                 on_booker=bookers.append,
             )

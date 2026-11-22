@@ -302,7 +302,9 @@
       "full": "The account is in the {{name}} subdivision",
       "plain": "Read the account's subdivision"
     },
-    "logged_in": "The app had logged out; logged in again",
+    "logged_in": "Logged in with the saved login",
+    "account_checked": "Right account {{phone}}",
+    "account_switched": "Changed to account {{phone}}",
     "repaired": {
       "restart_mumu": "Something failed while getting ready; restarted MuMu",
       "reconnect_adb": "Something failed while getting ready; connected to MuMu again",
@@ -423,6 +425,7 @@
     "loggedOut": "The Vinhomes app is logged out and no login is saved",
     "loginRefused": "The app refused the saved login: {{message}}",
     "loginFailed": "Could not log in again",
+    "wrongAccount": "Not sure Vinhomes is in the right account, so nothing was booked",
     "notReady": "The Vinhomes app did not open",
     "appMissing": "The Vinhomes app is not installed on MuMu",
     "other": "Error, see the activity log"

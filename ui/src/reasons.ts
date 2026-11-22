@@ -40,6 +40,10 @@ const REASONS: [RegExp, Phrase][] = [
     /stayed disabled after typing the login$|\(\d+ tap\(s\)\); check the app$|^The app logged out again/,
     (t) => t("reasons.loginFailed"),
   ],
+  [
+    /after logging in with the saved login|no earlier run saw the saved login/,
+    (t) => t("reasons.wrongAccount"),
+  ],
   [NOT_READY, (t) => t("reasons.notReady")],
   [/ is not installed on .+; install it$/, (t) => t("reasons.appMissing")],
 ];

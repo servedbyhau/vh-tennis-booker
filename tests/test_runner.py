@@ -25,7 +25,7 @@ FULL_SLOT = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
 
 
 class FakeBooker:
-    def __init__(self, device, config, report=None, login_for=None):
+    def __init__(self, device, config, report=None, login_for=None, account_seen=None):
         self.login_for = login_for
         self.booked = []
         self.events = []
@@ -86,7 +86,7 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger="court_booker")
     events = []
 
-    def make_booker(device, config, report=None, login_for=None):
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
         booker = FakeBooker(device, config, report)
         booker.events = events
         return booker
@@ -150,7 +150,7 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
 
     bookers = []
 
-    def make_booker(device, config, report=None, login_for=None):
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
         bookers.append(SlowListBooker(device, config, report))
         return bookers[-1]
 
@@ -386,6 +386,23 @@ def test_the_quota_notice_skips_the_rounds_left(monkeypatch, caplog, failing):
     }
     assert sink.kinds.count(EventKind.SLOT_STARTED) == failing + 1
     assert f"Booking quota used up; skipping {', '.join(slots[failing + 1 :])}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("ahead", "hurry"), [(timedelta(minutes=15), False), (timedelta(seconds=90), True)]
+)
+def test_a_run_begun_near_its_start_hurries(monkeypatch, ahead, hurry):
+    made = []
+
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
+        made.append(FakeBooker(device, config, report, login_for, account_seen))
+        return made[-1]
+
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    monkeypatch.setattr(runner, "wait_until", lambda moment, now: None)
+    clock = FakeClock([])
+    runner.run_booking(FakeDevice(), Config(slots=["a"]), start=clock.now() + ahead, clock=clock)
+    assert made[0].hurry is hurry
 
 
 def test_the_booker_is_handed_over_before_anything_runs(monkeypatch):

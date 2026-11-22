@@ -273,6 +273,19 @@ class History:
                 return False
         return row is not None
 
+    def last_account(self, device: int) -> str | None:
+        """Return the masked phone number last seen logged in on MuMu instance ``device``."""
+        with self._lock:
+            try:
+                row = self.connection.execute(
+                    "SELECT events.data FROM events JOIN runs ON runs.id = events.run_id"
+                    " WHERE events.kind = ? AND runs.device = ? ORDER BY events.id DESC LIMIT 1",
+                    (EventKind.ACCOUNT_CHECKED.value, device),
+                ).fetchone()
+                return None if row is None else json.loads(row[0]).get("phone")
+            except (sqlite3.Error, ValueError):
+                return None
+
     def save_tickets(
         self, device: int, tickets: Sequence[Ticket], photos: Mapping[str, str], seen_at: datetime
     ) -> None:

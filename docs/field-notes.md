@@ -158,8 +158,28 @@ limit, and no apartment to choose after a login (the user, 2026-11-18).
   screen showed 3 s later, then the rounds ran. An earlier try's screen stayed unchanged for
   30 s after the tap while MuMu was freezing, yet the account was logged in afterwards.
 - The login screen stays as it was while the server checks the login, its button enabled:
-  the home screen showed 7-9 s after the tap (3 logins on 2026-11-22, one with a single tap),
+  the home screen showed 7-11 s after the tap (5 logins on 2026-11-22, two with a single tap),
   so a tap repeated sooner sends the password again.
+- The home screen may show although the session is over: it came from the app's store after a
+  restart, and the notice that the session expired some seconds later (2026-11-22).
+
+### Account tab (2026-11-22)
+
+Read on one account in both languages; the same page with other labels.
+
+- The home screen has two tabs at the bottom, `Trang chủ\nTab 1 trong tổng số 2` and
+  `Tài khoản\nTab 2 trong tổng số 2` (`Home\nTab 1 of 2`, `Account\nTab 2 of 2`). Back on the
+  account tab stays there; the home tab leads back.
+- The account tab shows `<name>\n<phone number>` in one clickable element, the number whole (10
+  digits from 0), then the apartment with `Thay đổi` (`Change`), and a list that ends with
+  **`Xóa tài khoản`** (`Delete account`) `[0,1288][540,1370]` right above `Đăng xuất`
+  (`Log out`) `[35,1418][505,1512]`: it is tapped by its whole label only.
+- `Đăng xuất` asks in a dialog of that title: "Bạn có muốn đăng xuất khỏi ứng dụng?",
+  `Hủy bỏ`, `Đồng ý` (`Cancel`, `Agree`); Back closes it. The login screen showed 0.8 s after
+  `Đồng ý`, the phone number still in its field.
+- Reading the number took 2.3 s of getting ready (two taps, and 2 s watching for the popup);
+  logging out and in again with the saved login 17 s. No OTP was asked.
+- `Ngôn ngữ` (`Language`) offers `Tiếng Việt` and `English`.
 
 ### Promotion popup over the home screen
 
@@ -325,6 +345,10 @@ slots and the booked date and time read the same.
 | `notice` | Thông báo | Notification |
 | `quota_full` | hết hạn mức | registration quota (seen in a dry run, 2026-10-25) |
 | `dont_show_again` | Không hiện lại | Don't show again (a guess, not seen) |
+| `home_tab` | Trang chủ | Home (2026-11-22) |
+| `account_tab` | Tài khoản | Account (2026-11-22) |
+| `log_out` | Đăng xuất | Log out (2026-11-22) |
+| `log_out_yes` | Đồng ý | Agree (2026-11-22) |
 | `login` | Đăng nhập | Login (2026-11-18) |
 | (dialog button) | Đóng | Close |
 

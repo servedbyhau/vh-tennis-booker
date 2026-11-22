@@ -57,6 +57,10 @@ class LabelSettings(BaseModel):
     registered: str
     login: str
     dont_show_again: str
+    home_tab: str
+    account_tab: str
+    log_out: str
+    log_out_yes: str
 
 
 class InstanceSettings(BaseModel):

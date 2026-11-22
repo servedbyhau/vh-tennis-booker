@@ -397,6 +397,22 @@ def test_tickets_that_cannot_be_saved_only_warn(connection, caplog):
     assert "History database failed" in caplog.text
 
 
+def test_the_account_last_seen_on_a_machine_is_told(connection):
+    store = history.History(connection)
+    assert store.last_account(1) is None
+    for device, phone in ((1, "09••••••11"), (1, "09••••••22"), (2, "09••••••33")):
+        run = history.History(connection)
+        report = Reporter(run)
+        report(
+            EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1", device=device
+        )
+        report(EventKind.ACCOUNT_CHECKED, phone=phone, switched=False)
+    assert store.last_account(1) == "09••••••22"
+    assert store.last_account(2) == "09••••••33"
+    connection.close()
+    assert store.last_account(1) is None  # a database that cannot be read
+
+
 def test_another_run_going_on_is_told(connection):
     first, second = history.History(connection), history.History(connection)
     Reporter(first)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")

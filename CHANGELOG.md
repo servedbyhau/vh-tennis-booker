@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- While getting ready, a run reads the phone number on the Vinhomes app's account tab, and logs
+  out and in again if it is not the account saved for the machine. It never books with another
+  one: a machine that stays in it, or cannot tell, books nothing and says so.
 - The backend keeps customers with the Vinhomes accounts they gave, and attaches an account to
   a machine (`/api/customers`, `/api/machines/{index}/account`). Logins saved before get a
   customer each.
@@ -23,8 +26,8 @@ uses [Semantic Versioning](https://semver.org/).
   others is on.
 
 ### Fixed
-- Logging in again waits 15 s for the app to answer instead of 3 s before "Đăng nhập" is
-  tapped again, and taps it twice at most: the app was seen to take 9 s, so one login was
+- Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is
+  tapped again, and taps it twice at most: the app was seen to take 11 s, so one login was
   sent three times (the app locks an account after 5 wrong passwords).
 
 ## [1.1.2] - 2026-11-19

@@ -107,6 +107,13 @@ class Labels:
     dont_show_again: str = "Không hiện lại"
     """Caption of the tick box on a promotion popup over the home screen; the popup is closed
     with its unlabelled X, as Back leaves it open."""
+    home_tab: str = "Trang chủ"
+    account_tab: str = "Tài khoản"
+    """First lines of the two tabs at the bottom, such as ``Tài khoản\\nTab 2 trong tổng số 2``."""
+    log_out: str = "Đăng xuất"
+    """Button of the account tab, right under "Xóa tài khoản", and title of its dialog."""
+    log_out_yes: str = "Đồng ý"
+    """Button of the dialog that asks whether to log out."""
 
 
 @dataclass

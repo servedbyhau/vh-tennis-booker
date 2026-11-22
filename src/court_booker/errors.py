@@ -111,6 +111,10 @@ class LoginFailedError(AppNotReadyError):
     """The saved login was typed in once and the app did not take it; never tried again."""
 
 
+class WrongAccountError(AppNotReadyError):
+    """The app is not known to be logged in with the account saved for the MuMu instance."""
+
+
 class AppMissingError(AppNotReadyError):
     """The app is not installed on the emulator: a person must install it."""
 

@@ -124,13 +124,21 @@ Details live in the docstrings; this page says where things are and what must st
   Attaching an account to a machine saves its login as that instance's, the one a run reads,
   so a run knows nothing of customers, and an instance's account is the one with its phone
   number: one account, one machine. Nothing of a machine's login changes while a run holds the
-  lock. Logins saved before 1.2.0 get a customer each when the backend starts (`adopt`).
+  lock. Logins saved before there were customers get one each when the backend starts (`adopt`).
 - `credentials.py`: one `Login` per MuMu instance and per customer account in Windows
   Credential Manager (a data folder set by `COURT_BOOKER_HOME` has names of its own there;
   `advapi32`,
   generic credential `CourtBooker/vinhomes/mumu-N`, kept for this Windows user on this PC,
   whom the daily task runs as); in memory where Windows is missing. `Login`'s repr hides the
   password. The run reads its own instance's (`cli` → `run_booking(login_for=...)`).
+- `prepare()` makes sure of the account (`check_account`) when a login is saved for the machine:
+  it opens the account tab, reads the phone number, and logs out and in with the saved login
+  if it is another one, once a run; then the number must be right (`WrongAccountError`, not
+  repaired). A number that cannot be read is tried again after a restart, then the run goes
+  on only if an earlier run saw this account on this machine (`History.last_account`, from
+  `account_checked` events, which hold the masked number). A run begun less than 2 minutes
+  before its start skips the check then (`Booker.hurry`). Labels, never places, are tapped:
+  the button above "Đăng xuất" deletes the account. No log holds a whole number.
 - `prepare()` then tells the account's subdivision (`read_account`) from the apartment code
   on the home screen it read anyway ("BS…" → `bs`, "S…" → `origami`; 0 commands). Only the
   subdivision is logged and reported (`account_subdivision`), never the code (personal data).
