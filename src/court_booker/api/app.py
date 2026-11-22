@@ -20,6 +20,7 @@ from court_booker.api import (
     settings,
     setup,
     status,
+    tickets,
 )
 from court_booker.api.context import AppContext
 from court_booker.api.errors import Problem, add_error_handlers
@@ -62,7 +63,18 @@ def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
         """Tell the UI the backend is up, and its version."""
         return Health(status="ok", version=__version__)
 
-    modules = (history, settings, accounts, logins, notifications, setup, schedule, runs, status)
+    modules = (
+        history,
+        tickets,
+        settings,
+        accounts,
+        logins,
+        notifications,
+        setup,
+        schedule,
+        runs,
+        status,
+    )
     for module in modules:
         app.include_router(module.router, responses=ERROR_RESPONSES)
     app.include_router(live.router)

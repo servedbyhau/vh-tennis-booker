@@ -6,6 +6,9 @@ const PATHS = {
   clock: "M8 2.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0-11zM8 5v3.25l2 1.25",
   /** A person: something someone started by hand. */
   person: "M8 2.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5zM3 13.5c.7-2.4 2.6-3.5 5-3.5s4.3 1.1 5 3.5",
+  /** A picture: something that opens as one. */
+  picture:
+    "M2.5 3h11v10h-11zM2.5 11l3.2-3.2l2.6 2.6l2-2l3.2 3.2M10.6 5.2a.9 .9 0 1 0 0 1.8a.9 .9 0 1 0 0-1.8z",
 } as const;
 
 export type IconName = keyof typeof PATHS;

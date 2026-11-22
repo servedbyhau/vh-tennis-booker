@@ -11,6 +11,7 @@ import {
   getSettings,
   listEvents,
   listRuns,
+  listTickets,
   type RunsQuery,
 } from "./endpoints";
 
@@ -27,6 +28,7 @@ export const queryKeys = {
   settings: ["settings"] as const,
   notifications: ["notifications"] as const,
   accounts: ["accounts"] as const,
+  tickets: ["tickets"] as const,
   login: (mumuIndex: number) => ["login", mumuIndex] as const,
 };
 
@@ -113,6 +115,11 @@ export function useNotifications() {
 /** Read the subdivision each MuMu instance's account told last. */
 export function useAccounts() {
   return useQuery({ queryKey: queryKeys.accounts, queryFn: getAccounts });
+}
+
+/** Read every machine's tickets; a run that read them again marks them stale. */
+export function useTickets() {
+  return useQuery({ queryKey: queryKeys.tickets, queryFn: listTickets });
 }
 
 /** Read whether a login is saved for MuMu instance `mumuIndex`; waits for a known index. */

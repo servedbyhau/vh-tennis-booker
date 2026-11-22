@@ -41,6 +41,9 @@ const RUN_BOUNDARIES: ReadonlySet<StepKind> = new Set<StepKind>([
  * booking nothing between them.
  */
 export function staleKeysFor(step: Step): QueryKey[] {
+  if (step.kind === "tickets_saved" && step.run_id !== null) {
+    return [queryKeys.tickets, queryKeys.run(step.run_id)]; // after the run's own end
+  }
   if (step.run_id !== null) {
     if (!RUN_BOUNDARIES.has(step.kind)) {
       return [];

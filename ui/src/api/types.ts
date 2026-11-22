@@ -28,6 +28,9 @@ export type StepKind = Schemas["EventKind"];
 export type StepCategory = Step["category"];
 export type LogLine = Schemas["LogLine"];
 
+/** One ticket of an account, as a run last read it in the app (`GET /api/tickets`). */
+export type Ticket = Schemas["Ticket"];
+
 /** The subdivision a MuMu instance's account last told (`GET /api/accounts`). */
 export type AccountSubdivision = Schemas["AccountSubdivision"];
 

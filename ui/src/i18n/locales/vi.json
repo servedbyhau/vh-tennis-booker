@@ -127,8 +127,48 @@
       "steps": "Từng bước",
       "technical": "Chi tiết kỹ thuật"
     },
+    "tickets": {
+      "title": "Quản lý",
+      "period": "Vé nào",
+      "upcoming": "Sắp tới",
+      "past": "Đã qua",
+      "machine": "Vé của máy",
+      "all": "Mọi máy",
+      "withCancelled": "Gồm cả vé đã hủy",
+      "count": "{{count}} vé",
+      "row": "{{slot}} · {{court}}",
+      "where": "{{machine}} · {{code}}",
+      "view": "Xem vé",
+      "noPhoto": "chưa có ảnh",
+      "empty": {
+        "none": "Chưa có vé nào. Vé và ảnh vé được lưu sau mỗi lượt đặt thật thành công.",
+        "upcoming": "Không có vé nào sắp tới.",
+        "past": "Không có vé nào đã qua."
+      },
+      "status": {
+        "registered": "ĐÃ ĐĂNG KÝ",
+        "processing": "ĐANG XỬ LÝ",
+        "cancelled": "ĐÃ HỦY"
+      },
+      "facts": {
+        "day": "Ngày chơi",
+        "slot": "Khung giờ",
+        "court": "Sân",
+        "machine": "Máy",
+        "code": "Mã đặt",
+        "created": "Đặt lúc"
+      },
+      "seen": "Trạng thái trong app lúc {{time}} ngày {{day}}.",
+      "photo": "Ảnh vé {{name}}",
+      "photoNone": "Vé này chưa có ảnh. Ảnh chỉ được chụp cho vé vừa đặt trong lượt chạy.",
+      "photoFailed": "Không mở được ảnh vé.",
+      "place": "{{place}}/{{total}}",
+      "previous": "← Vé trước",
+      "next": "Vé sau →",
+      "close": "Đóng"
+    },
     "panel": {
-      "title": "Lịch sử và thiết lập",
+      "title": "Vé, lịch sử và thiết lập",
       "setup": "Thiết lập",
       "left": ", còn {{count}} việc"
     },

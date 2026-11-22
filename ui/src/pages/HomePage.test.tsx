@@ -375,5 +375,14 @@ describe("HomePage panel", () => {
     fireEvent.keyDown(screen.getByRole("tab", { name: "Thiết lập" }), { key: "ArrowLeft" });
     expect(history).toHaveAttribute("aria-selected", "true");
     expect(history).toHaveFocus();
+
+    // Round the three tabs, past either end.
+    const tickets = screen.getByRole("tab", { name: "Quản lý" });
+    fireEvent.keyDown(history, { key: "ArrowLeft" });
+    expect(tickets).toHaveFocus();
+    fireEvent.keyDown(tickets, { key: "ArrowLeft" });
+    expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Thiết lập" }), { key: "ArrowRight" });
+    expect(tickets).toHaveFocus();
   });
 });
