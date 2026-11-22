@@ -20,6 +20,7 @@
   grid-template-columns: var(--touch-target) auto var(--touch-target);
   gap: var(--space-5);
   height: var(--picture);
+  position: relative;
 }
 
 .dialog:focus {
@@ -119,4 +120,23 @@
 
 .save:hover {
   background: var(--color-highlight-soft);
+}
+
+/* How a copy went, over the foot of the picture for a moment. */
+.notice {
+  position: absolute;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-size: var(--text-data);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.notice:empty {
+  display: none;
 }

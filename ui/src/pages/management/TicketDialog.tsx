@@ -3,9 +3,12 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { Ticket } from "../../api/types";
 import { Icon } from "../../components/Icon";
-import { photoFileName, photoUrl } from "../../tickets";
+import { copyPicture, photoFileName, photoUrl } from "../../tickets";
 import { useFormat } from "../../useFormat";
 import styles from "./TicketDialog.module.css";
+
+/** How long it shows how a copy went. */
+const NOTICE_MS = 2500;
 
 interface TicketDialogProps {
   /** The tickets listed, in their order. */
@@ -17,8 +20,8 @@ interface TicketDialogProps {
 }
 
 /**
- * One ticket's picture over the page, with a button to save it and the ones before and after it
- * in the list. The arrow keys move between them; Escape, or a press beside it, closes it, and
+ * One ticket's picture over the page, with buttons to save and to copy it and the ones before and
+ * after it in the list. The arrow keys move between them; Escape, or a press beside it, closes it, and
  * the focus returns to where it was.
  */
 export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogProps) {
@@ -27,6 +30,8 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
   const dialog = useRef<HTMLDivElement>(null);
   /** The ticket whose picture did not open. */
   const [failedCode, setFailedCode] = useState<string | null>(null);
+  /** How the last copy went, shown for a moment. */
+  const [copy, setCopy] = useState<"copied" | "copyFailed" | null>(null);
   const ticket = tickets[place];
 
   useEffect(() => {
@@ -46,8 +51,21 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
     }
   }, [place]);
 
+  useEffect(() => {
+    const timer = copy === null ? undefined : setTimeout(() => setCopy(null), NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [copy]);
+
   if (ticket === undefined) {
     return null;
+  }
+
+  function onCopy(url: string) {
+    setCopy(null);
+    copyPicture(url).then(
+      () => setCopy("copied"),
+      () => setCopy("copyFailed"),
+    );
   }
 
   function onKeyDown(event: KeyboardEvent) {
@@ -155,6 +173,17 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
                 <Icon name="save" />
               </a>
             )}
+            {hasPicture && (
+              <button
+                type="button"
+                aria-label={t("pages.tickets.copy")}
+                title={t("pages.tickets.copy")}
+                className={`${styles.round} ${styles.save}`}
+                onClick={() => onCopy(photoUrl(ticket))}
+              >
+                <Icon name="copy" />
+              </button>
+            )}
           </div>
           <button
             type="button"
@@ -167,6 +196,9 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
             <Icon name="forward" />
           </button>
         </div>
+        <p role="status" className={styles.notice}>
+          {copy !== null && t(`pages.tickets.${copy}`)}
+        </p>
       </div>
     </div>,
     document.body,
