@@ -89,6 +89,28 @@ The first read after "Xác nhận" holds the title `Chi tiết đặt lịch` an
 status `Đang xử lý` but no time or court yet; later the status `Đã đăng ký`, the codes, time,
 court and a clickable `Đặt lịch khác`.
 
+## History page
+
+Read on 2026-11-22 in Vietnamese, on three accounts (tennis and pickleball); not seen in
+English.
+
+- The icon at the top right of the utilities list (no label, `[472,42][528,100]`) opens
+  `Lịch sử tiện ích`: the account's bookings, newest first, one clickable card each (four on
+  the screen). A card's label, line by line: the utility, `Mã đặt: 1234567`,
+  `Vị trí: S6 - Sân tennis`, `Thời gian: 03/10/2026 08:00 - 09:00`, `Trạng thái:`, the status
+  (`Đã đăng ký`, `Đã huỷ`), `Thời gian tạo: 01/10/2026 - 06:00`. The page has an unlabelled
+  filter button where the list has the history icon.
+- A card opens the ticket, `Chi tiết đặt lịch`, with **`Hủy tiện ích`** at its top right
+  (`[376,38][528,104]`, over the place of those icons), an element labelled `qr code`, the
+  status, and one element with the details, the booking code on a line of its own. Inside it
+  are `Xem thêm` (left) and `Chỉ đường` (right, bottom at 1140), then the fees. Back returns
+  to the history page.
+- The ticket moves its lower half while its description loads: the place of `Chỉ đường` read
+  0.5 s after the ticket showed was 232 px too low by the time of the picture.
+- The app does not block screenshots of these pages. Reading the page and two tickets took
+  5-6 s, one ticket 4 s. How long after 06:00 a ticket turns from `Đang xử lý` to `Đã đăng ký`
+  is not known yet.
+
 ## Dialogs
 
 All are titled "Thông báo": the title node spans `[0,33][540,1600]` and holds the message and a

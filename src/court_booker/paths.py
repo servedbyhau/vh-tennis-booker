@@ -39,6 +39,11 @@ class DataFolder:
     def lock(self) -> Path:
         return self.root / "run.lock"
 
+    @property
+    def tickets(self) -> Path:
+        """Return the folder of the ticket pictures, which hold personal data."""
+        return self.root / "tickets"
+
     def instance_lock(self, index: int) -> Path:
         """Return the run lock of the ``[[instances]]`` entry for MuMu instance ``index``."""
         return self.root / f"run-mumu{index}.lock"

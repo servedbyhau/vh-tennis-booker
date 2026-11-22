@@ -386,3 +386,20 @@ def test_the_quota_notice_skips_the_rounds_left(monkeypatch, caplog, failing):
     }
     assert sink.kinds.count(EventKind.SLOT_STARTED) == failing + 1
     assert f"Booking quota used up; skipping {', '.join(slots[failing + 1 :])}" in caplog.text
+
+
+def test_the_booker_is_handed_over_before_anything_runs(monkeypatch):
+    monkeypatch.setattr(runner, "Booker", FakeBooker)
+    handed = []
+
+    def on_booker(booker):
+        handed.append((booker, list(booker.events)))
+
+    runner.run_booking(
+        FakeDevice(), Config(slots=["19:00 - 20:00"]), dry_run=True, on_booker=on_booker
+    )
+
+    (booker, events), *others = handed
+    assert isinstance(booker, FakeBooker)
+    assert events == []
+    assert others == []

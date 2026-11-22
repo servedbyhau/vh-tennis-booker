@@ -1,11 +1,13 @@
 """Tests for reading the history back."""
 
 import sqlite3
+from datetime import datetime
 
 import pytest
 
 from court_booker import history, history_read
 from court_booker.events import EventKind, Reporter
+from court_booker.tickets import Ticket
 
 
 @pytest.fixture
@@ -231,3 +233,37 @@ def test_each_instance_comes_with_the_subdivision_it_told_last(path, read):
 
     assert [(item["device"], item["subdivision"]) for item in found] == [(0, "bs"), (1, "bs")]
     assert all(item["seen_at"].startswith("20") for item in found)
+
+
+def test_tickets_of_every_machine_come_by_day_then_slot(path, read):
+    def ticket(code, day, slot):
+        return Ticket(code, "Sân Tennis", "S6 - Sân tennis", day, slot, "Đã đăng ký", None)
+
+    store = history.History(history.connect(path))
+    seen = datetime(2026, 11, 22, 6, 1)
+    store.save_tickets(1, [ticket("11", "2026-10-03", "19:00 - 20:00")], {"11": "11.png"}, seen)
+    store.save_tickets(
+        2,
+        [
+            ticket("22", "2026-10-03", "18:00 - 19:00"),
+            ticket("33", "2026-10-04", "20:00 - 21:00"),
+            ticket("44", "2026-10-01", "06:00 - 07:00"),
+        ],
+        {},
+        seen,
+    )
+    store.close()
+    with sqlite3.connect(path):
+        rows = history_read.list_tickets(history_read.open_read_only(path))
+    assert [row["code"] for row in rows] == ["33", "22", "11", "44"]
+    db = history_read.open_read_only(path)
+    assert [row["code"] for row in history_read.list_tickets(db, since="2026-10-03")] == [
+        "33",
+        "22",
+        "11",
+    ]
+    assert [row["code"] for row in history_read.list_tickets(db, limit=1)] == ["33"]
+    assert history_read.ticket_photo(db, "11") == "11.png"
+    assert history_read.ticket_photo(db, "22") is None
+    assert history_read.ticket_photo(db, "99") is None
+    db.close()

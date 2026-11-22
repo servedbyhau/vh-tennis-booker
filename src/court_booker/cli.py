@@ -7,13 +7,14 @@ import logging
 import os
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, NoReturn
 
 from court_booker import __version__, credentials, device_setup, schedule
 from court_booker.adb import AUTO
-from court_booker.clock import NtpClock, ntp_offset, resolve_start
+from court_booker.clock import NtpClock, ntp_offset, resolve_start, wait_until
 from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
 from court_booker.emulator import CALL_ATTEMPTS, MuMu
@@ -28,6 +29,7 @@ from court_booker.errors import (
     RequestError,
 )
 from court_booker.events import Event, EventKind, LogSink, MultiSink, Reporter
+from court_booker.flow import Booker
 from court_booker.history import History, close_history, open_history
 from court_booker.lock import TAKE_OVER_AHEAD, RunLock, check_quiet_time
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
@@ -36,6 +38,7 @@ from court_booker.paths import data_folder
 from court_booker.power import keep_awake
 from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
 from court_booker.runner import RoundResult, run_booking
+from court_booker.tickets import TicketReader, Wanted, drop_old_photos
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -46,6 +49,14 @@ EXIT_DEVICE = 3
 EXIT_APP_NOT_READY = 4
 EXIT_BUSY = 5
 EXIT_INTERRUPTED = 130
+
+TICKETS_AFTER = timedelta(seconds=60)
+"""When a timed run reads its tickets, from the start: the rounds of November 2026 ended by
+06:00:13, and the app shows a ticket as processing for a while."""
+TICKETS_LATEST = timedelta(seconds=150)
+"""How long past the start another machine may still book; the tickets are skipped then."""
+TICKETS_SECONDS = 90.0
+"""How long reading the tickets may take; a run so ends before the quiet time does (5 min)."""
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -221,6 +232,47 @@ def close_device(device: Any) -> None:
         logger.warning("Could not stop the driver", exc_info=True)
 
 
+def read_tickets(
+    booker: Booker,
+    results: list[RoundResult],
+    play_date: date,
+    start: datetime | None,
+    clock: NtpClock,
+    history: History,
+    report: Reporter,
+) -> None:
+    """Record the account's tickets, with a picture of each one booked, after the rounds.
+
+    A timed run waits until :data:`TICKETS_AFTER` the start and until no other machine is
+    booking, so this takes nothing from the rounds still going on. Raises only
+    ``DeviceNotRespondingError`` (a frozen emulator) and ``KeyboardInterrupt``.
+    """
+    if start is not None:
+        wait_until(start + TICKETS_AFTER, clock.now)
+        while history.other_runs_going():
+            if clock.now() >= start + TICKETS_LATEST:
+                logger.warning("Tickets not read: another machine is still booking")
+                return
+            time.sleep(1.0)
+    folder = data_folder().tickets
+    wanted = [
+        Wanted(play_date.isoformat(), result.slot, result.court or booker.config.court)
+        for result in results
+        if result.ok
+    ]
+    reader = TicketReader(booker, folder, time.monotonic() + TICKETS_SECONDS)
+    try:
+        reader.read(wanted)
+    finally:  # also what was read before the emulator froze
+        found = reader.collected
+        if found.tickets:
+            history.save_tickets(
+                booker.config.mumu_index, found.tickets, found.photos, datetime.now()
+            )
+            report(EventKind.TICKETS_SAVED, tickets=len(found.tickets), photos=len(found.photos))
+    drop_old_photos(folder)
+
+
 def run_trigger(args: argparse.Namespace) -> str:
     """Return what started the run: ``scheduled``, ``dry_run`` or ``manual``."""
     if args.scheduled:
@@ -373,6 +425,8 @@ def main(argv: list[str] | None = None) -> int:
     frozen = False
     start: datetime | None = None
     instances: list[tuple[int, subprocess.Popen[bytes]]] = []
+    bookers: list[Booker] = []
+    clock: NtpClock | None = None
     try:
         config = apply_overrides(load_config(args.config), args)
         if args.instance is not None:
@@ -436,6 +490,7 @@ def main(argv: list[str] | None = None) -> int:
                 report=report,
                 login_for=lambda: credentials.default_store().read(config.mumu_index),
                 screens=None if log_dir is None else log_dir / "screens",
+                on_booker=bookers.append,
             )
         code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:
@@ -449,7 +504,16 @@ def main(argv: list[str] | None = None) -> int:
         logger.exception("Unexpected error")
         error, code = repr(exc), EXIT_ROUND_FAILED
 
-    if device is not None and not frozen:
+    # The driver stays for the tickets, read once all the rest is done and reported.
+    tickets = (
+        bool(bookers)
+        and clock is not None
+        and history is not None
+        and error is None
+        and not args.dry_run
+        and any(result.ok for result in results)
+    )
+    if device is not None and not frozen and not tickets:
         close_device(device)
     print_summary(results)
     if started:
@@ -477,6 +541,21 @@ def main(argv: list[str] | None = None) -> int:
         account=account.subdivision,
         repairs=0 if supervisor is None else supervisor.repairs,
     )
+    tickets_froze = False
+    if tickets and clock is not None and history is not None:
+        target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
+        try:
+            with keep_awake():
+                read_tickets(bookers[0], results, target, start, clock, history, report)
+        except DeviceNotRespondingError as exc:
+            tickets_froze = True
+            logger.warning("Tickets not read: %s", exc)
+        except KeyboardInterrupt:
+            logger.warning("Interrupted while reading the tickets")
+        except Exception:  # the bookings are made and reported
+            logger.warning("Tickets not read", exc_info=True)
+        if not tickets_froze:
+            close_device(device)
     # A real run closes MuMu once its rounds ran; the next run starts it again. MuMu stays
     # open after a dry run, Ctrl+C or an error before the rounds, for whoever is at the PC,
     # and when frozen, since MuMuManager does not shut a frozen instance down.
@@ -487,6 +566,7 @@ def main(argv: list[str] | None = None) -> int:
         and results
         and code != EXIT_INTERRUPTED
         and not frozen
+        and not tickets_froze
     ):
         close_emulator(config)
     if not frozen:

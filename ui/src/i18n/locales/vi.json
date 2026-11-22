@@ -287,6 +287,7 @@
       "other": "Có lỗi khi chuẩn bị, đã tự sửa"
     },
     "screen_saved": "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
+    "tickets_saved": "Đã đọc {{tickets}} vé trong app, lưu {{photos}} ảnh vé",
     "waiting": {
       "full": "Chờ đến {{time}}",
       "plain": "Chờ đến giờ đặt"

@@ -12,12 +12,16 @@ import logging
 import sqlite3
 import threading
 import time
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from court_booker.events import Event, EventKind
 from court_booker.logging_setup import LOGGER_NAME
+
+if TYPE_CHECKING:
+    from court_booker.tickets import Ticket
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +74,23 @@ MIGRATIONS = (
     # The MuMu instance a run booked with, since runs can book side by side (0.13.0).
     """
     ALTER TABLE runs ADD COLUMN device INTEGER;
+    """,
+    # The accounts' tickets as the app's history page showed them (court_booker.tickets).
+    """
+    CREATE TABLE tickets (
+        code TEXT PRIMARY KEY,
+        device INTEGER NOT NULL,
+        utility TEXT NOT NULL,
+        court TEXT NOT NULL,
+        play_date TEXT NOT NULL,
+        slot TEXT NOT NULL,
+        status TEXT NOT NULL,
+        status_text TEXT NOT NULL,
+        created_at TEXT,
+        seen_at TEXT NOT NULL,
+        photo TEXT
+    );
+    CREATE INDEX tickets_by_day ON tickets (play_date);
     """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
@@ -218,6 +239,60 @@ class History:
             lambda db: db.executemany(
                 "INSERT INTO log_lines (run_id, time, level, message) VALUES (?, ?, ?, ?)",
                 [(run_id, *line) for line in lines],
+            )
+        )
+
+    def other_runs_going(self) -> bool:
+        """Return whether another run is still recorded as running.
+
+        A database that cannot be read tells of none.
+        """
+        with self._lock:
+            try:
+                row = self.connection.execute(
+                    "SELECT 1 FROM runs WHERE status = 'running' AND id IS NOT ? LIMIT 1",
+                    (self.run_id,),
+                ).fetchone()
+            except sqlite3.Error:
+                return False
+        return row is not None
+
+    def save_tickets(
+        self, device: int, tickets: Sequence[Ticket], photos: Mapping[str, str], seen_at: datetime
+    ) -> None:
+        """Record ``tickets`` as MuMu instance ``device`` showed them at ``seen_at``.
+
+        A ticket recorded before takes its new status; one without a new picture in
+        ``photos`` (booking code to file name) keeps the one it has.
+        """
+        rows = [
+            (
+                ticket.code,
+                device,
+                ticket.utility,
+                ticket.court,
+                ticket.play_date,
+                ticket.slot,
+                ticket.status,
+                ticket.status_text,
+                ticket.created_at,
+                _stamp(seen_at),
+                photos.get(ticket.code),
+            )
+            for ticket in tickets
+        ]
+        self._write(
+            lambda db: db.executemany(
+                "INSERT INTO tickets (code, device, utility, court, play_date, slot, status,"
+                " status_text, created_at, seen_at, photo)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT (code) DO UPDATE SET device = excluded.device,"
+                " utility = excluded.utility, court = excluded.court,"
+                " play_date = excluded.play_date, slot = excluded.slot,"
+                " status = excluded.status, status_text = excluded.status_text,"
+                " created_at = excluded.created_at, seen_at = excluded.seen_at,"
+                " photo = COALESCE(excluded.photo, tickets.photo)",
+                rows,
             )
         )
 

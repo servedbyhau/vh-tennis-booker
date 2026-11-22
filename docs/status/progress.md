@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-21.
+Last updated: 2026-11-22.
 
 ## Release and daily run
 
@@ -27,12 +27,16 @@ Last updated: 2026-11-21.
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
-- Open branch: `feat/third-machine` ("Máy 3" on the ticket), for a PR into `develop`.
+- Open branches, stacked, for PRs into `develop` in this order: `feat/ticket-records` (tickets
+  read and pictured after a run), `feat/tickets-tab` (their list and pictures in the UI). The
+  reading was tried on three real accounts on 2026-11-22; a real timed booking with it is
+  still to do before the merge.
 
 ## Last 06:00 runs
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-22 | 1.1.2 | First run of three machines, 4 cores and 3 GB each, 4/6: instance 0 1/2 (7.2 s), instance 1 2/2 (6.7 s, 5.5 s), instance 2 1/2 (5.7 s); both lost slots were second ones, full by 06:00:10.5. The PC clock was 3.18 s slow after a power cut; the run made up for it |
 | 2026-11-21 | 1.1.2 | Instance 0 2/2 (6.3 s, 6.5 s), instance 1 2/2 (5.5 s, 3.8 s) |
 | 2026-11-20 | 1.1.2 | Instance 0 1/2 (4.4 s): the first slot was taken by someone else at "Xác nhận" (06:00:05); instance 1 2/2 (6.0 s, 3.3 s) |
 | 2026-11-19 | 1.1.1 | Instance 0 0/2: `MuMuManager control launch` failed once at 05:45 ("nemu-api init failed"), the run stopped (fixed in 1.1.2); instance 1 1/1 (6.7 s) |
