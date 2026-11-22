@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useTickets } from "../../api/queries";
 import type { Ticket } from "../../api/types";
 import { Icon } from "../../components/Icon";
+import { PageTitle } from "../../components/PageTitle";
 import { QueryView } from "../../components/QueryView";
 import { localToday } from "../../format";
 import { useMachines } from "../../machines";
@@ -11,7 +12,8 @@ import { useFormat } from "../../useFormat";
 import { TicketDialog } from "./TicketDialog";
 import { TicketStamp } from "./TicketStamp";
 import styles from "./TicketsTab.module.css";
-import { machineName } from "./ticketText";
+import { useManagement } from "./state";
+import { machineName } from "../home/ticketText";
 
 interface MachineFilterProps {
   /** The machines with tickets. */
@@ -129,30 +131,28 @@ function TicketList({ tickets, device, onDevice }: TicketListProps) {
   );
 }
 
-interface TicketsTabProps {
-  /** The MuMu instance whose tickets to list, `null` for every machine's. */
-  device: number | null;
-  onDevice: (device: number | null) => void;
-}
-
 /**
  * The tickets booked and still to use, of every machine's account, as the runs read them in the
  * Vinhomes app: by day of play until that day is over, each opening its picture to send. Nothing
  * here asks the app again or changes a ticket.
  */
-export function TicketsTab({ device, onDevice }: TicketsTabProps) {
+export function TicketsTab() {
   const { t } = useTranslation();
+  const { device, onDevice } = useManagement();
   const tickets = useTickets();
   const today = localToday();
   return (
-    <QueryView
-      query={tickets}
-      isEmpty={(list) => ticketsToUse(list, today).length === 0}
-      empty={<span className={styles.none}>{t("pages.tickets.empty")}</span>}
-    >
-      {(list) => (
-        <TicketList tickets={ticketsToUse(list, today)} device={device} onDevice={onDevice} />
-      )}
-    </QueryView>
+    <section aria-label={t("pages.tickets.title")} className={styles.paper}>
+      <PageTitle>{t("pages.tickets.title")}</PageTitle>
+      <QueryView
+        query={tickets}
+        isEmpty={(list) => ticketsToUse(list, today).length === 0}
+        empty={<span className={styles.none}>{t("pages.tickets.empty")}</span>}
+      >
+        {(list) => (
+          <TicketList tickets={ticketsToUse(list, today)} device={device} onDevice={onDevice} />
+        )}
+      </QueryView>
+    </section>
   );
 }

@@ -2,17 +2,19 @@
 export const paths = {
   overview: "/",
   management: "/management",
+  tickets: "/management/tickets",
+  history: "/management/history",
 } as const;
 
 /**
- * The addresses of the screens the home screen replaced. They lead to it, keeping the
- * query: a `?run=` of the old History opens that run in the panel.
+ * The addresses of screens there are no more, and where they lead, keeping the query: a
+ * `?run=` of the old History opens that run in the new one.
  */
 export const OLD_PATHS = [
-  "/schedule",
-  "/history/*",
-  "/activity",
-  "/settings/*",
-  "/guide",
-  "/welcome",
+  ["/schedule", paths.overview],
+  ["/history/*", paths.history],
+  ["/activity", paths.history],
+  ["/settings/*", paths.overview],
+  ["/guide", paths.overview],
+  ["/welcome", paths.overview],
 ] as const;

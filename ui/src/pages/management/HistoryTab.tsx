@@ -4,6 +4,7 @@ import { useRunDays } from "../../api/queries";
 import type { RunSummary } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Icon, type IconName } from "../../components/Icon";
+import { PageTitle } from "../../components/PageTitle";
 import { QueryView } from "../../components/QueryView";
 import { EmptyState } from "../../components/States";
 import { Stamp } from "../../components/Stamp";
@@ -12,8 +13,9 @@ import { failureReason } from "../../reasons";
 import { runMark, runOrigin, runStamp } from "../../runs";
 import { useFormat } from "../../useFormat";
 import styles from "./HistoryTab.module.css";
+import { useManagement } from "./state";
 import { RunDetail } from "./RunDetail";
-import { runShortTitle } from "./runText";
+import { runShortTitle } from "../home/runText";
 
 /** Return the run asked for in the address (`?run=12`), if it is a run id. */
 function requestedRun(params: URLSearchParams): number | undefined {
@@ -93,14 +95,14 @@ function StartedAt({ run }: { run: RunSummary }) {
  * One run in two lines: what it booked and its mark ("2/2"), then each slot and when it
  * started; it opens the run, where the full stamp, the reasons and the steps are.
  */
-function RunRow({ run }: { run: RunSummary }) {
+function RunRow({ run, shown }: { run: RunSummary; shown: boolean }) {
   const { t } = useTranslation();
   const f = useFormat();
   const mark = runMark(t, run);
   const stamp = runStamp(t, run);
   return (
     <li className={styles.item}>
-      <Link to={{ search: `?run=${run.id}` }} className={styles.row}>
+      <Link to={{ search: `?run=${run.id}` }} replace aria-current={shown} className={styles.row}>
         <span className={styles.head}>
           <span className={styles.title}>{runShortTitle(t, f, run)}</span>
           <span title={stamp.text}>
@@ -121,11 +123,18 @@ function RunRow({ run }: { run: RunSummary }) {
   );
 }
 
+interface RunListProps {
+  withDry: boolean;
+  onWithDry: (on: boolean) => void;
+  /** The run shown beside the list, if any. */
+  shown: number | undefined;
+}
+
 /**
  * The runs of the newest days, newest first: real bookings only unless dry runs are asked
  * for, and ten more days on request. Leaving dry runs out sends no request.
  */
-function RunList({ withDry, onWithDry }: { withDry: boolean; onWithDry: (on: boolean) => void }) {
+function RunList({ withDry, onWithDry, shown: shownRun }: RunListProps) {
   const { t } = useTranslation();
   const runs = useRunDays();
   // The days read so far; the list names them while older days are left to read.
@@ -158,7 +167,7 @@ function RunList({ withDry, onWithDry }: { withDry: boolean; onWithDry: (on: boo
                 {shown.length > 0 ? (
                   <ul className={styles.list}>
                     {shown.map((run) => (
-                      <RunRow key={run.id} run={run} />
+                      <RunRow key={run.id} run={run} shown={run.id === shownRun} />
                     ))}
                   </ul>
                 ) : (
@@ -188,21 +197,28 @@ function RunList({ withDry, onWithDry }: { withDry: boolean; onWithDry: (on: boo
   );
 }
 
-interface HistoryTabProps {
-  withDry: boolean;
-  onWithDry: (on: boolean) => void;
-}
-
 /**
- * The History tab: the list of runs, or the run the address asks for (`?run=12`) with
- * every step, and a way back to the list.
+ * The History: the runs on the left, and on the right the one the address asks for (`?run=12`)
+ * with every step.
  */
-export function HistoryTab({ withDry, onWithDry }: HistoryTabProps) {
+export function HistoryTab() {
+  const { t } = useTranslation();
+  const { withDry, onWithDry } = useManagement();
   const [params] = useSearchParams();
   const runId = requestedRun(params);
-  return runId === undefined ? (
-    <RunList withDry={withDry} onWithDry={onWithDry} />
-  ) : (
-    <RunDetail key={runId} runId={runId} />
+  return (
+    <div className={styles.columns}>
+      <PageTitle>{t("pages.history.title")}</PageTitle>
+      <section aria-label={t("pages.history.title")} className={styles.runs}>
+        <RunList withDry={withDry} onWithDry={onWithDry} shown={runId} />
+      </section>
+      <div className={styles.run}>
+        {runId === undefined ? (
+          <EmptyState>{t("pages.history.choose")}</EmptyState>
+        ) : (
+          <RunDetail key={runId} runId={runId} />
+        )}
+      </div>
+    </div>
   );
 }

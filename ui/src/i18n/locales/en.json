@@ -32,7 +32,7 @@
     "overview": {
       "title": "Overview",
       "status": {
-        "setupLeft": "Setup: {{count}} left, see the Setup tab",
+        "setupLeft": "Setup: {{count}} left, see the Setup",
         "noDryRun": "No dry run passed yet · press Dry run now",
         "scheduleOff": "Dry run passed · turn on Auto-book",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
@@ -120,7 +120,6 @@
       "booked": "booked {{when}} · {{by}}",
       "dry": "dry run {{when}}",
       "instance": "{{text}} · MuMu {{index}}",
-      "back": "← History",
       "slot": {
         "booked": "BOOKED",
         "failed": "NOT BOOKED",
@@ -130,7 +129,8 @@
       "done": "Done at {{time}} · took {{seconds}}",
       "through": "Stopped before \"Confirm\", nothing booked",
       "steps": "Every step",
-      "technical": "Technical details"
+      "technical": "Technical details",
+      "choose": "Choose a run on the left to see it."
     },
     "tickets": {
       "title": "Tickets",
@@ -155,6 +155,9 @@
       "next": "Next ticket",
       "save": "Save",
       "close": "Close"
+    },
+    "management": {
+      "sections": "Management sections"
     },
     "customers": {
       "title": "Customers",
@@ -182,10 +185,9 @@
       "remove": "Remove",
       "removeSure": "Really remove",
       "keep": "Keep",
-      "inUse": "In use for booking; it cannot be removed."
+      "inUse": "A machine books with it. Choose another one on the Booking page to remove it."
     },
     "panel": {
-      "title": "Tickets, history and setup",
       "setup": "Setup",
       "left": ", {{count}} left"
     },
@@ -212,14 +214,22 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "A resident account. The customers and their accounts are on the Management page."
+          "hint": "A resident account. Choose one above so the app logs in by itself."
         },
         "off": "off, not counted in the setup"
       },
       "account": {
-        "title": "Booking account",
-        "none": "None attached: books with the account logged in on MuMu.",
-        "manage": "Manage customers →"
+        "title": "Choose the account",
+        "why": "Before booking, the app reads the phone number logged in on this machine, and changes it if it is not the chosen account's.",
+        "customer": "Customer",
+        "account": "Account",
+        "none": "None",
+        "pick": "Pick an account",
+        "onMachine": "on {{machine}}",
+        "noCustomers": "No customers yet. Add one on the Management page.",
+        "attached": "The next run uses this account. Press \"{{dryRun}}\" to check it now.",
+        "free": "None chosen: the machine books with the account logged in on MuMu, and stops if it is logged out.",
+        "notYet": "Pick an account to change it. Until then the machine keeps the one it had."
       },
       "guide": {
         "title": "Guide",
@@ -246,7 +256,7 @@
           },
           "loggedOut": {
             "question": "The app was logged out",
-            "answer": "If the app says the password is wrong, change the account on the Management page: the app locks an account after 5 wrong ones."
+            "answer": "Choose the machine's account under \"Choose the account\" so a run logs in by itself. If the app says the password is wrong, change it on the Management page: the app locks an account after 5 wrong ones."
           }
         }
       }
@@ -467,7 +477,7 @@
     "notification": "Windows could not show the notification.",
     "credentials": "Windows could not keep the password. Try again.",
     "phone_taken": "A customer already has this number.",
-    "account_attached": "The account is in use for booking; it cannot be removed.",
+    "account_attached": "A machine books with it. Choose another one on the Booking page to remove it.",
     "engine": "Court Booker hit an error.",
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",

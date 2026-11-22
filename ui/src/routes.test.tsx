@@ -23,10 +23,10 @@ describe("routes", () => {
   });
 
   it.each([
-    ["/history", paths.overview],
-    ["/history/bookings?month=2026-09", `${paths.overview}?month=2026-09`],
-    ["/history/activity?run=25", `${paths.overview}?run=25`],
-    ["/activity?run=25", `${paths.overview}?run=25`],
+    ["/history", paths.history],
+    ["/history/bookings?month=2026-09", `${paths.history}?month=2026-09`],
+    ["/history/activity?run=25", `${paths.history}?run=25`],
+    ["/activity?run=25", `${paths.history}?run=25`],
     ["/schedule", paths.overview],
     ["/settings", paths.overview],
     ["/settings/booking", paths.overview],
@@ -37,7 +37,7 @@ describe("routes", () => {
   ])("sends the old address %s on to %s", async (path, to) => {
     const router = renderAt(path);
 
-    await screen.findByRole("tab", { name: /^Lịch sử/ });
+    await screen.findByRole("region", { name: /^(Lịch sử|Thiết lập)/ });
     const { pathname, search } = router.state.location;
     expect(pathname + search).toBe(to);
     expect(router.state.historyAction).toBe("REPLACE");

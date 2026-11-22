@@ -313,12 +313,16 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   engine's English reasons into a few words (`notify.REASONS` holds the same words; a test
   compares them).
 - Two pages, a press apart in the middle of the header: the booking and the management
-  (`pages/CustomersPage.tsx`, parts in `pages/customers/`), for now the customers: `CustomerList`,
-  and `CustomerDetail` beside it (the one in the address, `?customer=`, else the first): who they
-  are and their accounts. One form is open at a time (`CustomerForms`); a password typed in is
-  sent once and never shown again, a removal takes two presses, and an account in use is not
-  removed. Nothing in the UI attaches an account to a machine yet (`/api/machines/{index}/account`
-  does).
+  (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose three sections each have an
+  address: `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
+  `?customer=`, else the first: who they are and their accounts; one form is open at a time, a
+  password typed in is sent once and never shown again, a removal takes two presses, an account
+  in use is not removed), `TicketsTab` (every machine's tickets still to use by day of play, of
+  one machine or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
+  `TicketDialog` with the picture, which a plain download link saves under `photoFileName`; read
+  again after `tickets_saved`) and `HistoryTab` (runs ten days at a time, real bookings unless
+  dry runs are ticked; `?run=` shows one run's slots, steps and log beside the list). What a
+  section lists is kept while another shows (`state.ts`).
 - The booking page (`pages/HomePage.tsx`, parts in `pages/home/`): the ticket (`BookingTicket`:
   on top the daily switch and what is set: the play day and court side by side, the slots
   on a row of their own (fixed rows, whatever the court's name), and a line only while the
@@ -332,21 +336,16 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   books, that machine's subdivision, sport, court and up to two slots, saved on each press,
   and the dry run;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
-  named "MuMu N" when several instances book side by side) and `SidePanel` beside it, three tabs:
-  `TicketsTab` ("Vé": every machine's tickets still to use by day of play, of one machine
-  or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens
-  `TicketDialog` with the picture, which a plain download link saves under `photoFileName`;
-  read again after `tickets_saved`),
-  `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
-  opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the machine's account
-  and the guide, those of the machine chosen on the ticket, which `HomePage` holds).
-  `MachineAccount` says the machine's account and leads to the management page.
+  named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
+  `SetupTab` (the machine's account, the user's ticks and the guide, those of the machine chosen on
+  the ticket, which `HomePage` holds). `AccountPicker` picks a customer, then one of their
+  accounts, which saves it; an account on another machine is listed but not picked.
   The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
   readers. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the
   settings. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
   fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the
-  setup tasks left over the machines that book and picks the panel's first tab. `booking.ts` holds the slots and the two-slot limit, and reads
+  setup tasks left over the machines that book. `booking.ts` holds the slots and the two-slot limit, and reads
   the subdivisions, sports and courts from `catalog.json`, written from `catalog.py`.
   `useFormat`'s `courtLabel` tells a court from the others of its sport ("BE7 · tập ném 01",
   in English "BE7 · shooting 01": the app keeps court names in Vietnamese in both languages,

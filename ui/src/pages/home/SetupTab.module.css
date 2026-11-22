@@ -129,16 +129,42 @@ details[open] > .summary::after {
   color: var(--color-muted);
 }
 
-/* The machine's account, in a line. */
-.account {
-  font-size: var(--text-control);
-  font-weight: var(--weight-semibold);
-  overflow-wrap: anywhere;
-}
-
+/* The machine's account: the customer, then one of their accounts. */
 .note {
   margin: 0 0 var(--space-2);
   color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.field select {
+  padding: 7px 10px;
+  border: var(--border-hairline) solid var(--color-rule);
+  border-radius: var(--radius-stamp);
+  background: var(--color-field);
+  font-size: var(--text-control);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-failed);
   font-size: var(--text-small);
 }
 

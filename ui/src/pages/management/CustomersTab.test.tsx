@@ -1,13 +1,13 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Customer } from "../api/types";
-import i18n from "../i18n";
-import { paths } from "../paths";
-import { renderApp } from "../test/app";
-import { type Reply, reply, requestsTo } from "../test/backend";
-import { account, customer } from "../test/customers";
-import { overview } from "../test/overview";
-import { settings } from "../test/settings";
+import type { Customer } from "../../api/types";
+import i18n from "../../i18n";
+import { paths } from "../../paths";
+import { renderApp } from "../../test/app";
+import { type Reply, reply, requestsTo } from "../../test/backend";
+import { account, customer } from "../../test/customers";
+import { overview } from "../../test/overview";
+import { settings } from "../../test/settings";
 
 const AN = customer("a1", {
   representative: "Nguyễn Văn An",
@@ -144,7 +144,9 @@ describe("Management customers", () => {
   it("does not remove one whose account is in use", async () => {
     await openPage([AN]);
     press("Sửa khách");
-    expect(screen.getByText("Đang được dùng để đặt sân, chưa xóa được.")).toBeVisible();
+    expect(
+      screen.getByText("Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được."),
+    ).toBeVisible();
     expect(screen.queryByRole("button", { name: "Xóa" })).not.toBeInTheDocument();
   });
 
@@ -230,7 +232,9 @@ describe("Management accounts", () => {
       "DELETE /api/customer-accounts/b2": reply(null, 204),
     });
     press("Sửa", 0);
-    expect(screen.getByText("Đang được dùng để đặt sân, chưa xóa được.")).toBeVisible();
+    expect(
+      screen.getByText("Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được."),
+    ).toBeVisible();
     press("Sửa", 1); // the other account's form in its place
     press("Xóa");
     press("Xóa thật");

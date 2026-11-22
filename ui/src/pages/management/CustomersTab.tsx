@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
-import { useCustomers } from "../api/queries";
-import type { Customer } from "../api/types";
-import { PageTitle } from "../components/PageTitle";
-import { QueryView } from "../components/QueryView";
-import { EmptyState } from "../components/States";
-import styles from "./CustomersPage.module.css";
-import { CustomerDetail } from "./customers/CustomerDetail";
-import { CustomerForm } from "./customers/CustomerForms";
-import { CustomerList } from "./customers/CustomerList";
+import { useCustomers } from "../../api/queries";
+import type { Customer } from "../../api/types";
+import { PageTitle } from "../../components/PageTitle";
+import { QueryView } from "../../components/QueryView";
+import { EmptyState } from "../../components/States";
+import styles from "./CustomersTab.module.css";
+import { CustomerDetail } from "./CustomerDetail";
+import { CustomerForm } from "./CustomerForms";
+import { CustomerList } from "./CustomerList";
 
 interface ColumnsProps {
   customers: readonly Customer[];
@@ -60,17 +60,16 @@ function Columns({ customers, chosen, onChoose }: ColumnsProps) {
 }
 
 /**
- * The management page, for now the customers: the list on the left, and on the right the one
+ * The customers: the list on the left, and on the right the one
  * chosen: who they are and the Vinhomes accounts they gave. The address keeps the choice.
  */
-export function CustomersPage() {
+export function CustomersTab() {
   const { t } = useTranslation();
   const customers = useCustomers();
   const [params, setParams] = useSearchParams();
   return (
     <>
-      <PageTitle>{t("nav.management")}</PageTitle>
-      <h1 className="visually-hidden">{t("nav.management")}</h1>
+      <PageTitle>{t("pages.customers.title")}</PageTitle>
       <QueryView query={customers}>
         {(list) => (
           <Columns

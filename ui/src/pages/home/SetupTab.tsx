@@ -11,7 +11,7 @@ import {
   useManualTicks,
 } from "../../manualSteps";
 import { setupDone } from "../../setupState";
-import { MachineAccount } from "./MachineAccount";
+import { AccountPicker } from "./AccountPicker";
 import styles from "./SetupTab.module.css";
 
 /** The three steps of a first use; shown first until everything is set up. */
@@ -118,8 +118,8 @@ function Guide({ overview, howto }: { overview: Overview; howto: boolean }) {
 }
 
 /**
- * The Setup tab: how to start while anything is left, the steps the user ticks, the shown
- * machine's account and the guide; the notification switch is on the ticket. MuMu's place and screen and waking the
+ * The Setup: how to start while anything is left, the shown machine's account, the steps the
+ * user ticks and the guide; the notification switch is on the ticket. MuMu's place and screen and waking the
  * PC need no step: the runs and the daily switch see to them. It shows the machine chosen
  * on the ticket (`machine`, 0: the first).
  */
@@ -144,8 +144,10 @@ export function SetupTab({ machine }: { machine: number }) {
                   <HowTo />
                 </section>
               )}
+              {shown.mumuIndex !== null && (
+                <AccountPicker key={shown.mumuIndex} mumuIndex={shown.mumuIndex} />
+              )}
               <ManualSteps machine={shown} several={machines.length > 1} />
-              {shown.mumuIndex !== null && <MachineAccount mumuIndex={shown.mumuIndex} />}
               <Guide overview={data} howto={done} />
             </>
           );
