@@ -1,4 +1,4 @@
-"""The customer routes: what they change, refuse, and never answer."""
+"""The customer routes: what they change, refuse, and answer of a login."""
 
 import os
 
@@ -74,6 +74,20 @@ def test_an_account_takes_a_label_and_a_password(client, account, saved_logins):
     assert reply.json()["accounts"][0]["label"] == "Căn B"
     assert "moi" not in reply.text
     assert saved_logins.read(2).password == "moi"
+
+
+def test_the_login_is_answered_whole_to_the_form_alone(client, account, saved_logins):
+    url = f"/api/customer-accounts/{account['id']}/login"
+    reply = client.get(url)
+    assert reply.json() == {"phone": ACCOUNT["phone"], "password": ACCOUNT["password"]}
+    assert reply.headers["cache-control"] == "no-store"
+    assert client.get(url, headers={"Origin": "https://example.com"}).status_code == 403
+    assert client.get(url, headers={"Host": "example.com"}).status_code == 403
+
+    saved_logins.delete(account["id"])
+    assert client.get(url).json() == {"phone": None, "password": None}
+    unknown = client.get(f"/api/customer-accounts/{'0' * 32}/login")
+    assert (unknown.status_code, unknown.json()["error"]) == (404, "not_found")
 
 
 def test_an_account_takes_another_phone_number(client, customer, account, saved_logins):

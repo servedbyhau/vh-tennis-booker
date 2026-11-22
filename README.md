@@ -179,7 +179,7 @@ On the second:
 
 - **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
   the Vinhomes accounts they gave. The passwords are kept by Windows (Credential Manager) for your
-  Windows account and never shown again.
+  Windows account; an account's form shows its own.
 - **Vé / Tickets**: the tickets booked and still to use, of every machine's account in one list, by
   day of play, with their slot, court, status and booking code; a press opens the ticket's picture
   with its QR code, and a button saves it as a file. They are read from the Vinhomes app at 06:03,

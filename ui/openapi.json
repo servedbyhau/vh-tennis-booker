@@ -1003,6 +1003,60 @@
         }
       }
     },
+    "/api/customer-accounts/{account_id}/login": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Read Login",
+        "description": "The account's saved login, whole, to fill the form that changes it.\n\nThe user asked to see it there (2026-11-22). Only this PC reaches the backend\n(``local_only.py``), and no cache keeps the answer.",
+        "operationId": "read_login_api_customer_accounts__account_id__login_get",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountLogin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/customer-accounts/{account_id}": {
       "put": {
         "tags": [
@@ -1634,6 +1688,39 @@
         "title": "AccountChange",
         "description": "Another label and, if given, phone number and password; what is not given stays."
       },
+      "AccountLogin": {
+        "properties": {
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "password"
+        ],
+        "title": "AccountLogin",
+        "description": "The saved login of an account as it is, ``None`` once it is gone."
+      },
       "AccountSubdivision": {
         "properties": {
           "device": {
@@ -1722,7 +1809,7 @@
           "device"
         ],
         "title": "CustomerAccount",
-        "description": "A customer's Vinhomes account; never its password."
+        "description": "A customer's Vinhomes account, without its password."
       },
       "CustomerFields": {
         "properties": {

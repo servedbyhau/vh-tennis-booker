@@ -44,6 +44,7 @@ export type CustomerAccount = Schemas["CustomerAccount"];
 export type CustomerFields = Schemas["CustomerFields"];
 export type NewAccount = Schemas["NewAccount"];
 export type AccountChange = Schemas["AccountChange"];
+export type AccountLogin = Schemas["AccountLogin"];
 
 export type SetupItem = Schemas["SetupItem"];
 /** The state of one device setup item (the backend's `Status` enum). */

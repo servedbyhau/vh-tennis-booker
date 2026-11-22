@@ -115,7 +115,7 @@ export function useAddAccount() {
   );
 }
 
-/** Change an account's label and, unless `null`, its password. */
+/** Change an account's label and, unless `null`, its phone number and password. */
 export function useChangeAccount() {
   return useCustomerChange(({ id, fields }: { id: string; fields: AccountChange }) =>
     changeAccount(id, fields),
