@@ -158,7 +158,7 @@ remove them too.
 
 ## Using the app
 
-The app has two pages, **Đặt sân / Booking** and **Khách hàng / Customers**. On the first:
+The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**. On the first:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
@@ -181,12 +181,12 @@ The app has two pages, **Đặt sân / Booking** and **Khách hàng / Customers*
   need no step (the runs and the daily switch see to them). It also says the account the
   machine books with. It opens first, with a count, while anything is left. The Windows notification switch sits on
   the ticket, beside the daily switch.
-- **Khách hàng / Customers**, the second page: the people or groups you book for, each with who
-  speaks for them and the Vinhomes accounts they gave; a press on a machine in an account's line
-  lets it book with that account. Before booking, a run reads the phone number logged in on the machine's Vinhomes app,
-  and logs out and in if it is another one, trying the password once; a machine that cannot be
-  sure books nothing. The passwords are kept by Windows (Credential Manager) for your Windows
-  account and never shown again.
+- **Quản lý / Management**, the second page: the customers, people or groups you book for, each
+  with who speaks for them and the Vinhomes accounts they gave. Before booking, a run reads the
+  phone number logged in on the machine's Vinhomes app, and logs out and in if it is not the
+  machine's account, trying the password once; a machine that cannot be sure books nothing. The
+  passwords are kept by Windows (Credential Manager) for your Windows account and never shown
+  again.
 - **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,
   each logged in to another account) book alongside the first once their "Dùng máy này"
   switch is on.

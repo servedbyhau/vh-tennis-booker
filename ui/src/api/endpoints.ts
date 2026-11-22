@@ -135,25 +135,6 @@ export async function removeAccount(id: string): Promise<void> {
   );
 }
 
-/** Let MuMu instance `mumuIndex` book with the account from its next run on. */
-export function attachAccount(mumuIndex: number, accountId: string): Promise<Customer> {
-  return call(
-    client.PUT("/api/machines/{mumu_index}/account", {
-      params: { path: { mumu_index: mumuIndex } },
-      body: { account_id: accountId },
-    }),
-  );
-}
-
-/** Let MuMu instance `mumuIndex` book with whichever account its app has logged in. */
-export async function detachAccount(mumuIndex: number): Promise<void> {
-  await call(
-    client.DELETE("/api/machines/{mumu_index}/account", {
-      params: { path: { mumu_index: mumuIndex } },
-    }),
-  );
-}
-
 /** Read whether every run ends with a Windows notification, and its language. */
 export function getNotifications(): Promise<NotificationSettings> {
   return call(client.GET("/api/notifications"));

@@ -24,7 +24,7 @@ logger = logging.getLogger(LOGGER_NAME)
 HOST = "127.0.0.1"
 """Only this PC can reach the backend; it has no login."""
 DEFAULT_PORT = 8765
-MACHINE_NAMES = {"vi": "Khách Máy {}", "en": "Machine {} customer"}
+CUSTOMER_NAMES = {"vi": "Khách hàng {}", "en": "Customer {}"}
 """Names the customer given to a login saved before there were customers."""
 UI_FOLDER = Path(__file__).resolve().parent.parent / "ui"
 """The built UI, beside the code in the packaged app; absent from the sources."""
@@ -66,10 +66,8 @@ def main(argv: list[str]) -> int:
     )
     forget_expired(data, date.today())
     # Logins saved before there were customers, which the app then shows as one's account.
-    machine = MACHINE_NAMES.get(config.notification_language, MACHINE_NAMES[DEFAULT_LANGUAGE])
-    adopt_saved_logins(
-        data.database, credentials.default_store(), lambda index: machine.format(index + 1)
-    )
+    name = CUSTOMER_NAMES.get(config.notification_language, CUSTOMER_NAMES[DEFAULT_LANGUAGE])
+    adopt_saved_logins(data.database, credentials.default_store(), name.format)
     log_config: dict[str, Any] | None = uvicorn.config.LOGGING_CONFIG
     if sys.stdout is None:
         # The packaged app has no console: uvicorn's formatter would fail on it, and only the

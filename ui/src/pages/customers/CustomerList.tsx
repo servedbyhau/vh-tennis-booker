@@ -1,53 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Customer } from "../../api/types";
 import { Button } from "../../components/Button";
-import { accountOn, useMachines } from "../../machines";
-import { machineName } from "../home/ticketText";
 import styles from "./CustomerList.module.css";
-
-/** The machines that book for a customer. */
-function devicesOf(customer: Customer): number[] {
-  return customer.accounts.flatMap((account) => account.device ?? []).sort((a, b) => a - b);
-}
-
-/** Who each machine books for; a press shows that customer. */
-function MachineRows({ customers, onChoose }: Pick<CustomerListProps, "customers" | "onChoose">) {
-  const { t } = useTranslation();
-  const machines = useMachines();
-  return (
-    <section aria-labelledby="machines-title" className={styles.machines}>
-      <h2 id="machines-title" className={styles.heading}>
-        {t("pages.customers.machines.title")}
-      </h2>
-      <ul className={styles.rows}>
-        {machines.map((machine) => {
-          const found = machine.mumuIndex === null ? null : accountOn(customers, machine.mumuIndex);
-          const name = t("pages.ticket.instanceName", { number: machine.place + 1 });
-          const label = machine.enabled
-            ? name
-            : t("pages.customers.machines.off", { machine: name });
-          return (
-            <li key={machine.key} className={styles.machine}>
-              <span className={styles.machineName}>{label}</span>
-              {found === null ? (
-                <span className={styles.none}>{t("pages.customers.machines.none")}</span>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.link}
-                  onClick={() => onChoose(found.customer.id)}
-                >
-                  {found.customer.name}
-                  <span className={styles.phone}>{found.account.phone}</span>
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
 
 interface CustomerListProps {
   customers: readonly Customer[];
@@ -57,10 +11,9 @@ interface CustomerListProps {
   onAdd: () => void;
 }
 
-/** Every customer with the machine that books for them, and the machines under them. */
+/** Every customer, with who speaks for them and how many accounts they gave. */
 export function CustomerList({ customers, shown, onChoose, onAdd }: CustomerListProps) {
   const { t } = useTranslation();
-  const machines = useMachines();
   return (
     <div className={styles.panel}>
       <div className={styles.head}>
@@ -84,21 +37,19 @@ export function CustomerList({ customers, shown, onChoose, onAdd }: CustomerList
                 <span className={styles.who}>
                   <span className={styles.name}>{customer.name}</span>
                   <span className={styles.sub}>
-                    {customer.representative ||
-                      t("pages.customers.accountCount", { count: customer.accounts.length })}
+                    {[
+                      customer.representative,
+                      t("pages.customers.accountCount", { count: customer.accounts.length }),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 </span>
-                {devicesOf(customer).map((device) => (
-                  <span key={device} className={styles.badge}>
-                    {machineName(t, machines, device)}
-                  </span>
-                ))}
               </button>
             </li>
           ))}
         </ul>
       </nav>
-      <MachineRows customers={customers} onChoose={onChoose} />
     </div>
   );
 }

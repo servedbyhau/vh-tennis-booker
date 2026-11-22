@@ -30,9 +30,10 @@ that reads tickets: check that each ticket booked has its picture and reads as r
 the reading started and ended (06:03 to about 06:05), and that it changed nothing in the rounds.
 
 Sending the results and tickets over Zalo is put off by the user (2026-11-22).
-Later, by the user's wish: what a customer asks for (courts, slots, weekdays) kept with the
-customer and applied to a machine, whose settings stay what a run reads; a run books every day
-today, so the weekdays need a change of the engine.
+Later, by the user's wish: choosing the account a machine books with, and what a customer asks
+for (courts, slots, weekdays) kept with the customer and applied to a machine, whose settings
+stay what a run reads; a run books every day today, so the weekdays need a change of the
+engine.
 
 ## After that
 

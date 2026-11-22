@@ -312,13 +312,13 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 - `steps.ts` words each event kind (a new kind fails the type check); `reasons.ts` turns the
   engine's English reasons into a few words (`notify.REASONS` holds the same words; a test
   compares them).
-- Two pages, a press apart in the middle of the header: the booking and the customers
-  (`pages/CustomersPage.tsx`, parts in `pages/customers/`): `CustomerList` (the customers with the
-  machines that book for them, and who each machine books for) and `CustomerDetail` beside it
-  (the one in the address, `?customer=`, else the first): who they are and their accounts, each
-  with the machines as buttons: a press attaches the account there (it moves if it was on
-  another), a second one frees it. One form is open at a time (`CustomerForms`); a password
-  typed in is sent once and never shown again, a removal takes two presses.
+- Two pages, a press apart in the middle of the header: the booking and the management
+  (`pages/CustomersPage.tsx`, parts in `pages/customers/`), for now the customers: `CustomerList`,
+  and `CustomerDetail` beside it (the one in the address, `?customer=`, else the first): who they
+  are and their accounts. One form is open at a time (`CustomerForms`); a password typed in is
+  sent once and never shown again, a removal takes two presses, and an account in use is not
+  removed. Nothing in the UI attaches an account to a machine yet (`/api/machines/{index}/account`
+  does).
 - The booking page (`pages/HomePage.tsx`, parts in `pages/home/`): the ticket (`BookingTicket`:
   on top the daily switch and what is set: the play day and court side by side, the slots
   on a row of their own (fixed rows, whatever the court's name), and a line only while the
@@ -340,7 +340,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   `HistoryTab` (runs ten days at a time, real bookings unless dry runs are ticked, `?run=`
   opens one run's slots, steps and log) and `SetupTab` (the user's ticks, the machine's account
   and the guide, those of the machine chosen on the ticket, which `HomePage` holds).
-  `MachineAccount` says the machine's account and leads to the customers page.
+  `MachineAccount` says the machine's account and leads to the management page.
   The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
   readers. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the

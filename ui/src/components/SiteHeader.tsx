@@ -32,8 +32,8 @@ export function SiteHeader() {
         <NavLink to={paths.overview} end className={styles.link}>
           {t("nav.booking")}
         </NavLink>
-        <NavLink to={paths.customers} className={styles.link}>
-          {t("nav.customers")}
+        <NavLink to={paths.management} className={styles.link}>
+          {t("nav.management")}
         </NavLink>
       </nav>
       <div className={styles.end}>

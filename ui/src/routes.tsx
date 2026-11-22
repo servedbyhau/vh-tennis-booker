@@ -15,7 +15,7 @@ export const routes: RouteObject[] = [
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: paths.customers, element: <CustomersPage /> },
+      { path: paths.management, element: <CustomersPage /> },
       ...OLD_PATHS.map((path) => ({ path, element: <Redirect to={paths.overview} /> })),
       { path: "*", element: <NotFoundPage /> },
     ],
