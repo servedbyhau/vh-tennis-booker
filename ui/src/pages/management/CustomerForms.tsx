@@ -9,6 +9,7 @@ import {
 } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Button } from "../../components/Button";
+import { Icon } from "../../components/Icon";
 import styles from "./CustomerForms.module.css";
 
 /** A phone number as the Vinhomes app takes it: 10 digits from 0. */
@@ -58,9 +59,13 @@ function EditForm({ title, pending, error, onSave, onClose, children }: FormProp
       <div className={styles.fields}>{children}</div>
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={pending}>
+          <Icon name="check" />
           {t("pages.customers.save")}
         </Button>
-        <Button onClick={onClose}>{t("pages.customers.cancel")}</Button>
+        <Button onClick={onClose}>
+          <Icon name="close" />
+          {t("pages.customers.cancel")}
+        </Button>
       </div>
       {error !== null && (
         <p role="alert" className={styles.error}>
@@ -211,7 +216,10 @@ export function AccountForm({ customerId, account, onClose }: AccountFormProps) 
           onChange={(event) => setLabel(event.target.value)}
         />
       </Field>
-      <p className={styles.note}>{t("pages.customers.private")}</p>
+      <p className={styles.note}>
+        <Icon name="lock" />
+        {t("pages.customers.private")}
+      </p>
     </EditForm>
   );
 }

@@ -30,7 +30,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - A lighter look: space, soft fills and hairlines part things in place of dark rules; ink is for the
-  main action and the page shown.
+  main action and the page shown. Icons of one set (Lucide) take the place of words on the
+  customers' buttons and facts.
 
 ### Fixed
 - Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is

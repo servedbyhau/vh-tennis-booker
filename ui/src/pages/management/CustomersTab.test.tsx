@@ -67,7 +67,7 @@ function choose(name: RegExp) {
 describe("Management customers", () => {
   it("lists them, the first one shown with its accounts", async () => {
     await openPage();
-    expect(listed()).toEqual(["[Anh AnNguyễn Văn An · 2 tài khoản]", "Chị Bình0 tài khoản"]);
+    expect(listed()).toEqual(["[Anh AnNguyễn Văn An22 tài khoản]", "Chị Bình00 tài khoản"]);
     const facts = card("Anh An").getAllByRole("definition");
     expect(facts.map((fact) => fact.textContent)).toEqual([
       "Nguyễn Văn An",
@@ -76,10 +76,9 @@ describe("Management customers", () => {
     ]);
     expect(
       card("Anh An")
-        .getAllByRole("row")
-        .slice(1)
+        .getAllByRole("listitem")
         .map((row) => row.textContent),
-    ).toEqual(["09••••••11Căn ASửaXóa", "09••••••22SửaXóa"]);
+    ).toEqual(["09••••••11Căn A", "09••••••22"]);
   });
 
   it("shows the one pressed, with no form left open, and keeps it in the address", async () => {
@@ -87,10 +86,10 @@ describe("Management customers", () => {
     press("Thêm tài khoản");
     choose(/^Chị Bình/);
     expect(card("Chị Bình").getByText("Chưa có tài khoản nào.")).toBeVisible();
-    expect(card("Chị Bình").getByText(/^Chưa có thông tin liên hệ\./)).toBeVisible();
+    expect(card("Chị Bình").getByText("Chưa có thông tin liên hệ.")).toBeVisible();
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
     expect(router.state.location.search).toBe("?customer=a2");
-    expect(listed()).toEqual(["Anh AnNguyễn Văn An · 2 tài khoản", "[Chị Bình0 tài khoản]"]);
+    expect(listed()).toEqual(["Anh AnNguyễn Văn An22 tài khoản", "[Chị Bình00 tài khoản]"]);
   });
 
   it("says what to do without customers", async () => {
@@ -102,7 +101,7 @@ describe("Management customers", () => {
     const { fetch, router } = await openPage([AN], { "POST /api/customers": reply(BINH, 201) });
     press("Thêm khách");
     expect(screen.getByLabelText("Tên khách hoặc nhóm")).toHaveFocus();
-    expect(listed()).toEqual(["Anh AnNguyễn Văn An · 2 tài khoản"]); // none shown meanwhile
+    expect(listed()).toEqual(["Anh AnNguyễn Văn An22 tài khoản"]); // none shown meanwhile
     type("Tên khách hoặc nhóm", "Nhóm Bình");
     type("Người đại diện", "Chị Bình");
     type("Liên hệ (SĐT, Zalo)", "Zalo Bình");
@@ -251,6 +250,15 @@ describe("Management accounts", () => {
     fireEvent.click(within(question).getByRole("button", { name: "Xóa" }));
     await waitFor(() => expect(requestsTo(fetch, "DELETE /api/customer-accounts/b2")).toBe(1));
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+  });
+
+  it("opens an account's form under it, and shuts it on a second press", async () => {
+    await openPage([AN]);
+    press("Sửa", 1);
+    const [first] = card("Anh An").getAllByRole("listitem");
+    expect(within(first!).getByRole("form")).toBeVisible();
+    press("Sửa", 1);
+    expect(screen.queryByRole("form")).not.toBeInTheDocument();
   });
 
   it("opens one form at a time", async () => {

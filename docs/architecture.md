@@ -304,7 +304,9 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 - `src/paths.ts` names the two pages and the old addresses that lead to it, keeping
   `?run=`; `routes.tsx` maps them to `pages/`. `i18n/` (Vietnamese
   default, English; same keys, checked by a test). `styles/` holds the tokens (contrast checked
-  by `tokens.test.ts`); components use CSS Modules on them.
+  by `tokens.test.ts`); components use CSS Modules on them. Every icon is one of Lucide's,
+  named in `components/Icon.tsx`; a button of an icon alone is an `IconButton`, whose label is its
+  tooltip too.
 - `src/api/`: types generated from `openapi.json` (`schema.d.ts`), a typed client, React Query
   hooks (`queries.ts`, `mutations.ts`) and the live feed (`live.ts`, one WebSocket, reconnects
   with `?after=`). Data is refreshed only at run boundaries (`staleKeysFor`): a run's own steps
@@ -315,7 +317,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 - Two pages, a press apart in the middle of the header: the booking and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose three sections each have an
   address: `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
-  `?customer=`, else the first: who they are and their accounts; one form is open at a time, a
+  `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes, a
   password typed in is sent once and never shown again, a removal is beside each edit and
   asks first, saying which machine loses its account), `TicketsTab` (every machine's tickets still to use by day of play, of
   one machine or all, no cancelled ones, picked in `tickets.ts` without a request; a press opens

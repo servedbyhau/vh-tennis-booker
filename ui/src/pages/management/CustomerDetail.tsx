@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRemoveAccount, useRemoveCustomer } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
-import { Button } from "../../components/Button";
+import { Icon, type IconName } from "../../components/Icon";
+import { IconButton } from "../../components/IconButton";
 import { useMachines } from "../../machines";
 import { machineName } from "../home/ticketText";
 import styles from "./CustomerDetail.module.css";
@@ -16,70 +17,30 @@ type Open =
   | { form: "removeCustomer" }
   | { form: "removeAccount"; id: string };
 
-/** Who the customer is; what is not known is left out. */
+/** Who the customer is, a line each behind its icon; what is not known is left out. */
 function Facts({ customer }: { customer: Customer }) {
   const { t } = useTranslation();
-  const facts = [
-    [t("pages.customers.representative"), customer.representative],
-    [t("pages.customers.contact"), customer.contact],
-    [t("pages.customers.note"), customer.note],
-  ].filter(([, value]) => value !== "");
-  if (facts.length === 0) {
-    return <p className={styles.note}>{t("pages.customers.noFacts")}</p>;
+  const facts: { icon: IconName; label: string; value: string }[] = [
+    { icon: "person", label: t("pages.customers.representative"), value: customer.representative },
+    { icon: "phone", label: t("pages.customers.contact"), value: customer.contact },
+    { icon: "note", label: t("pages.customers.note"), value: customer.note },
+  ];
+  const known = facts.filter(({ value }) => value !== "");
+  if (known.length === 0) {
+    return <p className={styles.none}>{t("pages.customers.noFacts")}</p>;
   }
   return (
     <dl className={styles.facts}>
-      {facts.map(([label, value]) => (
-        <div key={label} className={styles.fact}>
-          <dt>{label}</dt>
+      {known.map(({ icon, label, value }) => (
+        <div key={icon} className={styles.fact} title={label}>
+          <dt>
+            <Icon name={icon} />
+            <span className="visually-hidden">{label}</span>
+          </dt>
           <dd>{value}</dd>
         </div>
       ))}
     </dl>
-  );
-}
-
-/** The accounts, one line each. */
-function Accounts({ customer, open, onOpen }: OpenProps) {
-  const { t } = useTranslation();
-  if (customer.accounts.length === 0) {
-    return <p className={styles.note}>{t("pages.customers.noAccounts")}</p>;
-  }
-  return (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th scope="col">{t("pages.customers.phone")}</th>
-          <th scope="col">{t("pages.customers.label")}</th>
-          <th scope="col">
-            <span className="visually-hidden">{t("pages.customers.edit")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {customer.accounts.map((account) => (
-          <tr key={account.id}>
-            <td className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</td>
-            <td className={styles.label}>{account.label}</td>
-            <td className={styles.end}>
-              <Button
-                className={styles.small}
-                aria-pressed={open?.form === "account" && open.id === account.id}
-                onClick={() => onOpen({ form: "account", id: account.id })}
-              >
-                {t("pages.customers.edit")}
-              </Button>
-              <Button
-                className={styles.small}
-                onClick={() => onOpen({ form: "removeAccount", id: account.id })}
-              >
-                {t("pages.customers.remove")}
-              </Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 }
 
@@ -136,10 +97,47 @@ function RemoveAccount({ account, onClose }: { account: CustomerAccount; onClose
   );
 }
 
-interface OpenProps {
-  customer: Customer;
+interface AccountRowProps {
+  customerId: string;
+  account: CustomerAccount;
   open: Open | null;
   onOpen: (open: Open | null) => void;
+}
+
+/** An account: its phone and label, its form or the question before its removal under it. */
+function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
+  const { t } = useTranslation();
+  const close = () => onOpen(null);
+  const edited = open?.form === "account" && open.id === account.id;
+  const removed = open?.form === "removeAccount" && open.id === account.id;
+  return (
+    <li className={styles.account}>
+      <div className={styles.row}>
+        <span className={styles.mark}>
+          <Icon name="key" />
+        </span>
+        <span className={styles.login}>
+          <span className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</span>
+          {account.label !== "" && <span className={styles.label}>{account.label}</span>}
+        </span>
+        <IconButton
+          icon="edit"
+          label={t("pages.customers.edit")}
+          aria-expanded={edited}
+          onClick={() => onOpen(edited ? null : { form: "account", id: account.id })}
+        />
+        <IconButton
+          icon="remove"
+          variant="danger"
+          label={t("pages.customers.remove")}
+          aria-expanded={removed}
+          onClick={() => onOpen(removed ? null : { form: "removeAccount", id: account.id })}
+        />
+      </div>
+      {edited && <AccountForm customerId={customerId} account={account} onClose={close} />}
+      {removed && <RemoveAccount account={account} onClose={close} />}
+    </li>
+  );
 }
 
 /** A customer: who they are, then the Vinhomes accounts they gave. One form is open at a time. */
@@ -147,11 +145,8 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState<Open | null>(null);
   const close = () => setOpen(null);
-  const edited = open?.form === "account" ? open : null;
-  const editedAccount = customer.accounts.find((account) => account.id === edited?.id) ?? null;
-  const removed = customer.accounts.find(
-    (account) => open?.form === "removeAccount" && account.id === open.id,
-  );
+  const adding = open?.form === "account" && open.id === null;
+  const removing = open?.form === "removeCustomer";
   return (
     <section aria-label={customer.name} className={styles.body}>
       {open?.form === "customer" ? (
@@ -160,38 +155,47 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
         <>
           <div className={styles.head}>
             <h2 className={styles.name}>{customer.name}</h2>
-            <div className={styles.buttons}>
-              <Button className={styles.small} onClick={() => setOpen({ form: "customer" })}>
-                {t("pages.customers.editCustomer")}
-              </Button>
-              <Button className={styles.small} onClick={() => setOpen({ form: "removeCustomer" })}>
-                {t("pages.customers.removeCustomer")}
-              </Button>
-            </div>
+            <IconButton
+              icon="edit"
+              label={t("pages.customers.editCustomer")}
+              onClick={() => setOpen({ form: "customer" })}
+            />
+            <IconButton
+              icon="remove"
+              variant="danger"
+              label={t("pages.customers.removeCustomer")}
+              aria-expanded={removing}
+              onClick={() => setOpen(removing ? null : { form: "removeCustomer" })}
+            />
           </div>
-          {open?.form === "removeCustomer" && (
-            <RemoveCustomer customer={customer} onClose={close} />
-          )}
+          {removing && <RemoveCustomer customer={customer} onClose={close} />}
           <Facts customer={customer} />
         </>
       )}
-      <div className={styles.head}>
+      <div className={`${styles.head} ${styles.accountsHead}`}>
         <h3 className={styles.section}>{t("pages.customers.accounts")}</h3>
-        <Button className={styles.small} onClick={() => setOpen({ form: "account", id: null })}>
-          {t("pages.customers.addAccount")}
-        </Button>
-      </div>
-      <Accounts customer={customer} open={open} onOpen={setOpen} />
-      {removed !== undefined && (
-        <RemoveAccount key={removed.id} account={removed} onClose={close} />
-      )}
-      {edited !== null && (edited.id === null || editedAccount !== null) && (
-        <AccountForm
-          key={edited.id ?? "new"}
-          customerId={customer.id}
-          account={editedAccount}
-          onClose={close}
+        <IconButton
+          icon="add"
+          label={t("pages.customers.addAccount")}
+          aria-expanded={adding}
+          onClick={() => setOpen(adding ? null : { form: "account", id: null })}
         />
+      </div>
+      {adding && <AccountForm customerId={customer.id} account={null} onClose={close} />}
+      {customer.accounts.length > 0 ? (
+        <ul aria-label={t("pages.customers.accounts")} className={styles.accounts}>
+          {customer.accounts.map((account) => (
+            <AccountRow
+              key={account.id}
+              customerId={customer.id}
+              account={account}
+              open={open}
+              onOpen={setOpen}
+            />
+          ))}
+        </ul>
+      ) : (
+        !adding && <p className={styles.none}>{t("pages.customers.noAccounts")}</p>
       )}
     </section>
   );

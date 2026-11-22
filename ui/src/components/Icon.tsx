@@ -1,33 +1,60 @@
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Download,
+  Image,
+  KeyRound,
+  Lock,
+  Pencil,
+  Phone,
+  Plus,
+  StickyNote,
+  Trash2,
+  UserRound,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import styles from "./Icon.module.css";
 
-/** Line drawings on a 16-unit grid, in the colour of the text around them. */
-const PATHS = {
-  /** A clock: a time set ahead, such as the wake time or a run on schedule. */
-  clock: "M8 2.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0-11zM8 5v3.25l2 1.25",
-  /** A person: something someone started by hand. */
-  person: "M8 2.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5zM3 13.5c.7-2.4 2.6-3.5 5-3.5s4.3 1.1 5 3.5",
-  /** A picture: something that opens as one. */
-  picture:
-    "M2.5 3h11v10h-11zM2.5 11l3.2-3.2l2.6 2.6l2-2l3.2 3.2M10.6 5.2a.9 .9 0 1 0 0 1.8a.9 .9 0 1 0 0-1.8z",
-  /** A cross: close what is open. */
-  close: "M4 4l8 8M12 4l-8 8",
-  /** An arrow down into a tray: save as a file. */
-  save: "M8 2.5v7.5M4.8 6.8l3.2 3.2l3.2-3.2M2.8 11v2.5h10.4v-2.5",
-  /** Arrow heads: the one before, the one after. */
-  back: "M10 3.5l-4.5 4.5l4.5 4.5",
-  forward: "M6 3.5l4.5 4.5l-4.5 4.5",
-} as const;
+/** The drawings the app uses, all of one set (Lucide), by what they stand for here. */
+const DRAWINGS = {
+  /** A time set ahead, such as the wake time or a run on schedule. */
+  clock: Clock,
+  /** Someone: a customer, who speaks for them, or a run started by hand. */
+  person: UserRound,
+  /** How to reach someone. */
+  phone: Phone,
+  /** Something written down. */
+  note: StickyNote,
+  /** A login. */
+  key: KeyRound,
+  /** Something that opens as a picture. */
+  picture: Image,
+  /** Something locked, or kept to itself. */
+  lock: Lock,
+  add: Plus,
+  edit: Pencil,
+  remove: Trash2,
+  /** Agree, keep what was typed. */
+  check: Check,
+  /** Close what is open, give it up. */
+  close: X,
+  /** Save as a file. */
+  save: Download,
+  /** The one before, the one after. */
+  back: ChevronLeft,
+  forward: ChevronRight,
+} as const satisfies Record<string, LucideIcon>;
 
-export type IconName = keyof typeof PATHS;
+export type IconName = keyof typeof DRAWINGS;
 
 /**
- * A small icon, sized to the text. Screen readers skip it: it only adds to the words next to
- * it, and a button of an icon alone has a label of its own.
+ * A small icon in the colour of the text around it, sized to it. Screen readers skip it: it
+ * only adds to the words next to it, and a button of an icon alone has a label of its own.
  */
 export function Icon({ name }: { name: IconName }) {
-  return (
-    <svg className={styles.icon} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path d={PATHS[name]} />
-    </svg>
-  );
+  const Drawing = DRAWINGS[name];
+  return <Drawing className={styles.icon} aria-hidden="true" focusable="false" />;
 }

@@ -2,32 +2,13 @@ import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useRunSteps } from "../../api/runSteps";
 import type { Step } from "../../api/types";
+import { Icon } from "../../components/Icon";
 import { Overline } from "../../components/Overline";
 import { stepMessage } from "../../steps";
 import { useFormat } from "../../useFormat";
 import styles from "./LiveTicket.module.css";
 import { progressOf } from "./progress";
 import { TicketFrame } from "./TicketFrame";
-
-/** A closed padlock: the choices wait for the run to end. */
-function Padlock() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="5" y="11" width="14" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
-  );
-}
 
 interface LiveProps {
   steps: readonly Step[];
@@ -140,7 +121,7 @@ function Live({ steps, instance, locked = true }: LiveProps) {
       </ol>
       {locked && (
         <p className={styles.locked}>
-          <Padlock />
+          <Icon name="lock" />
           {t("pages.ticket.live.locked")}
         </p>
       )}
