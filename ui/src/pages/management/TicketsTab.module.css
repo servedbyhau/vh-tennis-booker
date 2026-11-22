@@ -126,6 +126,32 @@
   font-size: var(--text-label);
 }
 
+/* A long customer's name ends in dots before their account does. */
+.holder {
+  min-width: 0;
+  display: flex;
+  white-space: nowrap;
+}
+
+.customer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account {
+  flex: none;
+}
+
+.account::before {
+  content: "· ";
+  white-space: pre;
+  margin-left: 1ch;
+}
+
+.line > :last-child {
+  flex: none;
+}
+
 .photo {
   display: inline-flex;
   align-items: center;

@@ -15,7 +15,7 @@ import { useFormat } from "../../useFormat";
 import styles from "./HistoryTab.module.css";
 import { useManagement } from "./state";
 import { RunDetail } from "./RunDetail";
-import { runShortTitle } from "../home/runText";
+import { runHolder, runShortTitle } from "../home/runText";
 
 /** Return the run asked for in the address (`?run=12`), if it is a run id. */
 function requestedRun(params: URLSearchParams): number | undefined {
@@ -72,13 +72,14 @@ const ORIGIN_ICONS: Record<string, IconName> = {
 
 /**
  * When a run started, short ("15/10 08:32", the day alone on schedule), after the icon of how
- * it started; the MuMu instance of a run beside the first ends it.
+ * it started; whose account it booked with ends it.
  */
 function StartedAt({ run }: { run: RunSummary }) {
   const { t } = useTranslation();
   const f = useFormat();
   const origin = runOrigin(t, run.trigger);
   const icon = ORIGIN_ICONS[run.trigger];
+  const holder = runHolder(t, run);
   return (
     <span className={styles.when} title={origin}>
       {icon !== undefined && <Icon name={icon} />}
@@ -86,7 +87,11 @@ function StartedAt({ run }: { run: RunSummary }) {
       {f.shortDate(run.started_at)}
       {/* A run on schedule starts at the wake time, the same every day. */}
       {run.trigger === "scheduled" ? "" : ` ${f.time(run.started_at)}`}
-      {run.device ? ` · ${t("pages.ticket.mumuName", { index: run.device })}` : ""}
+      {holder !== "" && (
+        <span className={styles.holder} title={holder}>
+          {` · ${run.customer ?? holder}`}
+        </span>
+      )}
     </span>
   );
 }

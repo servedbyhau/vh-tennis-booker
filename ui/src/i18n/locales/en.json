@@ -103,7 +103,6 @@
       "runOn": "Run on {{day}}",
       "booked": "booked {{when}} · {{by}}",
       "dry": "dry run {{when}}",
-      "instance": "{{text}} · MuMu {{index}}",
       "slot": {
         "booked": "BOOKED",
         "failed": "NOT BOOKED",
@@ -118,11 +117,11 @@
     },
     "tickets": {
       "title": "Tickets",
-      "machine": "Tickets of machine",
-      "all": "All machines",
+      "customer": "Tickets of",
+      "all": "Every customer",
+      "unknown": "Not known",
       "count": "Tickets: {{count}}",
       "row": "{{slot}} · {{court}}",
-      "where": "{{machine}} · {{code}}",
       "view": "View ticket",
       "noPhoto": "no picture",
       "empty": "No tickets yet. A booked ticket shows here until its day of play is over.",

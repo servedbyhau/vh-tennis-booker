@@ -22,7 +22,7 @@ uses [Semantic Versioning](https://semver.org/).
   machines would book the same court and slot; their tabs are marked, and the second is told at the
   press that makes it so.
 - A "Vé" ("Tickets") section: the tickets booked and still to use, of every
-  machine's account in one list by day of play, with their status and booking code; a press
+  customer in one list by day of play, with their status and whose account they are of; a press
   opens the ticket's picture, which can be saved as a file.
 - After a real run that booked, the app's tickets are read from its history page (code, court,
   time, status) and a picture of each new ticket, with its QR code, is saved in the data
@@ -30,7 +30,7 @@ uses [Semantic Versioning](https://semver.org/).
   three minutes or so later than before. A ticket and its picture are deleted once its day of
   play is over.
 - Each run and each ticket is recorded with whose account it is of, the customer and the account, so
-  it stays known when the accounts change machines.
+  it stays known when the accounts change machines; the History and the tickets name them.
 - A third machine on the ticket, "Máy 3" (MuMu 2), switched on and off like "Máy 2", so a
   third account books alongside from the UI. Each machine keeps its tab whichever of the
   others is on.

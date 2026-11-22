@@ -1,6 +1,6 @@
 /**
  * What the tickets list shows: the tickets still to use, in days. The backend gives every
- * machine's tickets in one list; picking among them sends no request.
+ * customer's tickets in one list; picking among them sends no request.
  */
 import type { Ticket } from "./api/types";
 
@@ -10,9 +10,19 @@ export interface TicketDay {
   tickets: Ticket[];
 }
 
-/** Return the machines that have tickets, by their MuMu index. */
-export function ticketDevices(tickets: readonly Ticket[]): number[] {
-  return [...new Set(tickets.map((ticket) => ticket.device))].sort((a, b) => a - b);
+/** The customer of a ticket whose holder is not known. */
+export const UNKNOWN = "";
+
+/** Return whose ticket it is, `UNKNOWN` while that is not known. */
+export function ticketCustomer(ticket: Ticket): string {
+  return ticket.customer ?? UNKNOWN;
+}
+
+/** Return the customers that have tickets by name, those not known last. */
+export function ticketCustomers(tickets: readonly Ticket[]): string[] {
+  return [...new Set(tickets.map(ticketCustomer))].sort((a, b) =>
+    a === UNKNOWN || b === UNKNOWN ? b.length - a.length : a.localeCompare(b, "vi"),
+  );
 }
 
 /** Return the tickets still to use on `today` ("2026-10-15"): its own too, no cancelled one. */
