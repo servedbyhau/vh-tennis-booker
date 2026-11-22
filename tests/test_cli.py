@@ -17,12 +17,14 @@ import court_booker.cli as cli
 from court_booker import device_setup, processes
 from court_booker.cli import close_emulator
 from court_booker.config import Config
+from court_booker.credentials import Login
+from court_booker.customers import CustomerBook
 from court_booker.device_setup import Check, Status
 from court_booker.engine import engine_command
 from court_booker.errors import AppNotReadyError, DeviceNotRespondingError, EmulatorError
 from court_booker.events import EventKind
 from court_booker.history import History as HistoryStore
-from court_booker.history import HistoryHandler
+from court_booker.history import HistoryHandler, connect
 from court_booker.lock import Holder
 from court_booker.ready import DeviceHandle
 from court_booker.runner import RoundResult
@@ -581,6 +583,32 @@ def test_a_run_is_recorded_in_the_history(monkeypatch, tmp_path, data_home):
     assert kinds == ["run_started", "device_ready", "run_finished"]
     assert f"court-booker {cli.__version__}" in lines
     assert "Summary" in lines
+
+
+def test_a_run_is_recorded_with_whose_account_it_books_with(
+    monkeypatch, tmp_path, data_home, saved_logins
+):
+    db = connect(data_home / "booker.db")
+    book = CustomerBook(db, saved_logins)
+    account = book.add_account(book.add_customer("An").id, Login("0900000011", "x"), "Căn A")
+    book.attach(account.id, 0)
+
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)])
+
+    names = db.execute("SELECT account_id, customer, account FROM runs").fetchall()
+    db.close()
+    assert names == [(account.id, "An", "Căn A")]
+
+
+def test_a_run_books_without_knowing_whose_account_it_is(
+    monkeypatch, tmp_path, data_home, saved_logins
+):
+    def refuse(key):
+        raise OSError("no vault")
+
+    monkeypatch.setattr(saved_logins, "read", refuse)
+    assert run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)]) == cli.EXIT_OK
+    assert "Whose account MuMu 0 books with is not known" in read_log(tmp_path)
 
 
 def test_the_history_stops_listening_after_the_run(monkeypatch, tmp_path):

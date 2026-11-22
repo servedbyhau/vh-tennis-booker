@@ -16,6 +16,7 @@ from court_booker import __version__, credentials, device_setup, schedule
 from court_booker.adb import AUTO
 from court_booker.clock import NtpClock, ntp_offset, resolve_start, wait_until
 from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
+from court_booker.customers import holder_on
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
 from court_booker.emulator import CALL_ATTEMPTS, MuMu
 from court_booker.engine import engine_command
@@ -169,6 +170,21 @@ def start_instances(
         logger.info("MuMu instance %d books in process %d", index, process.pid)
         started.append((index, process))
     return started
+
+
+def note_holder(history: History, device: int) -> None:
+    """Record whose account the run books with, once the lock keeps it from changing.
+
+    The run books with that account or not at all (:meth:`Booker.check_account`), and books
+    all the same when it cannot be told.
+    """
+    try:
+        holder = holder_on(data_folder().database, credentials.default_store(), device)
+    except Exception:
+        logger.warning("Whose account MuMu %d books with is not known", device, exc_info=True)
+        return
+    if holder is not None:
+        history.set_holder(holder)
 
 
 def wait_for_instances(processes: list[tuple[int, subprocess.Popen[bytes]]]) -> None:
@@ -477,6 +493,8 @@ def main(argv: list[str] | None = None) -> int:
                     history.interrupt_stale_runs()
                 # Only now: the cleanup above would take the instances' runs for stale ones.
                 instances = start_instances(args, config)
+            if history is not None:
+                note_holder(history, config.mumu_index)
             clock = NtpClock(config.ntp_server, ntp_offset)
             if start is not None:
                 clock.measure()

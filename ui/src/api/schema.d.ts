@@ -846,6 +846,10 @@ export interface components {
             error: string | null;
             /** Device */
             device: number | null;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
             /** Booked */
             booked: number;
             /** Total */
@@ -884,6 +888,10 @@ export interface components {
             error: string | null;
             /** Device */
             device: number | null;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
             /** Booked */
             booked: number;
             /** Total */
@@ -1063,6 +1071,10 @@ export interface components {
             code: string;
             /** Device */
             device: number;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
             /** Court */
             court: string;
             /** Play Date */

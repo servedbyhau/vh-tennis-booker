@@ -61,6 +61,10 @@ class RunSummary(BaseModel):
     error: Optional[str]
     device: Optional[int]
     """The MuMu instance it booked with; empty for runs before 0.13.0."""
+    customer: Optional[str]
+    """Whose account it booked with; empty without a chosen one."""
+    account: Optional[str]
+    """The account's name, else its phone number with the middle hidden."""
     booked: int
     total: int
     slots: list[SlotResult]

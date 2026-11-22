@@ -13,6 +13,7 @@ import sqlite3
 import threading
 import time
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
@@ -113,6 +114,16 @@ MIGRATIONS = (
     ALTER TABLE customers ADD COLUMN representative TEXT NOT NULL DEFAULT '';
     ALTER TABLE customers ADD COLUMN contact TEXT NOT NULL DEFAULT '';
     """,
+    # Whose account a run booked with and a ticket is of: which account, and the names it had
+    # then, for once it is removed. Empty on a machine without a chosen account.
+    """
+    ALTER TABLE runs ADD COLUMN account_id TEXT;
+    ALTER TABLE runs ADD COLUMN customer TEXT;
+    ALTER TABLE runs ADD COLUMN account TEXT;
+    ALTER TABLE tickets ADD COLUMN account_id TEXT;
+    ALTER TABLE tickets ADD COLUMN customer TEXT;
+    ALTER TABLE tickets ADD COLUMN account TEXT;
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 
@@ -199,6 +210,16 @@ def category(event: Event) -> str:
     return "slot" if event.kind in _SLOT_KINDS else "step"
 
 
+@dataclass(frozen=True)
+class Holder:
+    """Whose account a run books with, with the names it has now."""
+
+    account_id: str
+    customer: str
+    account: str
+    """The account's name, else its phone number with the middle hidden."""
+
+
 class History:
     """Write the runs of this process to the history database; an event sink.
 
@@ -209,6 +230,7 @@ class History:
     def __init__(self, connection: sqlite3.Connection) -> None:
         self.connection = connection
         self.run_id: int | None = None
+        self.holder: Holder | None = None
         self.failed = False
         self.writes = 0
         self.seconds = 0.0
@@ -234,6 +256,16 @@ class History:
             )
 
         self._write(write)
+
+    def set_holder(self, holder: Holder) -> None:
+        """Record whose account this run books with, for it and the tickets it reads."""
+        self.holder = holder
+        self._write(
+            lambda db: db.execute(
+                "UPDATE runs SET account_id = ?, customer = ?, account = ? WHERE id = ?",
+                (holder.account_id, holder.customer, holder.account, self.run_id),
+            )
+        )
 
     def interrupt_stale_runs(self) -> None:
         """Mark runs left ``running`` by a process that is gone as ``interrupted``.
@@ -297,8 +329,15 @@ class History:
         """Record ``tickets`` as MuMu instance ``device`` showed them at ``seen_at``.
 
         A ticket recorded before takes its new status; one without a new picture in
-        ``photos`` (booking code to file name) keeps the one it has.
+        ``photos`` (booking code to file name) keeps the one it has, and its account's holder
+        while this run knows of none.
         """
+        holder = self.holder
+        names = (
+            (None, None, None)
+            if holder is None
+            else (holder.account_id, holder.customer, holder.account)
+        )
         rows = [
             (
                 ticket.code,
@@ -312,20 +351,24 @@ class History:
                 ticket.created_at,
                 _stamp(seen_at),
                 photos.get(ticket.code),
+                *names,
             )
             for ticket in tickets
         ]
         self._write(
             lambda db: db.executemany(
                 "INSERT INTO tickets (code, device, utility, court, play_date, slot, status,"
-                " status_text, created_at, seen_at, photo)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " status_text, created_at, seen_at, photo, account_id, customer, account)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 " ON CONFLICT (code) DO UPDATE SET device = excluded.device,"
                 " utility = excluded.utility, court = excluded.court,"
                 " play_date = excluded.play_date, slot = excluded.slot,"
                 " status = excluded.status, status_text = excluded.status_text,"
                 " created_at = excluded.created_at, seen_at = excluded.seen_at,"
-                " photo = COALESCE(excluded.photo, tickets.photo)",
+                " photo = COALESCE(excluded.photo, tickets.photo),"
+                " account_id = COALESCE(excluded.account_id, tickets.account_id),"
+                " customer = COALESCE(excluded.customer, tickets.customer),"
+                " account = COALESCE(excluded.account, tickets.account)",
                 rows,
             )
         )

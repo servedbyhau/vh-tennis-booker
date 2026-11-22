@@ -13,8 +13,9 @@ from court_booker.customers import (
     PhoneTakenError,
     UnknownRecordError,
     adopt_saved_logins,
+    holder_on,
 )
-from court_booker.history import connect
+from court_booker.history import Holder, connect
 
 FIRST = Login("0900000011", "mat-khau-1")
 SECOND = Login("0900000022", "mat-khau-2")
@@ -286,3 +287,19 @@ def test_a_data_folder_set_by_hand_has_logins_of_its_own(monkeypatch):
     monkeypatch.setenv("COURT_BOOKER_HOME", "C:/scratch")
     assert credentials.target(1) != "CourtBooker/vinhomes/mumu-1"
     assert credentials.target(1).endswith("/vinhomes/mumu-1")
+
+
+def test_whose_account_a_machine_books_with_is_told(tmp_path):
+    path = tmp_path / "booker.db"
+    store = MemoryStore()
+    db = connect(path)
+    book = CustomerBook(db, store)
+    an = book.add_customer("An")
+    named, plain = book.add_account(an.id, FIRST, "Căn A"), book.add_account(an.id, SECOND)
+    book.attach(named.id, 0)
+    book.attach(plain.id, 2)
+    db.close()
+
+    assert holder_on(path, store, 0) == Holder(named.id, "An", "Căn A")
+    assert holder_on(path, store, 2) == Holder(plain.id, "An", "09••••••22")
+    assert holder_on(path, store, 1) is None  # no account chosen

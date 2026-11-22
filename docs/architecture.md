@@ -195,8 +195,13 @@ Details live in the docstrings; this page says where things are and what must st
   steps and `slot_booked`/`slot_failed`; `Booker` the steps of a round.
 - `history.py`: `booker.db` (SQLite, WAL, migrations by `PRAGMA user_version`) as an event sink:
   `runs` (with the MuMu instance as `device`, from schema 2; empty for older runs; `court` is
-  the configured court until a slot is booked, then the court the app booked), `run_slots`,
-  `events`, and the run's log lines (about 0.13 ms per row written). The first database error
+  the configured court until a slot is booked, then the court the app booked; whose account it
+  books with, from schema 6), `run_slots`,
+  `events`, the tickets with whose account they are of, and the run's log lines (about 0.13 ms per
+  row written). Whose it is (`Holder`: the account's id, and the customer's and account's names)
+  is the chosen account's, noted once the run holds its lock (`cli.note_holder`), as a run books
+  with that account or not at all; empty on a machine without a chosen one. It never costs a
+  booking. Reading it back gives the names of today, those of then once the customer is removed. The first database error
   turns history off for the process.
   Schema changes only add columns, so an older runner still writes to a newer database.
 - `history_read.py`: read-only queries for the backend (runs, one run, events, the live feed's
@@ -278,7 +283,7 @@ values 422 `invalid_request`.
 |---|---|
 | `GET /api/health` | Version; no device access |
 | `GET /api/status` | The Overview in one call: running run (with `runs`: the lock holder's run, then those of the instances it started), schedule, last run, `wake_blocked` (the schedule on but wake timers off: `powercfg`, asked only with no run going on); never calls MuMu |
-| `GET /api/runs`, `/api/runs/{id}`, `/api/runs/months` | Runs newest first (filters, paging by id or by days), one run with steps and log lines, months of real bookings |
+| `GET /api/runs`, `/api/runs/{id}`, `/api/runs/months` | Runs newest first (filters, paging by id or by days) with whose account each booked with, one run with steps and log lines, months of real bookings |
 | `GET /api/events` | Activity steps newest first |
 | `GET`/`PUT /api/settings` | Booking settings without the hidden keys (`HIDDEN`: Telegram, the notification), with each `[[instances]]` entry in full; `PUT` validates, refuses added or removed instances, saves only on a change |
 | `PUT /api/instances/{mumu_index}` | A machine beside the first on or off: adds its `[[instances]]` table (taking every setting from the top) or removes it; no `enabled` key, which an older runner would refuse |
@@ -286,7 +291,7 @@ values 422 `invalid_request`.
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
-| `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), and a ticket's picture from the data folder's `tickets`, by its code alone |
+| `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of, and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
 | `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |

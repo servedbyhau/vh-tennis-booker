@@ -5,6 +5,8 @@ export function ticket(code: string, fields: Partial<Ticket> = {}): Ticket {
   return {
     code,
     device: 0,
+    customer: null,
+    account: null,
     court: "S6 - Sân tennis",
     play_date: "2026-10-16",
     slot: "18:00 - 19:00",

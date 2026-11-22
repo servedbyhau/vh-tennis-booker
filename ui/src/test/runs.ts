@@ -14,6 +14,8 @@ export function runSummary(id: number, fields: Partial<RunSummary> = {}): RunSum
     status: "ok",
     error: null,
     device: null,
+    customer: null,
+    account: null,
     booked: 2,
     total: 2,
     slots: [
