@@ -1,27 +1,37 @@
-"""The Vinhomes login a run types in when the app logged out, kept in Windows' vault.
+"""The Vinhomes logins: each machine's and each customer account's, kept in Windows' vault.
 
 The app logs an account out when it logs in on another device. With a login saved for a
 MuMu instance, the run logs in again by itself (:meth:`court_booker.flow.Booker.log_in`).
-Each login lives in Windows Credential Manager as a generic credential, encrypted for the
-signed-in Windows user, who also runs the daily task. It is never written to
-``config.toml``, a log, the history or an answer of the backend; the backend only tells
-whether one is saved, with the phone number masked.
+A customer's account (:mod:`court_booker.customers`) keeps its login under its id, and is
+attached to a machine by saving it as that instance's. Each login lives in Windows
+Credential Manager as a generic credential, encrypted for the signed-in Windows user, who
+also runs the daily task. It is never written to ``config.toml``, a log, the history or an
+answer of the backend; the backend only tells whether one is saved, with the phone number
+masked.
 """
 
 from __future__ import annotations
 
 import ctypes
 import logging
+import os
 import sys
+import zlib
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, Union
 
 from court_booker.errors import CourtBookerError
+from court_booker.paths import HOME_ENV
 
 logger = logging.getLogger(__name__)
 
-TARGET = "CourtBooker/vinhomes/mumu-{index}"
-"""The vault's name of the login of MuMu instance ``index``."""
+TARGET = "{app}/vinhomes/{owner}"
+"""The vault's name of a login."""
+APP = "CourtBooker"
+MAX_INDEX = 63
+"""The highest MuMu instance a login is kept for."""
+Key = Union[int, str]
+"""Whose login: a MuMu instance, by its index, or a customer's account, by its id."""
 MAX_PASSWORD = 128
 """Longest password kept; the vault holds up to 2560 bytes."""
 
@@ -50,30 +60,42 @@ def mask_phone(phone: str) -> str:
     return phone[:2] + "•" * (len(phone) - 4) + phone[-2:]
 
 
+def target(key: Key) -> str:
+    """Return the vault's name of the login of ``key``.
+
+    Every data folder of the PC shares one vault, so one set by hand (a scratch backend) has
+    names of its own and never changes the installed app's logins.
+    """
+    home = os.environ.get(HOME_ENV)
+    app = APP if not home else f"{APP}-{zlib.crc32(home.encode('utf-8')):08x}"
+    owner = f"mumu-{key}" if isinstance(key, int) else f"account-{key}"
+    return TARGET.format(app=app, owner=owner)
+
+
 class CredentialStore(Protocol):
     """Where the logins live: the Windows vault, or a test double."""
 
-    def read(self, index: int) -> Login | None: ...
+    def read(self, key: Key) -> Login | None: ...
 
-    def save(self, index: int, login: Login) -> None: ...
+    def save(self, key: Key, login: Login) -> None: ...
 
-    def delete(self, index: int) -> None: ...
+    def delete(self, key: Key) -> None: ...
 
 
 class MemoryStore:
     """Logins in memory: for tests, and where Windows' vault is missing."""
 
     def __init__(self) -> None:
-        self.logins: dict[int, Login] = {}
+        self.logins: dict[Key, Login] = {}
 
-    def read(self, index: int) -> Login | None:
-        return self.logins.get(index)
+    def read(self, key: Key) -> Login | None:
+        return self.logins.get(key)
 
-    def save(self, index: int, login: Login) -> None:
-        self.logins[index] = login
+    def save(self, key: Key, login: Login) -> None:
+        self.logins[key] = login
 
-    def delete(self, index: int) -> None:
-        self.logins.pop(index, None)
+    def delete(self, key: Key) -> None:
+        self.logins.pop(key, None)
 
 
 _CRED_TYPE_GENERIC = 1
@@ -114,13 +136,13 @@ class WindowsVault:
         self._api.CredWriteW.restype = ctypes.c_bool
         self._api.CredDeleteW.restype = ctypes.c_bool
 
-    def read(self, index: int) -> Login | None:
+    def read(self, key: Key) -> Login | None:
         found = ctypes.POINTER(_CREDENTIAL)()
-        target = TARGET.format(index=index)
-        if not self._api.CredReadW(target, _CRED_TYPE_GENERIC, 0, ctypes.byref(found)):
+        name = target(key)
+        if not self._api.CredReadW(name, _CRED_TYPE_GENERIC, 0, ctypes.byref(found)):
             error = ctypes.get_last_error()  # type: ignore[attr-defined]
             if error != _ERROR_NOT_FOUND:
-                logger.warning("Could not read the saved login of MuMu %d (error %d)", index, error)
+                logger.warning("Could not read a saved login (error %d)", error)
             return None
         try:
             credential = found.contents
@@ -129,13 +151,13 @@ class WindowsVault:
         finally:
             self._api.CredFree(found)
 
-    def save(self, index: int, login: Login) -> None:
+    def save(self, key: Key, login: Login) -> None:
         secret = login.password.encode("utf-8")
         blob = (ctypes.c_ubyte * len(secret)).from_buffer_copy(secret)
         credential = _CREDENTIAL(
             Type=_CRED_TYPE_GENERIC,
-            TargetName=TARGET.format(index=index),
-            Comment="Court Booker: the Vinhomes login typed in when the app logged out",
+            TargetName=target(key),
+            Comment="Court Booker: a login of the Vinhomes app",
             CredentialBlobSize=len(secret),
             CredentialBlob=ctypes.cast(blob, ctypes.POINTER(ctypes.c_ubyte)),
             Persist=_CRED_PERSIST_LOCAL_MACHINE,
@@ -145,8 +167,8 @@ class WindowsVault:
             error = ctypes.get_last_error()  # type: ignore[attr-defined]
             raise CredentialError(f"Windows could not keep the login (error {error})")
 
-    def delete(self, index: int) -> None:
-        if not self._api.CredDeleteW(TARGET.format(index=index), _CRED_TYPE_GENERIC, 0):
+    def delete(self, key: Key) -> None:
+        if not self._api.CredDeleteW(target(key), _CRED_TYPE_GENERIC, 0):
             error = ctypes.get_last_error()  # type: ignore[attr-defined]
             if error != _ERROR_NOT_FOUND:
                 raise CredentialError(f"Windows could not remove the login (error {error})")

@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The backend keeps customers with the Vinhomes accounts they gave, and attaches an account to
+  a machine (`/api/customers`, `/api/machines/{index}/account`). Logins saved before get a
+  customer each.
 - A "Quản lý" ("Manage") tab beside the History: the tickets booked and still to use, of every
   machine's account in one list by day of play, with their status and booking code; a press
   opens the ticket's picture, which can be saved as a file.

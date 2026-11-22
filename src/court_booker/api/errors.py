@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from court_booker.credentials import CredentialError
+from court_booker.customers import AccountAttachedError, PhoneTakenError, UnknownRecordError
 from court_booker.errors import (
     AppNotReadyError,
     CourtBookerError,
@@ -52,8 +53,11 @@ class Problem(BaseModel):
 
 _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (NotFoundError, 404, "not_found"),
+    (UnknownRecordError, 404, "not_found"),
     (LockHeldError, 409, "lock_held"),
     (DryRunRequiredError, 409, "dry_run_required"),
+    (PhoneTakenError, 409, "phone_taken"),
+    (AccountAttachedError, 409, "account_attached"),
     (RequestError, 400, "bad_request"),
     (DeviceError, 503, "device"),
     (AppNotReadyError, 503, "app_not_ready"),

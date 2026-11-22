@@ -119,7 +119,15 @@ Details live in the docstrings; this page says where things are and what must st
   ticket's cancel button is in the same place) and a card by its whole label; pages are
   recognised by their shape, not by captions, so in either language. A picture counts only if
   the directions link is at the same place before and after it.
-- `credentials.py`: one `Login` per MuMu instance in Windows Credential Manager (`advapi32`,
+- `customers.py` (`CustomerBook`): the customers and the Vinhomes accounts each one gave. The
+  database holds names and notes only; an account's login is in the vault under its id.
+  Attaching an account to a machine saves its login as that instance's, the one a run reads,
+  so a run knows nothing of customers, and an instance's account is the one with its phone
+  number: one account, one machine. Nothing of a machine's login changes while a run holds the
+  lock. Logins saved before 1.2.0 get a customer each when the backend starts (`adopt`).
+- `credentials.py`: one `Login` per MuMu instance and per customer account in Windows
+  Credential Manager (a data folder set by `COURT_BOOKER_HOME` has names of its own there;
+  `advapi32`,
   generic credential `CourtBooker/vinhomes/mumu-N`, kept for this Windows user on this PC,
   whom the daily task runs as); in memory where Windows is missing. `Login`'s repr hides the
   password. The run reads its own instance's (`cli` → `run_booking(login_for=...)`).
@@ -271,6 +279,9 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), and a ticket's picture from the data folder's `tickets`, by its code alone |
+| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) |
+| `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`) |
+| `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine, or none; refused while a run goes on (409 `lock_held`) and for an account on another machine (409 `account_attached`) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
 | `GET`/`PUT`/`DELETE /api/logins/{mumu_index}` | Whether a login is saved for the instance, with its phone masked (`09••••••79`); save one (10-digit phone, password as `SecretStr`) or remove it. No answer or error holds the password; Windows refusing is 503 `credentials`. Not recorded in the history |
 | `WS /api/live` | Pushes each new step |

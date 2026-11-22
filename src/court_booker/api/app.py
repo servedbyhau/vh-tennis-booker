@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from court_booker import __version__
 from court_booker.api import (
     accounts,
+    customers,
     history,
     live,
     logins,
@@ -68,6 +69,7 @@ def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
         tickets,
         settings,
         accounts,
+        customers,
         logins,
         notifications,
         setup,

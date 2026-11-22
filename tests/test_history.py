@@ -71,10 +71,13 @@ def tables(connection):
     return {name for (name,) in rows}
 
 
+TABLES = {"runs", "run_slots", "events", "log_lines", "tickets", "customers", "accounts"}
+
+
 def test_connect_creates_the_tables(tmp_path):
     connection = history.connect(tmp_path / "data" / "booker.db")
 
-    assert tables(connection) == {"runs", "run_slots", "events", "log_lines", "tickets"}
+    assert tables(connection) == TABLES
     assert connection.execute("PRAGMA user_version").fetchone()[0] == history.SCHEMA_VERSION
     assert connection.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     connection.close()
@@ -89,7 +92,7 @@ def test_newer_database_is_left_as_it_is(connection):
     connection.execute(f"PRAGMA user_version = {history.SCHEMA_VERSION + 1}")
 
     assert history.migrate(connection) == history.SCHEMA_VERSION + 1
-    assert tables(connection) == {"runs", "run_slots", "events", "log_lines", "tickets"}
+    assert tables(connection) == TABLES
 
 
 def test_runs_of_the_first_schema_keep_no_device(tmp_path):
