@@ -722,6 +722,499 @@
         }
       }
     },
+    "/api/customers": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "List Customers",
+        "description": "List the customers in the order they were added, each with their accounts.",
+        "operationId": "list_customers_api_customers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerRecord"
+                  },
+                  "type": "array",
+                  "title": "Response List Customers Api Customers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Add Customer",
+        "description": "Add a customer without accounts.",
+        "operationId": "add_customer_api_customers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerFields"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{customer_id}": {
+      "put": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Change Customer",
+        "description": "Change a customer's name and note.",
+        "operationId": "change_customer_api_customers__customer_id__put",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerFields"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Remove Customer",
+        "description": "Remove a customer with their accounts and saved logins.\n\nRefused (409 ``account_attached``) while one of the accounts is attached to a machine.",
+        "operationId": "remove_customer_api_customers__customer_id__delete",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{customer_id}/accounts": {
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Add Account",
+        "description": "Add an account to a customer and save its login; answers the customer.\n\nThe app does not check the login here: a wrong one shows when a run logs in with it. A\nphone number another account has is refused (409 ``phone_taken``), and Windows refusing\nto keep the login answers 503 ``credentials``.",
+        "operationId": "add_account_api_customers__customer_id__accounts_post",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customer-accounts/{account_id}": {
+      "put": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Change Account",
+        "description": "Change an account's label and, if given, password; answers the customer.\n\nA new password of an attached account is the one its machine logs in with, so it is\nrefused (409 ``lock_held``) while a run goes on.",
+        "operationId": "change_account_api_customer_accounts__account_id__put",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Remove Account",
+        "description": "Remove an account with its saved login.\n\nRefused (409 ``account_attached``) while it is attached to a machine.",
+        "operationId": "remove_account_api_customer_accounts__account_id__delete",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/{mumu_index}/account": {
+      "put": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Attach Account",
+        "description": "Let a machine book with an account from its next run on; answers the customer.\n\nThe run logs the machine's Vinhomes app in with it. Refused while a run goes on (409\n``lock_held``) and for an account attached to another machine (409 ``account_attached``).",
+        "operationId": "attach_account_api_machines__mumu_index__account_put",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachedAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Detach Account",
+        "description": "Let a machine book with whichever account its app has logged in.\n\nA run then stops when the app logged out. Refused while a run goes on (409 ``lock_held``).",
+        "operationId": "detach_account_api_machines__mumu_index__account_delete",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/logins/{mumu_index}": {
       "get": {
         "tags": [
@@ -1244,6 +1737,37 @@
   },
   "components": {
     "schemas": {
+      "AccountChange": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Label"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1,
+                "format": "password",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "AccountChange",
+        "description": "Another label and, if given, password; the phone number stays."
+      },
       "AccountSubdivision": {
         "properties": {
           "device": {
@@ -1274,6 +1798,120 @@
         ],
         "title": "AccountSubdivision",
         "description": "The subdivision a MuMu instance's account last told, read from its home screen."
+      },
+      "AttachedAccount": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Account Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "account_id"
+        ],
+        "title": "AttachedAccount",
+        "description": "The account a machine books with from its next run on."
+      },
+      "CustomerAccount": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "device": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "phone",
+          "device"
+        ],
+        "title": "CustomerAccount",
+        "description": "A customer's Vinhomes account; never its password."
+      },
+      "CustomerFields": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CustomerFields",
+        "description": "What is known of a customer."
+      },
+      "CustomerRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerAccount"
+            },
+            "type": "array",
+            "title": "Accounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "note",
+          "accounts"
+        ],
+        "title": "CustomerRecord",
+        "description": "A customer with the accounts they gave."
       },
       "DryRunStarted": {
         "properties": {
@@ -1577,6 +2215,37 @@
         ],
         "title": "MonthSummary",
         "description": "One month with real bookings: how many runs, how many slots they booked."
+      },
+      "NewAccount": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "pattern": "^0\\d{9}$",
+            "title": "Phone"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "format": "password",
+            "title": "Password",
+            "writeOnly": true
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Label",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "phone",
+          "password"
+        ],
+        "title": "NewAccount",
+        "description": "The login of an account of the Vinhomes app, and what tells it from the others."
       },
       "NewLogin": {
         "properties": {

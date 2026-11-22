@@ -9,10 +9,13 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from court_booker import credentials
 from court_booker.api.app import create_app
 from court_booker.api.context import AppContext
 from court_booker.config import ensure_config, load_config
+from court_booker.customers import adopt_saved_logins
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
+from court_booker.notify import DEFAULT_LANGUAGE
 from court_booker.paths import data_folder
 from court_booker.tickets import forget_expired
 
@@ -21,6 +24,8 @@ logger = logging.getLogger(LOGGER_NAME)
 HOST = "127.0.0.1"
 """Only this PC can reach the backend; it has no login."""
 DEFAULT_PORT = 8765
+MACHINE_NAMES = {"vi": "Khách Máy {}", "en": "Machine {} customer"}
+"""Names the customer given to a login saved before there were customers."""
 UI_FOLDER = Path(__file__).resolve().parent.parent / "ui"
 """The built UI, beside the code in the packaged app; absent from the sources."""
 
@@ -60,6 +65,11 @@ def main(argv: list[str]) -> int:
         "Backend on http://%s:%d, config %s, data %s", HOST, args.port, config_path, data.root
     )
     forget_expired(data, date.today())
+    # Logins saved before there were customers, which the app then shows as one's account.
+    machine = MACHINE_NAMES.get(config.notification_language, MACHINE_NAMES[DEFAULT_LANGUAGE])
+    adopt_saved_logins(
+        data.database, credentials.default_store(), lambda index: machine.format(index + 1)
+    )
     log_config: dict[str, Any] | None = uvicorn.config.LOGGING_CONFIG
     if sys.stdout is None:
         # The packaged app has no console: uvicorn's formatter would fail on it, and only the

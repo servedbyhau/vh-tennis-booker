@@ -92,6 +92,22 @@ MIGRATIONS = (
     );
     CREATE INDEX tickets_by_day ON tickets (play_date);
     """,
+    # The customers and their accounts (court_booker.customers); logins are in the vault.
+    """
+    CREATE TABLE customers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        note TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+    CREATE TABLE accounts (
+        id TEXT PRIMARY KEY,
+        customer_id TEXT NOT NULL REFERENCES customers (id),
+        label TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX accounts_by_customer ON accounts (customer_id);
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 

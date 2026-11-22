@@ -222,6 +222,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Customers
+         * @description List the customers in the order they were added, each with their accounts.
+         */
+        get: operations["list_customers_api_customers_get"];
+        put?: never;
+        /**
+         * Add Customer
+         * @description Add a customer without accounts.
+         */
+        post: operations["add_customer_api_customers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customers/{customer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Customer
+         * @description Change a customer's name and note.
+         */
+        put: operations["change_customer_api_customers__customer_id__put"];
+        post?: never;
+        /**
+         * Remove Customer
+         * @description Remove a customer with their accounts and saved logins.
+         *
+         *     Refused (409 ``account_attached``) while one of the accounts is attached to a machine.
+         */
+        delete: operations["remove_customer_api_customers__customer_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customers/{customer_id}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Account
+         * @description Add an account to a customer and save its login; answers the customer.
+         *
+         *     The app does not check the login here: a wrong one shows when a run logs in with it. A
+         *     phone number another account has is refused (409 ``phone_taken``), and Windows refusing
+         *     to keep the login answers 503 ``credentials``.
+         */
+        post: operations["add_account_api_customers__customer_id__accounts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Account
+         * @description Change an account's label and, if given, password; answers the customer.
+         *
+         *     A new password of an attached account is the one its machine logs in with, so it is
+         *     refused (409 ``lock_held``) while a run goes on.
+         */
+        put: operations["change_account_api_customer_accounts__account_id__put"];
+        post?: never;
+        /**
+         * Remove Account
+         * @description Remove an account with its saved login.
+         *
+         *     Refused (409 ``account_attached``) while it is attached to a machine.
+         */
+        delete: operations["remove_account_api_customer_accounts__account_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/{mumu_index}/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Attach Account
+         * @description Let a machine book with an account from its next run on; answers the customer.
+         *
+         *     The run logs the machine's Vinhomes app in with it. Refused while a run goes on (409
+         *     ``lock_held``) and for an account attached to another machine (409 ``account_attached``).
+         */
+        put: operations["attach_account_api_machines__mumu_index__account_put"];
+        post?: never;
+        /**
+         * Detach Account
+         * @description Let a machine book with whichever account its app has logged in.
+         *
+         *     A run then stops when the app logged out. Refused while a run goes on (409 ``lock_held``).
+         */
+        delete: operations["detach_account_api_machines__mumu_index__account_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/logins/{mumu_index}": {
         parameters: {
             query?: never;
@@ -403,6 +535,16 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AccountChange
+         * @description Another label and, if given, password; the phone number stays.
+         */
+        AccountChange: {
+            /** Label */
+            label: string;
+            /** Password */
+            password?: string | null;
+        };
+        /**
          * AccountSubdivision
          * @description The subdivision a MuMu instance's account last told, read from its home screen.
          */
@@ -413,6 +555,55 @@ export interface components {
             subdivision: string;
             /** Seen At */
             seen_at: string;
+        };
+        /**
+         * AttachedAccount
+         * @description The account a machine books with from its next run on.
+         */
+        AttachedAccount: {
+            /** Account Id */
+            account_id: string;
+        };
+        /**
+         * CustomerAccount
+         * @description A customer's Vinhomes account; never its password.
+         */
+        CustomerAccount: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Phone */
+            phone: string | null;
+            /** Device */
+            device: number | null;
+        };
+        /**
+         * CustomerFields
+         * @description What is known of a customer.
+         */
+        CustomerFields: {
+            /** Name */
+            name: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /**
+         * CustomerRecord
+         * @description A customer with the accounts they gave.
+         */
+        CustomerRecord: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Accounts */
+            accounts: components["schemas"]["CustomerAccount"][];
         };
         /**
          * DryRunStarted
@@ -541,6 +732,24 @@ export interface components {
             runs: number;
             /** Booked */
             booked: number;
+        };
+        /**
+         * NewAccount
+         * @description The login of an account of the Vinhomes app, and what tells it from the others.
+         */
+        NewAccount: {
+            /** Phone */
+            phone: string;
+            /**
+             * Password
+             * Format: password
+             */
+            password: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
         };
         /**
          * NewLogin
@@ -1305,6 +1514,378 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccountSubdivision"][];
                 };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_customers_api_customers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    add_customer_api_customers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_customer_api_customers__customer_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_customer_api_customers__customer_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    add_account_api_customers__customer_id__accounts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewAccount"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_account_api_customer_accounts__account_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_account_api_customer_accounts__account_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    attach_account_api_machines__mumu_index__account_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The MuMu instance */
+                mumu_index: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachedAccount"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    detach_account_api_machines__mumu_index__account_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The MuMu instance */
+                mumu_index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Invalid request values, one line per value */
             422: {
