@@ -31,10 +31,12 @@ Last updated: 2026-11-22.
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
-- Open branches, stacked, for PRs into `develop` in this order: `feat/ticket-records` (tickets
-  read and pictured after a run), `feat/tickets-tab` (their list and pictures in the UI). The
-  reading was tried on three real accounts on 2026-11-22; a real timed booking with it is
-  still to do before the merge.
+- Tickets read and pictured after a run, and their Manage tab, were merged on 2026-11-22 (#265,
+  #266). Open branches with what followed, stacked, for PRs into `develop` in this order:
+  `feat/ticket-records` (from 06:02, expired tickets deleted, a second try) and
+  `feat/tickets-tab` (tickets still to use, the picture saved as a file). The reading was tried
+  on three real accounts on 2026-11-22, also after two idle minutes; not yet after a real
+  booking, nor on three machines at once.
 
 ## Last 06:00 runs
 
