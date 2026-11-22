@@ -136,7 +136,7 @@ Then:
    (install MuMu and the Vinhomes app, log in); tick each step once it is done.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
-5. Press **Dry run now** between 06:00 and 21:00, while the Vinhomes app takes bookings. It
+5. In the **Setup** beside it, press **Dry run** between 06:00 and 21:00, while the Vinhomes app takes bookings. It
    walks the whole booking and stops before the final confirmation, so nothing is booked.
 6. Once it has passed, turn **Auto-book** on. Every morning the PC wakes at the wake time and
    books at 06:00; the window does not need to be open.
@@ -163,17 +163,17 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
-  on top the daily switch (it creates or removes the Windows task, once a dry run passed)
-  and what is set, the play day, court and slots; below, the subdivision, the sport, the
-  court and up to two slots to choose, saved on each press, and a dry run. During a run it
-  shows the steps as they happen.
-- **Thiết lập / Setup** on the right: the account the machine books with. Before booking, a run reads the phone number logged in on the machine's
+  on top what is set, the play day, court and slots; below, the subdivision, the sport, the
+  court and up to two slots to choose, saved on each press. During a run it shows the steps as
+  they happen.
+- **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
+  once a dry run passed), the Windows notification, the account the machine books with, picked
+  from the customers', and a dry run. Before booking, a run reads the phone number logged in on the machine's
   Vinhomes app, and logs out and in if it is not the chosen account's, trying the password once; a
-  machine that cannot be sure books nothing. The Windows notification switch sits on the ticket,
-  beside the daily switch.
+  machine that cannot be sure books nothing.
 - **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,
   each logged in to another account) book alongside the first once their "Dùng máy này"
-  switch is on.
+  switch, in the Setup, is on.
 
 On the second:
 

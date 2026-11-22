@@ -1,41 +1,3 @@
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-/* The daily switch and the result notification's, side by side on one row. */
-.switches {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-/* The switch with its words; sand yellow once a dry run passed and it is still off. */
-.auto {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 2px 2px 2px var(--space-3);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-small);
-  font-weight: var(--weight-semibold);
-}
-
-.use {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  font-size: var(--text-control);
-  font-weight: var(--weight-bold);
-}
-
-.remind {
-  background: var(--color-highlight);
-}
-
 /* What the run books, as the choices below hold it: the day and the court side by side,
    the slots on a row of their own, so no value moves when the court's name is long. */
 .summary {
@@ -65,7 +27,7 @@
   line-height: 1.2;
 }
 
-.off dd {
+.pale dd {
   color: var(--color-muted);
 }
 
@@ -96,20 +58,20 @@
   color: var(--color-ink);
 }
 
-.problem {
-  color: var(--color-failed);
-  font-size: var(--text-data);
-}
-
-/* The choices scroll inside the ticket in a low window, their bar near the ticket's edge;
-   the dry run row stays at the foot. */
+/* The choices scroll inside the ticket in a low window, their bar near the ticket's edge. */
 .scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   position: relative; /* holds its hidden screen reader text, which would grow the page */
   margin: calc(-1 * var(--space-5)) calc(6px - var(--space-7)) 0 0;
-  padding: var(--space-5) calc(var(--space-7) - 6px) var(--space-2) 0;
+  padding: var(--space-5) calc(var(--space-7) - 6px) var(--space-4) 0;
+}
+
+/* In place of the choices of a machine that is off. */
+.off {
+  color: var(--color-muted);
+  font-size: var(--text-control);
 }
 
 .choices {
@@ -237,36 +199,4 @@
 
 .choices[aria-busy="true"] button {
   cursor: progress;
-}
-
-.dryRun {
-  margin-top: auto;
-  padding: 14px 0 18px;
-  border-top: var(--border-hairline) solid var(--color-hairline);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.dryRunText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--color-muted);
-  font-size: var(--text-control);
-}
-
-.passed {
-  color: var(--color-stamp);
-  font-weight: var(--weight-semibold);
-}
-
-.failed {
-  color: var(--color-failed);
-  font-weight: var(--weight-semibold);
-}
-
-.quiet {
-  font-size: var(--text-small);
 }

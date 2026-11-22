@@ -1,6 +1,8 @@
 import {
   AlarmClock,
+  Bell,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -10,8 +12,10 @@ import {
   LifeBuoy,
   ListChecks,
   Lock,
+  MonitorSmartphone,
   Pencil,
   Phone,
+  Play,
   Plus,
   StickyNote,
   Trash2,
@@ -41,6 +45,12 @@ const DRAWINGS = {
   tasks: ListChecks,
   /** What happens by itself every morning. */
   alarm: AlarmClock,
+  /** The Windows notification. */
+  bell: Bell,
+  /** A MuMu instance. */
+  machine: MonitorSmartphone,
+  /** Start something now. */
+  play: Play,
   /** What to do when something goes wrong. */
   help: LifeBuoy,
   add: Plus,
@@ -52,6 +62,8 @@ const DRAWINGS = {
   close: X,
   /** Save as a file. */
   save: Download,
+  /** Open the list under it. */
+  down: ChevronDown,
   /** The one before, the one after. */
   back: ChevronLeft,
   forward: ChevronRight,

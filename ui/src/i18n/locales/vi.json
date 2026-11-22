@@ -5,9 +5,7 @@
   "common": {
     "loading": "Đang tải…",
     "retry": "Thử lại",
-    "more": "Xem thêm",
-    "on": "Đang bật",
-    "off": "Đang tắt"
+    "more": "Xem thêm"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -35,7 +33,7 @@
       "title": "Tổng quan",
       "status": {
         "setupLeft": "Còn {{count}} việc chuẩn bị, xem Hướng dẫn",
-        "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử ngay",
+        "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử",
         "scheduleOff": "Chạy thử đạt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
         "ready": "Sẵn sàng cho {{time}} {{when}}"
@@ -53,13 +51,6 @@
     },
     "ticket": {
       "title": "Lần đặt tiếp theo",
-      "auto": "Tự đặt mỗi sáng",
-      "autoShort": "Tự đặt",
-      "notifyShort": "Thông báo",
-      "notify": "Thông báo kết quả",
-      "notifyHint": "Góc màn hình Windows, sau mỗi lượt",
-      "on": "BẬT",
-      "off": "TẮT",
       "day": "Ngày",
       "chosenSlots": "Khung giờ",
       "offTitle": "Đang tắt",
@@ -69,9 +60,7 @@
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "còn việc chuẩn bị",
       "instanceOff": "đang tắt",
-      "use": "Dùng máy này",
-      "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
-      "useOff": "Máy {{number}} đang tắt: lượt chạy không dùng MuMu {{index}}. Bật khi MuMu {{index}} đã đăng nhập một tài khoản khác; máy này lấy lựa chọn của máy 1 cho tới khi bạn đổi.",
+      "useOff": "Máy {{number}} đang tắt. Bật \"Dùng máy này\" ở Thiết lập để đặt bằng máy này.",
       "subdivision": "Phân khu",
       "byAccount": "Theo tài khoản",
       "sport": "Môn",
@@ -83,16 +72,6 @@
       "saved": "✓ Đã lưu",
       "full": "Đã đủ {{max}} khung: bỏ một khung trước",
       "oneSlot": "Cần ít nhất một khung giờ",
-      "dryRun": {
-        "button": "Chạy thử ngay",
-        "starting": "Đang bắt đầu…",
-        "none": "Chưa chạy thử lần nào. Mất khoảng một phút, không đặt thật.",
-        "last": "Chạy thử gần nhất: {{when}} lúc {{time}}",
-        "passed": "thành công",
-        "failed": "không qua: {{reason}}",
-        "stopped": "dừng giữa chừng",
-        "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
-      },
       "live": {
         "booking": "Đang đặt cho {{day}} · sân {{court}}",
         "dryRun": "Đang chạy thử cho {{day}} · sân {{court}}",
@@ -104,9 +83,7 @@
         "running": "đang chạy",
         "waiting": "{{slot}} · chờ tới lượt",
         "locked": "Sân, khung giờ và chạy thử mở lại khi lần này xong. Bạn có thể đóng cửa sổ này."
-      },
-      "lockedTitle": "Chưa bật",
-      "locked": "Chạy thử thành công một lần thì mới bật được."
+      }
     },
     "history": {
       "title": "Lịch sử",
@@ -254,18 +231,34 @@
       "setup": "Thiết lập"
     },
     "setup": {
+      "daily": {
+        "title": "Tự đặt",
+        "times": "{{start}} mỗi sáng, máy thức {{wake}}",
+        "locked": "Chạy thử đạt một lần thì mới bật được"
+      },
+      "notify": "Thông báo kết quả",
+      "use": "Dùng máy này",
+      "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
       "account": {
-        "title": "Chọn tài khoản",
-        "why": "Trước giờ đặt, app xem số điện thoại đang đăng nhập trên máy này. Khác với tài khoản đã chọn thì tự đổi.",
-        "customer": "Khách hàng",
-        "account": "Tài khoản",
+        "title": "Tài khoản",
+        "empty": "Chưa chọn tài khoản",
         "none": "Không chọn",
-        "pick": "Chọn tài khoản",
-        "onMachine": "đang ở {{machine}}",
-        "noCustomers": "Chưa có khách nào. Thêm ở trang Quản lý.",
-        "attached": "Lượt chạy sau dùng tài khoản này. Bấm \"{{dryRun}}\" để kiểm tra luôn.",
-        "free": "Chưa chọn: máy đặt bằng tài khoản đang đăng nhập trên MuMu, và dừng nếu bị đăng xuất.",
-        "notYet": "Chọn tài khoản để đổi. Chưa chọn thì máy vẫn dùng tài khoản cũ."
+        "noneHint": "Dùng tài khoản đang đăng nhập trên MuMu",
+        "onMachine": "{{machine}} đang dùng",
+        "move": "{{from}} đang dùng tài khoản này. Chuyển sang {{to}}?",
+        "moveYes": "Chuyển",
+        "moveNo": "Thôi",
+        "add": "Thêm tài khoản"
+      },
+      "dryRun": {
+        "button": "Chạy thử",
+        "starting": "Đang bắt đầu…",
+        "none": "Mất khoảng một phút, không đặt thật",
+        "last": "Lần gần nhất: {{when}} {{time}}",
+        "passed": "thành công",
+        "failed": "không qua: {{reason}}",
+        "stopped": "dừng giữa chừng",
+        "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
       }
     },
     "notFound": {

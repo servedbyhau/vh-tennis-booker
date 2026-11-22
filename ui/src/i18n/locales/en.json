@@ -5,9 +5,7 @@
   "common": {
     "loading": "Loading…",
     "retry": "Try again",
-    "more": "Show more",
-    "on": "On",
-    "off": "Off"
+    "more": "Show more"
   },
   "language": {
     "label": "Language",
@@ -35,7 +33,7 @@
       "title": "Overview",
       "status": {
         "setupLeft": "Setup: {{count}} left, see the Guide",
-        "noDryRun": "No dry run passed yet · press Dry run now",
+        "noDryRun": "No dry run passed yet · press Dry run",
         "scheduleOff": "Dry run passed · turn on Auto-book",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
         "ready": "Ready for {{time}} {{when}}"
@@ -53,13 +51,6 @@
     },
     "ticket": {
       "title": "Next booking",
-      "auto": "Book every morning",
-      "autoShort": "Auto-book",
-      "notifyShort": "Notify",
-      "notify": "Result notifications",
-      "notifyHint": "In the corner of the Windows screen, after every run",
-      "on": "ON",
-      "off": "OFF",
       "day": "Day",
       "chosenSlots": "Slots",
       "offTitle": "Off",
@@ -69,9 +60,7 @@
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "setup left",
       "instanceOff": "off",
-      "use": "Use this machine",
-      "useLabel": "Book with machine {{number}} (MuMu {{index}})",
-      "useOff": "Machine {{number}} is off: runs leave MuMu {{index}} alone. Turn it on once MuMu {{index}} is logged in to another account; it takes machine 1's choices until you change them.",
+      "useOff": "Machine {{number}} is off. Turn on \"Use this machine\" in the Setup to book with it.",
       "subdivision": "Subdivision",
       "byAccount": "From the account",
       "sport": "Sport",
@@ -83,16 +72,6 @@
       "saved": "✓ Saved",
       "full": "{{max}} slots already: remove one first",
       "oneSlot": "Keep at least one slot",
-      "dryRun": {
-        "button": "Dry run now",
-        "starting": "Starting…",
-        "none": "No dry run yet. It takes about a minute and books nothing.",
-        "last": "Last dry run: {{when}} at {{time}}",
-        "passed": "passed",
-        "failed": "did not pass: {{reason}}",
-        "stopped": "stopped halfway",
-        "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
-      },
       "live": {
         "booking": "Booking for {{day}} · court {{court}}",
         "dryRun": "Dry run for {{day}} · court {{court}}",
@@ -104,9 +83,7 @@
         "running": "running",
         "waiting": "{{slot}} · waiting for its turn",
         "locked": "Court, slots and dry run open again when this ends. You can close this window."
-      },
-      "lockedTitle": "Not on yet",
-      "locked": "It turns on once a dry run has passed."
+      }
     },
     "history": {
       "title": "History",
@@ -254,18 +231,34 @@
       "setup": "Setup"
     },
     "setup": {
+      "daily": {
+        "title": "Auto-book",
+        "times": "Daily at {{start}}, PC wakes {{wake}}",
+        "locked": "It turns on once a dry run has passed"
+      },
+      "notify": "Result notifications",
+      "use": "Use this machine",
+      "useLabel": "Book with machine {{number}} (MuMu {{index}})",
       "account": {
-        "title": "Choose the account",
-        "why": "Before booking, the app reads the phone number logged in on this machine, and changes it if it is not the chosen account's.",
-        "customer": "Customer",
-        "account": "Account",
+        "title": "Account",
+        "empty": "No account chosen",
         "none": "None",
-        "pick": "Pick an account",
+        "noneHint": "Books with the one logged in on MuMu",
         "onMachine": "on {{machine}}",
-        "noCustomers": "No customers yet. Add one on the Management page.",
-        "attached": "The next run uses this account. Press \"{{dryRun}}\" to check it now.",
-        "free": "None chosen: the machine books with the account logged in on MuMu, and stops if it is logged out.",
-        "notYet": "Pick an account to change it. Until then the machine keeps the one it had."
+        "move": "{{from}} books with this account. Move it to {{to}}?",
+        "moveYes": "Move",
+        "moveNo": "No",
+        "add": "Add an account"
+      },
+      "dryRun": {
+        "button": "Dry run",
+        "starting": "Starting…",
+        "none": "Takes about a minute, books nothing",
+        "last": "Last one: {{when}} {{time}}",
+        "passed": "passed",
+        "failed": "did not pass: {{reason}}",
+        "stopped": "stopped halfway",
+        "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
       }
     },
     "notFound": {

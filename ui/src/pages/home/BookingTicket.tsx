@@ -1,21 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { errorMessage } from "../../api/errors";
-import {
-  useSaveSettings,
-  useStartDryRun,
-  useSwitchInstance,
-  useSwitchSchedule,
-} from "../../api/mutations";
-import { useAccounts, useRuns, useSettings } from "../../api/queries";
-import type {
-  AccountSubdivision,
-  Overview,
-  Running,
-  RunSummary,
-  ScheduleState,
-  Settings,
-} from "../../api/types";
+import { useSaveSettings } from "../../api/mutations";
+import { useAccounts, useSettings } from "../../api/queries";
+import type { AccountSubdivision, Overview, ScheduleState, Settings } from "../../api/types";
 import {
   courtChoices,
   firstCourt,
@@ -28,19 +16,14 @@ import {
   sportChoices,
   toggleSlot,
 } from "../../booking";
-import { Button } from "../../components/Button";
 import { Icon } from "../../components/Icon";
 import { Overline } from "../../components/Overline";
 import { QueryView } from "../../components/QueryView";
-import { Switch } from "../../components/Switch";
 import { localToday } from "../../format";
-import { type Machine, machineAt, useMachines } from "../../machines";
-import { quietEnd } from "../../quiet";
-import { failureReason } from "../../reasons";
+import { machineAt, useMachines } from "../../machines";
 import { useFormat } from "../../useFormat";
 import styles from "./BookingTicket.module.css";
 import { MachineBar } from "./MachineBar";
-import { NotifySwitch } from "./NotifySwitch";
 import { TicketFrame } from "./TicketFrame";
 
 /** The slots sit in rows of this many: the six of the morning, then the seven after. */
@@ -86,41 +69,21 @@ interface NextBookingProps {
 }
 
 /**
- * The top of the ticket shows what is set, and only that: the daily switch and the result
- * notification's beside it, then the play day (always two days after the start) and the court side by side, and the slots in booking
- * order (the choices below number them) on a row of their own, as the choices below hold them; the rows stay put whatever
- * the court's name. While the switch is off a line says that nothing is booked. The switch
- * stays locked until a dry run has passed; once one has, a switch still off is set off.
+ * The top of the ticket shows what is set, and only that: the play day (always two days after
+ * the start) and the court side by side, and the slots in booking order (the choices below
+ * number them) on a row of their own, as the choices below hold them; the rows stay put whatever
+ * the court's name. While the daily switch is off a line says that nothing is booked.
  */
 function NextBooking({ schedule, booking }: NextBookingProps) {
   const { t } = useTranslation();
   const f = useFormat();
-  const toggle = useSwitchSchedule();
-  const locked = !schedule.enabled && !schedule.dry_run_passed;
-  const remind = !schedule.enabled && schedule.dry_run_passed;
   const when = f.when(schedule.next_start, localToday());
   return (
     <>
-      <div className={styles.head}>
-        <Overline as="h2" id="next-title">
-          {t("pages.ticket.title")}
-        </Overline>
-        <div className={styles.switches}>
-          <div className={remind ? `${styles.auto} ${styles.remind}` : styles.auto}>
-            <span aria-hidden="true">{t("pages.ticket.autoShort")}</span>
-            <Switch
-              label={t("pages.ticket.auto")}
-              checked={schedule.enabled}
-              disabled={locked || toggle.isPending}
-              onChange={(enabled) => toggle.mutate(enabled)}
-              onText={t("pages.ticket.on")}
-              offText={t("pages.ticket.off")}
-            />
-          </div>
-          <NotifySwitch />
-        </div>
-      </div>
-      <dl className={schedule.enabled ? styles.summary : `${styles.summary} ${styles.off}`}>
+      <Overline as="h2" id="next-title">
+        {t("pages.ticket.title")}
+      </Overline>
+      <dl className={schedule.enabled ? styles.summary : `${styles.summary} ${styles.pale}`}>
         <div className={styles.field}>
           <Overline as="dt">{t("pages.ticket.day")}</Overline>
           <dd>{f.shortDay(schedule.next_play_date)}</dd>
@@ -145,11 +108,9 @@ function NextBooking({ schedule, booking }: NextBookingProps) {
       {!schedule.enabled && (
         <p className={styles.plan}>
           <Icon name="clock" />
-          <strong>{t(locked ? "pages.ticket.lockedTitle" : "pages.ticket.offTitle")}</strong>{" "}
-          {locked ? t("pages.ticket.locked") : t("pages.ticket.offLine", { when })}
+          <strong>{t("pages.ticket.offTitle")}</strong> {t("pages.ticket.offLine", { when })}
         </p>
       )}
-      {toggle.isError && <p className={styles.problem}>{errorMessage(t, toggle.error)}</p>}
     </>
   );
 }
@@ -345,107 +306,6 @@ function Choices({ saved, save, accounts, instance }: ChoicesProps) {
   );
 }
 
-/** The newest dry run in a line: when, and whether it passed or why not. */
-function LastDryRun({ run }: { run: RunSummary | undefined }) {
-  const { t } = useTranslation();
-  const f = useFormat();
-  if (run === undefined) {
-    return <p>{t("pages.ticket.dryRun.none")}</p>;
-  }
-  if (run.status === "running") {
-    return null;
-  }
-  const at = { when: f.when(run.started_at, localToday()), time: f.time(run.started_at) };
-  let result: string;
-  if (run.status === "ok") {
-    result = t("pages.ticket.dryRun.passed");
-  } else if (run.status === "interrupted") {
-    result = t("pages.ticket.dryRun.stopped");
-  } else {
-    const reason = run.error ?? run.slots.find((slot) => !slot.ok)?.reason ?? null;
-    result = t("pages.ticket.dryRun.failed", { reason: failureReason(t, f, reason) });
-  }
-  return (
-    <p>
-      {t("pages.ticket.dryRun.last", at)} ·{" "}
-      <strong className={run.status === "ok" ? styles.passed : styles.failed}>{result}</strong>
-    </p>
-  );
-}
-
-interface DryRunRowProps {
-  running: Running | null;
-  schedule: ScheduleState;
-}
-
-/**
- * The foot of the ticket: the last dry run and a button for another. The dry run walks
- * the whole booking and stops before "Xác nhận"; the backend refuses one in the quiet
- * time, and none starts while another run holds the emulator.
- */
-function DryRunRow({ running, schedule }: DryRunRowProps) {
-  const { t } = useTranslation();
-  const dryRun = useStartDryRun();
-  const last = useRuns({ dry_run: true, limit: 1 });
-  return (
-    <div className={styles.dryRun}>
-      <div className={styles.dryRunText}>
-        {running !== null ? (
-          <p>{t("pages.overview.live.locked")}</p>
-        ) : (
-          last.data !== undefined && <LastDryRun run={last.data[0]} />
-        )}
-        {dryRun.isError ? (
-          <p className={styles.problem}>{errorMessage(t, dryRun.error)}</p>
-        ) : (
-          <p className={styles.quiet}>
-            {t("pages.ticket.dryRun.quiet", {
-              from: schedule.wake_at,
-              to: quietEnd(schedule.start_at),
-            })}
-          </p>
-        )}
-      </div>
-      <Button disabled={running !== null || dryRun.isPending} onClick={() => dryRun.mutate()}>
-        {t(dryRun.isPending ? "pages.ticket.dryRun.starting" : "pages.ticket.dryRun.button")}
-      </Button>
-    </div>
-  );
-}
-
-/**
- * The switch of a machine beside the first: on, the runs book with it too (it gets its
- * `[[instances]]` table, taking the first machine's choices until changed); off, they leave
- * its MuMu alone and its choices are hidden.
- */
-function MachineUse({ machine, running }: { machine: Machine; running: boolean }) {
-  const { t } = useTranslation();
-  const use = useSwitchInstance();
-  const { mumuIndex } = machine;
-  const names = { number: machine.place + 1, index: mumuIndex };
-  return (
-    <div className={styles.group}>
-      <div className={styles.use}>
-        <span aria-hidden="true">{t("pages.ticket.use")}</span>
-        <Switch
-          label={t("pages.ticket.useLabel", names)}
-          checked={machine.enabled}
-          disabled={mumuIndex === null || running || use.isPending}
-          onChange={(enabled) => {
-            if (mumuIndex !== null) {
-              use.mutate({ mumuIndex, enabled });
-            }
-          }}
-          onText={t("pages.ticket.on")}
-          offText={t("pages.ticket.off")}
-        />
-      </div>
-      {!machine.enabled && <p className={styles.note}>{t("pages.ticket.useOff", names)}</p>}
-      {use.isError && <p className={styles.warning}>{errorMessage(t, use.error)}</p>}
-    </div>
-  );
-}
-
 interface BookingTicketProps {
   overview: Overview;
   /** The machine shown (0: the first), chosen on the machines' tabs on top. */
@@ -454,19 +314,19 @@ interface BookingTicketProps {
 }
 
 /**
- * The next booking as a ticket in two parts: on top what is set (the daily switch, the play
- * day, court and slots, when it starts), under the perforation the sport, court and slots to
- * choose, saved on each press, and the dry run at the foot. A press shows on top at once,
- * as the save goes out.
+ * The next booking as a ticket in two parts: on top what is set (the play day, court and
+ * slots), under the perforation the sport, court and slots to choose, saved on each press. A
+ * press shows on top at once, as the save goes out.
  */
 export function BookingTicket({ overview, machine, onMachine }: BookingTicketProps) {
+  const { t } = useTranslation();
   const settings = useSettings();
   const accounts = useAccounts();
   const save = useSaveSettings();
   const machines = useMachines();
   const shown = machineAt(machines, machine);
   const { entry } = shown;
-  const { schedule, running } = overview;
+  const { schedule } = overview;
   const booking =
     settings.data === undefined || entry === null
       ? undefined
@@ -479,8 +339,9 @@ export function BookingTicket({ overview, machine, onMachine }: BookingTicketPro
       contained
     >
       <div className={styles.scroll}>
-        {shown.place > 0 && <MachineUse machine={shown} running={running !== null} />}
-        {entry !== null && (
+        {entry === null ? (
+          <p className={styles.off}>{t("pages.ticket.useOff", { number: shown.place + 1 })}</p>
+        ) : (
           <QueryView query={settings}>
             {(saved) => (
               // Keyed by the machine, so a warning of one is gone on another.
@@ -495,7 +356,6 @@ export function BookingTicket({ overview, machine, onMachine }: BookingTicketPro
           </QueryView>
         )}
       </div>
-      <DryRunRow running={running} schedule={schedule} />
     </TicketFrame>
   );
 }

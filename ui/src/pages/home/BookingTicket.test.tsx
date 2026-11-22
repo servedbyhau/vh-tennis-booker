@@ -1,34 +1,15 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-  AccountSubdivision,
-  Overview,
-  RunSummary,
-  ScheduleState,
-  Settings,
-} from "../../api/types";
+import type { AccountSubdivision, Overview, ScheduleState, Settings } from "../../api/types";
 import { paths } from "../../paths";
 import { renderApp } from "../../test/app";
 import { type Reply, reply, requestsTo } from "../../test/backend";
 import { overview } from "../../test/overview";
-import { runSummary } from "../../test/runs";
 import { settings } from "../../test/settings";
-
-/** A dry run of 15/10 at 09:12, as GET /api/runs?dry_run=true gives it. */
-function dryRun(fields: Partial<RunSummary> = {}): RunSummary {
-  return runSummary(31, {
-    trigger: "dry_run",
-    dry_run: true,
-    started_at: "2026-10-15T09:12:00.000",
-    finished_at: "2026-10-15T09:13:02.000",
-    ...fields,
-  });
-}
 
 interface Backend {
   status?: Overview;
   saved?: Settings;
-  runs?: RunSummary[];
   /** The subdivision each account told last, as GET /api/accounts gives it. */
   accounts?: AccountSubdivision[];
   extra?: Record<string, Reply>;
@@ -38,7 +19,6 @@ interface Backend {
 function renderTicket({
   status = overview(),
   saved = settings(),
-  runs = [],
   accounts = [],
   extra = {},
 }: Backend = {}) {
@@ -46,7 +26,7 @@ function renderTicket({
     "GET /api/status": reply(status),
     "GET /api/settings": reply(saved),
     "PUT /api/settings": reply(saved),
-    "GET /api/runs": reply(runs),
+    "GET /api/runs": reply([]),
     "GET /api/accounts": reply(accounts),
     "GET /api/notifications": reply({ enabled: true, language: "vi" }),
     ...extra,
@@ -102,53 +82,15 @@ describe("BookingTicket start", () => {
       expect(shown(top)).toEqual(["CN 18/10", "Tennis S6", "15:00–16:0016:00–17:00"]),
     );
     expect(within(top).queryByText(/máy thức/)).toBeNull();
-    const toggle = within(top).getByRole("switch", { name: "Tự đặt mỗi sáng" });
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-    expect(toggle).toHaveTextContent("BẬT");
-    expect(toggle).toBeEnabled();
+    expect(within(top).queryByRole("switch")).not.toBeInTheDocument(); // in the Setup
+    expect(within(top).queryByText("Đang tắt")).not.toBeInTheDocument();
   });
 
-  it("switches the result notification at once, in the UI's language", async () => {
-    const { fetch, replies } = renderTicket();
+  it("says that nothing is booked while the daily switch is off", async () => {
+    renderTicket({ status: schedule({ enabled: false }) });
     const top = await ticket();
-    replies["PUT /api/notifications"] = reply({ enabled: false, language: "vi" });
-    const toggle = await within(top).findByRole("switch", { name: "Thông báo kết quả" });
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-
-    fireEvent.click(toggle);
-
-    await waitFor(async () =>
-      expect(await bodies(fetch, "PUT /api/notifications")).toEqual([
-        { enabled: false, language: "vi" },
-      ]),
-    );
-  });
-
-  it("keeps the switch locked until a dry run has passed", async () => {
-    renderTicket({ status: schedule({ enabled: false, dry_run_passed: false }) });
-
-    const top = await ticket();
-    expect(within(top).getByRole("switch", { name: "Tự đặt mỗi sáng" })).toBeDisabled();
-    expect(within(top).getByText("Chưa bật")).toBeInTheDocument();
-    expect(
-      within(top).getByText("Chạy thử thành công một lần thì mới bật được."),
-    ).toBeInTheDocument();
-  });
-
-  it("does not turn itself on after a dry run passed, but asks for it", async () => {
-    const { fetch, replies } = renderTicket({ status: schedule({ enabled: false }) });
-    const top = await ticket();
-    const toggle = within(top).getByRole("switch", { name: "Tự đặt mỗi sáng" });
-    expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(toggle.parentElement?.className).toMatch(/remind/);
+    expect(within(top).getByText("Đang tắt")).toBeInTheDocument();
     expect(within(top).getByText("Máy sẽ không tự đặt sân sáng mai.")).toBeInTheDocument();
-    replies["PUT /api/schedule"] = reply(overview().schedule);
-
-    fireEvent.click(toggle);
-
-    await waitFor(async () =>
-      expect(await bodies(fetch, "PUT /api/schedule")).toEqual([{ enabled: true }]),
-    );
   });
 });
 
@@ -309,7 +251,7 @@ describe("BookingTicket choices", () => {
     const use = screen.getByRole("switch", { name: "Đặt sân bằng máy 2 (MuMu 1)" });
     expect(use).toHaveAttribute("aria-checked", "false");
     expect(screen.queryByRole("group", { name: "Sân" })).not.toBeInTheDocument();
-    expect(screen.getByText(/^Máy 2 đang tắt: lượt chạy không dùng MuMu 1/)).toBeInTheDocument();
+    expect(screen.getByText(/^Máy 2 đang tắt\. Bật "Dùng máy này"/)).toBeInTheDocument();
 
     replies["PUT /api/instances/1"] = reply(settings({ instances: [other] }));
     fireEvent.click(use);
@@ -338,7 +280,7 @@ describe("BookingTicket choices", () => {
 
     const use = screen.getByRole("switch", { name: "Đặt sân bằng máy 3 (MuMu 2)" });
     expect(use).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByText(/^Máy 3 đang tắt: lượt chạy không dùng MuMu 2/)).toBeInTheDocument();
+    expect(screen.getByText(/^Máy 3 đang tắt\. Bật "Dùng máy này"/)).toBeInTheDocument();
 
     replies["PUT /api/instances/2"] = reply(settings({ instances: [third] }));
     fireEvent.click(use);
@@ -513,63 +455,5 @@ describe("BookingTicket choices", () => {
       "aria-pressed",
       "true",
     );
-  });
-});
-
-describe("BookingTicket dry run", () => {
-  it("offers a first dry run, with the quiet time", async () => {
-    renderTicket();
-
-    const top = await ticket();
-    expect(
-      await within(top).findByText("Chưa chạy thử lần nào. Mất khoảng một phút, không đặt thật."),
-    ).toBeInTheDocument();
-    expect(
-      within(top).getByText(
-        "Không chạy thử từ 05:50 đến 06:05, để không làm gián đoạn lần đặt sân.",
-      ),
-    ).toBeInTheDocument();
-    expect(within(top).getByRole("button", { name: "Chạy thử ngay" })).toBeEnabled();
-  });
-
-  it("says when the last dry run passed", async () => {
-    const { fetch } = renderTicket({ runs: [dryRun()] });
-
-    const line = await screen.findByText(/^Chạy thử gần nhất: sáng nay lúc 09:12/);
-    expect(line).toHaveTextContent("Chạy thử gần nhất: sáng nay lúc 09:12 · thành công");
-    const asked = fetch.mock.calls.map(([request]) => new URL(request.url).search);
-    expect(asked).toContain("?dry_run=true&limit=1");
-  });
-
-  it("says why the last dry run did not pass", async () => {
-    const full = { ok: false, reason: "Slot 15:00 - 16:00 is fully booked" };
-    const slots = dryRun().slots.map((slot, index) => (index === 0 ? { ...slot, ...full } : slot));
-    renderTicket({ runs: [dryRun({ status: "partial", booked: 1, slots })] });
-
-    expect(await screen.findByText(/^Chạy thử gần nhất/)).toHaveTextContent(
-      "Chạy thử gần nhất: sáng nay lúc 09:12 · không qua: Hết chỗ",
-    );
-  });
-
-  it("starts a dry run", async () => {
-    const started = reply({ pid: 4242, started_at: "2026-10-15T10:00:00.000" }, 202);
-    const { fetch } = renderTicket({ extra: { "POST /api/runs/dry-run": started } });
-    const top = await ticket();
-
-    fireEvent.click(within(top).getByRole("button", { name: "Chạy thử ngay" }));
-
-    await waitFor(() => expect(requestsTo(fetch, "POST /api/runs/dry-run")).toBe(1));
-  });
-
-  it("says why a dry run could not start", async () => {
-    const held = reply({ error: "lock_held", detail: "Another run is in progress" }, 409);
-    renderTicket({ extra: { "POST /api/runs/dry-run": held } });
-    const top = await ticket();
-
-    fireEvent.click(within(top).getByRole("button", { name: "Chạy thử ngay" }));
-
-    expect(
-      await within(top).findByText("Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại."),
-    ).toBeInTheDocument();
   });
 });

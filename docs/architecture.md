@@ -328,23 +328,22 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   dry runs are ticked; `?run=` shows one run's slots, steps and log beside the list). What a
   section lists is kept while another shows (`state.ts`).
 - The booking page (`pages/HomePage.tsx`, parts in `pages/home/`): the ticket (`BookingTicket`:
-  on top the daily switch and what is set: the play day and court side by side, the slots
+  on top what is set: the play day and court side by side, the slots
   on a row of their own (fixed rows, whatever the court's name), and a line only while the
   switch is off, for the machine chosen on its tabs on top (`MachineBar`, "Máy 1", "Máy 2",
   "Máy 3": one per MuMu instance, by its index, always three at least: those the
   `[[instances]]` lack are the lowest MuMu instances free (MuMu 1, MuMu 2), switched off and
   pale, so each keeps its name whichever of the others is on; a red mark on a machine that
   books with setup of its own left),
-  following each press as its save goes out; under the perforation, on a machine beside the
-  first, its "Dùng máy này" switch (`PUT /api/instances/{mumu_index}`), then, while it
-  books, that machine's subdivision, sport, court and up to two slots, saved on each press,
-  and the dry run;
+  following each press as its save goes out; under the perforation, while that machine books,
+  its subdivision, sport, court and up to two slots, saved on each press;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
-  the account of the machine chosen on the ticket, which `HomePage` holds. `AccountPicker` picks a customer, then one of their
-  accounts, which saves it; an account on another machine is listed but not picked.
-  The result notification's switch (`NotifySwitch`) sits on the ticket beside the daily one, both with a short word ("Tự đặt", "Thông báo") and their full name for screen
-  readers. The header's status line (`components/StatusLine.tsx`)
+  `SetupSwitches.tsx` (the daily booking, the result notification and, for a machine beside the
+  first, "Dùng máy này", `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
+  goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
+  (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's; a press
+  saves one, and one that another machine books with moves only after a question. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do. `machines.ts` lists the machines from the
   settings. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
   fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the

@@ -34,6 +34,9 @@ uses [Semantic Versioning](https://semver.org/).
 - A lighter look: space, soft fills and hairlines part things in place of dark rules; ink is for the
   main action and the page shown. Icons of one set (Lucide) take the place of words on the
   customers' buttons and facts.
+- The Setup beside the ticket holds the daily switch, the notification's, each machine's and the
+  dry run, which leave the ticket; the account is picked from one list of every customer's, and one
+  that another machine books with moves after a question.
 
 ### Fixed
 - Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is
