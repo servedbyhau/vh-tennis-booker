@@ -66,6 +66,8 @@ _PICTURE_TRIES = 6
 """Pictures taken of a ticket until its layout held still. A ticket moves its lower half
 while its description loads: on 2026-11-22 the directions link moved up by 230 px between
 a read 0.5 s after the ticket showed and the picture."""
+_PASSES = 2
+"""Times the tickets are gone through, the second for what the first could not read."""
 _RELOAD_PAUSE = 5.0
 """Seconds before the history is read again for a ticket missing or still processing."""
 REGISTER_WAIT = 45.0
@@ -315,20 +317,25 @@ class TicketReader:
 
         Starts from any screen a round leaves. The page is read again while a ticket wanted is
         missing or still processing, for :data:`REGISTER_WAIT` at most. A failure keeps what
-        was read so far and is only logged; a frozen emulator is raised, as nothing more can
-        be asked of it.
+        was read so far, is logged and tried once more while there is time; a frozen emulator
+        is raised, as nothing more can be asked of it.
         """
-        try:
-            self._read(wanted)
-        except DeviceNotRespondingError:
-            raise
-        except Exception:  # the bookings are made and reported: a ticket not read only logs
-            logger.warning("Could not read the tickets", exc_info=True)
+        give_up = min(self._clock() + REGISTER_WAIT, self.deadline)
+        for _ in range(_PASSES):
+            try:
+                if self._read(wanted, give_up):
+                    break
+            except DeviceNotRespondingError:
+                raise
+            except Exception:  # the bookings are made and reported: this only logs
+                logger.warning("Could not read the tickets", exc_info=True)
+            if self._clock() >= self.deadline:
+                break
         return self.collected
 
-    def _read(self, wanted: Sequence[Wanted]) -> None:
+    def _read(self, wanted: Sequence[Wanted], give_up: float) -> bool:
+        """Go through the tickets ``wanted`` once; return whether each one opened."""
         screen = self._open_history()
-        give_up = min(self._clock() + REGISTER_WAIT, self.deadline)
         while True:
             listed = [ticket for ticket, _ in cards(screen)]
             self.collected.tickets = listed
@@ -338,11 +345,18 @@ class TicketReader:
                 break
             self._sleep(_RELOAD_PAUSE)
             screen = self._open_history()
+        opened = True
         for want, ticket in zip(wanted, found):
             if ticket is None:
                 logger.warning("No ticket for %s %s on the history page", want.play_date, want.slot)
             elif ticket.code not in self.collected.photos:
-                self._take_picture(ticket)
+                try:
+                    self._take_picture(ticket)
+                except NavigationError as exc:
+                    logger.warning("No picture of ticket %s: %s", ticket.code, exc)
+                    opened = opened and ticket.code in self.collected.photos
+                    self._open_history()  # for the next one
+        return opened
 
     def _find(self, want: Wanted, listed: Sequence[Ticket]) -> Ticket | None:
         # Newest first: the one just booked comes before an older one of the same slot.

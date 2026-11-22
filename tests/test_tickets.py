@@ -422,6 +422,49 @@ def test_a_picture_that_fails_costs_only_itself(read, tmp_path, caplog):
     assert "Could not save the picture of ticket 11111" in caplog.text
 
 
+def stuck(monkeypatch, app, code, times):
+    """Let the card of ticket ``code`` lead back to the list the first ``times`` times."""
+    click, left = app.click, [times]
+
+    def clicking(x, y, label=""):
+        click(x, y, label)
+        if app.screen == code and left[0] > 0:
+            left[0] -= 1
+            app.screen = "list"
+
+    monkeypatch.setattr(app, "click", clicking)
+    monkeypatch.setattr(tickets, "_PAGE_TIMEOUT", 0.1)
+
+
+TWO = (WANTED, Wanted("2026-10-03", "18:00 - 19:00", "S6 - Sân tennis"))
+
+
+def test_a_ticket_that_does_not_open_is_tried_once_more(read, monkeypatch, caplog):
+    app = HistoryApp([card("11111"), card("22222", "18:00 - 19:00")])
+    stuck(monkeypatch, app, "11111", times=1)
+    with caplog.at_level(logging.WARNING):
+        found = read(app, *TWO)
+    assert set(found.photos) == {"11111", "22222"}
+    assert "No picture of ticket 11111: Ticket 11111 did not open" in caplog.text
+    assert app.taps.count(card("22222", "18:00 - 19:00")) == 1  # pictured already
+    assert CANCEL not in app.taps
+
+
+def test_a_ticket_that_never_opens_costs_no_other_one(read, monkeypatch):
+    app = HistoryApp([card("11111"), card("22222", "18:00 - 19:00")])
+    stuck(monkeypatch, app, "11111", times=99)
+    assert set(read(app, *TWO).photos) == {"22222"}
+    assert app.taps.count(card("11111")) == 2
+    assert CANCEL not in app.taps
+
+
+def test_a_history_page_that_does_not_show_is_opened_once_more(read, monkeypatch):
+    app = HistoryApp([], [card("11111")])
+    monkeypatch.setattr(tickets, "_PAGE_TIMEOUT", 0.1)
+    assert read(app, WANTED).photos == {"11111": "11111.png"}
+    assert app.taps == [ICON, ICON, card("11111")]
+
+
 def test_an_empty_history_gives_nothing(read, monkeypatch, caplog):
     monkeypatch.setattr(tickets, "_PAGE_TIMEOUT", 0.1)
     with caplog.at_level(logging.WARNING):
