@@ -52,6 +52,26 @@ function listed(list: HTMLElement) {
 }
 
 describe("AccountPicker", () => {
+  it("shows what is left of each account's quota, to choose one with some left", async () => {
+    const read = { month: "2026-11", month_limit: 8, read_at: "2026-11-24T06:03:20.000" };
+    const quoted = customer("a1", {
+      accounts: [
+        account("b1", { device: 0, quota: [{ utility: "Sân Tennis", used: 8, ...read }] }),
+        account("b2", {
+          phone: "09••••••22",
+          quota: [{ utility: "Sân Tennis", used: 3, ...read }],
+        }),
+      ],
+    });
+    const { machine, button } = await openMachine([quoted]);
+    expect(button).toHaveTextContent("Sân Tennis còn 0/8");
+
+    fireEvent.click(button);
+
+    const list = machine.getByRole("group", { name: "Tài khoản" });
+    expect(within(list).getByText(/Sân Tennis còn 5\/8/)).toBeInTheDocument();
+  });
+
   it("shows the account in use, and every account once pressed", async () => {
     const { machine, button } = await openMachine([AN, BINH, customer("a4", { name: "Chưa có" })]);
     expect(button).toHaveTextContent("Anh An09••••••11 · Căn A");

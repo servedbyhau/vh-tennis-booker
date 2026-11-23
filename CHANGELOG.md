@@ -10,6 +10,8 @@ uses [Semantic Versioning](https://semver.org/).
 - A run reads what is left of the account's quota for the day it books (8 a month, 2 a day, of
   the sport) on the app's history page, at 05:46 while getting ready and again after the tickets,
   and logs it; it warns when fewer are left than the slots chosen. What it books is the same.
+  Each account shows what is left of it in the month booked for, as the last run read it, in the
+  customers and in the Setup's list of accounts (`quota` of `/api/customers`).
 - While getting ready, a run reads the phone number on the Vinhomes app's account tab, and logs
   out and in again if it is not the account saved for the machine. It never books with another
   one: a machine that stays in it, or cannot tell, books nothing and says so.

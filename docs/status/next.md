@@ -11,27 +11,19 @@ Last updated: 2026-11-23.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: check the 06:00 run of 2026-11-23
-
-It is the first of the account check, of the ticket reading at 06:03 and of three machines with
-2 cores each. Check: the account each machine booked with and whether it had to change; that
-each ticket booked has its picture and reads as registered, and when the reading started and
-ended; the time from the slot to the court list (2.1-3.3 s on two machines, 2.9-4.4 s on three
-with 4 cores); whether a launch failed again ([known issues](known-issues.md)).
-
-Then install `develop` (#286 to #290: what is ready, whose account a run and a ticket are of, the
-copied picture, the question before a removal), not before 06:05, and look at each in the desktop
-window.
-
-## The quota
+## Next task: the quota, in the installed app
 
 What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"). Step 1, the
-run reading it at 05:46 and after the tickets (`quota.py`), is in `feat/quota-read`: check on a
-real machine that what it logs is what the history page shows, then in the first 06:00 run. Step
-2 shows the last read of each account in the app. Step 3, going on to another account of the same
-customer when too few are left, waits for the user: what to do with one left and two slots chosen,
-and whether two accounts share an apartment (the quota is the apartment's, a history the
-account's).
+run reading it at 05:46 and after the tickets (`quota.py`), is in `feat/quota-read`; dry runs on
+the three machines on 2026-11-23 counted what their history pages show, card by card. Step 2, the
+last read of each account shown in the app, is in `feat/quota-shown`. Once both are merged,
+install `develop` (not from 05:45 to 06:05) and check the next 06:00 run: a `quota_read` before
+the rounds and one after the tickets on each machine, the time they took, and each account's
+quota in the window.
+
+Step 3, going on to another account of the same customer when too few are left, waits for the
+user: what to do with one left and two slots chosen, and whether two accounts share an apartment
+(the quota is the apartment's, a history the account's).
 
 Put off by the user: the days each machine books on (a schedule), and sending results and tickets
 over Zalo.

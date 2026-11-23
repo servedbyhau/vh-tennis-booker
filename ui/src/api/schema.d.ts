@@ -583,6 +583,8 @@ export interface components {
             phone: string | null;
             /** Device */
             device: number | null;
+            /** Quota */
+            quota: components["schemas"]["QuotaReading"][];
         };
         /**
          * CustomerFields
@@ -818,6 +820,22 @@ export interface components {
             detail: string;
             /** Problems */
             problems?: string[] | null;
+        };
+        /**
+         * QuotaReading
+         * @description What an account used of a utility's quota in a month, as a run last read it.
+         */
+        QuotaReading: {
+            /** Utility */
+            utility: string;
+            /** Month */
+            month: string;
+            /** Used */
+            used: number;
+            /** Month Limit */
+            month_limit: number;
+            /** Read At */
+            read_at: string;
         };
         /**
          * RunDetail

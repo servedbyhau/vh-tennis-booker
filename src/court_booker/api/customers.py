@@ -7,18 +7,21 @@ form of an account is filled from. Nothing of them is recorded in the history.
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
 # time.
 import threading
-from collections.abc import Iterator
-from typing import Annotated, Optional
+from collections.abc import Iterator, Mapping
+from datetime import date, timedelta
+from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints
 
 from court_booker import credentials
 from court_booker.api.context import Context
+from court_booker.config import DAYS_AHEAD
 from court_booker.credentials import Login, mask_phone
 from court_booker.customers import Account, Customer, CustomerBook
 from court_booker.errors import LockHeldError
 from court_booker.history import connect
+from court_booker.history_read import quota_readings
 from court_booker.lock import RunLock
 
 router = APIRouter(prefix="/api", tags=["customers"])
@@ -40,6 +43,19 @@ _changing = threading.Lock()
 """One change at a time: each one checks the others' phone numbers and machines first."""
 
 
+class QuotaReading(BaseModel):
+    """What an account used of a utility's quota in a month, as a run last read it."""
+
+    utility: str
+    """The utility's name in the app's language, such as ``Sân Tennis``."""
+    month: str
+    """``YYYY-MM``, the month of play."""
+    used: int
+    month_limit: int
+    read_at: str
+    """When it was read, local time."""
+
+
 class CustomerAccount(BaseModel):
     """A customer's Vinhomes account, without its password."""
 
@@ -49,6 +65,8 @@ class CustomerAccount(BaseModel):
     """The phone number with its middle hidden, ``None`` once its saved login is gone."""
     device: Optional[int]
     """The MuMu instance it is attached to."""
+    quota: list[QuotaReading]
+    """The last read of each utility's quota in the month a run books for now."""
 
 
 class CustomerRecord(BaseModel):
@@ -127,40 +145,56 @@ def check_no_run(context: Context) -> None:
         raise LockHeldError(f"Another run is in progress: {holder.describe()}")
 
 
-def shown_account(account: Account) -> CustomerAccount:
+Readings = Mapping[str, list[dict[str, Any]]]
+
+
+def readings(book: CustomerBook) -> Readings:
+    """Return the quota reads of each account for the month a run books for now."""
+    month = (date.today() + timedelta(days=DAYS_AHEAD)).isoformat()[:7]
+    return quota_readings(book.db, month)
+
+
+def shown_account(account: Account, read: Readings) -> CustomerAccount:
     phone = None if account.phone is None else mask_phone(account.phone)
-    return CustomerAccount(id=account.id, label=account.label, phone=phone, device=account.device)
+    return CustomerAccount(
+        id=account.id,
+        label=account.label,
+        phone=phone,
+        device=account.device,
+        quota=[QuotaReading(**reading) for reading in read.get(account.id, [])],
+    )
 
 
-def shown(customer: Customer) -> CustomerRecord:
+def shown(customer: Customer, read: Readings) -> CustomerRecord:
     return CustomerRecord(
         id=customer.id,
         name=customer.name,
         representative=customer.representative,
         contact=customer.contact,
         note=customer.note,
-        accounts=[shown_account(account) for account in customer.accounts],
+        accounts=[shown_account(account, read) for account in customer.accounts],
     )
 
 
 @router.get("/customers", response_model=list[CustomerRecord])
 def list_customers(book: Book) -> list[CustomerRecord]:
     """List the customers in the order they were added, each with their accounts."""
-    return [shown(customer) for customer in book.customers()]
+    read = readings(book)
+    return [shown(customer, read) for customer in book.customers()]
 
 
 @router.post("/customers", status_code=201, response_model=CustomerRecord)
 def add_customer(book: Book, fields: CustomerFields) -> CustomerRecord:
     """Add a customer without accounts."""
     with _changing:
-        return shown(book.add_customer(**fields.model_dump()))
+        return shown(book.add_customer(**fields.model_dump()), readings(book))
 
 
 @router.put("/customers/{customer_id}", response_model=CustomerRecord)
 def change_customer(book: Book, customer_id: RecordId, fields: CustomerFields) -> CustomerRecord:
     """Change who a customer is; every fact not given is emptied."""
     with _changing:
-        return shown(book.change_customer(customer_id, **fields.model_dump()))
+        return shown(book.change_customer(customer_id, **fields.model_dump()), readings(book))
 
 
 @router.delete("/customers/{customer_id}", status_code=204, response_class=Response)
@@ -190,7 +224,7 @@ def add_account(book: Book, customer_id: RecordId, account: NewAccount) -> Custo
     login = Login(account.phone, account.password.get_secret_value())
     with _changing:
         book.add_account(customer_id, login, account.label)
-        return shown(book.customer(customer_id))
+        return shown(book.customer(customer_id), readings(book))
 
 
 @router.get("/customer-accounts/{account_id}/login", response_model=AccountLogin)
@@ -222,7 +256,7 @@ def change_account(
         if password is not None or change.phone is not None:
             check_no_run(context)
         book.change_account(account_id, change.label, password, change.phone)
-        return shown(book.owner(account_id))
+        return shown(book.owner(account_id), readings(book))
 
 
 @router.delete("/customer-accounts/{account_id}", status_code=204, response_class=Response)
@@ -253,7 +287,7 @@ def attach_account(
     with _changing:
         check_no_run(context)
         book.attach(attached.account_id, mumu_index)
-        return shown(book.owner(attached.account_id))
+        return shown(book.owner(attached.account_id), readings(book))
 
 
 @router.delete("/machines/{mumu_index}/account", status_code=204, response_class=Response)

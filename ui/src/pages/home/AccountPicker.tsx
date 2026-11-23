@@ -4,10 +4,11 @@ import { Link } from "react-router";
 import { errorMessage } from "../../api/errors";
 import { useAttachAccount, useDetachAccount } from "../../api/mutations";
 import { useCustomers } from "../../api/queries";
-import type { Customer, CustomerAccount } from "../../api/types";
+import type { Customer, CustomerAccount, QuotaReading } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Icon, type IconName } from "../../components/Icon";
 import { QueryView } from "../../components/QueryView";
+import { QuotaLine } from "../../components/QuotaLine";
 import { accountOn, useMachines } from "../../machines";
 import { paths } from "../../paths";
 import { useReadiness } from "../../readiness";
@@ -21,6 +22,8 @@ interface ChoiceProps {
   label?: string;
   /** Where it is now, on another machine. */
   place?: string;
+  /** What is left of its quota, as the last run read it. */
+  quota?: readonly QuotaReading[];
   chosen: boolean;
   disabled: boolean;
   onPick: () => void;
@@ -28,7 +31,7 @@ interface ChoiceProps {
 
 /** One line to choose: who, the account, and a tick in place of the icon once chosen. */
 function Choice(props: ChoiceProps) {
-  const { icon, title, phone, label, place, chosen, disabled, onPick } = props;
+  const { icon, title, phone, label, place, quota, chosen, disabled, onPick } = props;
   return (
     <button
       type="button"
@@ -44,6 +47,7 @@ function Choice(props: ChoiceProps) {
       <span className={styles.text}>
         <span className={styles.name}>{title}</span>
         {phone !== undefined && <AccountLine phone={phone} label={label} />}
+        {quota !== undefined && <QuotaLine quota={quota} />}
       </span>
       {place !== undefined && <span className={styles.place}>{place}</span>}
     </button>
@@ -159,7 +163,10 @@ function Picker({ customers, mumuIndex }: PickerProps) {
           {attached === null ? (
             <span className={styles.hint}>{t("pages.setup.account.emptyHint")}</span>
           ) : (
-            <AccountLine phone={attached.account.phone ?? ""} label={attached.account.label} />
+            <>
+              <AccountLine phone={attached.account.phone ?? ""} label={attached.account.label} />
+              <QuotaLine quota={attached.account.quota} />
+            </>
           )}
         </span>
         <span className={styles.chevron}>
@@ -193,6 +200,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
                   title={customer.name}
                   phone={account.phone ?? t("pages.customers.noLogin")}
                   label={account.label}
+                  quota={account.quota}
                   place={
                     account.device === null || account.device === mumuIndex
                       ? undefined

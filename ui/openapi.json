@@ -1799,6 +1799,13 @@
               }
             ],
             "title": "Device"
+          },
+          "quota": {
+            "items": {
+              "$ref": "#/components/schemas/QuotaReading"
+            },
+            "type": "array",
+            "title": "Quota"
           }
         },
         "type": "object",
@@ -1806,7 +1813,8 @@
           "id",
           "label",
           "phone",
-          "device"
+          "device",
+          "quota"
         ],
         "title": "CustomerAccount",
         "description": "A customer's Vinhomes account, without its password."
@@ -2345,6 +2353,40 @@
         ],
         "title": "Problem",
         "description": "An error: ``error`` is a stable code, ``detail`` the English message for the log.\n\n``problems`` lists each invalid value when there are several, one line per value."
+      },
+      "QuotaReading": {
+        "properties": {
+          "utility": {
+            "type": "string",
+            "title": "Utility"
+          },
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "used": {
+            "type": "integer",
+            "title": "Used"
+          },
+          "month_limit": {
+            "type": "integer",
+            "title": "Month Limit"
+          },
+          "read_at": {
+            "type": "string",
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "utility",
+          "month",
+          "used",
+          "month_limit",
+          "read_at"
+        ],
+        "title": "QuotaReading",
+        "description": "What an account used of a utility's quota in a month, as a run last read it."
       },
       "RunDetail": {
         "properties": {
