@@ -98,6 +98,27 @@ describe("HomePage status line", () => {
     expect(screen.getByRole("button", { name: /^Tài khoản/ }).className).toMatch(/remind/);
   });
 
+  it("names a machine whose account has too few left for its slots", async () => {
+    const read = { utility: "Sân Tennis", sport: "tennis", month_limit: 8, read_at: "" };
+    const quota = [{ ...read, month: "2026-10", used: 7 }];
+    const an = customer("a1", { accounts: [account("b1", { device: 0, quota })] });
+    renderApp(paths.overview, {
+      "GET /api/status": reply(overview()), // books for 18/10, two slots
+      "GET /api/settings": reply(settings()),
+      "GET /api/runs": reply([]),
+      "GET /api/customers": reply([an]),
+    });
+
+    await waitFor(async () =>
+      expect(await statusLine()).toHaveTextContent(
+        "● Máy 1 không đủ hạn mức cho lần đặt tới · đổi tài khoản",
+      ),
+    );
+    const tabs = within(screen.getByRole("group", { name: "Máy" }));
+    expect(tabs.getByRole("button", { name: "Máy 1, tài khoản không đủ hạn mức" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Tài khoản/ }).className).toMatch(/remind/);
+  });
+
   it("names the machines that would book the same court and slot, first", async () => {
     const same = {
       mumu_index: 1,

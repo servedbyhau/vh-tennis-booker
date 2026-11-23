@@ -6,6 +6,7 @@ import { QuotaLine } from "./QuotaLine";
 function reading(fields: Partial<QuotaReading> = {}): QuotaReading {
   return {
     utility: "Sân Tennis",
+    sport: "tennis",
     month: "2026-11",
     used: 7,
     month_limit: 8,
@@ -16,7 +17,12 @@ function reading(fields: Partial<QuotaReading> = {}): QuotaReading {
 
 describe("QuotaLine", () => {
   it("shows what is left of each sport, and when it was read", () => {
-    render(<QuotaLine quota={[reading(), reading({ utility: "Sân Pickleball", used: 2 })]} />);
+    render(
+      <QuotaLine
+        quota={[reading(), reading({ utility: "Sân Pickleball", used: 2 })]}
+        month="2026-11"
+      />,
+    );
 
     const tennis = screen.getByTitle("đã dùng 7/8 của tháng 11/2026, đọc lúc 05:46 24/11");
     expect(tennis).toHaveTextContent(/^Sân Tennis còn 1\/8 \(đã dùng 7\/8/);
@@ -25,14 +31,19 @@ describe("QuotaLine", () => {
   });
 
   it("marks a sport with none left", () => {
-    render(<QuotaLine quota={[reading({ used: 8 })]} />);
+    render(<QuotaLine quota={[reading({ used: 8 })]} month="2026-11" />);
 
     expect(screen.getByText(/Sân Tennis còn 0\/8/).className).toMatch(/none/);
   });
 
-  it("shows nothing for an account never read", () => {
-    const { container } = render(<QuotaLine quota={[]} />);
-
+  it("shows nothing for an account never read, or read for another month", () => {
+    const { container } = render(<QuotaLine quota={[]} month="2026-11" />);
     expect(container).toBeEmptyDOMElement();
+
+    render(<QuotaLine quota={[reading({ month: "2026-12" })]} month="2026-11" />);
+    expect(screen.queryByText(/Sân Tennis/)).not.toBeInTheDocument();
+
+    render(<QuotaLine quota={[reading()]} month={undefined} />);
+    expect(screen.queryByText(/Sân Tennis/)).not.toBeInTheDocument();
   });
 });

@@ -11,6 +11,7 @@ import { QueryView } from "../../components/QueryView";
 import { QuotaLine } from "../../components/QuotaLine";
 import { accountOn, useMachines } from "../../machines";
 import { paths } from "../../paths";
+import { useBookingMonth } from "../../quota";
 import { useReadiness } from "../../readiness";
 import styles from "./AccountPicker.module.css";
 import { machineName } from "./ticketText";
@@ -22,8 +23,9 @@ interface ChoiceProps {
   label?: string;
   /** Where it is now, on another machine. */
   place?: string;
-  /** What is left of its quota, as the last run read it. */
+  /** What is left of its quota, as the last run read it, and the month booked for. */
   quota?: readonly QuotaReading[];
+  month?: string;
   chosen: boolean;
   disabled: boolean;
   onPick: () => void;
@@ -31,7 +33,7 @@ interface ChoiceProps {
 
 /** One line to choose: who, the account, and a tick in place of the icon once chosen. */
 function Choice(props: ChoiceProps) {
-  const { icon, title, phone, label, place, quota, chosen, disabled, onPick } = props;
+  const { icon, title, phone, label, place, quota, month, chosen, disabled, onPick } = props;
   return (
     <button
       type="button"
@@ -47,7 +49,7 @@ function Choice(props: ChoiceProps) {
       <span className={styles.text}>
         <span className={styles.name}>{title}</span>
         {phone !== undefined && <AccountLine phone={phone} label={label} />}
-        {quota !== undefined && <QuotaLine quota={quota} />}
+        {quota !== undefined && <QuotaLine quota={quota} month={month} />}
       </span>
       {place !== undefined && <span className={styles.place}>{place}</span>}
     </button>
@@ -74,7 +76,8 @@ function Picker({ customers, mumuIndex }: PickerProps) {
   const { t } = useTranslation();
   const id = useId();
   const machines = useMachines();
-  const { accountless } = useReadiness();
+  const { accountless, short } = useReadiness();
+  const month = useBookingMonth();
   const attach = useAttachAccount();
   const detach = useDetachAccount();
   const button = useRef<HTMLButtonElement>(null);
@@ -137,8 +140,10 @@ function Picker({ customers, mumuIndex }: PickerProps) {
     }
   }
 
-  /** It books tomorrow with nobody chosen: the one thing to do here. */
-  const remind = accountless.some((machine) => machine.mumuIndex === mumuIndex);
+  /** It books tomorrow with nobody chosen, or with too few left: the one thing to do here. */
+  const remind =
+    accountless.some((machine) => machine.mumuIndex === mumuIndex) ||
+    short.some(({ place }) => machines[place]?.mumuIndex === mumuIndex);
   const choices = customers.flatMap((customer) =>
     customer.accounts.map((account) => ({ customer, account })),
   );
@@ -165,7 +170,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
           ) : (
             <>
               <AccountLine phone={attached.account.phone ?? ""} label={attached.account.label} />
-              <QuotaLine quota={attached.account.quota} />
+              <QuotaLine quota={attached.account.quota} month={month} />
             </>
           )}
         </span>
@@ -201,6 +206,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
                   phone={account.phone ?? t("pages.customers.noLogin")}
                   label={account.label}
                   quota={account.quota}
+                  month={month}
                   place={
                     account.device === null || account.device === mumuIndex
                       ? undefined

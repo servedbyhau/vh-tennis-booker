@@ -106,6 +106,20 @@ def count(tickets: Sequence[Ticket], utility: str, play_date: date) -> Quota:
     )
 
 
+def next_short(quota: Quota, slots: int) -> int | None:
+    """Return what the run a day later has left, if fewer than the ``slots`` it books.
+
+    For ``quota`` read after the tickets: nothing can be booked yet for the next day of play,
+    so only the month counts; ``None`` also when that day is in another month, whose quota
+    is whole.
+    """
+    following = date.fromisoformat(quota.play_date) + timedelta(days=1)
+    if following.isoformat()[:7] != quota.month:
+        return None
+    left = max(0, MONTH_LIMIT - quota.used)
+    return left if left < slots else None
+
+
 def first_booking_day(play_date: date) -> date:
     """Return the first day a ticket of ``play_date``'s month can have been booked on."""
     return play_date.replace(day=1) - timedelta(days=DAYS_AHEAD)
@@ -195,5 +209,5 @@ def read_quota(
         logger.warning("%s", shown)
     else:
         logger.info("%s", shown)
-    report(EventKind.QUOTA_READ, **quota.event_data(moment, slots))
+    report(EventKind.QUOTA_READ, **quota.event_data(moment, slots), sport=booker.config.sport)
     return quota

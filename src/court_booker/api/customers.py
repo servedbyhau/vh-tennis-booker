@@ -8,7 +8,7 @@ form of an account is filled from. Nothing of them is recorded in the history.
 # time.
 import threading
 from collections.abc import Iterator, Mapping
-from datetime import date, timedelta
+from datetime import date
 from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, Path, Query, Response
@@ -16,7 +16,6 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints
 
 from court_booker import credentials
 from court_booker.api.context import Context
-from court_booker.config import DAYS_AHEAD
 from court_booker.credentials import Login, mask_phone
 from court_booker.customers import Account, Customer, CustomerBook
 from court_booker.errors import LockHeldError
@@ -48,6 +47,8 @@ class QuotaReading(BaseModel):
 
     utility: str
     """The utility's name in the app's language, such as ``Sân Tennis``."""
+    sport: Optional[str]
+    """The run's ``sport`` (``config.SPORTS``), ``None`` for a read before it was recorded."""
     month: str
     """``YYYY-MM``, the month of play."""
     used: int
@@ -66,7 +67,8 @@ class CustomerAccount(BaseModel):
     device: Optional[int]
     """The MuMu instance it is attached to."""
     quota: list[QuotaReading]
-    """The last read of each utility's quota in the month a run books for now."""
+    """The last read of each utility's quota in this month and the next, if read; the app shows
+    the one of the month of the next booking."""
 
 
 class CustomerRecord(BaseModel):
@@ -149,9 +151,8 @@ Readings = Mapping[str, list[dict[str, Any]]]
 
 
 def readings(book: CustomerBook) -> Readings:
-    """Return the quota reads of each account for the month a run books for now."""
-    month = (date.today() + timedelta(days=DAYS_AHEAD)).isoformat()[:7]
-    return quota_readings(book.db, month)
+    """Return each account's last quota read of each utility and month still to book for."""
+    return quota_readings(book.db, date.today().isoformat()[:7])
 
 
 def shown_account(account: Account, read: Readings) -> CustomerAccount:

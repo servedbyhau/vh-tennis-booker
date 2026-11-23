@@ -1,11 +1,13 @@
 /**
  * What would cost a booking of the next start although everything is switched on: a machine
- * that books with no chosen account, and machines that would book the same court and slot.
+ * that books with no chosen account, machines that would book the same court and slot, and an
+ * account with fewer bookings left in the month than its machine's slots.
  */
 import { useMemo } from "react";
 import { useCustomers, useSettings } from "./api/queries";
 import type { Customer, Settings } from "./api/types";
 import { accountOn, enabledMachines, type Machine, useMachines } from "./machines";
+import { leftOf, useBookingMonth } from "./quota";
 
 /** A court and slot that several machines would book: one gets it at most. */
 export interface Clash {
@@ -46,16 +48,52 @@ export function clashes(settings: Settings, machines: readonly Machine[]): Clash
   return [...found.values()].filter(({ places }) => places.length > 1);
 }
 
+/** A machine whose account has fewer bookings left in the month than the slots it books. */
+export interface Short {
+  place: number;
+  left: number;
+  slots: number;
+}
+
+/**
+ * Return the machines whose account, by the last read of its quota for the sport they book in
+ * `month`, has fewer bookings left than their slots: the app refuses the ones over.
+ */
+export function shortOfQuota(
+  settings: Settings,
+  machines: readonly Machine[],
+  customers: readonly Customer[],
+  month: string,
+): Short[] {
+  return enabledMachines(machines).flatMap(({ place, mumuIndex, entry }) => {
+    const booking = entry === null ? undefined : [settings, ...settings.instances][entry];
+    const attached = mumuIndex === null ? null : accountOn(customers, mumuIndex);
+    const reading = attached?.account.quota.find(
+      (read) => read.month === month && read.sport === booking?.sport,
+    );
+    if (booking === undefined || reading === undefined) {
+      return [];
+    }
+    const left = leftOf(reading);
+    return left < booking.slots.length ? [{ place, left, slots: booking.slots.length }] : [];
+  });
+}
+
 /** Read what to look at before the next start; nothing until it is known. */
-export function useReadiness(): { accountless: Machine[]; clashing: Clash[] } {
+export function useReadiness(): { accountless: Machine[]; clashing: Clash[]; short: Short[] } {
   const machines = useMachines();
   const customers = useCustomers().data;
   const settings = useSettings().data;
+  const month = useBookingMonth();
   return useMemo(
     () => ({
       accountless: withoutAccount(machines, customers ?? []),
       clashing: settings === undefined ? [] : clashes(settings, machines),
+      short:
+        settings === undefined || month === undefined
+          ? []
+          : shortOfQuota(settings, machines, customers ?? [], month),
     }),
-    [machines, customers, settings],
+    [machines, customers, settings, month],
   );
 }

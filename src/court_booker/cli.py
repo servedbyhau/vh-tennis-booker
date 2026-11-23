@@ -31,13 +31,19 @@ from court_booker.errors import (
 )
 from court_booker.events import Event, EventKind, LogSink, MultiSink, Reporter
 from court_booker.flow import Booker
-from court_booker.history import History, close_history, open_history
+from court_booker.history import History, Holder, close_history, open_history
 from court_booker.lock import TAKE_OVER_AHEAD, RunLock, check_quiet_time
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
-from court_booker.notify import format_notification, format_summary, send_telegram, send_windows
+from court_booker.notify import (
+    format_notification,
+    format_quota_warning,
+    format_summary,
+    send_telegram,
+    send_windows,
+)
 from court_booker.paths import data_folder
 from court_booker.power import keep_awake
-from court_booker.quota import AFTER, read_quota
+from court_booker.quota import AFTER, MONTH_LIMIT, Quota, next_short, read_quota
 from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
 from court_booker.runner import RoundResult, run_booking
 from court_booker.tickets import TicketReader, Wanted, forget_expired
@@ -260,8 +266,12 @@ def read_tickets(
     clock: NtpClock,
     history: History,
     report: Reporter,
+    instance: int | None = None,
 ) -> None:
     """Record the account's tickets, with a picture of each one booked, then its quota.
+
+    A quota too short for the next day's slots is told by a Windows notification
+    (:func:`warn_short_quota`), under ``instance`` if given.
 
     Waits until every machine is done booking, a timed run until :data:`TICKETS_AFTER` the
     start at least, so this takes nothing from the rounds still going on. Raises only
@@ -292,11 +302,49 @@ def read_tickets(
             )
             report(EventKind.TICKETS_SAVED, tickets=len(found.tickets), photos=len(found.photos))
     try:
-        read_quota(booker, play_date, AFTER, report)
+        quota = read_quota(booker, play_date, AFTER, report)
     except DeviceNotRespondingError:
         raise
     except Exception as exc:  # the tickets are saved: this only logs
         logger.warning("Quota not read after the tickets: %s", exc)
+        return
+    if quota is not None:
+        warn_short_quota(booker.config, quota, history.holder, instance)
+
+
+def warn_short_quota(
+    config: Config, quota: Quota, holder: Holder | None, instance: int | None
+) -> None:
+    """Tell the user when the next day's run has fewer left than the slots it books.
+
+    They have the day to choose another account; a run never changes it by itself. Only
+    when Windows notifications are on; a failure only logs.
+    """
+    left = next_short(quota, len(config.slots))
+    if left is None:
+        return
+    logger.warning(
+        "The next run has %d of %s left for %d slot(s): choose another account",
+        left,
+        quota.utility,
+        len(config.slots),
+    )
+    if not config.windows_notification:
+        return
+    try:
+        title, body = format_quota_warning(
+            utility=quota.utility,
+            month=quota.month,
+            left=left,
+            limit=MONTH_LIMIT,
+            slots=len(config.slots),
+            account=None if holder is None else f"{holder.customer} · {holder.account}",
+            language=config.notification_language,
+            instance=instance,
+        )
+        send_windows(title, body)
+    except Exception:  # reporting never costs anything
+        logger.warning("Windows notification not shown", exc_info=True)
 
 
 def run_trigger(args: argparse.Namespace) -> str:
@@ -577,7 +625,7 @@ def main(argv: list[str] | None = None) -> int:
         target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
         try:
             with keep_awake():
-                read_tickets(bookers[0], results, target, start, clock, history, report)
+                read_tickets(bookers[0], results, target, start, clock, history, report, instance)
         except DeviceNotRespondingError as exc:
             tickets_froze = True
             logger.warning("Tickets not read: %s", exc)

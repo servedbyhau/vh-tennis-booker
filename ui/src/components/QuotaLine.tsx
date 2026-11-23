@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { QuotaReading } from "../api/types";
+import { leftOf, readingsOf } from "../quota";
 import { useFormat } from "../useFormat";
 import styles from "./QuotaLine.module.css";
 
@@ -9,21 +10,28 @@ function monthText(month: string): string {
   return `${number}/${year}`;
 }
 
+interface QuotaLineProps {
+  quota: readonly QuotaReading[];
+  /** The month the next booking is for (`useBookingMonth`); nothing shows while unknown. */
+  month: string | undefined;
+}
+
 /**
- * What an account has left of each sport's quota in the month it books for, as a run last read
- * it on the app's history page: "Sân Tennis còn 1/8". When it was read is in the words a screen
- * reader says and in the tooltip; none left is marked.
+ * What an account has left of each sport's quota in the month the next booking is for, as a
+ * run last read it on the app's history page: "Sân Tennis còn 1/8". When it was read is in the
+ * words a screen reader says and in the tooltip; none left is marked.
  */
-export function QuotaLine({ quota }: { quota: readonly QuotaReading[] }) {
+export function QuotaLine({ quota, month }: QuotaLineProps) {
   const { t } = useTranslation();
   const f = useFormat();
-  if (quota.length === 0) {
+  const shown = readingsOf(quota, month);
+  if (shown.length === 0) {
     return null;
   }
   return (
     <span className={styles.line}>
-      {quota.map((reading) => {
-        const left = Math.max(0, reading.month_limit - reading.used);
+      {shown.map((reading) => {
+        const left = leftOf(reading);
         const read = t("quota.read", {
           used: reading.used,
           limit: reading.month_limit,

@@ -22,7 +22,7 @@ interface MachineBarProps {
 export function MachineBar({ machines, machine, onMachine }: MachineBarProps) {
   const { t } = useTranslation();
   const ticks = useManualTicks();
-  const { accountless, clashing } = useReadiness();
+  const { accountless, clashing, short } = useReadiness();
   if (machines.length < 2) {
     return null;
   }
@@ -38,6 +38,7 @@ export function MachineBar({ machines, machine, onMachine }: MachineBarProps) {
       ...(accountless.some(({ place }) => place === item.place)
         ? [t("pages.ticket.instanceNoAccount")]
         : []),
+      ...(short.some(({ place }) => place === item.place) ? [t("pages.ticket.instanceQuota")] : []),
     ];
   }
 

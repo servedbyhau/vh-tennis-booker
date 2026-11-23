@@ -38,6 +38,7 @@
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
         "noAccount": "Máy {{machines}} chưa chọn tài khoản",
         "clash": "Máy {{machines}} trùng {{court}} lúc {{start}}",
+        "quotaShort": "Máy {{machines}} không đủ hạn mức cho lần đặt tới · đổi tài khoản",
         "ready": "Sẵn sàng cho {{time}} {{when}}"
       },
       "live": {
@@ -63,6 +64,7 @@
       "instanceLeft": "còn việc chuẩn bị",
       "instanceClash": "trùng sân và giờ với máy khác",
       "instanceNoAccount": "chưa chọn tài khoản",
+      "instanceQuota": "tài khoản không đủ hạn mức",
       "instanceOff": "đang tắt",
       "useOff": "Máy {{number}} đang tắt. Bật ở Thiết lập để đặt bằng máy này.",
       "subdivision": "Phân khu",

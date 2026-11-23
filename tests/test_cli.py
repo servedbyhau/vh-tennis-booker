@@ -26,6 +26,7 @@ from court_booker.events import EventKind
 from court_booker.history import History as HistoryStore
 from court_booker.history import HistoryHandler, connect
 from court_booker.lock import Holder
+from court_booker.quota import Quota
 from court_booker.ready import DeviceHandle
 from court_booker.runner import RoundResult
 from court_booker.tickets import Collected, Ticket
@@ -1045,3 +1046,25 @@ def test_a_real_run_forgets_the_expired_tickets_once_all_is_done(
     monkeypatch.setattr(cli, "forget_expired", lambda data, today: order.append((data.root, today)))
     run_with_booker(monkeypatch, tmp_path, BOOKED[:1], args)
     assert order == ["all done"] + [(data_home, FixedDatetime.now().date())] * times
+
+
+def short_quota(used):
+    def read_quota(booker, play_date, moment, report, slots=None):
+        return Quota("Sân Tennis", play_date.isoformat()[:7], used, play_date.isoformat(), 1)
+
+    return read_quota
+
+
+@pytest.mark.parametrize(("used", "warned"), [(7, True), (6, False)])
+def test_a_quota_too_short_for_the_next_run_is_told(
+    monkeypatch, tmp_path, reader, data_home, closed_mumu, windows_notifications, used, warned
+):
+    monkeypatch.setattr(cli, "read_quota", short_quota(used))
+
+    run_with_booker(monkeypatch, tmp_path, BOOKED)
+
+    titles = [title for title, _ in windows_notifications]
+    assert ("Lần đặt tới thiếu hạn mức" in titles) is warned
+    if warned:
+        body = windows_notifications[-1][1]
+        assert body.startswith("Sân Tennis còn 1/8 của tháng 10/2026, mà đã chọn 2 khung giờ")

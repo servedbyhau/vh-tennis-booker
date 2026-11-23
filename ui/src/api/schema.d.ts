@@ -828,6 +828,8 @@ export interface components {
         QuotaReading: {
             /** Utility */
             utility: string;
+            /** Sport */
+            sport: string | null;
             /** Month */
             month: string;
             /** Used */

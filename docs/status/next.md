@@ -13,17 +13,18 @@ Last updated: 2026-11-23.
 
 ## Next task: the quota, in the installed app
 
-What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"). Step 1, the
-run reading it at 05:46 and after the tickets (`quota.py`), is in `feat/quota-read`; dry runs on
-the three machines on 2026-11-23 counted what their history pages show, card by card. Step 2, the
-last read of each account shown in the app, is in `feat/quota-shown`. Once both are merged,
-install `develop` (not from 05:45 to 06:05) and check the next 06:00 run: a `quota_read` before
-the rounds and one after the tickets on each machine, the time they took, and each account's
-quota in the window.
+What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"). In
+`develop`: the run reads it at 05:46 and after the tickets (`quota.py`; dry runs on the three
+machines on 2026-11-23 counted what their history pages show, card by card), each account shows
+the last read, and a run warns when the next day's has too few left (`feat/quota-warning`). Once
+merged, install `develop` (not from 05:45 to 06:05) and check the next 06:00 run: a `quota_read`
+before the rounds and one after the tickets on each machine, the time they took, the warning
+where one is due, and each account's quota in the window.
 
-Step 3, going on to another account of the same customer when too few are left, waits for the
-user: what to do with one left and two slots chosen, and whether two accounts share an apartment
-(the quota is the apartment's, a history the account's).
+Decided with the user on 2026-11-23: a run never changes the account by itself (a login at 05:46
+could cost the booking, a customer's phone may be logged out, two accounts may share an
+apartment's quota); with one left and two slots, the app books the first and refuses the second.
+Sharing the bookings out over a customer's accounts belongs with the schedule.
 
 Put off by the user: the days each machine books on (a schedule), and sending results and tickets
 over Zalo.

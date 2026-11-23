@@ -38,6 +38,7 @@
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
         "noAccount": "Machine {{machines}}: no account chosen",
         "clash": "Machine {{machines}}: same {{court}} at {{start}}",
+        "quotaShort": "Machine {{machines}}: too little quota left for the next booking · choose another account",
         "ready": "Ready for {{time}} {{when}}"
       },
       "live": {
@@ -63,6 +64,7 @@
       "instanceLeft": "setup left",
       "instanceClash": "same court and slot as another machine",
       "instanceNoAccount": "no account chosen",
+      "instanceQuota": "account short of quota",
       "instanceOff": "off",
       "useOff": "Machine {{number}} is off. Turn it on in the Setup to book with it.",
       "subdivision": "Subdivision",
