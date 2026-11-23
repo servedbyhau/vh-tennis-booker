@@ -66,11 +66,17 @@ def fake_connect(config, driver="auto"):
 
 
 def use_connect(monkeypatch, connect):
-    """Make the run's supervisor connect its device with ``connect(config, driver)``."""
+    """Make the run's supervisor connect its device with ``connect(config, driver)``.
+
+    Returns the supervisors the run makes, as they are made.
+    """
+    made = []
 
     class FakeSupervisor:
-        def __init__(self, config, driver="auto", report=None, now=None):
+        def __init__(self, config, driver="auto", report=None, now=None, launch_after=()):
             self.config, self.driver, self.report = config, driver, report
+            self.launch_after = launch_after
+            made.append(self)
             self.device = DeviceHandle()
             self.repairs = 0
 
@@ -82,6 +88,7 @@ def use_connect(monkeypatch, connect):
             self.start()
 
     monkeypatch.setattr(cli, "Supervisor", FakeSupervisor)
+    return made
 
 
 def run_cli(monkeypatch, tmp_path, outcomes=(), connect=fake_connect, args=(), now=None):
@@ -484,13 +491,15 @@ def test_another_instance_books_on_its_own(
         locks.extend(sorted(item.name for item in data_home.glob("*.lock")))
         return run(device, config, results=results, **kwargs)
 
-    use_connect(monkeypatch, fake_connect)
+    supervisors = use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 
     assert cli.main(["--config", str(path), "--instance", "1"]) == cli.EXIT_OK
 
     assert (run.config.mumu_index, run.config.slots) == (1, ["20:00 - 21:00"])
+    # Launched once the first machine has booted, the config's order.
+    assert [supervisor.launch_after for supervisor in supervisors] == [[0]]
     assert run.config.court == "S9 - Sân tennis"
     assert locks == ["run-mumu1.lock"]  # beside the first instance's run.lock
     assert next((tmp_path / "logs").glob("court-booker-*-mumu1.log")).exists()

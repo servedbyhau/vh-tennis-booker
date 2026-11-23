@@ -81,6 +81,10 @@ class MuMu:
         self._clock = clock
         self._sleep = sleep
 
+    def sibling(self, index: int) -> MuMu:
+        """Return MuMu instance ``index`` of the same MuMuManager, asked once a call."""
+        return MuMu(self.manager, index, self._run, self._clock, self._sleep)
+
     def info(self) -> dict[str, Any]:
         """Return the instance state reported by ``MuMuManager.exe info``."""
         output = self._call("info")

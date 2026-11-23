@@ -39,7 +39,9 @@ Details live in the docstrings; this page says where things are and what must st
   its ADB connection (`adb.py`), the driver (`driver.py`; uiautomator2 after `DRIVER_STARTS`
   failed starts, `--driver` picks one) and the app on its home screen (`Booker.prepare`). Each
   pass checks every layer and repairs the first that fails: MuMu restarted (shutdown, checked
-  stopped, launched, booted in `BOOT_RETRY_WAIT`; the first boot waits `boot_timeout`), the
+  stopped, launched, booted in `BOOT_RETRY_WAIT`; the first boot waits `boot_timeout`, and is
+  made once the machines before this one in the config have booted, `launch_after` from
+  `cli`, `LAUNCH_TURN` each at most and never past half the time to the deadline), the
   serial disconnected alone and connected again (the adb server is shared by the instances'
   processes), the driver started again, the app restarted after growing pauses
   (`APP_BACKOFF`, as a PC just woken may join its network late). `Adb.ping` (`am
