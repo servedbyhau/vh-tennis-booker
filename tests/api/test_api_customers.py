@@ -210,10 +210,13 @@ def test_a_vault_that_refuses_answers_credentials(client, customer, saved_logins
     assert (reply.status_code, reply.json()["error"]) == (503, "credentials")
 
 
-def read_quota(context, account_id, month, used, utility="Sân Tennis", read_at="06:03"):
+def read_quota(context, account_id, month, used, sport="tennis", read_at="06:03"):
     """Record a run with ``account_id`` that read the quota, as runs do (court_booker.quota)."""
+    utility = {"tennis": "Sân Tennis", "pickleball": "Sân Pickleball", None: "Sân Tennis"}[sport]
     data = {"moment": "after", "utility": utility, "month": month, "used": used}
     data.update(month_limit=8, play_date=f"{month}-26", day_used=1, day_limit=2, left=1)
+    if sport is not None:  # reads before 2026-11-24 do not have it
+        data["sport"] = sport
     with contextlib.closing(connect(context.data.database)) as db, db:
         run = db.execute(
             "INSERT INTO runs (trigger, dry_run, version, started_at, status, account_id)"
@@ -227,32 +230,42 @@ def read_quota(context, account_id, month, used, utility="Sân Tennis", read_at=
         )
 
 
-def test_an_account_shows_the_last_quota_read_of_the_month_it_books_for(client, context, account):
-    month = (date.today() + timedelta(days=2)).isoformat()[:7]
-    read_quota(context, account["id"], month, 6, read_at="05:46")
-    read_quota(context, account["id"], month, 7)
-    read_quota(context, account["id"], month, 2, utility="Sân Pickleball")
-    read_quota(context, account["id"], "2020-01", 8)  # another month: no longer of use
-    read_quota(context, None, month, 8)  # a machine without an account chosen
+def reading(utility, sport, month, used):
+    return {
+        "utility": utility,
+        "sport": sport,
+        "month": month,
+        "used": used,
+        "month_limit": 8,
+        "read_at": f"{month}-24T06:03:10.000",
+    }
+
+
+def test_an_account_shows_its_last_quota_read_of_each_sport_and_month(client, context, account):
+    this = date.today().isoformat()[:7]
+    following = (date.today().replace(day=28) + timedelta(days=7)).isoformat()[:7]
+    read_quota(context, account["id"], this, 6, read_at="05:46")
+    read_quota(context, account["id"], this, 7)
+    read_quota(context, account["id"], this, 2, sport="pickleball")
+    read_quota(context, account["id"], following, 1)  # the next month, booked from its eve
+    read_quota(context, account["id"], "2020-01", 8)  # gone by: no longer of use
+    read_quota(context, None, this, 8)  # a machine without an account chosen
 
     (shown,) = client.get("/api/customers").json()[0]["accounts"]
 
     assert shown["quota"] == [
-        {
-            "utility": "Sân Tennis",
-            "month": month,
-            "used": 7,
-            "month_limit": 8,
-            "read_at": f"{month}-24T06:03:10.000",
-        },
-        {
-            "utility": "Sân Pickleball",
-            "month": month,
-            "used": 2,
-            "month_limit": 8,
-            "read_at": f"{month}-24T06:03:10.000",
-        },
+        reading("Sân Tennis", "tennis", this, 7),
+        reading("Sân Pickleball", "pickleball", this, 2),
+        reading("Sân Tennis", "tennis", following, 1),
     ]
+
+
+def test_a_read_before_the_sport_was_recorded_has_none(client, context, account):
+    read_quota(context, account["id"], date.today().isoformat()[:7], 3, sport=None)
+
+    (shown,) = client.get("/api/customers").json()[0]["accounts"]
+
+    assert shown["quota"][0]["sport"] is None
 
 
 def test_an_account_never_read_shows_no_quota(client, account):

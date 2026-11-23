@@ -53,7 +53,12 @@ function listed(list: HTMLElement) {
 
 describe("AccountPicker", () => {
   it("shows what is left of each account's quota, to choose one with some left", async () => {
-    const read = { month: "2026-11", month_limit: 8, read_at: "2026-11-24T06:03:20.000" };
+    const read = {
+      sport: "tennis",
+      month: "2026-10",
+      month_limit: 8,
+      read_at: "2026-10-16T06:03:20.000",
+    };
     const quoted = customer("a1", {
       accounts: [
         account("b1", { device: 0, quota: [{ utility: "Sân Tennis", used: 8, ...read }] }),

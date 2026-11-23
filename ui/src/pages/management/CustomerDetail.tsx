@@ -5,6 +5,7 @@ import type { Customer, CustomerAccount } from "../../api/types";
 import { Icon, type IconName } from "../../components/Icon";
 import { IconButton } from "../../components/IconButton";
 import { QuotaLine } from "../../components/QuotaLine";
+import { useBookingMonth } from "../../quota";
 import styles from "./CustomerDetail.module.css";
 import { AccountForm, CustomerForm } from "./CustomerForms";
 import { RemoveQuestion } from "./RemoveQuestion";
@@ -85,6 +86,7 @@ interface AccountRowProps {
 /** An account: its phone and label, its form under it, or the question before its removal. */
 function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
   const { t } = useTranslation();
+  const month = useBookingMonth();
   const close = () => onOpen(null);
   const edited = open?.form === "account" && open.id === account.id;
   const removed = open?.form === "removeAccount" && open.id === account.id;
@@ -97,7 +99,7 @@ function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
         <span className={styles.login}>
           <span className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</span>
           {account.label !== "" && <span className={styles.label}>{account.label}</span>}
-          <QuotaLine quota={account.quota} />
+          <QuotaLine quota={account.quota} month={month} />
         </span>
         <IconButton
           icon="edit"

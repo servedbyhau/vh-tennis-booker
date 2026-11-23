@@ -17,6 +17,7 @@ from court_booker.notify import (
     court_name,
     failure_reason,
     format_notification,
+    format_quota_warning,
     format_summary,
     send_telegram,
     send_windows,
@@ -364,3 +365,41 @@ def test_send_windows_does_nothing_outside_windows(monkeypatch):
     monkeypatch.setattr(sys, "platform", "linux")
 
     assert send_windows("title", "body") is False
+
+
+@pytest.mark.parametrize(
+    ("language", "title", "body"),
+    [
+        (
+            "vi",
+            "MuMu 1 · Lần đặt tới thiếu hạn mức",
+            "Nhóm 68 · 09••62: Sân Tennis còn 1/8 của tháng 11/2026, mà đã chọn 2 khung giờ."
+            " Đổi tài khoản trong Thiết lập.",
+        ),
+        (
+            "en",
+            "MuMu 1 · Next booking short of quota",
+            "Nhóm 68 · 09••62: Sân Tennis: 1/8 left in Nov 2026, 2 slots chosen."
+            " Choose another account in the Setup.",
+        ),
+    ],
+)
+def test_the_quota_warning_names_the_account_and_what_is_left(language, title, body):
+    shown = format_quota_warning(
+        utility="Sân Tennis",
+        month="2026-11",
+        left=1,
+        limit=8,
+        slots=2,
+        account="Nhóm 68 · 09••62",
+        language=language,
+        instance=1,
+    )
+
+    assert shown == (title, body)
+
+
+def test_the_quota_warning_without_an_account_starts_with_the_sport():
+    _, body = format_quota_warning(utility="Sân Tennis", month="2026-11", left=0, limit=8, slots=1)
+
+    assert body.startswith("Sân Tennis còn 0/8")

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { machinesOf } from "./machines";
-import { clashes, withoutAccount } from "./readiness";
+import type { QuotaReading } from "./api/types";
+import { clashes, shortOfQuota, withoutAccount } from "./readiness";
 import { account, customer } from "./test/customers";
 import { settings } from "./test/settings";
 
@@ -74,5 +75,42 @@ describe("clashes", () => {
       instances: [instance(1, "S9 - Sân Pickleball", ["18:00 - 19:00"])],
     });
     expect(clashes(sports, machinesOf(sports))).toEqual([]);
+  });
+});
+
+describe("shortOfQuota", () => {
+  const machines = machinesOf(TWO);
+  const read = { utility: "Sân Tennis", month: "2026-11", month_limit: 8, read_at: "" };
+
+  function reading(used: number, fields: Partial<QuotaReading> = {}): QuotaReading {
+    return { ...read, sport: "tennis", used, ...fields };
+  }
+
+  function holding(first: QuotaReading[], second: QuotaReading[] = []) {
+    return [
+      customer("a1", {
+        accounts: [
+          account("b1", { device: 0, quota: first }),
+          account("b2", { device: 1, quota: second }),
+        ],
+      }),
+    ];
+  }
+
+  it("names a machine with fewer left in the month than its slots", () => {
+    // Machine 1 books two slots, machine 2 one.
+    const short = shortOfQuota(TWO, machines, holding([reading(7)], [reading(7)]), "2026-11");
+    expect(short).toEqual([{ place: 0, left: 1, slots: 2 }]);
+  });
+
+  it("counts only the sport the machine books and the month booked for", () => {
+    const others = [reading(8, { sport: "pickleball" }), reading(8, { month: "2026-12" })];
+    expect(shortOfQuota(TWO, machines, holding(others), "2026-11")).toEqual([]);
+  });
+
+  it("says nothing of an account never read, or read before the sport was kept", () => {
+    expect(
+      shortOfQuota(TWO, machines, holding([], [reading(8, { sport: null })]), "2026-11"),
+    ).toEqual([]);
   });
 });

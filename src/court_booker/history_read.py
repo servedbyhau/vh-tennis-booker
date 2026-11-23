@@ -256,13 +256,15 @@ def dry_run_passed(db: sqlite3.Connection) -> bool:
     return row.fetchone() is not None
 
 
-def quota_readings(db: sqlite3.Connection, month: str) -> dict[str, list[dict[str, Any]]]:
-    """Return the newest quota read of each account and utility of ``month`` (``YYYY-MM``).
+def quota_readings(db: sqlite3.Connection, since: str) -> dict[str, list[dict[str, Any]]]:
+    """Return the newest quota read of each account, utility and month from ``since`` on.
 
-    From the ``quota_read`` events of the runs that knew whose account they booked with
-    (:mod:`court_booker.quota`), newest last; an event without its fields is left out.
+    ``since`` is a month, ``YYYY-MM``; the app picks the month of the next booking, which may
+    be the next one. From the ``quota_read`` events of the runs that knew whose account they
+    booked with (:mod:`court_booker.quota`); an event without its fields is left out, and
+    ``sport`` is ``None`` in those read before it was recorded.
     """
-    newest: dict[tuple[str, str], dict[str, Any]] = {}
+    newest: dict[tuple[str, str, str], dict[str, Any]] = {}
     rows = db.execute(
         "SELECT runs.account_id, events.time, events.data FROM events"
         " JOIN runs ON runs.id = events.run_id"
@@ -274,15 +276,17 @@ def quota_readings(db: sqlite3.Connection, month: str) -> dict[str, list[dict[st
             fields = json.loads(data)
         except ValueError:
             continue
-        utility, used, limit = fields.get("utility"), fields.get("used"), fields.get("month_limit")
-        if fields.get("month") != month or not isinstance(utility, str):
+        utility, month = fields.get("utility"), fields.get("month")
+        used, limit, sport = fields.get("used"), fields.get("month_limit"), fields.get("sport")
+        if not isinstance(utility, str) or not isinstance(month, str) or month < since:
             continue
         if not isinstance(used, int) or not isinstance(limit, int):
             continue
         reading = {"utility": utility, "month": month, "used": used, "month_limit": limit}
-        newest[(account_id, utility)] = {**reading, "read_at": read_at}
+        sport = sport if isinstance(sport, str) else None
+        newest[(account_id, utility, month)] = {**reading, "sport": sport, "read_at": read_at}
     found: dict[str, list[dict[str, Any]]] = {}
-    for (account_id, _), reading in newest.items():
+    for (account_id, _, _), reading in newest.items():
         found.setdefault(account_id, []).append(reading)
     return found
 

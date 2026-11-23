@@ -8,7 +8,15 @@ import pytest
 import court_booker.quota as quota
 from court_booker.events import EventKind, MemorySink, Reporter
 from court_booker.flow import Booker
-from court_booker.quota import AFTER, BEFORE, Quota, count, first_booking_day, read_back
+from court_booker.quota import (
+    AFTER,
+    BEFORE,
+    Quota,
+    count,
+    first_booking_day,
+    next_short,
+    read_back,
+)
 from court_booker.screen import Node, Screen
 from court_booker.tickets import Ticket
 
@@ -114,6 +122,7 @@ class FakeHistory:
         self.swipes = 0
         self.deadline = deadline
         self.labels = SimpleNamespace(utility=TENNIS)
+        self.config = SimpleNamespace(sport="tennis")
 
     def open_history(self):
         self.shown = 0
@@ -201,3 +210,16 @@ def test_a_page_swipe_is_one_command():
     assert booker.commands == 1
     ((x1, y1, x2, y2, _),) = swipes
     assert (x1, x2) == (270, 270) and y1 > y2
+
+
+@pytest.mark.parametrize(
+    ("used", "play_date", "slots", "short"),
+    [
+        (7, "2026-11-25", 2, 1),
+        (8, "2026-11-25", 1, 0),
+        (6, "2026-11-25", 2, None),  # two left: enough
+        (8, "2026-11-30", 2, None),  # the next run books for December
+    ],
+)
+def test_the_next_run_is_short_only_in_the_same_month(used, play_date, slots, short):
+    assert next_short(Quota(TENNIS, "2026-11", used, play_date, 2), slots) == short

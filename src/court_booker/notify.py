@@ -63,6 +63,9 @@ TEXTS = {
         "dry_run": " (chạy thử)",
         "otherSubdivision": "⚠️ Tài khoản thuộc {subdivision}, sân {court} không thuộc phân khu này",
         "repaired": "🔧 Đã tự sửa {count} lỗi khi chuẩn bị",
+        "quota_title": "Lần đặt tới thiếu hạn mức",
+        "quota_body": "{account}{utility} còn {left}/{limit} của tháng {month}, mà đã chọn"
+        " {slots} khung giờ. Đổi tài khoản trong Thiết lập.",
         "test_title": "Thông báo thử",
         "test_body": "Court Booker sẽ báo kết quả ở đây sau mỗi lượt đặt sân.",
     },
@@ -74,6 +77,9 @@ TEXTS = {
         "dry_run": " (dry run)",
         "otherSubdivision": "⚠️ The account is in {subdivision}; court {court} is not",
         "repaired": "🔧 Repaired {count} problem(s) while getting ready",
+        "quota_title": "Next booking short of quota",
+        "quota_body": "{account}{utility}: {left}/{limit} left in {month}, {slots} slots chosen."
+        " Choose another account in the Setup.",
         "test_title": "Test notification",
         "test_body": "Court Booker will report here after every booking run.",
     },
@@ -284,6 +290,40 @@ def format_notification(
     if repairs:
         lines.append(texts["repaired"].format(count=repairs))
     return title, "\n".join(lines)
+
+
+def format_quota_warning(
+    *,
+    utility: str,
+    month: str,
+    left: int,
+    limit: int,
+    slots: int,
+    account: str | None = None,
+    language: str = DEFAULT_LANGUAGE,
+    instance: int | None = None,
+) -> tuple[str, str]:
+    """Return the title and the text of the notice that the next run has too few left.
+
+    ``month`` is ``YYYY-MM``; ``account`` names whose account it is, if known.
+    """
+    if language not in TEXTS:
+        language = DEFAULT_LANGUAGE
+    texts = TEXTS[language]
+    year, number = (int(part) for part in month.split("-"))
+    shown = f"{number}/{year}" if language == DEFAULT_LANGUAGE else f"{_MONTHS[number - 1]} {year}"
+    title = texts["quota_title"]
+    if instance is not None:
+        title = f"MuMu {instance} · {title}"
+    body = texts["quota_body"].format(
+        account="" if account is None else f"{account}: ",
+        utility=utility,
+        left=left,
+        limit=limit,
+        month=shown,
+        slots=slots,
+    )
+    return title, body
 
 
 def format_test_notification(language: str = DEFAULT_LANGUAGE) -> tuple[str, str]:

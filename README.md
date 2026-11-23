@@ -56,7 +56,9 @@ through, and each step as it happens; a list of the last runs is beside it](docs
   pictured with its QR code, kept by customer until its day of play is over.
 - **The quota in sight.** While getting ready and after the tickets, a run counts on the app's
   history page what the account used of the month's 8 bookings and the day's 2, and warns when
-  fewer are left than the slots chosen; each account shows what is left of it.
+  fewer are left than the slots chosen; each account shows what is left of it. When the next
+  day's run would have too few, a notification and the line at the top say so, so another
+  account can be chosen in time; a run never changes the account by itself.
 - **Several accounts at once.** Each extra MuMu instance books with its own account, court
   and slots, in a process of its own, so one that fails holds up no other.
 - **Tested without a device.** Fakes replace the emulator, ADB, the clock and Task
