@@ -37,6 +37,7 @@ from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_
 from court_booker.notify import format_notification, format_summary, send_telegram, send_windows
 from court_booker.paths import data_folder
 from court_booker.power import keep_awake
+from court_booker.quota import AFTER, read_quota
 from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
 from court_booker.runner import RoundResult, run_booking
 from court_booker.tickets import TicketReader, Wanted, forget_expired
@@ -260,7 +261,7 @@ def read_tickets(
     history: History,
     report: Reporter,
 ) -> None:
-    """Record the account's tickets, with a picture of each one booked, after the rounds.
+    """Record the account's tickets, with a picture of each one booked, then its quota.
 
     Waits until every machine is done booking, a timed run until :data:`TICKETS_AFTER` the
     start at least, so this takes nothing from the rounds still going on. Raises only
@@ -290,6 +291,12 @@ def read_tickets(
                 booker.config.mumu_index, found.tickets, found.photos, datetime.now()
             )
             report(EventKind.TICKETS_SAVED, tickets=len(found.tickets), photos=len(found.photos))
+    try:
+        read_quota(booker, play_date, AFTER, report)
+    except DeviceNotRespondingError:
+        raise
+    except Exception as exc:  # the tickets are saved: this only logs
+        logger.warning("Quota not read after the tickets: %s", exc)
 
 
 def run_trigger(args: argparse.Namespace) -> str:

@@ -23,14 +23,15 @@ Then install `develop` (#286 to #290: what is ready, whose account a run and a t
 copied picture, the question before a removal), not before 06:05, and look at each in the desktop
 window.
 
-## Under study: the quota
+## The quota
 
-What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"): the history
-page tells it, at any hour, in 5-9 s. Counting what the app itself booked would be wrong, as
-residents book and cancel by hand and rain refunds come a day later. The plan to decide with the
-user: read it while getting ready, after the account check (05:46, when no booking can change it
-any more), and again with the tickets; show what is left per account and sport with when it was
-read; go on to another account of the same customer when none is left.
+What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"). Step 1, the
+run reading it at 05:46 and after the tickets (`quota.py`), is in `feat/quota-read`: check on a
+real machine that what it logs is what the history page shows, then in the first 06:00 run. Step
+2 shows the last read of each account in the app. Step 3, going on to another account of the same
+customer when too few are left, waits for the user: what to do with one left and two slots chosen,
+and whether two accounts share an apartment (the quota is the apartment's, a history the
+account's).
 
 Put off by the user: the days each machine books on (a schedule), and sending results and tickets
 over Zalo.

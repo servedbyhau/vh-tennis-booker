@@ -355,6 +355,11 @@
     },
     "screen_saved": "Saved the screen at the failure, in the logs\\screens folder",
     "tickets_saved": "Read {{tickets}} tickets in the app, saved {{photos}} ticket pictures",
+    "quota_read": {
+      "full": "{{utility}} quota for {{month}}: {{used}}/{{monthLimit}} used, {{dayUsed}}/{{dayLimit}} on {{day}}, {{left}} left",
+      "plain": "Read the booking quota",
+      "short": ", {{short}} short of the {{slots}} slots chosen"
+    },
     "waiting": {
       "full": "Waiting until {{time}}",
       "plain": "Waiting for the start time"

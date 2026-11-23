@@ -87,7 +87,7 @@ Details live in the docstrings; this page says where things are and what must st
 - `screen.Screen` is one `dump_hierarchy` parsed into `Node`s (label, visible bounds,
   clickable); `screen.Match` finds nodes locally. One read per screen state, no element queries.
 - The device is used only through `snapshot()`, `tap()`/`tap_point()` (label and point),
-  `press_back()`, `_scroll()` and `type_text()` (the login only), each counted in `commands`. A full round costs 16 commands
+  `press_back()`, `_scroll()`, `scroll_page()` (the history page) and `type_text()` (the login only), each counted in `commands`. A full round costs 16 commands
   (tests hold it). A screen that differs from the last read is logged at debug level, so the
   log holds every screen of a run.
 - Labels come from `app_language.app_languages(config.labels, config.sport)`: Vietnamese from
@@ -119,6 +119,19 @@ Details live in the docstrings; this page says where things are and what must st
   ticket's cancel button is in the same place) and a card by its whole label; pages are
   recognised by their shape, not by captions, so in either language. A picture counts only if
   the directions link is at the same place before and after it.
+- `quota.py`: what the account used of the quota of the utility it books, for the day of play
+  (today + 2): the tickets of that month of play, and of that day, all but cancelled ones
+  (`count`; 8 a month, 2 a day, field notes "Dialogs"). `read_back` swipes the history page
+  (`scroll_page`) down to its first card booked before the month could be (the 1st minus 2
+  days), or to its end (a swipe that brought no card, then one more); neither within 25 swipes
+  and 60 s, and it tells nothing, as cards left unread would show more left than there is.
+  `run_booking` reads it once the app is ready (`check_quota`, 05:46), unless less than 5 min
+  are left before the start: from 21:00 to 06:00 nothing can be booked, so it is what the app
+  checks at 06:00. `cli.read_tickets` reads it again after the tickets. Each read is a
+  `quota_read` event (`moment` before or after, what is used, what is left, and before the
+  rounds the slots wanted) and a log line, a warning when the slots wanted are more than what is
+  left. It only reports: a failure logs, then the home screen is checked as while waiting
+  (`check_home`, repaired until the deadline), and the rounds are the same.
 - `customers.py` (`CustomerBook`): the customers and the Vinhomes accounts each one gave. The
   database holds names and notes only; an account's login is in the vault under its id.
   Attaching an account to a machine saves its login as that instance's, the one a run reads,

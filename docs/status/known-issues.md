@@ -35,8 +35,6 @@ crashing mid-round, ADB lost mid-run. Fixed when a log shows one.
 - Throttling screen reads while a screen stays long (2026-10-27): MuMu froze only under test
   bursts, never in a real run.
 - Other subdivisions as a bug: they are a feature (the subdivision choice), not a defect.
-- Counting the month's bookings in the app's history: the user tracks the quota; the quota
-  notice stops the run (0.11.0).
 - A PC that did not wake (the user had shut it down). A scrolled home screen where Back
   leaves the app (only after someone touched it).
 - The schedule switch in a development UI replacing the app's task (2026-10-16, not fixed:

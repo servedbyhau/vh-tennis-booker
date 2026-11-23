@@ -335,7 +335,7 @@ class TicketReader:
 
     def _read(self, wanted: Sequence[Wanted], give_up: float) -> bool:
         """Go through the tickets ``wanted`` once; return whether each one opened."""
-        screen = self._open_history()
+        screen = self.open_history()
         while True:
             listed = [ticket for ticket, _ in cards(screen)]
             self.collected.tickets = listed
@@ -344,7 +344,7 @@ class TicketReader:
             if settled or self._clock() + _RELOAD_PAUSE >= give_up:
                 break
             self._sleep(_RELOAD_PAUSE)
-            screen = self._open_history()
+            screen = self.open_history()
         opened = True
         for want, ticket in zip(wanted, found):
             if ticket is None:
@@ -355,14 +355,14 @@ class TicketReader:
                 except NavigationError as exc:
                     logger.warning("No picture of ticket %s: %s", ticket.code, exc)
                     opened = opened and ticket.code in self.collected.photos
-                    self._open_history()  # for the next one
+                    self.open_history()  # for the next one
         return opened
 
     def _find(self, want: Wanted, listed: Sequence[Ticket]) -> Ticket | None:
         # Newest first: the one just booked comes before an older one of the same slot.
         return next((ticket for ticket in listed if want.matches(ticket)), None)
 
-    def _open_history(self) -> Screen:
+    def open_history(self) -> Screen:
         """Open the history page from any screen and return it once it lists a booking."""
         booker = self.booker
         screen = booker.return_to_utilities()

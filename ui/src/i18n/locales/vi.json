@@ -355,6 +355,11 @@
     },
     "screen_saved": "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
     "tickets_saved": "Đã đọc {{tickets}} vé trong app, lưu {{photos}} ảnh vé",
+    "quota_read": {
+      "full": "Hạn mức {{utility}} tháng {{month}}: đã dùng {{used}}/{{monthLimit}}, ngày {{day}} có {{dayUsed}}/{{dayLimit}} vé, còn đặt được {{left}}",
+      "plain": "Đã đọc hạn mức đặt sân",
+      "short": ", thiếu {{short}} so với {{slots}} khung giờ đã chọn"
+    },
     "waiting": {
       "full": "Chờ đến {{time}}",
       "plain": "Chờ đến giờ đặt"
