@@ -137,7 +137,7 @@ npm run api:types                                    # src/api/schema.d.ts from 
 - `driver.py` talks to the instrumentation APK built from `android/` by
   `tools/build_driver.py` (committed in `src/court_booker/assets/`).
 - `flow.py` `Booker`: the booking flow; device use only through `snapshot()`, `tap()`,
-  `tap_point()`, `press_back()`, `_scroll()`, each counted in `commands`. Pure:
+  `tap_point()`, `press_back()`, `_scroll()`, `scroll_page()`, each counted in `commands`. Pure:
   `screen.py` (one dump, matched locally), `app_language.py` (labels per language),
   `catalog.py` (subdivisions → sports → venues → courts, the only copy; the UI gets it as
   `ui/src/catalog.json`), `geometry.py`, most of `clock.py`.
