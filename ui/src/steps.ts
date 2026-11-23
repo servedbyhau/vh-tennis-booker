@@ -118,6 +118,48 @@ const MESSAGES: Record<StepKind, Describe> = {
     }),
     tone: "plain",
   }),
+  // What the history page leaves of the quota (quota.py); short of the slots chosen, marked.
+  quota_read: ({ t, f }, data) => {
+    const utility = text(data, "utility");
+    const month = text(data, "month");
+    const day = text(data, "play_date");
+    const used = number(data, "used");
+    const monthLimit = number(data, "month_limit");
+    const dayUsed = number(data, "day_used");
+    const dayLimit = number(data, "day_limit");
+    const left = number(data, "left");
+    if (
+      utility === undefined ||
+      month === undefined ||
+      day === undefined ||
+      used === undefined ||
+      monthLimit === undefined ||
+      dayUsed === undefined ||
+      dayLimit === undefined ||
+      left === undefined
+    ) {
+      return { text: t("steps.quota_read.plain"), tone: "plain" };
+    }
+    const [year, monthNumber] = month.split("-");
+    const full = t("steps.quota_read.full", {
+      utility,
+      month: `${monthNumber}/${year}`,
+      used,
+      monthLimit,
+      day: f.shortDate(day),
+      dayUsed,
+      dayLimit,
+      left,
+    });
+    const slots = number(data, "slots");
+    if (slots === undefined || slots <= left) {
+      return { text: full, tone: "plain" };
+    }
+    return {
+      text: full + t("steps.quota_read.short", { short: slots - left, slots }),
+      tone: "failed",
+    };
+  },
   waiting: ({ t, f }, data) => {
     const until = text(data, "until");
     return {

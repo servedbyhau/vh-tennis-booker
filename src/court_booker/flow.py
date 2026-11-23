@@ -143,6 +143,10 @@ month still sliding in only stopped the slide, and the prompt stayed (2026-10-30
 _CHECKBOX_TIMEOUT = 0.8
 _SETTLE_TIMEOUT = 1.0
 _SWIPE_SECONDS = 0.25
+_PAGE_SWIPE = (0.86, 0.16)
+_PAGE_SWIPE_SECONDS = 0.6
+"""A page swipe, as shares of the height: it moved the history page by about three cards
+(2026-11-23)."""
 _MIN_VISIBLE_RATIO = 0.6
 """A slot clipped to less than this share of a full slot's height is scrolled into view."""
 QUIET_SETTINGS = (
@@ -1439,6 +1443,19 @@ class Booker:
         self.commands += 1
         logger.debug("Swipe %s", "down the list" if down else "up the list")
         self.device.swipe(width * 0.5, height * start, width * 0.5, height * end, _SWIPE_SECONDS)
+
+    def scroll_page(self, screen: Screen) -> None:
+        """Move a long list, such as the history page, on by most of the screen."""
+        width, height = screen.size
+        self.commands += 1
+        logger.debug("Swipe a page down the list")
+        self.device.swipe(
+            width * 0.5,
+            height * _PAGE_SWIPE[0],
+            width * 0.5,
+            height * _PAGE_SWIPE[1],
+            _PAGE_SWIPE_SECONDS,
+        )
 
     def _settled_screen(self) -> Screen:
         """Read the screen until the slot list stops moving after a swipe."""

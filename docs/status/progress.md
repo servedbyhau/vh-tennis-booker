@@ -74,7 +74,8 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - From 1.0.0 each version has a GitHub release page with its installer; the pages of
   0.1.0 to 0.9.0 were deleted on 2026-11-03, their tags kept. Releases go ahead without
   asking again.
-- Accounts, quotas, the first login and making MuMu instances are the user's job. "Máy 2"
+- Accounts, the first login and making MuMu instances are the user's job, and so is choosing
+  another account when the quota a run read is short (it only reads it). "Máy 2"
   and "Máy 3" are switched on in the UI; a fourth machine needs its `[[instances]]` table
   in `config.toml` by hand.
   Logging in again after a logout is the app's, with a login the user saved (2026-11-18); the

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
@@ -21,6 +21,7 @@ from court_booker.errors import (
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
+from court_booker.quota import BEFORE, read_quota
 from court_booker.ready import Supervisor, setup_deadline
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,9 @@ SCREENS_KEPT = 30
 """Screenshots of failures kept in the log folder's ``screens``; each holds personal data, so
 they stay on this PC and the oldest go."""
 QUOTA_SKIPPED = "Skipped: the booking quota is used up"
+QUOTA_LATEST = timedelta(minutes=5)
+"""How near the start the quota is no longer read: the read and getting back to the home
+screen take under a minute, and the warm-up must find the app ready."""
 """Why a round after the app's quota notice failed without running."""
 
 
@@ -151,9 +155,12 @@ def run_booking(
     # Started with less time than getting ready is given: the account is not read again if
     # an earlier run saw it.
     booker.hurry = start is not None and start - clock.now() < NEAR_START
+    target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
     try:
         supervisor.prepare(booker, deadline)
         report(EventKind.APP_READY)
+        if start is None or clock.now() < start - QUOTA_LATEST:
+            check_quota(booker, supervisor, deadline, target, len(config.slots), report)
         if start is not None:
             report(EventKind.WAITING, until=start.isoformat(timespec="seconds"))
             # Wait on the home screen, checked every minute until the deadline, then load the
@@ -176,7 +183,6 @@ def run_booking(
         if not isinstance(exc, DeviceNotRespondingError) and getattr(device, "connected", True):
             save_screen(device, shots, report, config.mumu_index)
         raise
-    target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
     logger.info(
         "Target date %s, slots: %s%s",
         target.isoformat(),
@@ -252,6 +258,26 @@ def run_booking(
             skip_rounds(config.slots[index:], results, report)
             break
     return results
+
+
+def check_quota(
+    booker: Booker,
+    supervisor: Supervisor,
+    deadline: datetime,
+    target: date,
+    slots: int,
+    report: Reporter,
+) -> None:
+    """Read what is left of the quota, then make sure the app is back on its home screen.
+
+    It only reports (:mod:`court_booker.quota`): a failure logs, and the app is made ready
+    again as while getting ready, until ``deadline``.
+    """
+    try:
+        read_quota(booker, target, BEFORE, report, slots)
+    except Exception as exc:  # the booking goes on without it
+        logger.warning("Quota not read: %s", exc)
+    supervisor.run_step(booker, booker.check_home, deadline)
 
 
 def skip_rounds(slots: list[str], results: list[RoundResult], report: Reporter) -> None:

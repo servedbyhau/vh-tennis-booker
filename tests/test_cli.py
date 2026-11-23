@@ -7,7 +7,7 @@ import os
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import ClassVar
 
@@ -829,6 +829,7 @@ class FakeReader:
 
     error: ClassVar = None
     made: ClassVar = []
+    quotas: ClassVar = []
 
     def __init__(self, booker, folder, deadline):
         self.booker, self.folder = booker, folder
@@ -853,6 +854,13 @@ def reader(monkeypatch):
     monkeypatch.setattr(FakeReader, "error", None)
     monkeypatch.setattr(FakeReader, "made", [])
     monkeypatch.setattr(cli, "TicketReader", FakeReader)
+    monkeypatch.setattr(FakeReader, "quotas", [])
+
+    def read_quota(booker, play_date, moment, report, slots=None):
+        FakeReader.quotas.append((play_date, moment))
+        report(EventKind.QUOTA_READ, moment=moment)
+
+    monkeypatch.setattr(cli, "read_quota", read_quota)
     return FakeReader
 
 
@@ -886,8 +894,9 @@ def test_a_real_run_reads_the_tickets_of_the_slots_it_booked(
             ("1234567", 0, "1234567.png")
         ]
         kinds = [row[0] for row in db.execute("SELECT kind FROM events ORDER BY id")]
-    # After the run's own result, never before it.
-    assert kinds[-2:] == ["run_finished", "tickets_saved"]
+    # After the run's own result, never before it; the quota once the tickets are saved.
+    assert kinds[-3:] == ["run_finished", "tickets_saved", "quota_read"]
+    assert reader.quotas == [(date(2026, 10, 10), "after")]
 
 
 def test_the_tickets_come_after_the_notification_and_before_the_driver_stops(

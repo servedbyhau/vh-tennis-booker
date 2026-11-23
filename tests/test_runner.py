@@ -2,7 +2,7 @@
 
 import contextlib
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -22,6 +22,20 @@ from court_booker.flow import Booked
 from court_booker.screen import Node, Screen
 
 FULL_SLOT = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
+
+
+@pytest.fixture(autouse=True)
+def quota(monkeypatch):
+    """Note each read of the quota in the booker's events instead of reading the app."""
+    failure = []
+
+    def read_quota(booker, play_date, moment, report, slots=None):
+        booker.events.append(("quota", play_date, moment, slots))
+        if failure:
+            raise failure[0]
+
+    monkeypatch.setattr(runner, "read_quota", read_quota)
+    return failure
 
 
 class FakeBooker:
@@ -102,6 +116,8 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     checks = [datetime(2026, 10, 10, 5, 46) + timedelta(minutes=minute) for minute in range(12)]
     assert events == [
         "prepare",
+        ("quota", date(2026, 10, 12), "before", 1),  # what the app checks at 06:00
+        "check",  # back on the home screen
         *[step for tick in checks for step in (tick, "check")],
         start - timedelta(seconds=60),
         "measure",  # once more, as Windows may have set the PC clock since the first check
@@ -166,7 +182,7 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
 
     # The app made ready again, then the list opened at once, and read just before the start.
     steps = ["prepare", "locate", "prepare", "locate", "locate"]
-    assert [e for e in bookers[0].events if e != "check"] == steps
+    assert [e for e in bookers[0].events if e != "check" and e[0] != "quota"] == steps
     assert results[0].ok
     assert "The run was no longer ready: Tapped 'Tiện ích' but the next screen" in caplog.text
 
@@ -420,3 +436,46 @@ def test_the_booker_is_handed_over_before_anything_runs(monkeypatch):
     assert isinstance(booker, FakeBooker)
     assert events == []
     assert others == []
+
+
+class LateClock(FakeClock):
+    def now(self):
+        return datetime(2026, 10, 10, 5, 56)
+
+
+@pytest.mark.parametrize(("clock", "read"), [(FakeClock, True), (LateClock, False)])
+def test_the_quota_is_read_unless_the_start_is_near(monkeypatch, clock, read):
+    events = []
+
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
+        booker = FakeBooker(device, config, report)
+        booker.events = events
+        return booker
+
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
+    config = Config(slots=["18:00 - 19:00", "19:00 - 20:00"])
+
+    runner.run_booking(FakeDevice(), config, start=datetime(2026, 10, 10, 6), clock=clock([]))
+
+    quota = [event for event in events if event[0] == "quota"]
+    assert quota == ([("quota", date(2026, 10, 12), "before", 2)] if read else [])
+
+
+def test_a_quota_not_read_still_books(monkeypatch, caplog, quota):
+    events = []
+
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
+        booker = FakeBooker(device, config, report)
+        booker.events = events
+        return booker
+
+    quota.append(NavigationError("The history page did not show"))
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    config = Config(slots=["19:00 - 20:00"])
+
+    results = runner.run_booking(FakeDevice(), config, dry_run=True)
+
+    assert events[1:3] == [("quota", events[1][1], "before", 1), "check"]
+    assert [result.ok for result in results] == [True]
+    assert "Quota not read: The history page did not show" in caplog.text
