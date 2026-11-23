@@ -54,6 +54,7 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
     "quota_read",
     {
       moment: "before",
+      sport: "tennis",
       utility: "Sân Tennis",
       month: "2026-11",
       used: 7,
@@ -64,7 +65,7 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
       left: 1,
       slots: 2,
     },
-    "Hạn mức Sân Tennis tháng 11/2026: đã dùng 7/8, ngày 26/11 có 0/2 vé, còn đặt được 1, thiếu 1 so với 2 khung giờ đã chọn",
+    "Hạn mức Tennis tháng 11/2026: đã dùng 7/8, ngày 26/11 có 0/2 vé, còn đặt được 1, thiếu 1 so với 2 khung giờ đã chọn",
     "failed",
   ],
   [

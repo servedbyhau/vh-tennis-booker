@@ -15,6 +15,8 @@ from typing import Callable
 from xml.sax.saxutils import escape
 
 from court_booker import catalog
+from court_booker.app_language import ENGLISH_SPORTS
+from court_booker.config import SPORTS
 from court_booker.processes import powershell
 from court_booker.runner import RoundResult
 
@@ -302,13 +304,17 @@ def format_quota_warning(
     account: str | None = None,
     language: str = DEFAULT_LANGUAGE,
     instance: int | None = None,
+    sport: str | None = None,
 ) -> tuple[str, str]:
     """Return the title and the text of the notice that the next run has too few left.
 
-    ``month`` is ``YYYY-MM``; ``account`` names whose account it is, if known.
+    ``month`` is ``YYYY-MM``; ``account`` names whose account it is, if known. The ``sport``
+    is named as the app's tile is in the notification's language, else as ``utility``.
     """
     if language not in TEXTS:
         language = DEFAULT_LANGUAGE
+    names = SPORTS if language == DEFAULT_LANGUAGE else ENGLISH_SPORTS
+    utility = names.get(sport or "", utility)
     texts = TEXTS[language]
     year, number = (int(part) for part in month.split("-"))
     shown = f"{number}/{year}" if language == DEFAULT_LANGUAGE else f"{_MONTHS[number - 1]} {year}"

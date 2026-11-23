@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { QuotaReading } from "../api/types";
-import { leftOf, readingsOf } from "../quota";
+import { leftOf, readingsOf, sportName } from "../quota";
 import { useFormat } from "../useFormat";
 import styles from "./QuotaLine.module.css";
 
@@ -18,7 +18,7 @@ interface QuotaLineProps {
 
 /**
  * What an account has left of each sport's quota in the month the next booking is for, as a
- * run last read it on the app's history page: "Sân Tennis còn 1/8". When it was read is in the
+ * run last read it on the app's history page: "Tennis còn 1/8". When it was read is in the
  * words a screen reader says and in the tooltip; none left is marked.
  */
 export function QuotaLine({ quota, month }: QuotaLineProps) {
@@ -45,7 +45,11 @@ export function QuotaLine({ quota, month }: QuotaLineProps) {
             title={read}
             className={left === 0 ? `${styles.item} ${styles.none}` : styles.item}
           >
-            {t("quota.left", { utility: reading.utility, left, limit: reading.month_limit })}
+            {t("quota.left", {
+              sport: sportName(t, reading.sport, reading.utility),
+              left,
+              limit: reading.month_limit,
+            })}
             <span className="visually-hidden"> ({read})</span>
           </span>
         );

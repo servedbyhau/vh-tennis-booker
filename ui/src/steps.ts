@@ -5,6 +5,7 @@
  */
 import type { TFunction } from "i18next";
 import type { Step, StepKind } from "./api/types";
+import { sportName } from "./quota";
 import type { Formatter } from "./useFormat";
 
 /** How a step is marked: ✓ in stamp blue, ✕ in orange-red, the 06:00 moment, or nothing. */
@@ -142,7 +143,7 @@ const MESSAGES: Record<StepKind, Describe> = {
     }
     const [year, monthNumber] = month.split("-");
     const full = t("steps.quota_read.full", {
-      utility,
+      sport: sportName(t, text(data, "sport"), utility),
       month: `${monthNumber}/${year}`,
       used,
       monthLimit,

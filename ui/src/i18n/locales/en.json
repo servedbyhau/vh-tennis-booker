@@ -333,7 +333,7 @@
     }
   },
   "quota": {
-    "left": "{{utility}} {{left}}/{{limit}} left",
+    "left": "{{sport}} {{left}}/{{limit}} left",
     "read": "{{used}}/{{limit}} of {{month}} used, read at {{time}} {{day}}"
   },
   "steps": {
@@ -362,7 +362,7 @@
     "screen_saved": "Saved the screen at the failure, in the logs\\screens folder",
     "tickets_saved": "Read {{tickets}} tickets in the app, saved {{photos}} ticket pictures",
     "quota_read": {
-      "full": "{{utility}} quota for {{month}}: {{used}}/{{monthLimit}} used, {{dayUsed}}/{{dayLimit}} on {{day}}, {{left}} left",
+      "full": "{{sport}} quota for {{month}}: {{used}}/{{monthLimit}} used, {{dayUsed}}/{{dayLimit}} on {{day}}, {{left}} left",
       "plain": "Read the booking quota",
       "short": ", {{short}} short of the {{slots}} slots chosen"
     },
