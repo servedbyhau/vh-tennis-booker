@@ -4,6 +4,7 @@ import { useRemoveAccount, useRemoveCustomer } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Icon, type IconName } from "../../components/Icon";
 import { IconButton } from "../../components/IconButton";
+import { QuotaLine } from "../../components/QuotaLine";
 import styles from "./CustomerDetail.module.css";
 import { AccountForm, CustomerForm } from "./CustomerForms";
 import { RemoveQuestion } from "./RemoveQuestion";
@@ -96,6 +97,7 @@ function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
         <span className={styles.login}>
           <span className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</span>
           {account.label !== "" && <span className={styles.label}>{account.label}</span>}
+          <QuotaLine quota={account.quota} />
         </span>
         <IconButton
           icon="edit"

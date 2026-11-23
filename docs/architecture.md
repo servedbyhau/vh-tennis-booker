@@ -305,7 +305,7 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of, and a ticket's picture from the data folder's `tickets`, by its code alone |
-| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
+| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password), each with the last quota read of every utility in the month a run books for now (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
 | `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |
 | `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine (it moves from another one), or none; refused while a run goes on (409 `lock_held`) |
@@ -363,7 +363,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
   (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's, a line
-  each; a press saves one, and one that another machine books with moves only after a question. The header's status line (`components/StatusLine.tsx`)
+  each; a press saves one, and one that another machine books with moves only after a question.
+  Under each account there and in `CustomerDetail`, `components/QuotaLine.tsx` shows what is left
+  of each utility's quota as the last run read it ("Sân Tennis còn 1/8"), none left marked, when
+  it was read in the tooltip. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do; `readiness.ts` finds the machines that book
   without an account (while a customer has one to choose) and the courts and slots that two would
   book, marked on their tabs too. `machines.ts` lists the machines from the

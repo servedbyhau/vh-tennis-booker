@@ -54,6 +54,9 @@ through, and each step as it happens; a list of the last runs is beside it](docs
   logs out and in again if it is not the chosen account's; one that cannot be sure books nothing.
 - **Tickets at hand.** After the rounds the app's own list of tickets is read and each new ticket
   pictured with its QR code, kept by customer until its day of play is over.
+- **The quota in sight.** While getting ready and after the tickets, a run counts on the app's
+  history page what the account used of the month's 8 bookings and the day's 2, and warns when
+  fewer are left than the slots chosen; each account shows what is left of it.
 - **Several accounts at once.** Each extra MuMu instance books with its own account, court
   and slots, in a process of its own, so one that fails holds up no other.
 - **Tested without a device.** Fakes replace the emulator, ADB, the clock and Task
@@ -187,8 +190,9 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
 On the second:
 
 - **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
-  the Vinhomes accounts they gave. The passwords are kept by Windows (Credential Manager) for your
-  Windows account; an account's form shows its own.
+  the Vinhomes accounts they gave, each with what is left of its quota in the month booked for, as
+  the last run read it (also in the Setup's list of accounts). The passwords are kept by Windows
+  (Credential Manager) for your Windows account; an account's form shows its own.
 - **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
   by day of play, with their slot, court, status and whose account they are of; a press opens the
   ticket's picture

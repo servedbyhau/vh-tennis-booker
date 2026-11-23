@@ -330,6 +330,10 @@
       "unknown": "chưa kiểm tra được"
     }
   },
+  "quota": {
+    "left": "{{utility}} còn {{left}}/{{limit}}",
+    "read": "đã dùng {{used}}/{{limit}} của tháng {{month}}, đọc lúc {{time}} {{day}}"
+  },
   "steps": {
     "run_started": {
       "scheduled": "Bắt đầu theo hẹn giờ",

@@ -41,6 +41,7 @@ export type NotificationSettings = Schemas["NotificationSettings"];
 /** A customer with the Vinhomes accounts they gave; phone numbers masked, never a password. */
 export type Customer = Schemas["CustomerRecord"];
 export type CustomerAccount = Schemas["CustomerAccount"];
+export type QuotaReading = Schemas["QuotaReading"];
 export type CustomerFields = Schemas["CustomerFields"];
 export type NewAccount = Schemas["NewAccount"];
 export type AccountChange = Schemas["AccountChange"];

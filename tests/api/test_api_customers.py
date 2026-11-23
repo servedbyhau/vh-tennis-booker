@@ -1,10 +1,14 @@
 """The customer routes: what they change, refuse, and answer of a login."""
 
+import contextlib
+import json
 import os
+from datetime import date, timedelta
 
 import pytest
 
 from court_booker.credentials import CredentialError, Login
+from court_booker.history import connect
 from court_booker.lock import RunLock
 
 ACCOUNT = {"phone": "0900000079", "password": "mat-khau-bi-mat", "label": "Căn A"}
@@ -204,3 +208,52 @@ def test_a_vault_that_refuses_answers_credentials(client, customer, saved_logins
     monkeypatch.setattr(saved_logins, "save", refuse)
     reply = client.post(f"/api/customers/{customer['id']}/accounts", json=ACCOUNT)
     assert (reply.status_code, reply.json()["error"]) == (503, "credentials")
+
+
+def read_quota(context, account_id, month, used, utility="Sân Tennis", read_at="06:03"):
+    """Record a run with ``account_id`` that read the quota, as runs do (court_booker.quota)."""
+    data = {"moment": "after", "utility": utility, "month": month, "used": used}
+    data.update(month_limit=8, play_date=f"{month}-26", day_used=1, day_limit=2, left=1)
+    with contextlib.closing(connect(context.data.database)) as db, db:
+        run = db.execute(
+            "INSERT INTO runs (trigger, dry_run, version, started_at, status, account_id)"
+            " VALUES ('scheduled', 0, 'x', ?, 'success', ?)",
+            (f"{month}-24T05:45:00.000", account_id),
+        ).lastrowid
+        db.execute(
+            "INSERT INTO events (run_id, time, category, kind, data)"
+            " VALUES (?, ?, 'step', 'quota_read', ?)",
+            (run, f"{month}-24T{read_at}:10.000", json.dumps(data, ensure_ascii=False)),
+        )
+
+
+def test_an_account_shows_the_last_quota_read_of_the_month_it_books_for(client, context, account):
+    month = (date.today() + timedelta(days=2)).isoformat()[:7]
+    read_quota(context, account["id"], month, 6, read_at="05:46")
+    read_quota(context, account["id"], month, 7)
+    read_quota(context, account["id"], month, 2, utility="Sân Pickleball")
+    read_quota(context, account["id"], "2020-01", 8)  # another month: no longer of use
+    read_quota(context, None, month, 8)  # a machine without an account chosen
+
+    (shown,) = client.get("/api/customers").json()[0]["accounts"]
+
+    assert shown["quota"] == [
+        {
+            "utility": "Sân Tennis",
+            "month": month,
+            "used": 7,
+            "month_limit": 8,
+            "read_at": f"{month}-24T06:03:10.000",
+        },
+        {
+            "utility": "Sân Pickleball",
+            "month": month,
+            "used": 2,
+            "month_limit": 8,
+            "read_at": f"{month}-24T06:03:10.000",
+        },
+    ]
+
+
+def test_an_account_never_read_shows_no_quota(client, account):
+    assert account["quota"] == []

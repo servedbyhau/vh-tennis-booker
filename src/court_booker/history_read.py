@@ -11,6 +11,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from court_booker.events import EventKind
 from court_booker.history import SCHEMA_VERSION, connect
 
 DEFAULT_LIMIT = 50
@@ -253,6 +254,37 @@ def dry_run_passed(db: sqlite3.Connection) -> bool:
     """Return whether any dry run went through every slot; scheduling requires one."""
     row = db.execute("SELECT 1 FROM runs WHERE trigger = 'dry_run' AND status = 'ok' LIMIT 1")
     return row.fetchone() is not None
+
+
+def quota_readings(db: sqlite3.Connection, month: str) -> dict[str, list[dict[str, Any]]]:
+    """Return the newest quota read of each account and utility of ``month`` (``YYYY-MM``).
+
+    From the ``quota_read`` events of the runs that knew whose account they booked with
+    (:mod:`court_booker.quota`), newest last; an event without its fields is left out.
+    """
+    newest: dict[tuple[str, str], dict[str, Any]] = {}
+    rows = db.execute(
+        "SELECT runs.account_id, events.time, events.data FROM events"
+        " JOIN runs ON runs.id = events.run_id"
+        " WHERE events.kind = ? AND runs.account_id IS NOT NULL ORDER BY events.id",
+        (EventKind.QUOTA_READ.value,),
+    )
+    for account_id, read_at, data in rows:
+        try:
+            fields = json.loads(data)
+        except ValueError:
+            continue
+        utility, used, limit = fields.get("utility"), fields.get("used"), fields.get("month_limit")
+        if fields.get("month") != month or not isinstance(utility, str):
+            continue
+        if not isinstance(used, int) or not isinstance(limit, int):
+            continue
+        reading = {"utility": utility, "month": month, "used": used, "month_limit": limit}
+        newest[(account_id, utility)] = {**reading, "read_at": read_at}
+    found: dict[str, list[dict[str, Any]]] = {}
+    for (account_id, _), reading in newest.items():
+        found.setdefault(account_id, []).append(reading)
+    return found
 
 
 def _add_slots(db: sqlite3.Connection, runs: list[dict[str, Any]]) -> None:

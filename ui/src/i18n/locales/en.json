@@ -330,6 +330,10 @@
       "unknown": "could not be checked"
     }
   },
+  "quota": {
+    "left": "{{utility}} {{left}}/{{limit}} left",
+    "read": "{{used}}/{{limit}} of {{month}} used, read at {{time}} {{day}}"
+  },
   "steps": {
     "run_started": {
       "scheduled": "Started by the schedule",
