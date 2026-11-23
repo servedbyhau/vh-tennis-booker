@@ -379,8 +379,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   shows the run going on, else the one thing to do; `readiness.ts` finds the machines that book
   without an account (while a customer has one to choose), the courts and slots that two would
   book, and the machines whose account has fewer left in that month for their sport than their
-  slots (`shortOfQuota`), marked on their tabs too, and the account picker set off as for no
-  account. `machines.ts` lists the machines from the
+  slots (`shortOfQuota`), which only their tabs and the account picker show (set off as for
+  no account), not the status line. `machines.ts` lists the machines from the
   settings. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
   fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the
   setup tasks left over the machines that book. `booking.ts` holds the slots and the two-slot limit, and reads

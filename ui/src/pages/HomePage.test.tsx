@@ -109,13 +109,12 @@ describe("HomePage status line", () => {
       "GET /api/customers": reply([an]),
     });
 
-    await waitFor(async () =>
-      expect(await statusLine()).toHaveTextContent(
-        "● Máy 1 không đủ hạn mức cho lần đặt tới · đổi tài khoản",
-      ),
-    );
-    const tabs = within(screen.getByRole("group", { name: "Máy" }));
-    expect(tabs.getByRole("button", { name: "Máy 1, tài khoản không đủ hạn mức" })).toBeVisible();
+    const tabs = within(await screen.findByRole("group", { name: "Máy" }));
+    expect(
+      await tabs.findByRole("button", { name: "Máy 1, tài khoản không đủ hạn mức" }),
+    ).toBeVisible();
+    // The line at the top leaves it to the tab and the account.
+    expect(await statusLine()).not.toHaveTextContent("hạn mức");
     expect(screen.getByRole("button", { name: /^Tài khoản/ }).className).toMatch(/remind/);
   });
 

@@ -38,7 +38,6 @@
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
         "noAccount": "Machine {{machines}}: no account chosen",
         "clash": "Machine {{machines}}: same {{court}} at {{start}}",
-        "quotaShort": "Machine {{machines}}: too little quota left for the next booking · choose another account",
         "ready": "Ready for {{time}} {{when}}"
       },
       "live": {

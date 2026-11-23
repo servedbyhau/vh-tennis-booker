@@ -38,7 +38,6 @@
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
         "noAccount": "Máy {{machines}} chưa chọn tài khoản",
         "clash": "Máy {{machines}} trùng {{court}} lúc {{start}}",
-        "quotaShort": "Máy {{machines}} không đủ hạn mức cho lần đặt tới · đổi tài khoản",
         "ready": "Sẵn sàng cho {{time}} {{when}}"
       },
       "live": {

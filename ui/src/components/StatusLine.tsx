@@ -34,7 +34,7 @@ function machineNumbers(places: readonly number[]): string {
  * One line in the header on whether the next booking can happen, in this order: the run
  * going on; the setup tasks left (the Guide lists them); no dry run passed yet; the
  * daily switch off; Windows keeping the PC from waking; machines that would book the same;
- * machines without an account; accounts short of quota; else ready for the next start. The booking page holds what fixes
+ * machines without an account; else ready for the next start. The booking page holds what fixes
  * them (switching the schedule on allows waking).
  */
 export function StatusLine({ overview }: { overview: Overview }) {
@@ -42,7 +42,7 @@ export function StatusLine({ overview }: { overview: Overview }) {
   const f = useFormat();
   const ticks = useManualTicks();
   const machines = useMachines();
-  const { accountless, clashing, short } = useReadiness();
+  const { accountless, clashing } = useReadiness();
   const { running, schedule } = overview;
   if (running !== null) {
     return <RunningStatus running={running} startAt={schedule.start_at} />;
@@ -71,10 +71,6 @@ export function StatusLine({ overview }: { overview: Overview }) {
   } else if (accountless.length > 0) {
     words = t("pages.overview.status.noAccount", {
       machines: machineNumbers(accountless.map(({ place }) => place)),
-    });
-  } else if (short.length > 0) {
-    words = t("pages.overview.status.quotaShort", {
-      machines: machineNumbers(short.map(({ place }) => place)),
     });
   } else {
     ready = true;
