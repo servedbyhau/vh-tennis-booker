@@ -341,6 +341,7 @@ def warn_short_quota(
             account=None if holder is None else f"{holder.customer} · {holder.account}",
             language=config.notification_language,
             instance=instance,
+            sport=config.sport,
         )
         send_windows(title, body)
     except Exception:  # reporting never costs anything

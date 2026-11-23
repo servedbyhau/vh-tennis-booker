@@ -372,7 +372,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   each; a press saves one, and one that another machine books with moves only after a question.
   Under each account there and in `CustomerDetail`, `components/QuotaLine.tsx` shows what is left
   of each utility's quota in the month the next booking is for (`quota.ts`, from the schedule's
-  `next_play_date`), as the last run read it ("Sân Tennis còn 1/8"), none left marked, when it was
+  `next_play_date`), as the last run read it ("Tennis còn 1/8", the sport in the interface's language, the app's words for a read without it), none left marked, when it was
   read in the tooltip. The header's status line (`components/StatusLine.tsx`)
   shows the run going on, else the one thing to do; `readiness.ts` finds the machines that book
   without an account (while a customer has one to choose), the courts and slots that two would

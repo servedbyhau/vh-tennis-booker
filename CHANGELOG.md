@@ -47,7 +47,7 @@ uses [Semantic Versioning](https://semver.org/).
 ### Changed
 - A lighter look: space, soft fills and hairlines part things in place of dark rules; ink is for the
   main action and the page shown. Icons of one set (Lucide) take the place of words on the
-  customers' buttons and facts.
+  customers' buttons and facts. The management's sections are tabs like the machines'.
 - The Setup beside the ticket holds the daily switch, the notification's, each machine's and the
   dry run, which leave the ticket; the account is picked from one list of every customer's, and one
   that another machine books with moves after a question. An account's form shows its saved login.

@@ -2,8 +2,10 @@
  * What is left of the accounts' quota, as the runs read it on the Vinhomes app's history page
  * (quota.py): 8 bookings of a sport a month. Only the month the next booking is for counts.
  */
+import type { TFunction } from "i18next";
 import { useOverview } from "./api/queries";
 import type { QuotaReading } from "./api/types";
+import { isSport } from "./booking";
 
 /** Return "2026-11", the month of a day such as "2026-11-26". */
 export function monthOf(day: string): string {
@@ -16,6 +18,14 @@ export function readingsOf(
   month: string | undefined,
 ): QuotaReading[] {
   return month === undefined ? [] : quota.filter((reading) => reading.month === month);
+}
+
+/**
+ * Return the name of the sport read in the interface's language ("Pickleball"); the app's own
+ * words ("Sân Pickleball") for a read that did not keep its sport.
+ */
+export function sportName(t: TFunction, sport: string | null | undefined, utility: string): string {
+  return sport !== null && sport !== undefined && isSport(sport) ? t(`sports.${sport}`) : utility;
 }
 
 /** Return the bookings a read leaves in its month. */

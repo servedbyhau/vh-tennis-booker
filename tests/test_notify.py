@@ -403,3 +403,19 @@ def test_the_quota_warning_without_an_account_starts_with_the_sport():
     _, body = format_quota_warning(utility="Sân Tennis", month="2026-11", left=0, limit=8, slots=1)
 
     assert body.startswith("Sân Tennis còn 0/8")
+
+
+def test_the_quota_warning_names_the_sport_in_its_language():
+    def body(language):
+        return format_quota_warning(
+            utility="Sân Pickleball",
+            month="2026-11",
+            left=1,
+            limit=8,
+            slots=2,
+            language=language,
+            sport="pickleball",
+        )[1]
+
+    assert body("en").startswith("Pickleball: 1/8 left in Nov 2026")
+    assert body("vi").startswith("Sân Pickleball còn 1/8")

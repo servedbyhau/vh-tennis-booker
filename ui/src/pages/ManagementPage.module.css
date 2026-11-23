@@ -1,4 +1,4 @@
-/* The sections under the header as soft pills; the one shown is filled with paper. */
+/* The sections under the header as the machines' tabs are; the one shown is filled with paper. */
 .sections {
   flex: none;
   display: flex;
@@ -11,7 +11,7 @@
   align-items: center;
   min-height: 40px;
   padding: 0 var(--space-4);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-button);
   color: var(--color-muted);
   font-size: var(--text-control);
   font-weight: var(--weight-semibold);

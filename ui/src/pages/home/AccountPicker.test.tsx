@@ -69,12 +69,12 @@ describe("AccountPicker", () => {
       ],
     });
     const { machine, button } = await openMachine([quoted]);
-    expect(button).toHaveTextContent("Sân Tennis còn 0/8");
+    expect(button).toHaveTextContent("Tennis còn 0/8");
 
     fireEvent.click(button);
 
     const list = machine.getByRole("group", { name: "Tài khoản" });
-    expect(within(list).getByText(/Sân Tennis còn 5\/8/)).toBeInTheDocument();
+    expect(within(list).getByText(/^Tennis còn 5\/8/)).toBeInTheDocument();
   });
 
   it("shows the account in use, and every account once pressed", async () => {
