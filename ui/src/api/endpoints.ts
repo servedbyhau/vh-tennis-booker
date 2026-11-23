@@ -67,6 +67,11 @@ export function saveSettings(settings: Settings): Promise<Settings> {
   return call(client.PUT("/api/settings", { body: settings })) as Promise<Settings>;
 }
 
+/** List the MuMu instances on this PC; empty when MuMuManager does not answer. */
+export function getMumuInstances(): Promise<number[]> {
+  return call(client.GET("/api/mumu-instances")).then((answer) => answer.indexes);
+}
+
 /** Book with MuMu instance `mumuIndex` beside the first, or stop; answers the settings. */
 export function switchInstance(mumuIndex: number, enabled: boolean): Promise<Settings> {
   return call(

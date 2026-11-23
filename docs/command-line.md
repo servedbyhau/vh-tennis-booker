@@ -45,9 +45,8 @@ To book with more accounts at once, clone the MuMu instance in MuMu's multi-inst
 log the clone in to another account, and add an `[[instances]]` table for it (example in
 `config.example.toml`): its `mumu_index`, and any of `slots`, `subdivision`, `sport`, `court` and
 `venue_keyword` that differ. The UI shows a tab for each machine on top of the ticket, with its
-own settings and, in the Setup beside it, its account; "Máy 2" (MuMu 1) and "Máy 3" (MuMu 2) are always there, and each
-one's switch in the Setup adds or removes its `[[instances]]` table; a fourth machine on
-needs its table added by hand.
+own settings and, in the Setup beside it, its account; each MuMu instance on the PC is there (three at least), and each
+one's switch in the Setup adds or removes its `[[instances]]` table.
 
 ## Set up the PC and the emulator
 

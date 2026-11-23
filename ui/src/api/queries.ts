@@ -5,6 +5,7 @@ import {
   type EventsQuery,
   getAccountLogin,
   getAccounts,
+  getMumuInstances,
   getOverview,
   getRun,
   getNotifications,
@@ -27,6 +28,7 @@ export const queryKeys = {
   run: (runId: number) => ["run", runId] as const,
   events: (query: EventsQuery = {}) => ["events", query] as const,
   settings: ["settings"] as const,
+  mumuInstances: ["mumuInstances"] as const,
   notifications: ["notifications"] as const,
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
@@ -107,6 +109,18 @@ export function useEvents(query: EventsQuery = {}) {
 /** Read the booking settings. */
 export function useSettings() {
   return useQuery({ queryKey: queryKeys.settings, queryFn: getSettings });
+}
+
+/**
+ * Read the MuMu instances on this PC, once: an instance is made or deleted in MuMu, and the
+ * app is opened again after that.
+ */
+export function useMumuInstances() {
+  return useQuery({
+    queryKey: queryKeys.mumuInstances,
+    queryFn: getMumuInstances,
+    staleTime: Infinity,
+  });
 }
 
 /** Read the notification settings. */

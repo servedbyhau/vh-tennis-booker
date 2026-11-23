@@ -5,7 +5,7 @@ import subprocess
 
 import pytest
 
-from court_booker.emulator import CALL_ATTEMPTS, RETRY_DELAY, MuMu
+from court_booker.emulator import CALL_ATTEMPTS, RETRY_DELAY, MuMu, instance_indexes
 from court_booker.errors import EmulatorError, MuMuNotFoundError
 
 RUNNING = {
@@ -311,3 +311,28 @@ def test_a_sibling_asks_the_same_manager_about_another_instance(manager_path):
     assert sibling.is_started()
     assert (sibling.manager, sibling.index, sibling.attempts) == (manager_path, 4, 1)
     assert "4" in argvs[-1]
+
+
+@pytest.mark.parametrize(
+    ("answer", "indexes"),
+    [
+        ({"0": STOPPED, "2": STOPPED, "1": RUNNING}, [0, 1, 2]),
+        (STOPPED, [0]),  # one instance answers as itself
+    ],
+)
+def test_the_instances_are_listed_lowest_first(manager_path, answer, indexes):
+    def run(argv):
+        assert argv[1:] == ["info", "-v", "all"]
+        return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(answer), stderr="")
+
+    assert instance_indexes(manager_path, run) == indexes
+
+
+def test_a_listing_that_fails_raises(manager_path, tmp_path):
+    def run(argv):
+        return subprocess.CompletedProcess(argv, 1, stdout="", stderr="nemu-api init failed")
+
+    with pytest.raises(EmulatorError):
+        instance_indexes(manager_path, run)
+    with pytest.raises(MuMuNotFoundError):
+        instance_indexes(tmp_path / "missing.exe", run)

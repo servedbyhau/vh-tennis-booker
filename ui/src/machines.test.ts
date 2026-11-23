@@ -47,6 +47,31 @@ describe("machinesOf", () => {
     ]);
   });
 
+  it("shows every MuMu instance on the PC, those the settings lack off", () => {
+    const fields = settings({ instances: [instance(2), instance(1)] });
+    const machines = machinesOf(fields, [0, 1, 2, 4, 5]);
+
+    expect(machines.map(({ mumuIndex, enabled }) => [mumuIndex, enabled])).toEqual([
+      [0, true],
+      [1, true],
+      [2, true],
+      [4, false],
+      [5, false],
+    ]);
+    // Named by their place: MuMu 4 is the fourth machine.
+    expect(machines.map(({ place, key }) => [place, key])).toEqual([
+      [0, ""],
+      [1, "1"],
+      [2, "2"],
+      [3, "4"],
+      [4, "5"],
+    ]);
+  });
+
+  it("fills three machines from the lowest indexes free beside the instances listed", () => {
+    expect(machinesOf(settings({}), [0, 4]).map(({ mumuIndex }) => mumuIndex)).toEqual([0, 1, 4]);
+  });
+
   it("offers the lowest MuMu instances free beside a first that is not MuMu 0", () => {
     expect(shape({ mumu_index: 1 }).map((machine) => machine.mumuIndex)).toEqual([1, 0, 2]);
   });

@@ -185,9 +185,9 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
   from the customers', and a dry run. Before booking, a run reads the phone number logged in on the
   machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
   once; a machine that cannot be sure books nothing.
-- **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,
-  each logged in to another account) book alongside the first once their switch
-  in the Setup is on.
+- **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at
+  least: the others (each logged in to another account) book alongside the first once their
+  switch in the Setup is on.
 
 On the second:
 

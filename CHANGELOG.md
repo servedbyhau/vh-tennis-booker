@@ -45,6 +45,8 @@ uses [Semantic Versioning](https://semver.org/).
   others is on.
 
 ### Changed
+- Every MuMu instance on the PC has its tab, not three only: a fourth or fifth machine is
+  switched on in the Setup instead of added to `config.toml` by hand (`/api/mumu-instances`).
 - The machines of a run launch MuMu one after another, each once the ones before it in the
   config have booted (75 s each at most), instead of all at once: five booting together left
   0.5 GB of memory free.

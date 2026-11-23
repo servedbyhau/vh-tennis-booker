@@ -307,6 +307,7 @@ values 422 `invalid_request`.
 | `GET /api/runs`, `/api/runs/{id}`, `/api/runs/months` | Runs newest first (filters, paging by id or by days) with whose account each booked with, one run with steps and log lines, months of real bookings |
 | `GET /api/events` | Activity steps newest first |
 | `GET`/`PUT /api/settings` | Booking settings without the hidden keys (`HIDDEN`: Telegram, the notification), with each `[[instances]]` entry in full; `PUT` validates, refuses added or removed instances, saves only on a change |
+| `GET /api/mumu-instances` | The MuMu instances MuMuManager knows, lowest first (`emulator.instance_indexes`); empty when it is not found or fails |
 | `PUT /api/instances/{mumu_index}` | A machine beside the first on or off: adds its `[[instances]]` table (taking every setting from the top) or removes it; no `enabled` key, which an older runner would refuse |
 | `GET`/`PUT /api/notifications`, `POST .../test` | The Windows notification's switch and language; a sample notification |
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
@@ -381,7 +382,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   book, and the machines whose account has fewer left in that month for their sport than their
   slots (`shortOfQuota`), which only their tabs and the account picker show (set off as for
   no account), not the status line. `machines.ts` lists the machines from the
-  settings. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
+  settings and from the MuMu instances on the PC (`GET /api/mumu-instances`, read once): every
+  instance shows, three at least, those the settings lack switched off. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
   fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the
   setup tasks left over the machines that book. `booking.ts` holds the slots and the two-slot limit, and reads
   the subdivisions, sports and courts from `catalog.json`, written from `catalog.py`.
