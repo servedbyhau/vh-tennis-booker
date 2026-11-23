@@ -295,3 +295,19 @@ def test_a_process_that_cannot_be_ended_is_logged(manager_path, caplog):
 
     assert MuMu(manager_path, 0).kill(find=lambda name: DEVICES, stop=stop)
     assert "Could not end process 9232: access denied" in caplog.text
+
+
+def test_a_sibling_asks_the_same_manager_about_another_instance(manager_path):
+    fake = FakeManager(started=True)
+    argvs = []
+
+    def run(argv):
+        argvs.append(argv)
+        return fake.run(argv)
+
+    mumu = MuMu(manager_path, 0, run=run, clock=lambda: fake.now, sleep=fake.sleep, attempts=3)
+    sibling = mumu.sibling(4)
+
+    assert sibling.is_started()
+    assert (sibling.manager, sibling.index, sibling.attempts) == (manager_path, 4, 1)
+    assert "4" in argvs[-1]

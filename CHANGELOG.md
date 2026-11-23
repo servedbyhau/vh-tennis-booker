@@ -45,6 +45,9 @@ uses [Semantic Versioning](https://semver.org/).
   others is on.
 
 ### Changed
+- The machines of a run launch MuMu one after another, each once the ones before it in the
+  config have booted (75 s each at most), instead of all at once: five booting together left
+  0.5 GB of memory free.
 - A lighter look: space, soft fills and hairlines part things in place of dark rules; ink is for the
   main action and the page shown. Icons of one set (Lucide) take the place of words on the
   customers' buttons and facts. The management's sections are tabs like the machines'.

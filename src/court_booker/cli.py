@@ -504,6 +504,9 @@ def main(argv: list[str] | None = None) -> int:
     clock: NtpClock | None = None
     try:
         config = apply_overrides(load_config(args.config), args)
+        # The machines are launched in the order the config lists them, one after another.
+        order = [config.mumu_index, *(table.get("mumu_index") for table in config.instances)]
+        launch_after = order[: order.index(args.instance)] if args.instance in order else []
         if args.instance is not None:
             config = select_instance(config, args.instance)
         log_dir: Path | None = None
@@ -554,7 +557,9 @@ def main(argv: list[str] | None = None) -> int:
             clock = NtpClock(config.ntp_server, ntp_offset)
             if start is not None:
                 clock.measure()
-            supervisor = Supervisor(config, args.driver, report, now=clock.now)
+            supervisor = Supervisor(
+                config, args.driver, report, now=clock.now, launch_after=launch_after
+            )
             device = supervisor.device
             run_booking(
                 device,

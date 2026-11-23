@@ -443,6 +443,20 @@ slots and the booked date and time read the same.
   "Tiếp tục" instead of 2.4-3.2 s). Three cold starts at once that day (15:21) left 0.8 GB
   free: on all three the driver or Android stopped answering within two minutes, and the runs
   restarted each MuMu.
+- Five and six instances side by side (2026-11-23, timed dry runs of one volleyball slot, every
+  app closed, 10.5-11.3 GB free before): launched together, all booted in 42-54 s and were
+  ready about 1 min 45 s after the launch, but free RAM fell to 0.5 GB while they got ready
+  (0.7-2.0 GB while booking). With one core and 2 GB each (six) a round to the confirmation
+  page took 7.5-8.0 s and one screen read about 610 ms; with two cores and 2 GB each (five)
+  5.2-7.1 s and about 270 ms (three instances with two cores at 06:00: about 190 ms). The PC's
+  CPU averaged 23-36% while booking.
+- **"Hệ thống giới hạn chỉ được đặt một tiện ích trong vòng 60s. Quý khách vui lòng thử lại
+  sau"** ("Thông báo", button "Đóng") showed 0.6 s after the day was tapped on the calendar, on
+  3 of 6 machines and on 2 of 5 started in the same second (2026-11-23); 3 got through each
+  time, and never one with three machines. The six accounts are of six apartments; what the
+  app counts is not known (the network, the cloned instances' device identity or the owner are
+  guesses). The flow does not know this notice: it looked for the slot for 29 s, then closed
+  it and opened the calendar again.
 - Two instances booked for real in parallel at 06:00 on 2026-11-01: Origami and BS each
   reached two tickets for 3/11, with every round finishing within 5 s. The one-day BS
   `[[instances]]` entry was removed at 07:05; the daily task still runs instance 0.

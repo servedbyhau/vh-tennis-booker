@@ -11,8 +11,11 @@ Last updated: 2026-11-23.
 - **Several MuMu instances launched at once** (within 0.25 s of each other) trip over each other:
   `MuMuManager control launch` failed with "nemu-api init failed" on 2026-11-19 (machine 1 lost
   the morning, before 1.1.2) and 2026-11-22 (the second try, 2 s later, started it); on
-  2026-11-21 at 15:21 three cold starts froze all three, which the runs restarted. The repairs
-  hold so far. Idea: launch them one after another, as on 2026-11-22 all were ready by 05:46:09.
+  2026-11-21 at 15:21 three cold starts froze all three, which the runs restarted. Since
+  `feat/launch-in-turn` each machine launches once the ones before it have booted.
+- **The app's "only one utility within 60 s" notice** when five or six machines start booking
+  in the same second (field notes, "Emulator (MuMu)"): two or three of them lose the race. The flow does
+  not know it yet and retries after 29 s.
 
 ## Severity 2
 
