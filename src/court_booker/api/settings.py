@@ -2,6 +2,7 @@
 
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
 # time.
+import logging
 from dataclasses import replace
 from typing import Any
 
@@ -20,8 +21,12 @@ from court_booker.config import (
     save_config,
     validate_config,
 )
-from court_booker.errors import RequestError
+from court_booker.device_setup import find_mumu_manager
+from court_booker.emulator import instance_indexes
+from court_booker.errors import EmulatorError, RequestError
 from court_booker.events import EventKind
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["settings"])
 
@@ -186,6 +191,26 @@ def switch_instance(context: Context, mumu_index: int, switch: InstanceSwitch) -
     save_config(config, context.config_path)
     record(context, EventKind.SETTINGS_SAVED, changed=["instances"])
     return settings_of(config)
+
+
+class MumuInstances(BaseModel):
+    """The MuMu instances on this PC: each is a machine the app can book with."""
+
+    indexes: list[int]
+    """Lowest first; empty when MuMuManager is not found or does not answer."""
+
+
+@router.get("/mumu-instances", response_model=MumuInstances)
+def list_mumu_instances(context: Context) -> MumuInstances:
+    """List the MuMu instances MuMuManager knows, the machines the app shows."""
+    manager = find_mumu_manager(context.config().mumu_manager)
+    if manager is None:
+        return MumuInstances(indexes=[])
+    try:
+        return MumuInstances(indexes=instance_indexes(manager))
+    except EmulatorError:  # the app shows its three machines then
+        logger.warning("MuMu instances not listed", exc_info=True)
+        return MumuInstances(indexes=[])
 
 
 def _indexes(config: Config) -> list[Any]:

@@ -676,6 +676,48 @@
         }
       }
     },
+    "/api/mumu-instances": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "List Mumu Instances",
+        "description": "List the MuMu instances MuMuManager knows, the machines the app shows.",
+        "operationId": "list_mumu_instances_api_mumu_instances_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MumuInstances"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/accounts": {
       "get": {
         "tags": [
@@ -2220,6 +2262,23 @@
         ],
         "title": "MonthSummary",
         "description": "One month with real bookings: how many runs, how many slots they booked."
+      },
+      "MumuInstances": {
+        "properties": {
+          "indexes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Indexes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "indexes"
+        ],
+        "title": "MumuInstances",
+        "description": "The MuMu instances on this PC: each is a machine the app can book with."
       },
       "NewAccount": {
         "properties": {

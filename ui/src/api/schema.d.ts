@@ -202,6 +202,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mumu-instances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Mumu Instances
+         * @description List the MuMu instances MuMuManager knows, the machines the app shows.
+         */
+        get: operations["list_mumu_instances_api_mumu_instances_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts": {
         parameters: {
             query?: never;
@@ -762,6 +782,14 @@ export interface components {
             runs: number;
             /** Booked */
             booked: number;
+        };
+        /**
+         * MumuInstances
+         * @description The MuMu instances on this PC: each is a machine the app can book with.
+         */
+        MumuInstances: {
+            /** Indexes */
+            indexes: number[];
         };
         /**
          * NewAccount
@@ -1510,6 +1538,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Settings"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_mumu_instances_api_mumu_instances_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MumuInstances"];
                 };
             };
             /** @description Invalid request values, one line per value */

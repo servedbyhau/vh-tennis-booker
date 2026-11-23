@@ -1,11 +1,12 @@
 /**
  * The machines the home screen shows, one at a time: the top of the settings first, then
- * the other MuMu instances by their index, each with its own account. There are always
- * three at least: the instances the settings lack show switched off, on the lowest MuMu
- * instances free (each books only once switched on, which adds its instance).
+ * the other MuMu instances by their index, each with its own account. Every MuMu instance on
+ * the PC shows, and three at least: the instances the settings lack show switched off (each
+ * books only once switched on, which adds its instance), the ones MuMu does not list yet on
+ * the lowest indexes free.
  */
 import { useMemo } from "react";
-import { useSettings } from "./api/queries";
+import { useMumuInstances, useSettings } from "./api/queries";
 import type { Customer, Settings } from "./api/types";
 
 /** The machines shown at least: the first, and two beside it. */
@@ -44,8 +45,14 @@ function spareIndexes(used: ReadonlySet<number>, count: number): number[] {
   return spare;
 }
 
-/** Return the machines of `settings`, the first alone until they have loaded. */
-export function machinesOf(settings: Settings | undefined): Machine[] {
+/**
+ * Return the machines of `settings` and of the MuMu instances on the PC (`mumu`, empty while
+ * not known), the first alone until the settings have loaded.
+ */
+export function machinesOf(
+  settings: Settings | undefined,
+  mumu: readonly number[] = [],
+): Machine[] {
   if (settings === undefined) {
     return [FIRST];
   }
@@ -54,10 +61,12 @@ export function machinesOf(settings: Settings | undefined): Machine[] {
     entry: place + 1,
   }));
   const used = new Set([settings.mumu_index, ...booked.map((item) => item.mumuIndex)]);
-  const spare: Placed[] = spareIndexes(used, MIN_MACHINES - 1 - booked.length).map((mumuIndex) => ({
-    mumuIndex,
-    entry: null,
-  }));
+  const listed = [...new Set(mumu)].filter((index) => !used.has(index));
+  const taken = new Set([...used, ...listed]);
+  const spare: Placed[] = [
+    ...listed,
+    ...spareIndexes(taken, MIN_MACHINES - 1 - booked.length - listed.length),
+  ].map((mumuIndex) => ({ mumuIndex, entry: null }));
   // By MuMu index, so a machine keeps its name whichever of the others is on.
   const others = [...booked, ...spare].sort((a, b) => a.mumuIndex - b.mumuIndex);
   return [{ mumuIndex: settings.mumu_index, entry: 0 }, ...others].map(
@@ -84,7 +93,8 @@ export function enabledMachines(machines: readonly Machine[]): Machine[] {
 /** Read the machines from the settings. */
 export function useMachines(): Machine[] {
   const settings = useSettings();
-  return useMemo(() => machinesOf(settings.data), [settings.data]);
+  const mumu = useMumuInstances();
+  return useMemo(() => machinesOf(settings.data, mumu.data), [settings.data, mumu.data]);
 }
 
 /** Return the account MuMu instance `mumuIndex` books with and its customer, or `null`. */

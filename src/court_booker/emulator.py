@@ -58,6 +58,32 @@ def run_mumu_command(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
     return run_command(args, timeout=MUMU_TIMEOUT)
 
 
+def instance_indexes(manager: Path, run: Run = run_mumu_command) -> list[int]:
+    """Return the indexes of the MuMu instances ``manager`` knows, lowest first.
+
+    Raises :class:`MuMuNotFoundError` without MuMuManager, :class:`EmulatorError` when it
+    fails or answers what is not known here.
+    """
+    if not manager.is_file():
+        raise MuMuNotFoundError(f"MuMuManager not found at {manager}")
+    argv = [str(manager), "info", "-v", "all"]
+    try:
+        result = run(argv)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise EmulatorError(f"MuMuManager info failed: {exc}") from exc
+    if result.returncode != 0:
+        raise EmulatorError(f"MuMuManager info exited with {result.returncode}")
+    try:
+        data = json.loads(result.stdout)
+    except ValueError as exc:
+        raise EmulatorError(f"Unexpected output from MuMuManager info: {result.stdout!r}") from exc
+    if not isinstance(data, dict):
+        raise EmulatorError(f"Unexpected output from MuMuManager info: {result.stdout!r}")
+    # One instance answers as itself, several keyed by their index.
+    keys = [str(data["index"])] if "index" in data else list(data)
+    return sorted(int(key) for key in keys if key.isdigit())
+
+
 class MuMu:
     """One MuMu Player instance, addressed by its index.
 
