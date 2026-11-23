@@ -17,11 +17,12 @@ Python reads each screen in one accessibility dump and finds every button by its
 small Android instrumentation driver written for the project does the taps, with
 uiautomator2 as a fallback. It uses no private API and does not modify the app.
 
-**The result.** It has booked real courts at 06:00 since 2026-10-10. On 2026-11-01,
-two MuMu instances booked four slots in parallel, at Origami and BS; each first slot reached
-its ticket within five seconds. Beside the booking engine there is a local FastAPI backend
-and a React and TypeScript UI, in Vietnamese and English, for the settings, the schedule
-and the history of every run, in a Tauri window.
+**The result.** It has booked real courts at 06:00 since 2026-10-10, since 2026-11-22 with
+three MuMu instances side by side, each with its own account, court and slots; the first slot
+usually has its ticket five to six seconds after the start. Beside the booking engine there is a
+local FastAPI backend and a React and TypeScript UI, in Vietnamese and English, for the
+settings, the schedule, the people booked for with their accounts, the tickets and the history of
+every run, in a Tauri window.
 
 It books tennis and the other courts a subdivision offers (multi-purpose, volleyball, table
 tennis, basketball, football, pickleball, badminton), for the Origami and BS subdivisions so
@@ -32,9 +33,9 @@ itself with one button.
 > An educational, personal project, not affiliated with or endorsed by Vinhomes.
 
 ![The app during a dry run: the ticket shows round 2 of 2 being booked large, one slot
-through, and each step as it happens; the History is beside it](docs/img/running.png)
+through, and each step as it happens; a list of the last runs is beside it](docs/img/running.png)
 
-<sub>The app during a dry run. All screenshots show made-up data.</sub>
+<sub>The app during a dry run, as of 1.0.0. All screenshots show made-up data.</sub>
 
 ## Highlights
 
@@ -45,9 +46,14 @@ through, and each step as it happens; the History is beside it](docs/img/running
 - **Reports only what the app showed.** A slot counts as booked only once the app shows its
   ticket (the booking confirmation); otherwise the round fails with the app's own message,
   or as "outcome unknown", never as booked.
-- **Built for a slow app and a fragile emulator.** A tap the app ignores is repeated, a slow
-  screen is awaited up to 30 s, and a frozen emulator ends the run after 60 s instead of
+- **Built for a slow app and a fragile emulator.** A tap the app ignores is repeated and a slow
+  screen is awaited up to 30 s. Until two minutes before the start, whatever fails is repaired,
+  a frozen emulator by restarting it; during the rounds one ends the run after 60 s instead of
   hanging until the next morning.
+- **Books with the right account.** Before the start a run reads the phone number logged in, and
+  logs out and in again if it is not the chosen account's; one that cannot be sure books nothing.
+- **Tickets at hand.** After the rounds the app's own list of tickets is read and each new ticket
+  pictured with its QR code, kept by customer until its day of play is over.
 - **Several accounts at once.** Each extra MuMu instance books with its own account, court
   and slots, in a process of its own, so one that fails holds up no other.
 - **Tested without a device.** Fakes replace the emulator, ADB, the clock and Task
@@ -136,8 +142,9 @@ Then:
    (install MuMu and the Vinhomes app, log in); tick each step once it is done.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
-5. In the **Setup** beside it, press **Dry run** between 06:00 and 21:00, while the Vinhomes app takes bookings. It
-   walks the whole booking and stops before the final confirmation, so nothing is booked.
+5. In the **Setup** beside it, press **Dry run** between 06:00 and 21:00, while the Vinhomes
+   app takes bookings. It walks the whole booking and stops before the final confirmation, so
+   nothing is booked.
 6. Once it has passed, turn **Auto-book** on. Every morning the PC wakes at the wake time and
    books at 06:00; the window does not need to be open.
 
@@ -145,8 +152,8 @@ The app is in Vietnamese by default, English is one click away.
 
 ### Update
 
-The version installed shows beside the app's name, at the top left. When a newer version is out, the top of the window shows **Update to x.y.z**. One press
-downloads it, installs it over the app and opens it again; your settings, history and
+The version installed shows beside the app's name, at the top left. When a newer version is
+out, the top of the window shows **Update to x.y.z**. One press downloads it, installs it over the app and opens it again; your settings, history and
 morning booking stay. The button waits while a run is going on and around 06:00.
 
 ### Uninstall
@@ -170,9 +177,9 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
   they happen.
 - **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
   once a dry run passed), the Windows notification, the account the machine books with, picked
-  from the customers', and a dry run. Before booking, a run reads the phone number logged in on the machine's
-  Vinhomes app, and logs out and in if it is not the chosen account's, trying the password once; a
-  machine that cannot be sure books nothing.
+  from the customers', and a dry run. Before booking, a run reads the phone number logged in on the
+  machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
+  once; a machine that cannot be sure books nothing.
 - **A tab per machine** on top of the ticket: "Máy 2" and "Máy 3" (other MuMu instances,
   each logged in to another account) book alongside the first once their switch
   in the Setup is on.

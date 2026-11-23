@@ -92,7 +92,7 @@
   --home-width: 1360px;
   --home-min-width: 1240px;
   --home-min-height: 640px;
-  --panel-width: 384px; /* the History beside the ticket */
+  --panel-width: 384px; /* the Setup beside the ticket */
   --touch-target: 44px; /* smallest height of anything clickable */
   --focus-ring: 3px solid var(--color-stamp);
   --focus-offset: 2px;

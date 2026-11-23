@@ -4,14 +4,26 @@ Open bugs, by severity: **1** may cost the 06:00 run, **2** reports wrongly or t
 **3** UI or docs. Remove an issue once it is fixed and confirmed (`CHANGELOG.md` keeps the
 history). Ideas the user ruled out are listed last, so they are not proposed again.
 
-Last updated: 2026-11-19.
+Last updated: 2026-11-23.
 
 ## Severity 1
 
-- **A failure while the run gets ready ended it, 15 minutes before 06:00** (2026-11-19, 1.1.1):
-  `MuMuManager control launch` failed once ("nemu-api init failed") and machine 1 booked
-  nothing. Fixed on `fix/startup-repair` and `fix/setup-supervisor` (every layer repaired
-  until 05:58), not released; the rest is planned in [next.md](next.md).
+- **Several MuMu instances launched at once** (within 0.25 s of each other) trip over each other:
+  `MuMuManager control launch` failed with "nemu-api init failed" on 2026-11-19 (machine 1 lost
+  the morning, before 1.1.2) and 2026-11-22 (the second try, 2 s later, started it); on
+  2026-11-21 at 15:21 three cold starts froze all three, which the runs restarted. The repairs
+  hold so far. Idea: launch them one after another, as on 2026-11-22 all were ready by 05:46:09.
+
+## Severity 2
+
+- **"Xác nhận" swallowed**: in 6 of 68 rounds booked since 2026-10-13 the tap 0.2 s after the
+  consent did nothing and was repeated 3 s later, 5 of them in a second round, where the 3 s may
+  cost the slot. Idea: wait about 0.1 s longer; needs a real booking.
+
+## Severity 3
+
+- The desktop window can open taller than the screen, its lower part under the taskbar. The fix
+  (Tauri's `preventOverflow`) needs an installer build.
 
 ## Unhandled situations
 
