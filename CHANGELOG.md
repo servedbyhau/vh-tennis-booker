@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-25
+
 ### Added
 - The money charges the tickets saved before it was there once its section is opened; the golden
   hours are chosen as whole hours in 24-hour time; the quota table names the machines as their
