@@ -43,6 +43,8 @@ SCREENCAP_TIMEOUT = 20.0
 """Seconds a screenshot may take: about 1 s; a frozen MuMu never answers (2026-11-17)."""
 PING_TIMEOUT = 10.0
 """Seconds the ping may take: it answered in 50-220 ms on a working instance (2026-11-19)."""
+CLOCK_TIMEOUT = 5.0
+"""Seconds a read of Android's clock may take; it is only logged."""
 PING_COMMAND = ("am", "get-current-user")
 """What the ping asks Android: a call to its system server, which answers with the user id.
 An ``echo`` is not enough: on 2026-11-19 a hung Android answered ``echo`` in 0.5 s while
@@ -165,6 +167,23 @@ class Adb:
         if not result.stdout.strip().isdigit():
             detail = (result.stderr or result.stdout).strip() or f"exit {result.returncode}"
             raise DeviceConnectionError(f"adb shell on {serial} failed: {detail}")
+
+    def device_time(self, serial: str, timeout: float = CLOCK_TIMEOUT) -> float:
+        """Return Android's clock on ``serial``, in seconds since the epoch, to the microsecond.
+
+        Raises :class:`DeviceConnectionError` when adb fails or answers what is not a time.
+        """
+        argv = [str(self.path), "-s", serial, "shell", "date", "+%s.%N"]
+        try:
+            result = self._timed_run(argv, timeout)
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise DeviceConnectionError(f"adb shell date failed: {exc}") from exc
+        try:
+            return float(result.stdout.strip())
+        except ValueError as exc:
+            raise DeviceConnectionError(
+                f"Unexpected answer of adb shell date: {result.stdout!r}"
+            ) from exc
 
     def forward(self, serial: str, remote: str) -> int:
         """Return a local TCP port forwarded to ``remote`` on ``serial``, reusing one if set."""

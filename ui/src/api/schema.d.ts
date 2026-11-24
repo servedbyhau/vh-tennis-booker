@@ -774,7 +774,7 @@ export interface components {
          * @description What happened. The value is stable: it becomes a database value and a message key.
          * @enum {string}
          */
-        EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "account_checked" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "tickets_saved" | "quota_read" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "ticket_cancelled" | "ticket_not_cancelled" | "quota_not_read" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
+        EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "account_checked" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "tickets_saved" | "opening_measured" | "quota_read" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "ticket_cancelled" | "ticket_not_cancelled" | "quota_not_read" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
         /**
          * Health
          * @description The backend answers and runs this version.

@@ -142,6 +142,14 @@ Details live in the docstrings; this page says where things are and what must st
   (`moment` `asked`, with the account's id) for the machine's own utility and each other one
   with a ticket that month (`quota.read_quotas`); `quota_not_read` when the page was not read
   far enough.
+- `opening.py`: the log of the opening of a timed run, to learn what the app's 06:00 is checked
+  against before changing when the first tap comes. Android's clock is read through adb
+  (`Adb.device_time`, `date +%s.%N`; the best of 3 reads) during the warm-up and again once the
+  rounds are over, never between them; during the first round `OpeningWatch` stands for the
+  booker's reporter and only notes when its calendar opened. After the rounds one log line
+  ("Opening: ...") and an `opening_measured` event hold the PC clock's and Android's offsets
+  from NTP time, the first tap by NTP and by Android's clock, when the calendar opened and the
+  attempt that opened it.
 - `quota.py`: what the account used of the quota of the utility it books, for the day of play
   (today + 2): the tickets of that month of play, and of that day, all but cancelled ones
   (`count`; 8 a month, 2 a day, field notes "Dialogs"). `read_back` swipes the history page

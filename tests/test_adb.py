@@ -174,6 +174,20 @@ def test_a_device_offline_fails_the_ping_at_once():
         Adb("adb", timed_run=run).ping("127.0.0.1:16384")
 
 
+def test_android_s_clock_is_read_to_the_microsecond():
+    run, calls = timed(subprocess.CompletedProcess([], 0, stdout="1764021600.123456789\r\n"))
+
+    assert Adb("adb", timed_run=run).device_time("127.0.0.1:16384") == 1764021600.123456789
+    assert calls == [(["-s", "127.0.0.1:16384", "shell", "date", "+%s.%N"], 5.0)]
+
+
+def test_a_clock_answer_that_is_no_time_fails():
+    run, _ = timed(subprocess.CompletedProcess([], 0, stdout="1764021600.%N\n"))
+
+    with pytest.raises(DeviceConnectionError, match="Unexpected answer"):
+        Adb("adb", timed_run=run).device_time("127.0.0.1:16384")
+
+
 def test_disconnect_drops_one_serial_only():
     fake = FakeAdb(attached=["127.0.0.1:16384", "127.0.0.1:16416"])
 

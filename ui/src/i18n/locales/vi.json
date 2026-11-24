@@ -394,6 +394,10 @@
       "other": "Có lỗi khi chuẩn bị, đã tự sửa"
     },
     "screen_saved": "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
+    "opening_measured": {
+      "full": "Giờ mở cửa: lịch mở sau {{seconds}} s, lần bấm {{attempt}}",
+      "plain": "Đã ghi lại giờ mở cửa"
+    },
     "tickets_saved": "Đã đọc {{tickets}} vé trong app, lưu {{photos}} ảnh vé",
     "quota_read": {
       "full": "Hạn mức {{sport}} tháng {{month}}: đã dùng {{used}}/{{monthLimit}}, ngày {{day}} có {{dayUsed}}/{{dayLimit}} vé, còn đặt được {{left}}",

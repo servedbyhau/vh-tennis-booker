@@ -2217,6 +2217,7 @@
           "booking_started",
           "run_finished",
           "tickets_saved",
+          "opening_measured",
           "quota_read",
           "slot_started",
           "calendar_opened",

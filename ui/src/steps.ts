@@ -112,6 +112,30 @@ const MESSAGES: Record<StepKind, Describe> = {
     detail: text(data, "path"),
     tone: "plain",
   }),
+  opening_measured: ({ t }, data) => {
+    const seconds = number(data, "seconds_to_calendar");
+    const attempt = number(data, "attempt");
+    const pc = number(data, "pc_offset");
+    const device = data["device_before"];
+    const android =
+      typeof device === "object" && device !== null && "offset" in device
+        ? Number((device).offset)
+        : undefined;
+    const clocks = [
+      pc === undefined ? undefined : `PC ${(-pc).toFixed(3)} s`,
+      android === undefined || Number.isNaN(android)
+        ? undefined
+        : `Android ${android.toFixed(3)} s`,
+    ].filter(Boolean);
+    return {
+      text:
+        seconds === undefined || attempt === undefined
+          ? t("steps.opening_measured.plain")
+          : t("steps.opening_measured.full", { seconds: seconds.toFixed(2), attempt }),
+      detail: clocks.length === 0 ? undefined : clocks.join(", "),
+      tone: "plain",
+    };
+  },
   tickets_saved: ({ t }, data) => ({
     text: t("steps.tickets_saved", {
       tickets: number(data, "tickets") ?? 0,

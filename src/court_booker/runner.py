@@ -21,6 +21,7 @@ from court_booker.errors import (
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
+from court_booker.opening import DeviceClock, Opening, OpeningWatch, read_device_clock
 from court_booker.quota import BEFORE, read_quota
 from court_booker.ready import Supervisor, setup_deadline
 
@@ -161,6 +162,7 @@ def run_booking(
     # an earlier run saw it.
     booker.hurry = start is not None and start - clock.now() < NEAR_START
     target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
+    android_clock = None
     try:
         supervisor.prepare(booker, deadline)
         report(EventKind.APP_READY)
@@ -177,6 +179,7 @@ def run_booking(
             # A fresh answer leaves the counter only the warm-up to drift, and the log shows
             # how far Windows set the PC clock since the first one.
             clock.measure()
+            android_clock = device_clock(supervisor, clock)
             # A failure here is repaired as one while getting ready (the 2026-11-17 popup, a
             # driver lost after the last check), with time left for the read before the start.
             supervisor.run_step(booker, booker.locate_entry, start - WARM_UP_REPAIRS_END)
@@ -204,7 +207,13 @@ def run_booking(
         dry_run=dry_run,
     )
 
+    # The first round's calendar is timed for the log of the opening (court_booker.opening).
+    watch = OpeningWatch(booker.report, clock.now) if start is not None else None
+    first_tap = None
     for index, slot in enumerate(config.slots, start=1):
+        if watch is not None:
+            booker.report = watch if index == 1 else watch.report
+            first_tap = first_tap or clock.now()
         logger.info("Round %d/%d: %s", index, len(config.slots), slot)
         report(EventKind.SLOT_STARTED, slot=slot, round=index, rounds=len(config.slots))
         started = time.perf_counter()
@@ -263,7 +272,42 @@ def run_booking(
         if quota_full:
             skip_rounds(config.slots[index:], results, report)
             break
+    if watch is not None and start is not None:
+        booker.report = watch.report
+        report_opening(
+            Opening(
+                start + OPENING_MARGIN,
+                clock.offset,
+                android_clock,
+                device_clock(supervisor, clock),
+                first_tap,
+                watch.opened,
+                watch.attempt,
+            ),
+            report,
+        )
     return results
+
+
+def device_clock(supervisor: Supervisor, clock: NtpClock) -> DeviceClock | None:
+    """Read Android's clock against NTP time, for the log; ``None`` when it cannot be read.
+
+    Read during the warm-up and once the rounds are over only, never between them.
+    """
+    # A supervisor handed a device (no MuMu of its own) has no adb.
+    adb, serial = getattr(supervisor, "adb", None), getattr(supervisor, "serial", None)
+    if adb is None or serial is None:
+        return None
+    return read_device_clock(lambda: adb.device_time(serial), clock.now)
+
+
+def report_opening(opening: Opening, report: Reporter) -> None:
+    """Log what the clocks and the first round told at the opening, and report it."""
+    try:
+        logger.info("%s", opening.describe())
+        report(EventKind.OPENING_MEASURED, **opening.event_data())
+    except Exception:  # the log only: the rounds are over and stay as they are
+        logger.warning("The opening was not logged", exc_info=True)
 
 
 def check_quota(

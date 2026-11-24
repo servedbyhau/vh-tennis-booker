@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import court_booker.runner as runner
+from court_booker import opening
 from court_booker.clock import NtpClock
 from court_booker.config import Config
 from court_booker.errors import (
@@ -40,6 +41,7 @@ def quota(monkeypatch):
 
 class FakeBooker:
     def __init__(self, device, config, report=None, login_for=None, account_seen=None):
+        self.report = report
         self.login_for = login_for
         self.booked = []
         self.events = []
@@ -82,6 +84,8 @@ def test_failed_round_does_not_stop_later_rounds(monkeypatch):
 
 class FakeClock:
     """Note each check of the time server in ``events``."""
+
+    offset = None
 
     def __init__(self, events):
         self.events = events
@@ -134,6 +138,60 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
         start + timedelta(seconds=0.1),  # a tap before 06:00 by the app's clock is refused
     ]
     assert "Start reached at 06:00:00.100 (NTP), PC clock 05:59:59.343" in caplog.text
+
+
+def test_the_opening_is_logged_once_the_rounds_are_over(monkeypatch, caplog):
+    caplog.set_level(logging.INFO, logger="court_booker")
+    steps = []
+
+    class TimedBooker(FakeBooker):
+        def book(self, slot, target, dry_run=False):
+            steps.append(("round", slot))
+            self.report(EventKind.CALENDAR_OPENED, attempt=2)
+            return super().book(slot, target, dry_run)
+
+    class Adb:
+        def device_time(self, serial):
+            steps.append(("android clock", serial))
+            return datetime(2026, 10, 10, 5, 59).timestamp()
+
+    config = Config(slots=["19:00 - 20:00", "20:00 - 21:00"])
+    clock = FakeClock([])
+    sink = MemorySink()
+    supervisor = runner.Supervisor(
+        config, report=Reporter(sink), device=FakeDevice(), now=clock.now
+    )
+    supervisor.adb, supervisor.serial = Adb(), "127.0.0.1:16384"
+    monkeypatch.setattr(runner, "Booker", TimedBooker)
+    monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
+
+    runner.run_booking(
+        FakeDevice(),
+        config,
+        start=datetime(2026, 10, 10, 6, 0),
+        clock=clock,
+        report=Reporter(sink),
+        supervisor=supervisor,
+    )
+
+    # Android's clock is read during the warm-up and after the rounds, never between them.
+    reads = ["android clock"] * opening.CLOCK_READS
+    assert [step[0] for step in steps] == [*reads, "round", "round", *reads]
+    (measured,) = [event for event in sink.events if event.kind is EventKind.OPENING_MEASURED]
+    assert measured.data["attempt"] == 2  # the first round's
+    assert measured.data["device_before"]["offset"] == measured.data["device_after"]["offset"]
+    assert "Opening: PC clock not known from NTP" in caplog.text
+
+
+def test_a_run_without_a_start_logs_no_opening(monkeypatch):
+    monkeypatch.setattr(runner, "Booker", FakeBooker)
+    sink = MemorySink()
+
+    runner.run_booking(
+        FakeDevice(), Config(slots=["19:00 - 20:00"]), dry_run=True, report=Reporter(sink)
+    )
+
+    assert EventKind.OPENING_MEASURED not in [event.kind for event in sink.events]
 
 
 @pytest.mark.parametrize(
