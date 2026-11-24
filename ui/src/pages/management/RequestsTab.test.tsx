@@ -58,6 +58,15 @@ describe("Requests", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows the words of the form's switch beside it", async () => {
+    await open();
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Thêm yêu cầu/ })[0]!);
+
+    expect(await screen.findByText("Đang áp dụng")).toBeVisible();
+    expect(screen.getByRole("switch", { name: "Đang áp dụng" })).toBeInTheDocument();
+  });
+
   it("applies a request to its machine, switching it on first", async () => {
     const on: Settings = settings({
       instances: [

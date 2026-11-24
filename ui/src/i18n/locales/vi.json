@@ -215,6 +215,7 @@
       "paidMark": "đã thu",
       "sums": "{{count}} vé · phải thu {{owed}} · đã thu {{paid}}",
       "unpriced": "{{count}} vé chưa có giá",
+      "unpricedHint": "{{count}} vé chưa có giá nên chưa tính vào tổng: nhập giá ở Bảng giá rồi bấm Lưu bảng giá.",
       "payAll": "Đã thu hết",
       "copy": "Copy bảng kê",
       "copied": "Đã copy, dán vào Zalo",

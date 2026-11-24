@@ -222,11 +222,14 @@ function RequestForm({ customers, request, onClose }: FormProps) {
         <span className={styles.label}>{t("pages.requests.note")}</span>
         <input value={fields.note} onChange={(event) => set({ note: event.target.value })} />
       </label>
-      <Switch
-        label={t("pages.requests.active")}
-        checked={fields.active}
-        onChange={(active) => set({ active })}
-      />
+      <label className={styles.toggle}>
+        <span className={styles.label}>{t("pages.requests.active")}</span>
+        <Switch
+          label={t("pages.requests.active")}
+          checked={fields.active}
+          onChange={(active) => set({ active })}
+        />
+      </label>
       {error !== null && (
         <p role="alert" className={styles.muted}>
           {errorMessage(t, error)}

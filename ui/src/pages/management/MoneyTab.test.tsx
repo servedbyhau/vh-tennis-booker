@@ -101,6 +101,30 @@ describe("Money", () => {
     await waitFor(() => expect(requestsTo(app.fetch, "PUT /api/money/paid")).toBe(1));
   });
 
+  it("says the tickets without a price, never all paid while a price is missing", async () => {
+    await open({
+      "GET /api/money/charges": reply({
+        month: "2026-11",
+        months: ["2026-11"],
+        charges: [charge("1", { amount: null }), charge("2", { amount: null })],
+        free_customers: [],
+      }),
+    });
+
+    const card = within(screen.getByRole("region", { name: "Anh An" }));
+    expect(card.getAllByText("2 vé chưa có giá").length).toBeGreaterThan(0);
+    expect(card.queryByText("đã thu đủ")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("nhập giá ở Bảng giá");
+  });
+
+  it("shows the words of the switch of a customer booked for free", async () => {
+    await open();
+
+    const card = within(screen.getByRole("region", { name: "Anh An" }));
+    expect(card.getByText("Không tính tiền (ví dụ tài khoản của chính bạn)")).toBeVisible();
+    expect(card.getByRole("switch", { name: /Không tính tiền/ })).toBeInTheDocument();
+  });
+
   it("saves the prices typed", async () => {
     const app = await open({
       "PUT /api/money/prices": reply({ golden_from: "17:00", golden_to: "21:00", prices: [] }),

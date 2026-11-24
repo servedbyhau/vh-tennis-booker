@@ -113,19 +113,27 @@ function CustomerCard({
     <section aria-label={item.name} className={styles.card}>
       <div className={styles.cardHead}>
         <h2 className={styles.cardTitle}>{item.name}</h2>
-        <span className={`${styles.chip} ${left > 0 ? styles.warn : styles.good}`}>
-          {left > 0
-            ? t("pages.money.leftToPay", { left: formatMoney(left) })
-            : t("pages.money.allPaid")}
+        {/* Not "all paid" while a price is missing: what is owed is not known yet. */}
+        <span
+          className={`${styles.chip} ${left > 0 || item.unpriced > 0 ? styles.warn : styles.good}`}
+        >
+          {item.unpriced > 0
+            ? t("pages.money.unpriced", { count: item.unpriced })
+            : left > 0
+              ? t("pages.money.leftToPay", { left: formatMoney(left) })
+              : t("pages.money.allPaid")}
         </span>
       </div>
       {item.id !== null && (
-        <Switch
-          label={t("pages.money.freeLabel")}
-          checked={free}
-          disabled={markFree.isPending}
-          onChange={(value) => item.id !== null && markFree.mutate({ id: item.id, free: value })}
-        />
+        <label className={styles.toggle}>
+          <Switch
+            label={t("pages.money.freeLabel")}
+            checked={free}
+            disabled={markFree.isPending}
+            onChange={(value) => item.id !== null && markFree.mutate({ id: item.id, free: value })}
+          />
+          <span className={styles.muted}>{t("pages.money.freeLabel")}</span>
+        </label>
       )}
       <table className={styles.table}>
         <thead>
@@ -341,7 +349,7 @@ export function MoneyTab() {
   const prices = usePrices();
   const months = [...new Set([month, ...(charges.data?.months ?? [])])].sort().reverse();
   const customers = byCustomer(charges.data?.charges ?? [], t("pages.tickets.unknown"));
-  const { owed, paid, left } = totalsOf(customers);
+  const { owed, paid, left, unpriced } = totalsOf(customers);
   const free = new Set(charges.data?.free_customers ?? []);
   return (
     <>
@@ -374,6 +382,11 @@ export function MoneyTab() {
             </div>
           ))}
         </div>
+        {unpriced > 0 && (
+          <p role="status" className={styles.muted}>
+            {t("pages.money.unpricedHint", { count: unpriced })}
+          </p>
+        )}
         <div className={styles.wide}>
           <div className={styles.column}>
             {charges.isPending ? (
