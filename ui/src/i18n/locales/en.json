@@ -287,7 +287,8 @@
       "noSlots": "No slot",
       "runFor": "{{when}} · for {{day}}",
       "open": "Open MuMu",
-      "change": "Change the court, slots or account on the Booking page"
+      "change": "Change the court, slots or account on the Booking page",
+      "days": "Days"
     },
     "customers": {
       "title": "Customers",
@@ -318,6 +319,31 @@
       "lostAccounts": "Accounts lost: {{count}}",
       "lostPasswords": "The saved password goes too, for good.",
       "lostFacts": "What is known of the customer goes too, for good."
+    },
+    "requests": {
+      "title": "Requests",
+      "hint": "What each customer wants: the court, the slots, the days. Applied to a machine, it books exactly that from the next 06:00 run (with the account chosen for it).",
+      "add": "Add a request",
+      "edit": "Change the request",
+      "remove": "Remove the request",
+      "customer": "Customer",
+      "subdivision": "Subdivision",
+      "sport": "Sport",
+      "court": "Court",
+      "slots": "Slots (two at most)",
+      "days": "Days of play",
+      "machine": "Machine",
+      "noMachine": "No machine chosen",
+      "note": "Note",
+      "active": "In use",
+      "paused": "paused",
+      "save": "Save",
+      "cancel": "Cancel",
+      "apply": "Apply to the machine",
+      "applied": "Applied: the machine books it from the next 06:00 run.",
+      "otherAccount": "This machine books with another customer's account: choose the account on the Booking page.",
+      "none": "No request yet.",
+      "noCustomer": "Add a customer in Customers first."
     },
     "guide": {
       "title": "Guide",
@@ -672,5 +698,15 @@
     "invalid_request": "The request has values that are not valid.",
     "unreachable": "Court Booker's background service cannot be reached.",
     "http": "The background service gave an unexpected answer."
+  },
+  "days": {
+    "0": "Mon",
+    "1": "Tue",
+    "2": "Wed",
+    "3": "Thu",
+    "4": "Fri",
+    "5": "Sat",
+    "6": "Sun",
+    "every": "Every day"
   }
 }

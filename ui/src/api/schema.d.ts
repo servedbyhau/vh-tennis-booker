@@ -619,6 +619,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Requests
+         * @description List every request, by customer.
+         */
+        get: operations["list_requests_api_requests_get"];
+        put?: never;
+        /**
+         * Add Request
+         * @description Record a customer's request; 404 for an unknown customer.
+         */
+        post: operations["add_request_api_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Request
+         * @description Replace what a request asks.
+         */
+        put: operations["change_request_api_requests__request_id__put"];
+        post?: never;
+        /**
+         * Remove Request
+         * @description Remove a request.
+         */
+        delete: operations["remove_request_api_requests__request_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/setup": {
         parameters: {
             query?: never;
@@ -826,6 +874,37 @@ export interface components {
             /** Account Id */
             account_id: string;
         };
+        /** BookingRequest */
+        BookingRequest: {
+            /** Customer Id */
+            customer_id: string;
+            /** Subdivision */
+            subdivision: string;
+            /** Sport */
+            sport: string;
+            /** Court */
+            court: string;
+            /** Slots */
+            slots: string[];
+            /** Days */
+            days?: number[];
+            /** Machine */
+            machine?: number | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Id */
+            id: string;
+            /** Created At */
+            created_at: string;
+        };
         /**
          * Charge
          * @description What a ticket a customer's account booked costs, and whether it was paid.
@@ -991,6 +1070,11 @@ export interface components {
             court: string;
             /** Venue Keyword */
             venue_keyword: string;
+            /**
+             * Days
+             * @default []
+             */
+            days: number[];
         };
         /**
          * InstanceSwitch
@@ -1201,6 +1285,36 @@ export interface components {
             read_at: string;
         };
         /**
+         * RequestFields
+         * @description What a customer asks to book.
+         */
+        RequestFields: {
+            /** Customer Id */
+            customer_id: string;
+            /** Subdivision */
+            subdivision: string;
+            /** Sport */
+            sport: string;
+            /** Court */
+            court: string;
+            /** Slots */
+            slots: string[];
+            /** Days */
+            days?: number[];
+            /** Machine */
+            machine?: number | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /**
          * RunDetail
          * @description One run in full, for its History page.
          */
@@ -1339,6 +1453,11 @@ export interface components {
         Settings: {
             /** Slots */
             slots: string[];
+            /**
+             * Days
+             * @default []
+             */
+            days: number[];
             /** Subdivision */
             subdivision: string;
             /** Sport */
@@ -2869,6 +2988,168 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_requests_api_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingRequest"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    add_request_api_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingRequest"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_request_api_requests__request_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingRequest"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_request_api_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

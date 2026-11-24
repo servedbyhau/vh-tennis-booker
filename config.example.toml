@@ -4,6 +4,7 @@ device = "auto"                     # ADB serial, or "auto" to find the emulator
 adb_path = ""                       # adb.exe; empty searches PATH, then the MuMu folder
 package = "com.vinhomes.resident"
 slots = ["18:00 - 19:00", "19:00 - 20:00"]  # one booking round per slot
+# days = [0, 2, 4]                  # the daily task books for these days of play only (0 Monday)
 subdivision = ""                    # "origami" or "bs"; "" = the account's
 sport = "tennis"                    # tennis, multi, volleyball, table-tennis, basketball,
                                     # football, pickleball or badminton
@@ -80,5 +81,6 @@ cancel_question = "muốn hủy tiện ích"  # in that question, answered with 
 # [[instances]]
 # mumu_index = 1
 # slots = ["20:00 - 21:00", "21:00 - 22:00"]
+# days = [5, 6]                     # its own; every day unless given
 # sport = "badminton"
 # court = "S6 - Sân cầu lông"

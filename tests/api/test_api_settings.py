@@ -52,8 +52,11 @@ OTHER = {
     "sport": "tennis",  # from the top of the file, which the file does not repeat
     "court": "S6 - Sân tennis",
     "venue_keyword": "Origami",
+    "days": [],  # every day: a machine's own, not written while empty
 }
-OTHER_IN_FILE = {key: value for key, value in OTHER.items() if key not in ("sport", "subdivision")}
+OTHER_IN_FILE = {
+    key: value for key, value in OTHER.items() if key not in ("sport", "subdivision", "days")
+}
 
 
 def test_settings_show_each_other_instance_in_full(client, saved):

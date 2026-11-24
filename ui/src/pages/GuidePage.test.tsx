@@ -15,6 +15,7 @@ const SECOND = {
   sport: "tennis",
   court: "S9 - Sân tennis",
   venue_keyword: "Origami",
+  days: [],
 };
 
 function openGuide(saved = settings({ instances: [SECOND] })) {

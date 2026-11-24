@@ -14,6 +14,7 @@ import { useFormat } from "../../useFormat";
 import styles from "./Board.module.css";
 import { type MachineFacts, runWhen, useMachineFacts } from "./machineFacts";
 import { useQuotaRefresh } from "./quotaRefresh";
+import { dayKey } from "./requests";
 import { RunSlots } from "./RunSlots";
 
 /** One machine: what it books, with whose account, its quota, its last booking and what to do. */
@@ -71,6 +72,16 @@ function MachineCard({ facts, running }: { facts: MachineFacts; running: boolean
             )}
           </span>
         </li>
+        {booking !== undefined && (
+          <li className={styles.line}>
+            <span className={styles.label}>{t("pages.machines.days")}</span>
+            <span className={styles.value}>
+              {booking.days.length === 0
+                ? t("days.every")
+                : booking.days.map((day) => t(dayKey(day))).join(", ")}
+            </span>
+          </li>
+        )}
         {attached !== null && (
           <li className={styles.line}>
             <span className={styles.label}>{t("pages.machines.quota")}</span>

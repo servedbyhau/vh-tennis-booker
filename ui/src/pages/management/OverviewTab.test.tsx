@@ -20,6 +20,7 @@ const SETTINGS: Settings = settings({
       sport: "pickleball",
       court: "S9 - Sân Pickleball",
       venue_keyword: "Origami",
+      days: [],
     },
   ],
 });

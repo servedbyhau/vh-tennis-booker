@@ -12,6 +12,7 @@ function instance(index: number): Settings["instances"][number] {
     sport: "tennis",
     court: "S9 - Sân tennis",
     venue_keyword: "Origami",
+    days: [],
   };
 }
 

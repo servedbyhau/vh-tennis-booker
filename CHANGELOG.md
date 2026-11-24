@@ -7,6 +7,11 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A requests section keeps what each customer asks to book (court, slots, days of the week,
+  machine, note); applying one sets its machine to book it from the next 06:00 run. A machine
+  may book for some days of play only (`days`, 0 Monday to 6 Sunday, each machine its own):
+  off that day it neither boots nor books, and the machines after it do not wait for it.
+  The machines' cards say their days.
 - A statistics section sums the 06:00 runs of the last 30 days: the share of slots booked by
   machine and by slot, the average time of a slot booked, and why slots were lost.
 - A money section: each ticket a customer's account books becomes a charge (kept once the ticket

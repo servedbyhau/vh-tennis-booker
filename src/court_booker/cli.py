@@ -15,7 +15,7 @@ from typing import Any, NoReturn
 from court_booker import __version__, credentials, device_setup, schedule
 from court_booker.adb import AUTO
 from court_booker.clock import NtpClock, ntp_offset, resolve_start, wait_until
-from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
+from court_booker.config import DAYS_AHEAD, Config, books_on, instance_config, load_config
 from court_booker.customers import holder_on
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
 from court_booker.emulator import CALL_ATTEMPTS, MuMu
@@ -113,6 +113,16 @@ def apply_overrides(config: Config, args: argparse.Namespace) -> Config:
     if args.device:
         config.device = args.device
     return config
+
+
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
+def machine_of(config: Config, index: int | None) -> Config:
+    """Return the settings of MuMu instance ``index``: the first machine's, or its entry's."""
+    if index is None or index == config.mumu_index:
+        return config
+    return select_instance(config, index)
 
 
 def select_instance(config: Config, index: int) -> Config:
@@ -510,8 +520,10 @@ def main(argv: list[str] | None = None) -> int:
     instances: list[tuple[int, subprocess.Popen[bytes]]] = []
     bookers: list[Booker] = []
     clock: NtpClock | None = None
+    off_day = False
     try:
         config = apply_overrides(load_config(args.config), args)
+        full = config
         # The machines are launched in the order the config lists them, one after another.
         order = [config.mumu_index, *(table.get("mumu_index") for table in config.instances)]
         launch_after = order[: order.index(args.instance)] if args.instance in order else []
@@ -535,16 +547,33 @@ def main(argv: list[str] | None = None) -> int:
             check_quiet_time(now, config.wake_at, config.start_at, "dry run")
         start_text = config.start_at if args.scheduled else args.at
         start = resolve_start(start_text, now) if start_text else None
-        report(
-            EventKind.RUN_STARTED,
-            trigger=trigger,
-            dry_run=args.dry_run,
-            slots=list(config.slots),
-            start=None if start is None else start.isoformat(timespec="seconds"),
-            version=__version__,
-            device=config.mumu_index,
-        )
-        started = True
+        play_day = (start or now).date() + timedelta(days=DAYS_AHEAD)
+        if args.scheduled:
+            # A machine off that day neither books nor boots: the ones after it need not wait.
+            launch_after = [i for i in launch_after if books_on(machine_of(full, i), play_day)]
+            off_day = not books_on(config, play_day)
+        if off_day:
+            logger.info(
+                "MuMu %d books for %s only, not for %s",
+                config.mumu_index,
+                ", ".join(WEEKDAYS[day] for day in sorted(config.days)),
+                play_day.isoformat(),
+            )
+        if off_day and args.instance is not None:
+            if history is not None:
+                close_history(history)
+            return EXIT_OK
+        if not off_day:
+            report(
+                EventKind.RUN_STARTED,
+                trigger=trigger,
+                dry_run=args.dry_run,
+                slots=list(config.slots),
+                start=None if start is None else start.isoformat(timespec="seconds"),
+                version=__version__,
+                device=config.mumu_index,
+            )
+        started = not off_day
         folder = data_folder()
         lock = RunLock(
             folder.lock if args.instance is None else folder.instance_lock(args.instance), report
@@ -560,32 +589,36 @@ def main(argv: list[str] | None = None) -> int:
                     history.interrupt_stale_runs()
                 # Only now: the cleanup above would take the instances' runs for stale ones.
                 instances = start_instances(args, config)
-            if history is not None:
+            if off_day:
+                wait_for_instances(instances)
+                instances = []
+            elif history is not None:
                 note_holder(history, config.mumu_index)
-            clock = NtpClock(config.ntp_server, ntp_offset)
-            if start is not None:
-                clock.measure()
-            supervisor = Supervisor(
-                config, args.driver, report, now=clock.now, launch_after=launch_after
-            )
-            device = supervisor.device
-            run_booking(
-                device,
-                config,
-                supervisor=supervisor,
-                dry_run=args.dry_run,
-                start=start,
-                clock=clock,
-                results=results,
-                report=report,
-                login_for=lambda: credentials.default_store().read(config.mumu_index),
-                account_seen=lambda: (
-                    None if history is None else history.last_account(config.mumu_index)
-                ),
-                screens=None if log_dir is None else log_dir / "screens",
-                on_booker=bookers.append,
-                on_race=None if history is None else history.hold,
-            )
+            if not off_day:
+                clock = NtpClock(config.ntp_server, ntp_offset)
+                if start is not None:
+                    clock.measure()
+                supervisor = Supervisor(
+                    config, args.driver, report, now=clock.now, launch_after=launch_after
+                )
+                device = supervisor.device
+                run_booking(
+                    device,
+                    config,
+                    supervisor=supervisor,
+                    dry_run=args.dry_run,
+                    start=start,
+                    clock=clock,
+                    results=results,
+                    report=report,
+                    login_for=lambda: credentials.default_store().read(config.mumu_index),
+                    account_seen=lambda: (
+                        None if history is None else history.last_account(config.mumu_index)
+                    ),
+                    screens=None if log_dir is None else log_dir / "screens",
+                    on_booker=bookers.append,
+                    on_race=None if history is None else history.hold,
+                )
         code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:
         logger.warning("Interrupted")
@@ -623,20 +656,23 @@ def main(argv: list[str] | None = None) -> int:
     # Each instance of a run with several reports on its own, under its number.
     shown = config or Config()  # also after a config that did not load: the defaults
     instance = shown.mumu_index if args.instance is not None or instances else None
-    if config is not None and config.telegram_token and config.telegram_chat_id:
+    if off_day:
+        pass  # nothing was booked or tried: nothing to tell
+    elif config is not None and config.telegram_token and config.telegram_chat_id:
         text = format_summary(results, error, dry_run=args.dry_run, instance=instance)
         send_telegram(config.telegram_token, config.telegram_chat_id, text)
-    notify_windows(
-        shown,
-        results,
-        error,
-        dry_run=args.dry_run,
-        interrupted=code == EXIT_INTERRUPTED,
-        target=(start or datetime.now()).date() + timedelta(days=DAYS_AHEAD),
-        instance=instance,
-        account=account.subdivision,
-        repairs=0 if supervisor is None else supervisor.repairs,
-    )
+    if not off_day:
+        notify_windows(
+            shown,
+            results,
+            error,
+            dry_run=args.dry_run,
+            interrupted=code == EXIT_INTERRUPTED,
+            target=(start or datetime.now()).date() + timedelta(days=DAYS_AHEAD),
+            instance=instance,
+            account=account.subdivision,
+            repairs=0 if supervisor is None else supervisor.repairs,
+        )
     tickets_froze = False
     if tickets and clock is not None and history is not None:
         target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)

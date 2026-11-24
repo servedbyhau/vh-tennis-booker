@@ -7,6 +7,7 @@ export const paths = {
   tickets: "/management/tickets",
   quota: "/management/quota",
   money: "/management/money",
+  requests: "/management/requests",
   history: "/management/history",
   stats: "/management/stats",
   guide: "/guide",

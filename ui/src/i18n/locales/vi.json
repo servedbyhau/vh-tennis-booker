@@ -287,7 +287,8 @@
       "noSlots": "Không đặt giờ nào",
       "runFor": "{{when}} · cho {{day}}",
       "open": "Mở MuMu",
-      "change": "Đổi sân, giờ, tài khoản ở trang Đặt sân"
+      "change": "Đổi sân, giờ, tài khoản ở trang Đặt sân",
+      "days": "Ngày đặt"
     },
     "customers": {
       "title": "Khách hàng",
@@ -318,6 +319,31 @@
       "lostAccounts": "Sẽ mất {{count}} tài khoản:",
       "lostPasswords": "Mật khẩu đã lưu cũng mất, không lấy lại được.",
       "lostFacts": "Thông tin của khách cũng mất, không lấy lại được."
+    },
+    "requests": {
+      "title": "Yêu cầu",
+      "hint": "Khách muốn đặt sân nào, giờ nào, những ngày nào. Áp dụng cho máy thì máy đó đặt đúng như vậy từ lượt 06:00 tới (máy dùng tài khoản đang chọn cho nó).",
+      "add": "Thêm yêu cầu",
+      "edit": "Sửa yêu cầu",
+      "remove": "Xoá yêu cầu",
+      "customer": "Khách",
+      "subdivision": "Phân khu",
+      "sport": "Môn",
+      "court": "Sân",
+      "slots": "Giờ (tối đa 2)",
+      "days": "Ngày chơi",
+      "machine": "Máy đặt",
+      "noMachine": "Chưa chọn máy",
+      "note": "Ghi chú",
+      "active": "Đang áp dụng",
+      "paused": "tạm dừng",
+      "save": "Lưu",
+      "cancel": "Thôi",
+      "apply": "Áp dụng cho máy",
+      "applied": "Đã áp dụng: máy sẽ đặt như vậy từ lượt 06:00 tới.",
+      "otherAccount": "Máy này đang dùng tài khoản của khách khác: chọn tài khoản ở trang Đặt sân.",
+      "none": "Chưa có yêu cầu.",
+      "noCustomer": "Thêm khách ở mục Khách hàng trước."
     },
     "guide": {
       "title": "Hướng dẫn",
@@ -672,5 +698,15 @@
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",
     "unreachable": "Không kết nối được phần chạy nền của Court Booker.",
     "http": "Phần chạy nền trả lời không như mong đợi."
+  },
+  "days": {
+    "0": "T2",
+    "1": "T3",
+    "2": "T4",
+    "3": "T5",
+    "4": "T6",
+    "5": "T7",
+    "6": "CN",
+    "every": "Mọi ngày"
   }
 }

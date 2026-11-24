@@ -72,7 +72,8 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
   `main`: the app's update button, or the installer from the release page.
 - The app is one PyInstaller folder inside a per-user NSIS installer, and the backend serves the
   built UI. The installer is built by the `Desktop` workflow, as this PC has no Rust.
-- Choosing days of the week: later, not decided.
+- Choosing days of the week: each machine's `days`, set by applying a customer's request
+  (2026-11-24).
 - Three machines book (MuMu 0, 1, 2; two cores and 2 GB each), since 2026-11-24: the app lets
   only three through when more select the day in the same second (known issues). Five were tried
   on 2026-11-23 and 24.

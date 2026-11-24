@@ -240,6 +240,7 @@ describe("BookingTicket choices", () => {
       sport: "tennis",
       court: "S6 - Sân tennis",
       venue_keyword: "Origami",
+      days: [],
     };
     const { fetch, replies } = renderTicket();
     const instances = await screen.findByRole("group", { name: "Máy" });
@@ -274,6 +275,7 @@ describe("BookingTicket choices", () => {
       sport: "tennis",
       court: "S9 - Sân tennis",
       venue_keyword: "Origami",
+      days: [],
     };
     const { fetch, replies } = renderTicket();
     const instances = await screen.findByRole("group", { name: "Máy" });
@@ -311,6 +313,7 @@ describe("BookingTicket choices", () => {
       sport: "tennis",
       court: "S9 - Sân tennis",
       venue_keyword: "Origami",
+      days: [],
     };
     const saved = settings({ instances: [other] });
     const { fetch, replies } = renderTicket({ saved });
@@ -358,6 +361,7 @@ describe("BookingTicket choices", () => {
       sport: "tennis",
       court: "S9 - Sân tennis",
       venue_keyword: "Origami",
+      days: [],
     };
     renderTicket({ saved: settings({ instances: [other] }) });
     const instances = await screen.findByRole("group", { name: "Máy" });

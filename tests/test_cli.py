@@ -477,6 +477,82 @@ def spawned(monkeypatch):
     return FakeProcess.started
 
 
+def days_config(tmp_path, top_days="", instance_days=""):
+    """Two machines booking 06:00 runs, with the days given (2026-10-10, played for on
+    2026-10-08, is a Saturday, 5)."""
+    path = tmp_path / "config.toml"
+    manager = (tmp_path / "MuMuManager.exe").as_posix()
+    path.write_text(
+        f'mumu_manager = "{manager}"\n{top_days}\n'
+        f'slots = ["18:00 - 19:00"]\n\n[[instances]]\nmumu_index = 1\n'
+        f'slots = ["20:00 - 21:00"]\n{instance_days}\n',
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_a_machine_off_that_day_neither_books_nor_boots(
+    monkeypatch, tmp_path, data_home, spawned, windows_notifications
+):
+    path = days_config(tmp_path, instance_days="days = [0, 2]")
+    supervisors = use_connect(monkeypatch, fake_connect)
+    run = fake_run([("20:00 - 21:00", True)])
+    monkeypatch.setattr(cli, "run_booking", run)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--instance", "1", "--scheduled"]) == cli.EXIT_OK
+
+    assert supervisors == []
+    assert not hasattr(run, "config")
+    assert windows_notifications == []
+    log = next((tmp_path / "logs").glob("court-booker-*-mumu1.log")).read_text(encoding="utf-8")
+    assert "MuMu 1 books for Monday, Wednesday only, not for 2026-10-10" in log
+    with sqlite3.connect(data_home / "booker.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM runs").fetchone() == (0,)
+
+
+def test_the_first_machine_off_that_day_still_starts_the_others(
+    monkeypatch, tmp_path, data_home, spawned, windows_notifications
+):
+    path = days_config(tmp_path, top_days="days = [6]")
+    monkeypatch.setattr(cli, "MuMu", lambda *args, **kwargs: None)
+    supervisors = use_connect(monkeypatch, fake_connect)
+    run = fake_run([("18:00 - 19:00", True)])
+    monkeypatch.setattr(cli, "run_booking", run)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--scheduled"]) == cli.EXIT_OK
+
+    command = spawned[0].command
+    assert command[command.index("--instance") + 1] == "1"
+    assert spawned[0].waited
+    assert supervisors == []
+    assert windows_notifications == []
+    assert not (data_home / "run.lock").exists()
+
+
+def test_a_machine_off_that_day_is_not_waited_for(monkeypatch, tmp_path, data_home, spawned):
+    path = days_config(tmp_path, top_days="days = [6]")
+    supervisors = use_connect(monkeypatch, fake_connect)
+    monkeypatch.setattr(cli, "run_booking", fake_run([("20:00 - 21:00", True)]))
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--instance", "1", "--scheduled"]) == cli.EXIT_OK
+
+    assert [supervisor.launch_after for supervisor in supervisors] == [[]]
+
+
+def test_a_machine_on_that_day_books(monkeypatch, tmp_path, data_home, spawned):
+    path = days_config(tmp_path, instance_days="days = [5]")
+    run = fake_run([("20:00 - 21:00", True)])
+    use_connect(monkeypatch, fake_connect)
+    monkeypatch.setattr(cli, "run_booking", run)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--instance", "1", "--scheduled"]) == cli.EXIT_OK
+    assert run.config.days == [5]
+
+
 def test_another_instance_books_on_its_own(
     monkeypatch, tmp_path, data_home, spawned, windows_notifications
 ):

@@ -126,6 +126,7 @@ describe("HomePage status line", () => {
       sport: "tennis",
       court: "S6 - Sân tennis",
       venue_keyword: "Origami",
+      days: [],
     };
     tickSteps({ mumu: true, app: true, login: true });
     localStorage.setItem(

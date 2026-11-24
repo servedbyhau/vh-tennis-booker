@@ -155,6 +155,24 @@ MIGRATIONS = (
     CREATE TABLE money_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     ALTER TABLE customers ADD COLUMN free INTEGER NOT NULL DEFAULT 0;
     """,
+    # 9: what each customer asks to book (court_booker.requests): a court, slots, the days of
+    # the week, and the machine that books it.
+    """
+    CREATE TABLE requests (
+        id TEXT PRIMARY KEY,
+        customer_id TEXT NOT NULL REFERENCES customers (id),
+        subdivision TEXT NOT NULL,
+        sport TEXT NOT NULL,
+        court TEXT NOT NULL,
+        slots TEXT NOT NULL,
+        days TEXT NOT NULL,
+        machine INTEGER,
+        active INTEGER NOT NULL DEFAULT 1,
+        note TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX requests_by_customer ON requests (customer_id);
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 

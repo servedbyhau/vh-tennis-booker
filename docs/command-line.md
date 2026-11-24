@@ -32,6 +32,7 @@ Edit `config.toml`, or use the UI. The keys you usually change:
 | Key | Example | Meaning |
 |---|---|---|
 | `slots` | `["18:00 - 19:00", "19:00 - 20:00"]` | Slots to book, one round each, in this order: put the most wanted first |
+| `days` | `[]` | The days of the week the day of play may fall on for the daily task to book with this machine, 0 Monday to 6 Sunday; empty books every day. Each `[[instances]]` table has its own (every day unless given). A machine off that day neither boots nor books, and the machines after it do not wait for it; the first machine still starts the others. Runs started by hand book whatever the day |
 | `sport` | `"tennis"` | What to book: `tennis`, `multi`, `volleyball`, `table-tennis`, `basketball`, `football`, `pickleball` or `badminton` |
 | `court` | `"S10 - Sân tennis"` | The court, as the app names it (S6, S8, S9 or S10 for tennis at Origami; BE7 or BCX3/CX2 01-02 at BS) |
 | `subdivision` | `""` | The account's subdivision, `origami` or `bs`; empty follows the account. The run books by `court` either way |
