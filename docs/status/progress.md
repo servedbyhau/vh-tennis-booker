@@ -73,7 +73,7 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - The app is one PyInstaller folder inside a per-user NSIS installer, and the backend serves the
   built UI. The installer is built by the `Desktop` workflow, as this PC has no Rust.
 - Choosing days of the week: later, not decided.
-- Three machines book (MuMu 0, 1, 2; two cores and 3 GB each), since 2026-11-24: the app lets
+- Three machines book (MuMu 0, 1, 2; two cores and 2 GB each), since 2026-11-24: the app lets
   only three through when more select the day in the same second (known issues). Five were tried
   on 2026-11-23 and 24.
 - From 1.0.0 each version has a GitHub release page with its installer; the pages of
