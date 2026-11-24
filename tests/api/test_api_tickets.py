@@ -59,9 +59,32 @@ def test_a_ticket_comes_with_what_the_app_showed(client, context, save):
             "created_at": "2026-10-01T06:00",
             "seen_at": "2026-10-01T06:01:12.000",
             "has_photo": True,
+            "sport": "tennis",
+            "sent_at": None,
             "machine": 1,
         }
     ]
+
+
+def test_a_ticket_is_marked_sent_and_stays_so_when_read_again(client, save):
+    save(1, ticket())
+
+    marked = client.put("/api/tickets/1234567/sent", json={"sent": True})
+    save(1, ticket(status="Đã sử dụng"))  # a later run reads it again
+    (listed,) = client.get("/api/tickets").json()
+    unmarked = client.put("/api/tickets/1234567/sent", json={"sent": False})
+
+    assert marked.status_code == 204
+    assert listed["sent_at"] is not None
+    assert listed["status_text"] == "Đã sử dụng"
+    assert unmarked.status_code == 204
+    assert client.get("/api/tickets").json()[0]["sent_at"] is None
+
+
+def test_an_unknown_ticket_is_not_marked(client):
+    answer = client.put("/api/tickets/7654321/sent", json={"sent": True})
+
+    assert (answer.status_code, answer.json()["error"]) == (404, "not_found")
 
 
 def test_every_machine_s_tickets_come_together(client, save):

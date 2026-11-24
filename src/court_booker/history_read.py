@@ -225,7 +225,7 @@ def account_subdivisions(db: sqlite3.Connection) -> list[dict[str, Any]]:
 
 _TICKET_COLUMNS = f"""
     code, device, utility, court, play_date, slot, status, status_text, created_at, seen_at,
-    photo, account_id, {_holder_columns("tickets")}
+    photo, account_id, sent_at, {_holder_columns("tickets")}
 """
 
 
@@ -248,6 +248,16 @@ def get_ticket(db: sqlite3.Connection, code: str) -> dict[str, Any] | None:
     """Return ticket ``code`` as :func:`list_tickets` lists it, ``None`` if not recorded."""
     row = db.execute(f"SELECT {_TICKET_COLUMNS} FROM tickets WHERE code = ?", (code,)).fetchone()
     return None if row is None else dict(row)
+
+
+def mark_sent(db: sqlite3.Connection, code: str, at: str | None) -> bool:
+    """Record ticket ``code`` as sent to its customer at ``at``, or not sent with ``None``.
+
+    Returns whether the ticket is recorded.
+    """
+    with db:
+        cursor = db.execute("UPDATE tickets SET sent_at = ? WHERE code = ?", (at, code))
+    return cursor.rowcount > 0
 
 
 def ticket_photo(db: sqlite3.Connection, code: str) -> str | None:

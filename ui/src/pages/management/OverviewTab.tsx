@@ -182,7 +182,7 @@ export function OverviewTab() {
   const { t } = useTranslation();
   const facts = useMachineFacts();
   const tickets = useTickets();
-  const alerts = useAlerts(facts);
+  const alerts = useAlerts(facts, tickets.data ?? []);
   const toPlay = ticketsToUse(tickets.data ?? [], localToday());
   return (
     <>

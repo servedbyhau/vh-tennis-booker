@@ -617,6 +617,63 @@
         }
       }
     },
+    "/api/tickets/{code}/sent": {
+      "put": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Mark Ticket Sent",
+        "description": "Mark the ticket sent to its customer now, or not sent; 404 for a ticket not recorded.",
+        "operationId": "mark_ticket_sent_api_tickets__code__sent_put",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentMark"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings": {
       "get": {
         "tags": [
@@ -3108,6 +3165,20 @@
         "title": "ScheduleSwitch",
         "description": "Switch the daily booking on or off."
       },
+      "SentMark": {
+        "properties": {
+          "sent": {
+            "type": "boolean",
+            "title": "Sent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent"
+        ],
+        "title": "SentMark",
+        "description": "Whether a ticket's picture was sent to its customer."
+      },
       "Settings": {
         "properties": {
           "slots": {
@@ -3531,6 +3602,28 @@
             "type": "boolean",
             "title": "Has Photo"
           },
+          "sport": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sport"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
           "machine": {
             "anyOf": [
               {
@@ -3557,6 +3650,8 @@
           "created_at",
           "seen_at",
           "has_photo",
+          "sport",
+          "sent_at",
           "machine"
         ],
         "title": "Ticket",

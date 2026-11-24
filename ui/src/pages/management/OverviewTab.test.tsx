@@ -51,8 +51,17 @@ async function open(path: string, extra: Record<string, Reply> = {}) {
     "GET /api/customers": reply([AN, BINH]),
     "GET /api/runs": reply([BOOKED]),
     "GET /api/tickets": reply([
-      ticket("1000001", { play_date: "2026-10-15", slot: "18:00 - 19:00", ...AN }),
-      ticket("1000002", { play_date: "2026-10-16", customer: "Chị Bình" }),
+      ticket("1000001", {
+        play_date: "2026-10-15",
+        slot: "18:00 - 19:00",
+        sent_at: "2026-10-15T07:00:00",
+        ...AN,
+      }),
+      ticket("1000002", {
+        play_date: "2026-10-16",
+        customer: "Chị Bình",
+        sent_at: "2026-10-15T07:00:00",
+      }),
       ticket("1000003", { play_date: "2026-10-16", status: "cancelled" }),
     ]),
     ...extra,
@@ -94,6 +103,7 @@ describe("Management overview", () => {
       "GET /api/status": reply(overview({ schedule: { ...overview().schedule, enabled: false } })),
       "GET /api/customers": reply([AN, { ...BINH, accounts: [account("b2", { device: null })] }]),
       "GET /api/runs": reply([FAILED, BOOKED]),
+      "GET /api/tickets": reply([ticket("1000005", { play_date: "2026-10-16" })]),
     });
     const alerts = within(screen.getByRole("region", { name: "Cần xử lý" }));
 
@@ -101,6 +111,7 @@ describe("Management overview", () => {
     expect(texts).toContain("Tự đặt đang tắt: sáng mai không đặt sân.");
     expect(texts).toContain("Máy 2 chưa chọn tài khoản nên sẽ không đặt.");
     expect(texts).toContain("Máy 2: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử.");
+    expect(texts).toContain("1 vé hôm nay và ngày mai chưa gửi cho khách.");
     expect(alerts.getByRole("link", { name: /bị lỗi/ })).toHaveAttribute(
       "href",
       `${paths.history}?run=8`,

@@ -125,6 +125,10 @@ MIGRATIONS = (
     ALTER TABLE tickets ADD COLUMN customer TEXT;
     ALTER TABLE tickets ADD COLUMN account TEXT;
     """,
+    # 7: when the ticket's picture was sent to its customer (the management marks it).
+    """
+    ALTER TABLE tickets ADD COLUMN sent_at TEXT;
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 

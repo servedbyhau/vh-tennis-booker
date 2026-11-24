@@ -3,11 +3,13 @@ cancel of one in the app (``court-booker cancel``, in its own process)."""
 
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
 # time, where Python 3.9 has no `X | None`, so `Optional` is used instead.
+import contextlib
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any, Literal, Optional
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
 from fastapi import Path as PathParameter
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -19,6 +21,8 @@ from court_booker.api.errors import NoMachineError, NotFoundError, TicketCancell
 from court_booker.api.history import HistoryDb
 from court_booker.api.tasks import TaskState, last, start, state_of
 from court_booker.customers import CustomerBook
+from court_booker.history import connect
+from court_booker.quota import sport_of
 
 router = APIRouter(prefix="/api", tags=["tickets"])
 
@@ -48,6 +52,10 @@ class Ticket(BaseModel):
     seen_at: str
     """When a run last read it: a status changed in the app since is not known."""
     has_photo: bool
+    sport: Optional[str]
+    """The sport of its utility (``tennis``, ``pickleball``...), empty for one not known here."""
+    sent_at: Optional[str]
+    """When its picture was marked sent to its customer; empty while not."""
     machine: Optional[int]
     """The MuMu instance that can cancel it now: the one its account is attached to, or the
     one that read it when no chosen account did; empty when its account is on no machine."""
@@ -96,6 +104,7 @@ def list_tickets(
         {
             **row,
             "has_photo": photo_path(folder, row["photo"]) is not None,
+            "sport": sport_of(row["utility"]),
             "machine": machine_of(row, machines),
         }
         for row in history_read.list_tickets(db, since=since, limit=limit)
@@ -146,3 +155,19 @@ def start_cancel(
     if machine is None:
         raise NoMachineError(f"The account of ticket {code} is on no machine")
     return start(request, context, "cancel", machine, ["cancel", code], code)
+
+
+class SentMark(BaseModel):
+    """Whether a ticket's picture was sent to its customer."""
+
+    sent: bool
+
+
+@router.put("/tickets/{code}/sent", status_code=204, response_class=Response)
+def mark_ticket_sent(context: Context, code: Code, mark: SentMark) -> Response:
+    """Mark the ticket sent to its customer now, or not sent; 404 for a ticket not recorded."""
+    at = datetime.now().isoformat(timespec="seconds") if mark.sent else None
+    with contextlib.closing(connect(context.data.database)) as db:
+        if not history_read.mark_sent(db, code, at):
+            raise NotFoundError(f"No ticket {code}")
+    return Response(status_code=204)
