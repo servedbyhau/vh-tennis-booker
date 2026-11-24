@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 
 from court_booker import history, processes
-from court_booker.api import tickets as ticket_routes
+from court_booker.api import tasks
 from court_booker.engine import engine_command
 from court_booker.lock import Holder
 from court_booker.tickets import Ticket
@@ -150,12 +150,12 @@ def launched(monkeypatch):
     """Record the cancels started instead of starting processes; the time is 14:00."""
     calls = []
 
-    def launch(path, code, instance):
-        calls.append((path, code, instance))
+    def launch(path, argv):
+        calls.append((path, argv))
         return FakeProcess()
 
-    monkeypatch.setattr(ticket_routes, "launch_cancel", launch)
-    monkeypatch.setattr(ticket_routes, "datetime", At)
+    monkeypatch.setattr(tasks, "launcher", launch)
+    monkeypatch.setattr(tasks, "datetime", At)
     return calls
 
 
@@ -188,14 +188,14 @@ def test_a_ticket_is_cancelled_by_the_machine_its_account_is_on(client, context,
         "running": True,
         "exit_code": None,
     }
-    assert launched == [(context.config_path.resolve(), "1234567", 2)]
+    assert launched == [(context.config_path.resolve(), ["cancel", "1234567", "--instance", "2"])]
 
 
 def test_a_ticket_of_the_first_machine_needs_no_instance(client, save, launched):
     save(0, ticket())  # read without a chosen account: its own machine cancels it
 
     assert client.post("/api/tickets/1234567/cancel").status_code == 202
-    assert launched[0][2] is None
+    assert launched[0][1] == ["cancel", "1234567"]
 
 
 def test_the_cancel_started_last_tells_how_it_ended(app, client, save, launched):
@@ -267,15 +267,13 @@ def test_one_cancel_at_a_time(app, client, save, launched):
     assert (second.status_code, after.status_code) == (409, 202)
 
 
-def test_launch_starts_the_cancel_command(monkeypatch, tmp_path):
+def test_launch_starts_the_task_command(monkeypatch, tmp_path):
     started = []
     monkeypatch.setattr(subprocess, "Popen", lambda argv, **options: started.append(argv))
 
-    ticket_routes.launch_cancel(tmp_path / "config.toml", "1234567", 2)
-    ticket_routes.launch_cancel(tmp_path / "config.toml", "1234567", None)
+    tasks.launch(tmp_path / "config.toml", ["cancel", "1234567", "--instance", "2"])
 
     path = str(tmp_path / "config.toml")
     assert started == [
-        [*engine_command(), "cancel", "1234567", "--config", path, "--instance", "2"],
-        [*engine_command(), "cancel", "1234567", "--config", path],
+        [*engine_command(), "cancel", "1234567", "--instance", "2", "--config", path],
     ]

@@ -7,6 +7,7 @@ import {
   getAccounts,
   getCancel,
   getMumuInstances,
+  getQuotaTask,
   getOverview,
   getRun,
   getNotifications,
@@ -34,6 +35,7 @@ export const queryKeys = {
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
   cancel: ["cancel"] as const,
+  quotaTask: ["quotaTask"] as const,
   customers: ["customers"] as const,
   accountLogin: (id: string) => ["accountLogin", id] as const,
 };
@@ -58,10 +60,10 @@ export function settlingInterval(overview: Overview | undefined): number | false
 
 /**
  * Tell whether a task that holds the emulator books (a booking or a dry run, whose steps show as
- * they go), unlike auto setup and a ticket cancel.
+ * they go), unlike auto setup, a ticket cancel and a quota read.
  */
 export function booking(trigger: string): boolean {
-  return trigger !== "setup" && trigger !== "cancel";
+  return trigger !== "setup" && trigger !== "cancel" && trigger !== "quota";
 }
 
 /** How often the ticket cancel going on is read again. */
@@ -72,6 +74,15 @@ export function useCancelState() {
   return useQuery({
     queryKey: queryKeys.cancel,
     queryFn: getCancel,
+    refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
+  });
+}
+
+/** Read the quota read started last, again every 2 s while it goes on. */
+export function useQuotaTask() {
+  return useQuery({
+    queryKey: queryKeys.quotaTask,
+    queryFn: getQuotaTask,
     refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
   });
 }

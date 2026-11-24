@@ -47,6 +47,7 @@
           "manual": "Booking (started by hand)",
           "setup": "Auto setup in progress",
           "cancel": "Cancelling a ticket in the Vinhomes app",
+          "quota": "Reading a quota in the Vinhomes app",
           "other": "A run is in progress"
         },
         "locked": "Dry run is locked until it ends"
@@ -244,7 +245,7 @@
         },
         "quota": {
           "question": "The flat used up its bookings",
-          "answer": "8 slots a month at most. Cancel the ones you do not need in the Vinhomes app."
+          "answer": "8 slots a month at most. Cancel the ones not needed in the Tickets (Cancel ticket): the quota comes back at once."
         },
         "loggedOut": {
           "question": "The app was logged out",
@@ -333,6 +334,7 @@
     "manual": "by hand",
     "setup": "auto setup",
     "cancel": "ticket cancel",
+    "quota": "quota read",
     "unknown": "unknown"
   },
   "setup": {
@@ -352,7 +354,20 @@
   },
   "quota": {
     "left": "{{sport}} {{left}}/{{limit}} left",
-    "read": "{{used}}/{{limit}} of {{month}} used, read at {{time}} {{day}}"
+    "read": "{{used}}/{{limit}} of {{month}} used, read at {{time}} {{day}}",
+    "refresh": {
+      "button": "Read the quota again",
+      "running": "Reading the quota in the Vinhomes app, about a minute…",
+      "done": "Quota read again.",
+      "failed": {
+        "1": "The quota was not read in the app. See the activity log.",
+        "2": "No quota read during the morning booking.",
+        "3": "This machine's MuMu did not open.",
+        "4": "The Vinhomes app on this machine is not ready; it may be logged out.",
+        "5": "This machine is busy with another run. Try again later.",
+        "other": "Something went wrong reading the quota. See the activity log."
+      }
+    }
   },
   "steps": {
     "run_started": {
@@ -460,6 +475,7 @@
       "full": "Could not cancel ticket {{code}}",
       "plain": "Could not cancel a ticket"
     },
+    "quota_not_read": "Quota not read",
     "other": "Other step ({{kind}})"
   },
   "runs": {

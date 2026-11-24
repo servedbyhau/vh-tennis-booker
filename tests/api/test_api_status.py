@@ -56,14 +56,17 @@ def test_a_starting_dry_run_runs(context):
     }
 
 
-def test_a_ticket_cancel_on_another_machine_runs(context):
-    assert status.running(context, cancel=Process()).model_dump() == {
-        "trigger": "cancel",
+def test_a_task_on_another_machine_runs(context):
+    from court_booker.api.tasks import Task
+
+    task = Task("quota", 1, "2026-10-14T10:00:00", Process())
+
+    assert status.running(context, task=task).model_dump() == {
+        "trigger": "quota",
         "pid": 4321,
         "since": None,
         "runs": [],
     }
-    assert status.running(context, cancel=Process(code=0)) is None
 
 
 def run(run_id, started_at, device):

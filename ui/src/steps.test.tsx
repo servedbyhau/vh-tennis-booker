@@ -220,6 +220,12 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
     "failed",
   ],
   ["ticket_not_cancelled", {}, "Không huỷ được một vé", "failed"],
+  [
+    "quota_not_read",
+    { reason: "The history page was not read back far enough" },
+    "Không đọc được hạn mức",
+    "failed",
+  ],
 ];
 
 describe("stepMessage", () => {

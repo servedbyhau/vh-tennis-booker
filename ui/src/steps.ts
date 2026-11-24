@@ -40,7 +40,7 @@ function length(data: Data, key: string): number | undefined {
   return Array.isArray(value) ? value.length : undefined;
 }
 
-const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel"] as const;
+const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel", "quota"] as const;
 const SETUP_ITEMS = ["mumu_installed", "mumu_screen", "wake_timers", "app_installed"] as const;
 const SETUP_STATUSES = ["ok", "fixed", "fixable", "user", "unknown"] as const;
 
@@ -352,6 +352,11 @@ const MESSAGES: Record<StepKind, Describe> = {
       tone: "booked",
     };
   },
+  quota_not_read: ({ t }, data) => ({
+    text: t("steps.quota_not_read"),
+    detail: text(data, "reason"),
+    tone: "failed",
+  }),
   ticket_not_cancelled: ({ t }, data) => {
     const code = text(data, "code");
     return {

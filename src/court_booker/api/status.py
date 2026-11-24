@@ -12,6 +12,7 @@ from court_booker import __version__, device_setup, history_read
 from court_booker.api.context import AppContext, Context
 from court_booker.api.history import RunSummary
 from court_booker.api.schedule import ScheduleState, schedule_state
+from court_booker.api.tasks import running_task
 from court_booker.device_setup import Status
 from court_booker.lock import RunLock
 
@@ -38,14 +39,14 @@ def running(
     context: AppContext,
     dry_run: Any = None,
     recent: Sequence[dict[str, Any]] = (),
-    cancel: Any = None,
+    task: Any = None,
 ) -> Optional[Running]:
-    """Return the run going on now, from the lock or from the dry run or cancel started last.
+    """Return the run going on now, from the lock or from the dry run or task started last.
 
     ``dry_run`` is the process the backend started last; for its first moments it does not
     hold the lock yet. ``recent`` holds the newest runs, newest first, where its runs are.
-    ``cancel`` is the process of the ticket cancel started last (``court-booker cancel``),
-    which holds the lock of another machine than the first one, or none yet.
+    ``task`` is the task on a machine still running (:mod:`court_booker.api.tasks`), which
+    holds the lock of another machine than the first one, or none yet; its kind is the trigger.
     """
     holder = RunLock(context.data.lock).running_holder()
     if holder is not None:
@@ -57,8 +58,8 @@ def running(
         )
     if dry_run is not None and dry_run.poll() is None:
         return Running(trigger="dry_run", pid=dry_run.pid, since=None)
-    if cancel is not None and cancel.poll() is None:
-        return Running(trigger="cancel", pid=cancel.pid, since=None)
+    if task is not None and task.process.poll() is None:
+        return Running(trigger=task.kind, pid=task.process.pid, since=None)
     return None
 
 
@@ -113,12 +114,8 @@ def read_status(context: Context, request: Request) -> Overview:
     finally:
         connection.close()
     last = recent[:1]
-    cancel = getattr(request.app.state, "cancel", None)
     now = running(
-        context,
-        getattr(request.app.state, "dry_run", None),
-        recent,
-        None if cancel is None else cancel.process,
+        context, getattr(request.app.state, "dry_run", None), recent, running_task(request)
     )
     state = schedule_state(context)
     return Overview(

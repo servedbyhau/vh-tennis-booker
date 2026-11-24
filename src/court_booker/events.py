@@ -53,6 +53,8 @@ class EventKind(str, Enum):
     # A ticket cancelled, outside any run (court-booker cancel).
     TICKET_CANCELLED = "ticket_cancelled"
     TICKET_NOT_CANCELLED = "ticket_not_cancelled"
+    # The quota read when asked, outside any run (court-booker quota).
+    QUOTA_NOT_READ = "quota_not_read"
     # The app, outside any run.
     SETTINGS_SAVED = "settings_saved"
     SCHEDULE_ENABLED = "schedule_enabled"

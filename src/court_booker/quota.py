@@ -21,7 +21,8 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
-from court_booker.config import DAYS_AHEAD
+from court_booker.app_language import ENGLISH_SPORTS
+from court_booker.config import DAYS_AHEAD, SPORTS
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker
 from court_booker.screen import Screen
@@ -38,6 +39,8 @@ BEFORE = "before"
 AFTER = "after"
 CANCEL = "cancel"
 """Read once a ticket was cancelled (:mod:`court_booker.cancel`)."""
+ASKED = "asked"
+"""Read when the user asked for it (:mod:`court_booker.quota_command`)."""
 """When a read was made: while getting ready, or after the tickets."""
 
 _PAGES = 25
@@ -87,6 +90,15 @@ class Quota:
         if slots is not None:
             data["slots"] = slots
         return data
+
+
+def sport_of(utility: str) -> str | None:
+    """Return the sport whose tile is ``utility``, in either language; ``None`` if none."""
+    for names in (SPORTS, ENGLISH_SPORTS):
+        for sport, name in names.items():
+            if name.casefold() == utility.casefold():
+                return sport
+    return None
 
 
 def counted(ticket: Ticket, utility: str) -> bool:
@@ -178,6 +190,42 @@ def settled_page(
         if places == before or clock() >= until:
             return screen
         before = places
+
+
+def read_quotas(
+    booker: Booker,
+    play_date: date,
+    moment: str,
+    report: Reporter,
+    account_id: str | None = None,
+) -> list[Quota] | None:
+    """Read the quota for ``play_date`` of every utility the account plays, in one read.
+
+    That is the config's utility and each other one with a ticket in that month of play; each
+    is reported as :func:`read_quota` does. ``None`` when the page was not read far enough.
+    """
+    reader = TicketReader(booker, Path(), time.monotonic() + QUOTA_SECONDS)
+    tickets = read_back(booker, reader, first_booking_day(play_date))
+    if tickets is None:
+        return None
+    month = play_date.isoformat()[:7]
+    utilities = [booker.labels.utility]
+    for ticket in tickets:
+        known = {utility.casefold() for utility in utilities}
+        if ticket.play_date[:7] == month and ticket.utility.casefold() not in known:
+            utilities.append(ticket.utility)
+    found = []
+    for utility in utilities:
+        quota = count(tickets, utility, play_date)
+        logger.info("%s", describe(quota))
+        data = quota.event_data(moment)
+        if account_id is not None:
+            data["account_id"] = account_id
+        own = utility == booker.labels.utility
+        sport = booker.config.sport if own else sport_of(utility)
+        report(EventKind.QUOTA_READ, **data, sport=sport)
+        found.append(quota)
+    return found
 
 
 def describe(quota: Quota, slots: int | None = None) -> str:

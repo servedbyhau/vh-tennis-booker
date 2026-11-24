@@ -84,15 +84,15 @@ def test_no_dry_run_while_a_run_holds_the_lock(client, context, launched):
 
 
 def test_no_dry_run_while_a_ticket_is_cancelled(app, client, launched):
-    from court_booker.api.tickets import Cancelling
+    from court_booker.api.tasks import Task
 
-    app.state.cancel = Cancelling("1234567", 1, "2026-10-13T13:59:00", FakeProcess())
+    app.state.cancel = Task("cancel", 1, "2026-10-13T13:59:00", FakeProcess(), "1234567")
 
     response = client.post("/api/runs/dry-run")
 
     assert (response.status_code, response.json()["detail"]) == (
         409,
-        "A ticket is being cancelled",
+        "Another task is in progress: cancel on MuMu 1",
     )
     assert launched == []
 

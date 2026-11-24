@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- An account on a machine has a button in the customers that reads its quota again in the
+  Vinhomes app, for each sport it plays that month (`court-booker quota [--instance N]`,
+  `/api/machines/{index}/quota`). The guide says to cancel a slot not needed in the tickets.
 - A ticket still to play has a cancel button in the tickets: after a question, the machine its
   account is on cancels it in the Vinhomes app and its words tell how that went; the ticket and
   the quota are shown again once done (`/api/tickets/{code}/cancel`, `/api/tickets/cancel`).

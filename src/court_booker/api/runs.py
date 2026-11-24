@@ -11,7 +11,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from court_booker.api.context import Context
-from court_booker.api.tickets import cancel_running
+from court_booker.api.tasks import running_task
 from court_booker.engine import engine_command
 from court_booker.errors import LockHeldError
 from court_booker.lock import RunLock, check_quiet_time
@@ -52,7 +52,7 @@ def start_dry_run(context: Context, request: Request) -> DryRunStarted:
     """Start a dry run of the saved settings; it stops before "Xác nhận".
 
     Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time and
-    (409 ``lock_held``) while a run holds the lock, or while the dry run or ticket cancel
+    (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine
     started last is still running (they may not hold the lock yet, or hold another machine's).
     The dry run checks again itself.
     """
@@ -63,8 +63,9 @@ def start_dry_run(context: Context, request: Request) -> DryRunStarted:
         last = getattr(request.app.state, "dry_run", None)
         if last is not None and last.poll() is None:
             raise LockHeldError(f"Another run is in progress: dry run (pid {last.pid})")
-        if cancel_running(request):
-            raise LockHeldError("A ticket is being cancelled")
+        task = running_task(request)
+        if task is not None:
+            raise LockHeldError(f"Another task is in progress: {task.kind} on MuMu {task.machine}")
         holder = RunLock(context.data.lock).running_holder()
         if holder is not None:
             raise LockHeldError(f"Another run is in progress: {holder.describe()}")

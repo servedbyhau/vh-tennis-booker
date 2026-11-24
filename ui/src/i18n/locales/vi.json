@@ -47,6 +47,7 @@
           "manual": "Đang đặt sân (chạy thủ công)",
           "setup": "Đang thiết lập tự động",
           "cancel": "Đang huỷ vé trong app Vinhomes",
+          "quota": "Đang đọc hạn mức trong app Vinhomes",
           "other": "Đang có một lần chạy"
         },
         "locked": "Chạy thử tạm khóa cho tới khi xong"
@@ -244,7 +245,7 @@
         },
         "quota": {
           "question": "Căn hộ hết hạn mức",
-          "answer": "Tối đa 8 khung mỗi tháng. Hủy lượt không cần trong app Vinhomes."
+          "answer": "Tối đa 8 khung mỗi tháng. Hủy lượt không cần ở mục Vé (nút Huỷ vé), hạn mức được hoàn ngay."
         },
         "loggedOut": {
           "question": "App bị đăng xuất",
@@ -333,6 +334,7 @@
     "manual": "thủ công",
     "setup": "thiết lập tự động",
     "cancel": "huỷ vé",
+    "quota": "đọc hạn mức",
     "unknown": "không rõ"
   },
   "setup": {
@@ -352,7 +354,20 @@
   },
   "quota": {
     "left": "{{sport}} còn {{left}}/{{limit}}",
-    "read": "đã dùng {{used}}/{{limit}} của tháng {{month}}, đọc lúc {{time}} {{day}}"
+    "read": "đã dùng {{used}}/{{limit}} của tháng {{month}}, đọc lúc {{time}} {{day}}",
+    "refresh": {
+      "button": "Đọc lại hạn mức",
+      "running": "Đang đọc hạn mức trong app Vinhomes, khoảng 1 phút…",
+      "done": "Đã đọc lại hạn mức.",
+      "failed": {
+        "1": "Chưa đọc được hạn mức trong app. Xem nhật ký.",
+        "2": "Không đọc hạn mức trong giờ đặt sân buổi sáng.",
+        "3": "Không mở được MuMu của máy này.",
+        "4": "App Vinhomes trên máy này chưa sẵn sàng, có thể đã bị đăng xuất.",
+        "5": "Máy này đang chạy một lượt khác. Hãy thử lại sau.",
+        "other": "Có lỗi khi đọc hạn mức. Xem nhật ký."
+      }
+    }
   },
   "steps": {
     "run_started": {
@@ -460,6 +475,7 @@
       "full": "Không huỷ được vé {{code}}",
       "plain": "Không huỷ được một vé"
     },
+    "quota_not_read": "Không đọc được hạn mức",
     "other": "Bước khác ({{kind}})"
   },
   "runs": {
