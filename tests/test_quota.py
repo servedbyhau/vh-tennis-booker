@@ -200,6 +200,66 @@ def test_the_quota_read_is_reported(monkeypatch):
     assert (event.data["left"], event.data["slots"]) == (1, 2)
 
 
+def test_every_utility_played_that_month_is_read_at_once(monkeypatch):
+    history = FakeHistory(
+        [
+            page(
+                card("9", "2026-11-26", "2026-11-24", utility="Sân Pickleball"),
+                card("8", "2026-11-25", "2026-11-23"),
+                card("7", "2026-11-20", "2026-11-18", "Đã huỷ", utility="Sân cầu lông"),
+                card("6", "2026-10-29", "2026-10-27", utility="Sân bóng rổ"),  # another month
+            )
+        ]
+    )
+    opened = []
+
+    def reader(booker, folder, deadline):
+        opened.append(deadline)
+        return history
+
+    monkeypatch.setattr(quota, "TicketReader", reader)
+    monkeypatch.setattr(quota, "read_back", lambda booker, reader, since: read(reader, since))
+    sink = MemorySink()
+
+    found = quota.read_quotas(
+        history, date(2026, 11, 26), quota.ASKED, Reporter(sink), account_id="acc-1"
+    )
+
+    assert len(opened) == 1  # one read of the page for all of them
+    assert [(q.utility, q.used) for q in found] == [
+        (TENNIS, 1),  # the machine's own first, then as they come
+        ("Sân Pickleball", 1),
+        ("Sân cầu lông", 0),  # cancelled: none used, still told
+    ]
+    assert [(e.data["sport"], e.data["moment"], e.data["account_id"]) for e in sink.events] == [
+        ("tennis", "asked", "acc-1"),
+        ("pickleball", "asked", "acc-1"),
+        ("badminton", "asked", "acc-1"),
+    ]
+
+
+def test_a_page_not_read_far_enough_tells_no_utility(monkeypatch):
+    history = FakeHistory([page(card("9", "2026-11-26", "2026-11-24"))])
+    monkeypatch.setattr(quota, "TicketReader", lambda booker, folder, deadline: history)
+    monkeypatch.setattr(quota, "read_back", lambda booker, reader, since: None)
+    sink = MemorySink()
+
+    assert quota.read_quotas(history, date(2026, 11, 26), quota.ASKED, Reporter(sink)) is None
+    assert sink.events == []
+
+
+@pytest.mark.parametrize(
+    ("utility", "sport"),
+    [("Sân cầu lông", "badminton"), ("Sân Pickleball", "pickleball"), ("Badminton", "badminton")],
+)
+def test_a_utility_names_its_sport(utility, sport):
+    assert quota.sport_of(utility) == sport
+
+
+def test_an_unknown_utility_names_no_sport():
+    assert quota.sport_of("VinWonders") is None
+
+
 def test_a_page_swipe_is_one_command():
     swipes = []
     device = SimpleNamespace(swipe=lambda *args: swipes.append(args))

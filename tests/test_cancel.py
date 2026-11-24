@@ -9,12 +9,13 @@ from xml.sax.saxutils import quoteattr
 
 import pytest
 
-from court_booker import cancel, cli
-from court_booker.cancel import cancel_ticket, machine_config, sport_of
+from court_booker import cancel, cli, machine_task
+from court_booker.cancel import cancel_ticket
 from court_booker.config import Config
 from court_booker.errors import LockHeldError, NavigationError, TicketNotCancelledError
 from court_booker.flow import Booker
 from court_booker.history import Holder
+from court_booker.machine_task import machine_config
 from court_booker.tickets import CANCELLED, Ticket
 
 WIDTH, HEIGHT = 540, 1600
@@ -226,18 +227,6 @@ def test_the_page_shown_after_the_confirm_is_not_trusted():
     assert app.taps.count("history") == 2  # the page that showed it cancelled was opened anew
 
 
-@pytest.mark.parametrize(
-    ("utility", "sport"),
-    [("Sân cầu lông", "badminton"), ("Sân Pickleball", "pickleball"), ("Badminton", "badminton")],
-)
-def test_a_utility_names_its_sport(utility, sport):
-    assert sport_of(utility) == sport
-
-
-def test_an_unknown_utility_names_no_sport():
-    assert sport_of("VinWonders") is None
-
-
 def test_a_machine_takes_its_own_settings_or_the_first_ones():
     config = Config(
         mumu_index=0,
@@ -295,9 +284,9 @@ TICKET = Ticket(
 def command(monkeypatch, tmp_path):
     """Run ``court-booker cancel`` with a fake device; return its exit code and quota reads."""
     made.clear()
-    monkeypatch.setattr(cancel, "datetime", At)
-    monkeypatch.setattr(cancel, "Supervisor", FakeSupervisor)
-    monkeypatch.setattr(cancel, "_mumu_off", lambda config: False)
+    monkeypatch.setattr(machine_task, "datetime", At)
+    monkeypatch.setattr(machine_task, "Supervisor", FakeSupervisor)
+    monkeypatch.setattr(machine_task, "_mumu_off", lambda config: False)
     monkeypatch.setattr(cancel, "cancel_ticket", lambda booker, code, deadline: [TICKET])
     reads = []
     monkeypatch.setattr(
@@ -367,7 +356,7 @@ def test_a_machine_busy_with_a_run_cancels_nothing(command, data_home, monkeypat
     def busy(self, trigger):
         raise LockHeldError("Another run is in progress")
 
-    monkeypatch.setattr(cancel.RunLock, "acquire", busy)
+    monkeypatch.setattr(machine_task.RunLock, "acquire", busy)
 
     assert command("2546028") == cli.EXIT_BUSY
     assert made == []

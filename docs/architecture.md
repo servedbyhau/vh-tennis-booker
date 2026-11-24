@@ -122,19 +122,26 @@ Details live in the docstrings; this page says where things are and what must st
   ticket's cancel button is in the same place) and a card by its whole label; pages are
   recognised by their shape, not by captions, so in either language. A picture counts only if
   the directions link is at the same place before and after it.
+- `machine_task.py`: a task on one machine's app outside any run, `court-booker cancel` and
+  `court-booker quota`, each a task of its own like auto setup: refused in the scheduled run's
+  quiet time, the machine's run lock held (its trigger the task's name), no run in the history,
+  its steps in the activity log (a failure as the task's own error step, with the reason). It
+  brings MuMu, the driver and the app up as a run does, checks the account, does its work and
+  shuts MuMu again if it started it. A machine switched off in the Setup is driven with the
+  first machine's settings (`machine_config`).
 - `cancel.py`: `court-booker cancel <code> [--instance N]` cancels a ticket in the app of its
-  machine, a task of its own like auto setup: refused in the scheduled run's quiet time, the
-  machine's run lock held (trigger `cancel`), no run in the history, its steps in the activity
-  log (`ticket_cancelled`, or `ticket_not_cancelled` with the reason, an error). A machine
-  switched off in the Setup is driven with the first machine's settings (`machine_config`).
-  `cancel_ticket` opens the history page, finds the card among the newest (3 swipes at most),
+  machine (`ticket_cancelled`, or `ticket_not_cancelled`). `cancel_ticket` opens the history page, finds the card among the newest (3 swipes at most),
   opens the ticket, taps its cancel button on the page of that code only, and "Xác nhận" only
   in the dialog that asks the question (labels `cancel_ticket`, `cancel_question`); without the
   question nothing is confirmed. The page the app shows after it still holds the old status,
   so the ticket counts as cancelled once a page opened again shows it so; the tickets read
   then are saved, and the quota of the ticket's utility is read again (`moment` `cancel`,
-  with the account's id in the event, as no run holds it). MuMu is shut again if the task
-  started it.
+  with the account's id in the event, as no run holds it).
+- `quota_command.py`: `court-booker quota [--instance N]` reads the quota of the account on the
+  machine when asked: the history page once, back to the month of today + 2, and a `quota_read`
+  (`moment` `asked`, with the account's id) for the machine's own utility and each other one
+  with a ticket that month (`quota.read_quotas`); `quota_not_read` when the page was not read
+  far enough.
 - `quota.py`: what the account used of the quota of the utility it books, for the day of play
   (today + 2): the tickets of that month of play, and of that day, all but cancelled ones
   (`count`; 8 a month, 2 a day, field notes "Dialogs"). `read_back` swipes the history page
@@ -332,7 +339,8 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |
-| `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine`, in its own process like the dry run (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`, in the quiet time, and while a run, a dry run or another cancel goes on); and how the one started last goes (`running`, its `exit_code`). `/api/status` shows it running (trigger `cancel`), and no dry run starts meanwhile |
+| `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine` (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`), and how the one started last goes (`running`, its `exit_code`) |
+| `POST /api/machines/{mumu_index}/quota`, `GET /api/machines/quota` | Start `court-booker quota` on the machine (refused for one without a chosen account, 409 `no_machine`), and how the one started last goes. Both are tasks (`api/tasks.py`): each in its own process like the dry run, one at a time, refused in the quiet time and while a run, a dry run or another task goes on (409 `lock_held`); `/api/status` shows one running (its kind as the trigger), and no dry run starts meanwhile |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password), each with the last quota read of every utility and month from this one on (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`; the app shows the month of the next booking); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
 | `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |

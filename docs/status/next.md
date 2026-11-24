@@ -16,7 +16,7 @@ Last updated: 2026-11-24.
 Chosen by the user on 2026-11-24, one branch each: (1) `court-booker cancel <code>`
 (#302; a real cancel of a ticket booked for the test went through), (2) its button on a
 ticket of the tickets section (`feat/cancel-ticket-button`; a real cancel through the API went
-through), (3) a button that reads
+through), (3, `feat/read-quota`, a real read on MuMu 0 went through) a button that reads
 an account's quota again, (4) one that opens a machine's MuMu. Adding or deleting machines stays
 by hand (three at most, on or off in the Setup). The quota read since #292 is in the installed
 app since #299; the first 06:00 runs read it on every machine.

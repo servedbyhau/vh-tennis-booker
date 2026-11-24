@@ -198,7 +198,11 @@ def category(event: Event) -> str:
 
     One of ``step``, ``slot``, ``setup``, ``settings``, ``schedule`` or ``error``.
     """
-    if event.kind in (EventKind.SLOT_FAILED, EventKind.TICKET_NOT_CANCELLED):
+    if event.kind in (
+        EventKind.SLOT_FAILED,
+        EventKind.TICKET_NOT_CANCELLED,
+        EventKind.QUOTA_NOT_READ,
+    ):
         return "error"
     if event.kind is EventKind.RUN_FINISHED and event.data.get("error"):
         return "error"

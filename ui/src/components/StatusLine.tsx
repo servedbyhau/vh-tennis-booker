@@ -8,7 +8,7 @@ import { setupLeft } from "../setupState";
 import { useFormat } from "../useFormat";
 import styles from "./StatusLine.module.css";
 
-const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel"] as const;
+const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel", "quota"] as const;
 
 /**
  * The ink pill while a run holds the emulator: what runs. Screen readers hear it once,

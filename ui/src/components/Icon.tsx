@@ -15,6 +15,7 @@ import {
   LifeBuoy,
   ListChecks,
   Lock,
+  RotateCw,
   MonitorSmartphone,
   Pencil,
   Phone,
@@ -62,6 +63,8 @@ const DRAWINGS = {
   remove: Trash2,
   /** A ticket to cancel. */
   cancel: CalendarX,
+  /** Read again in the app. */
+  refresh: RotateCw,
   /** Agree, keep what was typed. */
   check: Check,
   /** Close what is open, give it up. */

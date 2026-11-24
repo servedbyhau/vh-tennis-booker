@@ -184,9 +184,9 @@ export interface paths {
          * @description Cancel the ticket in the app of the machine its account is on; it takes about a minute.
          *
          *     Refused when the ticket is not recorded (404 ``not_found``) or cancelled already (409
-         *     ``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), from the wake
-         *     time to 5 minutes after the start (400 ``bad_request``), and while a run, a dry run or
-         *     another cancel goes on (409 ``lock_held``). The cancel checks again itself.
+         *     ``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), and as
+         *     :func:`court_booker.api.tasks.start` refuses (around the scheduled run, or another run or
+         *     task going on). The cancel checks again itself.
          */
         post: operations["start_cancel_api_tickets__code__cancel_post"];
         delete?: never;
@@ -559,11 +559,54 @@ export interface paths {
          * @description Start a dry run of the saved settings; it stops before "Xác nhận".
          *
          *     Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time and
-         *     (409 ``lock_held``) while a run holds the lock, or while the dry run or ticket cancel
+         *     (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine
          *     started last is still running (they may not hold the lock yet, or hold another machine's).
          *     The dry run checks again itself.
          */
         post: operations["start_dry_run_api_runs_dry_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Quota Task
+         * @description Show the quota read started last: on which machine, and how it ended.
+         */
+        get: operations["read_quota_task_api_machines_quota_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/{mumu_index}/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Quota
+         * @description Read the quota of the account on machine ``mumu_index`` again, in its app (about a minute).
+         *
+         *     Refused for a machine without a chosen account (409 ``no_machine``), as the reading would be
+         *     of no customer, and as :func:`start` refuses.
+         */
+        post: operations["start_quota_api_machines__mumu_index__quota_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -637,25 +680,6 @@ export interface components {
             account_id: string;
         };
         /**
-         * CancelState
-         * @description The cancel started last from the app, going on or over; all empty before any.
-         */
-        CancelState: {
-            /** Code */
-            code?: string | null;
-            /** Machine */
-            machine?: number | null;
-            /** Started At */
-            started_at?: string | null;
-            /**
-             * Running
-             * @default false
-             */
-            running: boolean;
-            /** Exit Code */
-            exit_code?: number | null;
-        };
-        /**
          * CustomerAccount
          * @description A customer's Vinhomes account, without its password.
          */
@@ -727,7 +751,7 @@ export interface components {
          * @description What happened. The value is stable: it becomes a database value and a message key.
          * @enum {string}
          */
-        EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "account_checked" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "tickets_saved" | "quota_read" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "ticket_cancelled" | "ticket_not_cancelled" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
+        EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "account_checked" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "tickets_saved" | "quota_read" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "ticket_cancelled" | "ticket_not_cancelled" | "quota_not_read" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
         /**
          * Health
          * @description The backend answers and runs this version.
@@ -1180,6 +1204,25 @@ export interface components {
             };
         };
         /**
+         * TaskState
+         * @description The task of one kind started last from the app, going on or over; all empty before any.
+         */
+        TaskState: {
+            /** Code */
+            code?: string | null;
+            /** Machine */
+            machine?: number | null;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Running
+             * @default false
+             */
+            running: boolean;
+            /** Exit Code */
+            exit_code?: number | null;
+        };
+        /**
          * Ticket
          * @description One ticket of an account, as the app's history page last showed it.
          */
@@ -1522,7 +1565,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CancelState"];
+                    "application/json": components["schemas"]["TaskState"];
                 };
             };
             /** @description Invalid request values, one line per value */
@@ -1562,7 +1605,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CancelState"];
+                    "application/json": components["schemas"]["TaskState"];
                 };
             };
             /** @description Invalid request values, one line per value */
@@ -2453,6 +2496,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DryRunStarted"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_quota_task_api_machines_quota_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_quota_api_machines__mumu_index__quota_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The MuMu instance */
+                mumu_index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
                 };
             };
             /** @description Invalid request values, one line per value */

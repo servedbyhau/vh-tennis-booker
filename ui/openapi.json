@@ -535,7 +535,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CancelState"
+                  "$ref": "#/components/schemas/TaskState"
                 }
               }
             }
@@ -569,7 +569,7 @@
           "tickets"
         ],
         "summary": "Start Cancel",
-        "description": "Cancel the ticket in the app of the machine its account is on; it takes about a minute.\n\nRefused when the ticket is not recorded (404 ``not_found``) or cancelled already (409\n``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), from the wake\ntime to 5 minutes after the start (400 ``bad_request``), and while a run, a dry run or\nanother cancel goes on (409 ``lock_held``). The cancel checks again itself.",
+        "description": "Cancel the ticket in the app of the machine its account is on; it takes about a minute.\n\nRefused when the ticket is not recorded (404 ``not_found``) or cancelled already (409\n``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), and as\n:func:`court_booker.api.tasks.start` refuses (around the scheduled run, or another run or\ntask going on). The cancel checks again itself.",
         "operationId": "start_cancel_api_tickets__code__cancel_post",
         "parameters": [
           {
@@ -589,7 +589,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CancelState"
+                  "$ref": "#/components/schemas/TaskState"
                 }
               }
             }
@@ -1702,7 +1702,7 @@
           "runs"
         ],
         "summary": "Start Dry Run",
-        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run or ticket cancel\nstarted last is still running (they may not hold the lock yet, or hold another machine's).\nThe dry run checks again itself.",
+        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine\nstarted last is still running (they may not hold the lock yet, or hold another machine's).\nThe dry run checks again itself.",
         "operationId": "start_dry_run_api_runs_dry_run_post",
         "responses": {
           "202": {
@@ -1711,6 +1711,105 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DryRunStarted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/quota": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Read Quota Task",
+        "description": "Show the quota read started last: on which machine, and how it ended.",
+        "operationId": "read_quota_task_api_machines_quota_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/{mumu_index}/quota": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Start Quota",
+        "description": "Read the quota of the account on machine ``mumu_index`` again, in its app (about a minute).\n\nRefused for a machine without a chosen account (409 ``no_machine``), as the reading would be\nof no customer, and as :func:`start` refuses.",
+        "operationId": "start_quota_api_machines__mumu_index__quota_post",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
                 }
               }
             }
@@ -1906,62 +2005,6 @@
         "title": "AttachedAccount",
         "description": "The account a machine books with from its next run on."
       },
-      "CancelState": {
-        "properties": {
-          "code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Code"
-          },
-          "machine": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Machine"
-          },
-          "started_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Started At"
-          },
-          "running": {
-            "type": "boolean",
-            "title": "Running",
-            "default": false
-          },
-          "exit_code": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exit Code"
-          }
-        },
-        "type": "object",
-        "title": "CancelState",
-        "description": "The cancel started last from the app, going on or over; all empty before any."
-      },
       "CustomerAccount": {
         "properties": {
           "id": {
@@ -2141,6 +2184,7 @@
           "setup_finished",
           "ticket_cancelled",
           "ticket_not_cancelled",
+          "quota_not_read",
           "settings_saved",
           "schedule_enabled",
           "schedule_disabled"
@@ -3302,6 +3346,62 @@
         ],
         "title": "Step",
         "description": "One step of the activity log; ``kind`` is the message key, ``data`` its values.\n\n``kind`` and ``category`` are listed in the schema, so the UI's types name every step\nand a step without a message fails its type check."
+      },
+      "TaskState": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running",
+            "default": false
+          },
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          }
+        },
+        "type": "object",
+        "title": "TaskState",
+        "description": "The task of one kind started last from the app, going on or over; all empty before any."
       },
       "Ticket": {
         "properties": {

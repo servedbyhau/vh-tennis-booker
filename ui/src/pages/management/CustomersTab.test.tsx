@@ -349,3 +349,38 @@ describe("the pages", () => {
     expect(pages.getByRole("link", { name: "Quản lý" })).not.toHaveAttribute("aria-current");
   });
 });
+
+describe("Reading a quota again", () => {
+  const RUNNING = { code: null, machine: 1, started_at: "2026-10-15T09:30:00", running: true };
+
+  it("reads the quota of an account on a machine again, and says when it is done", async () => {
+    const app = await openPage([AN], {
+      "POST /api/machines/1/quota": reply({ ...RUNNING, exit_code: null }, 202),
+      "GET /api/machines/quota": reply({ ...RUNNING, running: false, exit_code: 0 }),
+    });
+    const row = card("Anh An");
+
+    // Only the account on a machine can be read again.
+    expect(row.getAllByRole("button", { name: "Đọc lại hạn mức" })).toHaveLength(1);
+    fireEvent.click(row.getByRole("button", { name: "Đọc lại hạn mức" }));
+
+    expect(await row.findByText(/^Đang đọc hạn mức trong app Vinhomes/)).toBeVisible();
+    expect(await row.findByText("Đã đọc lại hạn mức.", {}, { timeout: 4000 })).toBeVisible();
+    expect(requestsTo(app.fetch, "POST /api/machines/1/quota")).toBe(1);
+    await waitFor(() => expect(requestsTo(app.fetch, "GET /api/customers")).toBeGreaterThan(1));
+  });
+
+  it("says why when it is refused", async () => {
+    await openPage([AN], {
+      "POST /api/machines/1/quota": reply({ error: "lock_held", detail: "busy" }, 409),
+      "GET /api/machines/quota": reply({}),
+    });
+    const row = card("Anh An");
+
+    fireEvent.click(row.getByRole("button", { name: "Đọc lại hạn mức" }));
+
+    expect(
+      await row.findByText("Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại."),
+    ).toBeVisible();
+  });
+});

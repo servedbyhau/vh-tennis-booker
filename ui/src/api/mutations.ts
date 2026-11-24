@@ -11,6 +11,7 @@ import {
   detachAccount,
   getNotifications,
   removeAccount,
+  readQuota,
   removeCustomer,
   saveNotifications,
   saveSettings,
@@ -30,6 +31,18 @@ export function useCancelTicket() {
     mutationFn: cancelTicket,
     onSuccess: async (state) => {
       cache.setQueryData(queryKeys.cancel, state);
+      await cache.invalidateQueries({ queryKey: queryKeys.overview });
+    },
+  });
+}
+
+/** Start reading a machine's quota again; how it goes is read from then on (`useQuotaTask`). */
+export function useReadQuota() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: readQuota,
+    onSuccess: async (state) => {
+      cache.setQueryData(queryKeys.quotaTask, state);
       await cache.invalidateQueries({ queryKey: queryKeys.overview });
     },
   });

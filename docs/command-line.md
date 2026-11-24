@@ -110,6 +110,7 @@ are dropped); the next run reads it.
 | `court-booker --verbose` | Also print every screen read and every tap |
 | `court-booker --driver instrumentation` / `--driver uiautomator2` | Use only that driver; the default `auto` tries instrumentation, then falls back to uiautomator2 |
 | `court-booker setup [--auto]` | Check the PC and the emulator, or fix them |
+| `court-booker quota [--instance N]` | Read what is left of the quota of MuMu instance N's account in its app, for each sport it plays in the month of today + 2; exit 0 once read, 1 if not, 2 around the scheduled run, 5 if a run uses the machine |
 | `court-booker cancel <code> [--instance N]` | Cancel ticket `<code>` (its "Mã đặt") in the app of MuMu instance N (default: the config's first), then read that sport's quota again; exit 0 once the app shows it cancelled, 1 if not, 2 around the scheduled run, 5 if a run uses the machine |
 | `court-booker schedule install` / `status` / `remove` | The daily task |
 | `court-booker serve --config config.toml` | The backend of the UI |

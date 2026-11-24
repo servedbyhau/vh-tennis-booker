@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useRemoveAccount, useRemoveCustomer } from "../../api/mutations";
+import { errorMessage } from "../../api/errors";
+import { useReadQuota, useRemoveAccount, useRemoveCustomer } from "../../api/mutations";
+import { queryKeys, useQuotaTask } from "../../api/queries";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Icon, type IconName } from "../../components/Icon";
 import { IconButton } from "../../components/IconButton";
@@ -83,6 +86,52 @@ interface AccountRowProps {
   onOpen: (open: Open | null) => void;
 }
 
+/** The exit codes of `court-booker quota` that have words of their own. */
+const QUOTA_FAILURES = ["1", "2", "3", "4", "5"] as const;
+
+/**
+ * The quota read again of the account on machine `device` (none without a machine): how the one
+ * started from here goes and how it ended, read every 2 s; the customers are read again once over.
+ */
+function useQuotaRefresh(device: number | null) {
+  const { t } = useTranslation();
+  const cache = useQueryClient();
+  const state = useQuotaTask();
+  const start = useReadQuota();
+  const mine = device !== null && state.data?.machine === device ? state.data : undefined;
+  const started = device !== null && start.data?.machine === device;
+  const ended = started && mine !== undefined && !mine.running;
+
+  useEffect(() => {
+    if (ended) {
+      void cache.invalidateQueries({ queryKey: queryKeys.customers });
+      void cache.invalidateQueries({ queryKey: queryKeys.overview });
+    }
+  }, [ended, cache]);
+
+  let text: string | null = null;
+  if (start.isError && start.variables === device) {
+    text = errorMessage(t, start.error);
+  } else if (mine?.running === true || (start.isPending && start.variables === device)) {
+    text = t("quota.refresh.running");
+  } else if (ended) {
+    const exit = String(mine.exit_code);
+    text =
+      mine.exit_code === 0
+        ? t("quota.refresh.done")
+        : t(`quota.refresh.failed.${QUOTA_FAILURES.find((known) => known === exit) ?? "other"}`);
+  }
+  return {
+    text,
+    running: mine?.running === true || start.isPending,
+    read: () => {
+      if (device !== null) {
+        start.mutate(device);
+      }
+    },
+  };
+}
+
 /** An account: its phone and label, its form under it, or the question before its removal. */
 function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
   const { t } = useTranslation();
@@ -90,6 +139,7 @@ function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
   const close = () => onOpen(null);
   const edited = open?.form === "account" && open.id === account.id;
   const removed = open?.form === "removeAccount" && open.id === account.id;
+  const refresh = useQuotaRefresh(account.device);
   return (
     <li className={styles.account}>
       <div className={styles.row}>
@@ -100,7 +150,20 @@ function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
           <span className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</span>
           {account.label !== "" && <span className={styles.label}>{account.label}</span>}
           <QuotaLine quota={account.quota} month={month} />
+          {refresh.text !== null && (
+            <span role="status" className={styles.label}>
+              {refresh.text}
+            </span>
+          )}
         </span>
+        {account.device !== null && (
+          <IconButton
+            icon="refresh"
+            label={t("quota.refresh.button")}
+            disabled={refresh.running}
+            onClick={refresh.read}
+          />
+        )}
         <IconButton
           icon="edit"
           label={t("pages.customers.edit")}

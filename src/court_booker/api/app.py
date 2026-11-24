@@ -20,6 +20,7 @@ from court_booker.api import (
     settings,
     setup,
     status,
+    tasks,
     tickets,
 )
 from court_booker.api.context import AppContext
@@ -73,6 +74,7 @@ def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
         setup,
         schedule,
         runs,
+        tasks,
         status,
     )
     for module in modules:

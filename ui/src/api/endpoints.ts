@@ -16,6 +16,7 @@ import type {
   ScheduleState,
   Settings,
   Step,
+  TaskState,
   Ticket,
   paths,
 } from "./types";
@@ -58,6 +59,20 @@ export function cancelTicket(code: string): Promise<CancelState> {
 /** Read how the ticket cancel started last goes. */
 export function getCancel(): Promise<CancelState> {
   return call(client.GET("/api/tickets/cancel"));
+}
+
+/** Read the quota of the account on MuMu instance `mumuIndex` again, in its app. */
+export function readQuota(mumuIndex: number): Promise<TaskState> {
+  return call(
+    client.POST("/api/machines/{mumu_index}/quota", {
+      params: { path: { mumu_index: mumuIndex } },
+    }),
+  );
+}
+
+/** Read how the quota read started last goes. */
+export function getQuotaTask(): Promise<TaskState> {
+  return call(client.GET("/api/machines/quota"));
 }
 
 /** List activity log steps newest first. */
