@@ -58,6 +58,9 @@ uses [Semantic Versioning](https://semver.org/).
   that another machine books with moves after a question. An account's form shows its saved login.
 
 ### Fixed
+- A timed run keeps its history in memory from the warm-up to the end of its rounds and writes
+  it after: at 06:00 five machines lost 0.2-0.8 s waiting for each other's writes, and two lost
+  their run and tickets from the History. Its steps show once the rounds are over.
 - Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is
   tapped again, and taps it twice at most: the app was seen to take 11 s, so one login was
   sent three times (the app locks an account after 5 wrong passwords).

@@ -119,6 +119,7 @@ def run_booking(
     screens: Path | None = None,
     supervisor: Supervisor | None = None,
     on_booker: Callable[[Booker], None] | None = None,
+    on_race: Callable[[], None] | None = None,
 ) -> list[RoundResult]:
     """Get ready, wait for ``start`` if given, then book every configured slot.
 
@@ -139,11 +140,15 @@ def run_booking(
     a dry run and a frozen emulator save none.
 
     ``on_booker`` gets the booker before anything runs, for a caller that goes on with
-    the app after the rounds (:mod:`court_booker.tickets`).
+    the app after the rounds (:mod:`court_booker.tickets`). ``on_race`` is called when the
+    warm-up of a timed run begins: from then to the end of the rounds only the booking should
+    run (the caller holds the history then). A run without ``start`` races no one, and its
+    steps show as they happen.
     """
     results = [] if results is None else results
     report = Reporter() if report is None else report
     clock = NtpClock() if clock is None else clock
+    race = on_race or (lambda: None)
     if supervisor is None:
         supervisor = Supervisor(config, report=report, device=device, now=clock.now)
     device = supervisor.device
@@ -167,6 +172,7 @@ def run_booking(
             # utilities list shortly before the start, so the app has just talked to its
             # server when the first tap comes.
             supervisor.watch(booker, deadline, lambda moment: wait_until(moment, clock.now))
+            race()
             wait_until(start - timedelta(seconds=config.warm_up_seconds), clock.now)
             # A fresh answer leaves the counter only the warm-up to drift, and the log shows
             # how far Windows set the PC clock since the first one.

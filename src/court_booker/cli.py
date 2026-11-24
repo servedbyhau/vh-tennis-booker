@@ -576,6 +576,7 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 screens=None if log_dir is None else log_dir / "screens",
                 on_booker=bookers.append,
+                on_race=None if history is None else history.hold,
             )
         code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:
@@ -588,6 +589,8 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # an unattended run must still log and report
         logger.exception("Unexpected error")
         error, code = repr(exc), EXIT_ROUND_FAILED
+    if history is not None:  # the rounds are over: what they held is written now
+        history.release()
 
     # The driver stays for the tickets, read once all the rest is done and reported.
     tickets = (

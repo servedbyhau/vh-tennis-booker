@@ -110,7 +110,13 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     start = datetime(2026, 10, 10, 6, 0)
 
     config = Config(slots=["19:00 - 20:00"], warm_up_seconds=60)
-    runner.run_booking(FakeDevice(), config, start=start, clock=FakeClock(events))
+    runner.run_booking(
+        FakeDevice(),
+        config,
+        start=start,
+        clock=FakeClock(events),
+        on_race=lambda: events.append("race"),
+    )
 
     # Checked every minute from 05:46 until the deadline, 05:58, while waiting on the home screen.
     checks = [datetime(2026, 10, 10, 5, 46) + timedelta(minutes=minute) for minute in range(12)]
@@ -119,6 +125,7 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
         ("quota", date(2026, 10, 12), "before", 1),  # what the app checks at 06:00
         "check",  # back on the home screen
         *[step for tick in checks for step in (tick, "check")],
+        "race",  # the history waits in memory from the warm-up to the end of the rounds
         start - timedelta(seconds=60),
         "measure",  # once more, as Windows may have set the PC clock since the first check
         "locate",
@@ -419,6 +426,18 @@ def test_a_run_begun_near_its_start_hurries(monkeypatch, ahead, hurry):
     clock = FakeClock([])
     runner.run_booking(FakeDevice(), Config(slots=["a"]), start=clock.now() + ahead, clock=clock)
     assert made[0].hurry is hurry
+
+
+def test_a_run_without_a_start_never_holds_the_history(monkeypatch):
+    monkeypatch.setattr(runner, "Booker", FakeBooker)
+    raced = []
+
+    results = runner.run_booking(
+        FakeDevice(), Config(slots=["19:00 - 20:00"]), dry_run=True, on_race=lambda: raced.append(1)
+    )
+
+    assert raced == []  # its steps show as they happen
+    assert [result.ok for result in results] == [True]
 
 
 def test_the_booker_is_handed_over_before_anything_runs(monkeypatch):
