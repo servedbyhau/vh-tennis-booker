@@ -26,8 +26,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-BUSY_TIMEOUT = 0.5
-"""Seconds to wait for another writer; longer would delay a booking round."""
+BUSY_TIMEOUT = 5.0
+"""Seconds to wait for another writer. The rounds write nothing (:meth:`History.hold`), so a
+wait costs no booking; 0.5 s gave up at 06:00 with five machines writing (2026-11-24)."""
 
 MIGRATIONS = (
     """
@@ -223,8 +224,9 @@ class Holder:
 class History:
     """Write the runs of this process to the history database; an event sink.
 
-    Writing must never cost a booking: after the first database error, history stops for
-    the rest of the process and the error is logged once.
+    Writing must never cost a booking: while held (:meth:`hold`, from the warm-up to the end
+    of the rounds) writes wait in memory, and after the first database error, history stops
+    for the rest of the process and the error is logged once.
     """
 
     def __init__(self, connection: sqlite3.Connection) -> None:
@@ -234,6 +236,8 @@ class History:
         self.failed = False
         self.writes = 0
         self.seconds = 0.0
+        self._held: list[Callable[[sqlite3.Connection], None]] | None = None
+        """The writes kept while held, in order; ``None`` when not held."""
         self._lock = threading.Lock()
         """One write at a time: events come from the run, log lines from any thread."""
         # Added to a logger by the caller, so that logger's lines are kept with the run.
@@ -373,20 +377,55 @@ class History:
             )
         )
 
+    def hold(self) -> None:
+        """Keep every write in memory until :meth:`release`.
+
+        Machines booking at once wait for each other to write: at 06:00 on 2026-11-24 five
+        lost 0.24-0.8 s to it in their first second, and two turned history off. Held, the
+        rounds never touch the database. Holding again changes nothing.
+        """
+        with self._lock:
+            if self._held is None:
+                self._held = []
+
+    def release(self) -> None:
+        """Write what was held, in one transaction, and write at once again from now on."""
+        with self._lock:
+            held, self._held = self._held, None
+        if not held:
+            return
+        started = time.perf_counter()
+
+        def write(db: sqlite3.Connection) -> None:
+            for each in held:
+                each(db)
+
+        self._write(write)
+        logger.debug(
+            "History: %d writes held during the rounds, stored in %.1f ms",
+            len(held),
+            (time.perf_counter() - started) * 1000,
+        )
+
     def close(self) -> None:
-        """Store the held log lines and close the database, logging what writing cost.
+        """Store the held writes and log lines and close the database, logging what writing
+        cost.
 
         Remove :attr:`handler` from its logger first.
         """
+        self.release()
         logger.debug("History: %d writes in %.1f ms", self.writes, self.seconds * 1000)
         self.handler.close()
         self.connection.close()
 
     def _write(self, write: Callable[[sqlite3.Connection], None]) -> None:
-        """Run ``write`` in one transaction, unless an earlier write failed."""
+        """Run ``write`` in one transaction, unless an earlier write failed; keep it while held."""
         error: sqlite3.Error | None = None
         with self._lock:
             if self.failed:
+                return
+            if self._held is not None:
+                self._held.append(write)
                 return
             started = time.perf_counter()
             try:

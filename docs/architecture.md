@@ -66,7 +66,8 @@ Details live in the docstrings; this page says where things are and what must st
   screen, `prepare(restart=True)` also without `restart_app`). Then wait on the home screen,
   checked every minute until the deadline (`Supervisor.watch`: `Booker.check_home`, the app
   in front and one screen read, a popup closed; a failure is repaired as above), until
-  `start - warm_up_seconds`, measure the clock again, open the utilities list (`locate_entry`,
+  `start - warm_up_seconds` (the history is held from then, "Events and history"), measure
+  the clock again, open the utilities list (`locate_entry`,
   through `Supervisor.run_step`: a failure is repaired and the list opened again, until 15 s
   before the start, `WARM_UP_REPAIRS_END`),
   read it again 2 s before the start, wait until start + 0.1 s, then one round per slot.
@@ -222,8 +223,12 @@ Details live in the docstrings; this page says where things are and what must st
   row written). Whose it is (`Holder`: the account's id, and the customer's and account's names)
   is the chosen account's, noted once the run holds its lock (`cli.note_holder`), as a run books
   with that account or not at all; empty on a machine without a chosen one. It never costs a
-  booking. Reading it back gives the names of today, those of then once the customer is removed. The first database error
-  turns history off for the process.
+  booking. Reading it back gives the names of today, those of then once the customer is removed.
+  A timed run holds its writes in memory from the warm-up to the end of the rounds
+  (`run_booking`'s `on_race`, `History.hold`) and writes them in one transaction after
+  (`release`, also on `close`): machines booking at once never wait for each other's writes.
+  Outside that, a write waits up to 5 s for another writer (`BUSY_TIMEOUT`). The first
+  database error turns history off for the process.
   Schema changes only add columns, so an older runner still writes to a newer database.
 - `history_read.py`: read-only queries for the backend (runs, one run, events, the live feed's
   `events_after`, `dry_run_passed`, `account_subdivisions`: the subdivision each

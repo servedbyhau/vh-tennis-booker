@@ -46,6 +46,8 @@ Last updated: 2026-11-23.
 
 | Date | Version | Result |
 |---|---|---|
+| 2026-11-24 | local `develop` build | Five machines, 2 cores and 2 GB each, launched in turn (all ready at 05:47:35), 5/10: instance 0 0/2, 1 1/2 (8.7 s), 2 1/2 (6.7 s), 4 2/2 (5.4 s, 4.8 s), 5 1/2. The two whose day tap came last (06:00:01.07, 01.22) got the 60 s notice; three got the "not open yet" notice (the PC clock 0.15 s behind NTP); each lost 0.2-0.8 s waiting for another's history write, and instances 4 and 5 turned history off (fixed on `fix/history-held-in-race`) |
+| 2026-11-23 | local `develop` build | Three machines, 3/6: instance 0 1/2 (5.6 s, the court full for the second), 1 2/2 (5.7 s, 3.5 s), 2 1/2 (5.4 s) |
 | 2026-11-22 | 1.1.2 | First run of three machines, 4 cores and 3 GB each, 4/6: instance 0 1/2 (7.2 s), instance 1 2/2 (6.7 s, 5.5 s), instance 2 1/2 (5.7 s); both lost slots were second ones, full by 06:00:10.5. The PC clock was 3.18 s slow after a power cut; the run made up for it |
 | 2026-11-21 | 1.1.2 | Instance 0 2/2 (6.3 s, 6.5 s), instance 1 2/2 (5.5 s, 3.8 s) |
 | 2026-11-20 | 1.1.2 | Instance 0 1/2 (4.4 s): the first slot was taken by someone else at "Xác nhận" (06:00:05); instance 1 2/2 (6.0 s, 3.3 s) |

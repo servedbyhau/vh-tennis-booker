@@ -595,6 +595,32 @@ def test_a_run_is_recorded_in_the_history(monkeypatch, tmp_path, data_home):
     assert "Summary" in lines
 
 
+def test_the_rounds_write_the_history_once_they_are_over(monkeypatch, tmp_path, data_home):
+    seen = []
+
+    def run_booking(device, config, *, results, supervisor=None, on_race=None, **kwargs):
+        supervisor.start()
+        on_race()
+        logging.getLogger("court_booker.runner").info("Round 1/1: 18:00 - 19:00")
+        with sqlite3.connect(data_home / "booker.db") as db:
+            seen.extend(message for (message,) in db.execute("SELECT message FROM log_lines"))
+        results.append(RoundResult("18:00 - 19:00", True, "booked", 1.0))
+        return results
+
+    use_connect(monkeypatch, fake_connect)
+    monkeypatch.setattr(cli, "run_booking", run_booking)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(tmp_path / "missing.toml"), "--dry-run"]) == cli.EXIT_OK
+
+    connection = sqlite3.connect(data_home / "booker.db")
+    lines = [line for (line,) in connection.execute("SELECT message FROM log_lines ORDER BY id")]
+    connection.close()
+    assert f"court-booker {cli.__version__}" in seen  # written before the race
+    assert "Round 1/1: 18:00 - 19:00" not in seen
+    assert lines.index("Round 1/1: 18:00 - 19:00") < lines.index("Summary")
+
+
 def test_a_run_is_recorded_with_whose_account_it_books_with(
     monkeypatch, tmp_path, data_home, saved_logins
 ):

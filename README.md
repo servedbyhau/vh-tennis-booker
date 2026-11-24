@@ -179,7 +179,8 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
   on top what is set, the play day, court and slots; below, the subdivision, the sport, the
   court and up to two slots to choose, saved on each press. During a run it shows the steps as
-  they happen.
+  they happen; those of the 06:00 race (from a minute before to the last slot) show once it is
+  over, so writing them takes nothing from the booking.
 - **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
   once a dry run passed), the Windows notification, the account the machine books with, picked
   from the customers', and a dry run. Before booking, a run reads the phone number logged in on the

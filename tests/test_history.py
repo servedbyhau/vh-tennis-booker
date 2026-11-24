@@ -368,6 +368,62 @@ def test_a_database_error_turns_history_off_once(connection, caplog):
     assert "Event sink failed" not in caplog.text
 
 
+def test_held_writes_wait_in_memory_until_released(connection, capture):
+    store, log = capture
+    report = Reporter(store, clock=ticking_clock())
+    report(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="0.5.0")
+
+    store.hold()
+    store.hold()  # the second changes nothing
+    log.info("Tapped 'Sân Tennis'")
+    report(EventKind.SLOT_BOOKED, slot="18:00 - 19:00", seconds=5.4, commands=75, dry_run=False)
+    held = [line["message"] for line in log_lines(connection)]
+    slots_held = rows(connection, "SELECT slot FROM run_slots")
+    store.release()
+    log.info("Reading the tickets")
+
+    assert "Tapped 'Sân Tennis'" not in held
+    assert slots_held == []
+    messages = [line["message"] for line in log_lines(connection)]
+    assert messages.index("Tapped 'Sân Tennis'") < messages.index("Reading the tickets")
+    booked = rows(connection, "SELECT slot, ok FROM run_slots")
+    assert booked == [{"slot": "18:00 - 19:00", "ok": 1}]
+    assert not store.failed
+
+
+def test_closing_writes_what_is_held(tmp_path, connection, capture):
+    store, log = capture
+    Reporter(store, clock=ticking_clock())(
+        EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="0.5.0"
+    )
+    store.hold()
+    log.info("Booked 18:00 - 19:00")
+
+    log.removeHandler(store.handler)
+    store.close()
+
+    reader = sqlite3.connect(tmp_path / "booker.db")
+    messages = [message for (message,) in reader.execute("SELECT message FROM log_lines")]
+    reader.close()
+    assert "Booked 18:00 - 19:00" in messages
+
+
+def test_a_held_write_that_fails_turns_history_off_once(connection, caplog):
+    caplog.set_level(logging.WARNING, logger="court_booker")
+    store = history.History(connection)
+    report = Reporter(store, clock=ticking_clock())
+    report(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="0.5.0")
+    store.hold()
+    report(EventKind.SLOT_STARTED, slot="18:00 - 19:00", round=1, rounds=1)
+    connection.close()
+
+    store.release()
+    report(EventKind.RUN_FINISHED, status="ok", booked=1, total=1)
+
+    assert store.failed
+    assert caplog.text.count("History database failed") == 1
+
+
 def ticket(code="1234567", status_text="Đã đăng ký", **fields):
     values = {
         "code": code,
