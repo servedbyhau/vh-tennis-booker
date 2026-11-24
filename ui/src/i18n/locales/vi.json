@@ -188,6 +188,47 @@
       "readAt": "Đọc lúc {{time}} {{day}}",
       "empty": "Chưa có tài khoản nào được đọc hạn mức. Hạn mức được đọc ở mỗi lượt 06:00, hoặc khi bấm Đọc lại."
     },
+    "money": {
+      "title": "Thu tiền",
+      "months": "Tháng chơi",
+      "month": "Tháng {{month}}",
+      "owed": "phải thu",
+      "paidSum": "đã thu",
+      "left": "còn lại",
+      "none": "Chưa có vé nào của khách trong tháng này. Mỗi vé đặt bằng tài khoản của khách tự thành một khoản phải thu.",
+      "leftToPay": "còn {{left}}",
+      "allPaid": "đã thu đủ",
+      "freeLabel": "Không tính tiền (ví dụ tài khoản của chính bạn)",
+      "day": "Ngày",
+      "court": "Sân",
+      "amount": "Số tiền",
+      "paid": "Đã thu",
+      "golden": "giờ vàng",
+      "cancelled": "đã huỷ",
+      "free": "miễn phí",
+      "noPrice": "chưa có giá",
+      "byHand": "sửa tay",
+      "editAmount": "Sửa số tiền",
+      "save": "Lưu",
+      "markPaid": "Đã thu tiền vé ngày {{day}}",
+      "unpaid": "chưa thu",
+      "paidMark": "đã thu",
+      "sums": "{{count}} vé · phải thu {{owed}} · đã thu {{paid}}",
+      "unpriced": "{{count}} vé chưa có giá",
+      "payAll": "Đã thu hết",
+      "copy": "Copy bảng kê",
+      "copied": "Đã copy, dán vào Zalo",
+      "copyFailed": "Không copy được",
+      "statementTitle": "Bảng kê tháng {{month}} · {{name}}",
+      "statementSums": "Tổng {{owed}} · đã trả {{paid}} · còn lại {{left}}",
+      "pricesTitle": "Bảng giá",
+      "goldenHours": "Giờ vàng",
+      "sport": "Môn",
+      "normal": "Giá thường",
+      "goldenPrice": "Giá giờ vàng",
+      "savePrices": "Lưu bảng giá",
+      "saved": "Đã lưu"
+    },
     "management": {
       "sections": "Các mục quản lý"
     },
@@ -212,7 +253,8 @@
         "short": "{{machine}}: tài khoản chỉ còn {{left}} lượt, ít hơn {{slots}} giờ đặt.",
         "failed": "{{machine}}: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử.",
         "unsent": "{{count}} vé hôm nay và ngày mai chưa gửi cho khách."
-      }
+      },
+      "toCollect": "còn phải thu tháng này"
     },
     "machines": {
       "title": "Máy",

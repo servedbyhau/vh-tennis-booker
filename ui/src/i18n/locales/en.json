@@ -188,6 +188,47 @@
       "readAt": "Read at {{time}} on {{day}}",
       "empty": "No account's quota has been read yet. It is read at each 06:00 run, or when asked."
     },
+    "money": {
+      "title": "Money",
+      "months": "Month of play",
+      "month": "{{month}}",
+      "owed": "owed",
+      "paidSum": "paid",
+      "left": "left to pay",
+      "none": "No customer's ticket this month. Each ticket booked with a customer's account becomes a charge.",
+      "leftToPay": "{{left}} to pay",
+      "allPaid": "all paid",
+      "freeLabel": "Booked for free (your own account, say)",
+      "day": "Day",
+      "court": "Court",
+      "amount": "Amount",
+      "paid": "Paid",
+      "golden": "golden",
+      "cancelled": "cancelled",
+      "free": "free",
+      "noPrice": "no price",
+      "byHand": "set by hand",
+      "editAmount": "Change the amount",
+      "save": "Save",
+      "markPaid": "Paid for the ticket of {{day}}",
+      "unpaid": "not paid",
+      "paidMark": "paid",
+      "sums": "{{count}} tickets · {{owed}} owed · {{paid}} paid",
+      "unpriced": "{{count}} tickets without a price",
+      "payAll": "All paid",
+      "copy": "Copy the statement",
+      "copied": "Copied, paste it in the chat",
+      "copyFailed": "Could not copy",
+      "statementTitle": "Statement of {{month}} · {{name}}",
+      "statementSums": "Total {{owed}} · paid {{paid}} · left {{left}}",
+      "pricesTitle": "Prices",
+      "goldenHours": "Golden hours",
+      "sport": "Sport",
+      "normal": "Normal",
+      "goldenPrice": "Golden",
+      "savePrices": "Save the prices",
+      "saved": "Saved"
+    },
     "management": {
       "sections": "Management sections"
     },
@@ -212,7 +253,8 @@
         "short": "{{machine}}: its account has {{left}} left, fewer than its {{slots}} slots.",
         "failed": "{{machine}}: its last booking failed. See the History.",
         "unsent": "{{count}} tickets of today and tomorrow not sent to their customer yet."
-      }
+      },
+      "toCollect": "left to collect this month"
     },
     "machines": {
       "title": "Machines",

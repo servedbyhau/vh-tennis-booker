@@ -129,6 +129,32 @@ MIGRATIONS = (
     """
     ALTER TABLE tickets ADD COLUMN sent_at TEXT;
     """,
+    # 8: the money (court_booker.money): a charge per ticket a customer's account booked, kept
+    # once the ticket is gone; the prices by sport; a customer booked for free.
+    """
+    CREATE TABLE charges (
+        code TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        customer TEXT,
+        account TEXT,
+        utility TEXT NOT NULL,
+        court TEXT NOT NULL,
+        play_date TEXT NOT NULL,
+        slot TEXT NOT NULL,
+        cancelled INTEGER NOT NULL DEFAULT 0,
+        amount INTEGER,
+        paid_at TEXT,
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX charges_by_play_date ON charges (play_date);
+    CREATE TABLE prices (
+        sport TEXT PRIMARY KEY,
+        normal INTEGER NOT NULL,
+        golden INTEGER NOT NULL
+    );
+    CREATE TABLE money_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    ALTER TABLE customers ADD COLUMN free INTEGER NOT NULL DEFAULT 0;
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 
@@ -343,6 +369,10 @@ class History:
         A ticket recorded before takes its new status; one without a new picture in
         ``photos`` (booking code to file name) keeps the one it has, and its account's holder
         while this run knows of none.
+
+        A ticket of a chosen account still to play becomes a charge of its customer
+        (:mod:`court_booker.money`), kept once the ticket is gone; a charge's ticket read
+        cancelled since is cancelled with it.
         """
         holder = self.holder
         names = (
@@ -384,6 +414,33 @@ class History:
                 rows,
             )
         )
+        today = seen_at.date().isoformat()
+        stamp = _stamp(seen_at)
+        charges = [
+            (
+                ticket.code,
+                *names,
+                ticket.utility,
+                ticket.court,
+                ticket.play_date,
+                ticket.slot,
+                stamp,
+            )
+            for ticket in tickets
+            if holder is not None and ticket.status != "cancelled" and ticket.play_date >= today
+        ]
+        cancelled = [(ticket.code,) for ticket in tickets if ticket.status == "cancelled"]
+
+        def write_charges(db: sqlite3.Connection) -> None:
+            db.executemany(
+                "INSERT INTO charges (code, account_id, customer, account, utility, court,"
+                " play_date, slot, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT (code) DO NOTHING",
+                charges,
+            )
+            db.executemany("UPDATE charges SET cancelled = 1 WHERE code = ?", cancelled)
+
+        self._write(write_charges)
 
     def hold(self) -> None:
         """Keep every write in memory until :meth:`release`.

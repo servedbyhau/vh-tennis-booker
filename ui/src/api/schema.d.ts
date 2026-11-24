@@ -465,6 +465,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/money/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Prices
+         * @description Show the price list.
+         */
+        get: operations["read_prices_api_money_prices_get"];
+        /**
+         * Save Prices
+         * @description Replace the price list; the charges not set by hand follow it.
+         */
+        put: operations["save_prices_api_money_prices_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Charges
+         * @description List the charges of a month of play (every month when not given), priced.
+         */
+        get: operations["list_charges_api_money_charges_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/charges/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Charge
+         * @description Mark a charge paid or not, or set its amount; 404 for one not recorded.
+         */
+        put: operations["change_charge_api_money_charges__code__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Paid
+         * @description Mark several charges paid at once, or not paid (a customer's month, say).
+         */
+        put: operations["mark_paid_api_money_paid_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/customers/{customer_id}/free": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Free
+         * @description Book for a customer for free (their charges owe nothing), or not.
+         */
+        put: operations["mark_free_api_money_customers__customer_id__free_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -723,6 +827,66 @@ export interface components {
             account_id: string;
         };
         /**
+         * Charge
+         * @description What a ticket a customer's account booked costs, and whether it was paid.
+         */
+        Charge: {
+            /** Code */
+            code: string;
+            /** Customer Id */
+            customer_id: string | null;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
+            /** Sport */
+            sport: string | null;
+            /** Court */
+            court: string;
+            /** Play Date */
+            play_date: string;
+            /** Slot */
+            slot: string;
+            /** Golden */
+            golden: boolean;
+            /** Amount */
+            amount: number | null;
+            /** Set By Hand */
+            set_by_hand: boolean;
+            /** Cancelled */
+            cancelled: boolean;
+            /** Free */
+            free: boolean;
+            /** Paid At */
+            paid_at: string | null;
+        };
+        /**
+         * ChargeChange
+         * @description Mark a charge paid or not, and set its amount by hand (``null`` takes the price list's).
+         */
+        ChargeChange: {
+            /** Paid */
+            paid?: boolean | null;
+            /** Amount */
+            amount?: number | null;
+            /**
+             * Reset Amount
+             * @default false
+             */
+            reset_amount: boolean;
+        };
+        /** Charges */
+        Charges: {
+            /** Month */
+            month: string | null;
+            /** Months */
+            months: string[];
+            /** Charges */
+            charges: components["schemas"]["Charge"][];
+            /** Free Customers */
+            free_customers: string[];
+        };
+        /**
          * CustomerAccount
          * @description A customer's Vinhomes account, without its password.
          */
@@ -795,6 +959,11 @@ export interface components {
          * @enum {string}
          */
         EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "account_checked" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "tickets_saved" | "opening_measured" | "quota_read" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "ticket_cancelled" | "ticket_not_cancelled" | "quota_not_read" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
+        /** FreeMark */
+        FreeMark: {
+            /** Free */
+            free: boolean;
+        };
         /**
          * Health
          * @description The backend answers and runs this version.
@@ -970,6 +1139,34 @@ export interface components {
             last_run: components["schemas"]["RunSummary"] | null;
             /** Wake Blocked */
             wake_blocked: boolean;
+        };
+        /** PaidMark */
+        PaidMark: {
+            /** Codes */
+            codes: string[];
+            /** Paid */
+            paid: boolean;
+        };
+        /** Price */
+        Price: {
+            /** Sport */
+            sport: string;
+            /** Normal */
+            normal: number;
+            /** Golden */
+            golden: number;
+        };
+        /**
+         * Prices
+         * @description The price list: the golden hours and a price per sport.
+         */
+        Prices: {
+            /** Golden From */
+            golden_from: string;
+            /** Golden To */
+            golden_to: string;
+            /** Prices */
+            prices: components["schemas"]["Price"][];
         };
         /**
          * Problem
@@ -2315,6 +2512,250 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_prices_api_money_prices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prices"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    save_prices_api_money_prices_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Prices"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prices"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_charges_api_money_charges_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Charges"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_charge_api_money_charges__code__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChargeChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_paid_api_money_paid_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaidMark"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_free_api_money_customers__customer_id__free_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreeMark"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

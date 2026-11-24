@@ -5,17 +5,21 @@ import {
   addAccount,
   addCustomer,
   attachAccount,
+  changeCharge,
   cancelTicket,
   changeAccount,
   changeCustomer,
   detachAccount,
   getNotifications,
+  markFree,
+  markPaid,
   markSent,
   openMachine,
   removeAccount,
   readQuota,
   removeCustomer,
   saveNotifications,
+  savePrices,
   saveSettings,
   startDryRun,
   switchInstance,
@@ -48,6 +52,42 @@ export function useReadQuota() {
       await cache.invalidateQueries({ queryKey: queryKeys.overview });
     },
   });
+}
+
+/** Read the charges again once the money changed. */
+function useMoneyChange<T>(change: (value: T) => Promise<unknown>) {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: change,
+    onSuccess: () => cache.invalidateQueries({ queryKey: ["charges"] }),
+  });
+}
+
+/** Replace the price list; the charges not set by hand follow it. */
+export function useSavePrices() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: savePrices,
+    onSuccess: async (prices) => {
+      cache.setQueryData(queryKeys.prices, prices);
+      await cache.invalidateQueries({ queryKey: ["charges"] });
+    },
+  });
+}
+
+/** Mark a charge paid or not, or set its amount. */
+export function useChangeCharge() {
+  return useMoneyChange(changeCharge);
+}
+
+/** Mark several charges paid, or not. */
+export function useMarkPaid() {
+  return useMoneyChange(markPaid);
+}
+
+/** Book for a customer for free, or not. */
+export function useMarkFree() {
+  return useMoneyChange(markFree);
 }
 
 /** Mark a ticket sent to its customer, or not; the tickets are read again. */
