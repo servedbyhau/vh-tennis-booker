@@ -207,6 +207,13 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
   ],
   ["schedule_disabled", {}, "Đã tắt hẹn giờ", "plain"],
   [
+    "opening_measured",
+    { seconds_to_calendar: 0.9, attempt: 2, pc_offset: 0.152 },
+    "Giờ mở cửa: lịch mở sau 0.90 s, lần bấm 2",
+    "plain",
+  ],
+  ["opening_measured", {}, "Đã ghi lại giờ mở cửa", "plain"],
+  [
     "ticket_cancelled",
     { code: "2546028", play_date: "2026-11-26", slot: "10:00 - 11:00" },
     "Đã huỷ vé 2546028: 10:00–11:00 Thứ Năm 26/11",

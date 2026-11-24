@@ -394,6 +394,10 @@
       "other": "Something failed while getting ready; repaired it"
     },
     "screen_saved": "Saved the screen at the failure, in the logs\\screens folder",
+    "opening_measured": {
+      "full": "Opening: the calendar opened after {{seconds}} s, tap {{attempt}}",
+      "plain": "Opening logged"
+    },
     "tickets_saved": "Read {{tickets}} tickets in the app, saved {{photos}} ticket pictures",
     "quota_read": {
       "full": "{{sport}} quota for {{month}}: {{used}}/{{monthLimit}} used, {{dayUsed}}/{{dayLimit}} on {{day}}, {{left}} left",

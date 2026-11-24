@@ -32,6 +32,7 @@ class EventKind(str, Enum):
     BOOKING_STARTED = "booking_started"
     RUN_FINISHED = "run_finished"
     TICKETS_SAVED = "tickets_saved"
+    OPENING_MEASURED = "opening_measured"
     QUOTA_READ = "quota_read"
     # One round, i.e. one slot.
     SLOT_STARTED = "slot_started"

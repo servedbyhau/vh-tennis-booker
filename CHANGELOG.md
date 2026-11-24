@@ -7,6 +7,10 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A timed run logs its opening once the rounds are over: how far the PC clock and Android's are
+  from NTP time (Android's read during the warm-up and after the rounds), when the first tap
+  came and when the calendar opened, after how many taps (`opening_measured`). Nothing is added
+  between 06:00 and the last slot.
 - Each machine's Setup has a button that opens its MuMu to see its screen: launched, or its window
   brought to the front (`/api/machines/{index}/open`); not around the 06:00 booking or while a run
   or task uses the machines.

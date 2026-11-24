@@ -11,6 +11,14 @@ Last updated: 2026-11-24.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
+## Gathering: the opening's clocks
+
+Since 2026-11-25 each 06:00 run logs "Opening: ..." on each machine (`opening.py`). The user
+asked for 5-7 days of it before deciding whether the first tap should wait until the PC clock
+(and so Android's) has passed 06:00 too: the "chỉ nhận đăng ký từ 06:00" notice showed on about
+half the days, costing 0.5-1 s. Compare, per day, Android's offset, the first tap by Android's
+clock and the attempt that opened the calendar.
+
 ## Next task: what needed MuMu, from the app
 
 Chosen by the user on 2026-11-24, one branch each: (1) `court-booker cancel <code>`
