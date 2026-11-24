@@ -6,12 +6,17 @@ import styles from "./ManagementPage.module.css";
 import type { ManagementState } from "./management/state";
 
 const SECTIONS = [
-  { to: paths.management, title: "pages.customers.title" },
+  { to: paths.management, title: "pages.board.title" },
+  { to: paths.machines, title: "pages.machines.title" },
+  { to: paths.customers, title: "pages.customers.title" },
   { to: paths.tickets, title: "pages.tickets.title" },
   { to: paths.history, title: "pages.history.title" },
 ] as const;
 
-/** The management, apart from the booking: the customers, the tickets and the History. */
+/**
+ * The management, apart from the booking: the overview first, then the machines, the customers,
+ * the tickets and the History.
+ */
 export function ManagementPage() {
   const { t } = useTranslation();
   const [withDry, setWithDry] = useState(false);

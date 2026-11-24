@@ -7,6 +7,11 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The management opens on an overview: this month's slots booked at 06:00, the tickets to play,
+  the machines booking, every machine in a line, the tickets of the next three days and what to
+  look at, each leading where it is set right. A machines section has a card per machine with its
+  account, what it books, its quota, its last 06:00 run and its buttons. The customers moved to
+  `/management/customers`.
 - A timed run logs its opening once the rounds are over: how far the PC clock and Android's are
   from NTP time (Android's read during the warm-up and after the rounds), when the first tap
   came and when the calendar opened, after how many taps (`opening_measured`). Nothing is added

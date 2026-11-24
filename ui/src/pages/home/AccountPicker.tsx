@@ -254,7 +254,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
                 />
               </div>
             )}
-            <Link to={paths.management} className={styles.manage}>
+            <Link to={paths.customers} className={styles.manage}>
               {t("pages.setup.account.manage")}
               <Icon name="go" />
             </Link>

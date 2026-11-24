@@ -193,6 +193,13 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
 
 On the second:
 
+- **Tổng quan / Overview**, shown first: the slots the 06:00 runs booked this month, the tickets
+  to play and the machines booking; every machine in a line with whose account it books with,
+  what it books and how its last 06:00 run went; the tickets of the next three days; and what to
+  look at (the daily booking off, a machine without an account, two machines on one court and
+  slot, an account short of quota, a last run that failed), each leading where it is set right.
+- **Máy / Machines**: a card per machine with its account, what it books, its quota, its last
+  06:00 run, and buttons that open its MuMu and read its quota again.
 - **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
   the Vinhomes accounts they gave, each with what is left of its quota in the month booked for, as
   the last run read it (also in the Setup's list of accounts); an account on a machine has a

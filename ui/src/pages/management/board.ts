@@ -1,0 +1,84 @@
+/** What the management's first board puts together: this month's figures and what to look at. */
+import { useTranslation } from "react-i18next";
+import { useOverview } from "../../api/queries";
+import type { RunSummary } from "../../api/types";
+import { localToday } from "../../format";
+import { paths } from "../../paths";
+import { useReadiness } from "../../readiness";
+import type { MachineFacts } from "./machineFacts";
+
+/** One thing to look at, and how much it matters. */
+export interface Alert {
+  level: "bad" | "warn";
+  text: string;
+  /** Where it is set right. */
+  to: string;
+}
+
+/** Return `day` ("2026-11-25") moved by `days`. */
+export function addDays(day: string, days: number): string {
+  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+  const moved = new Date(year, month - 1, date + days);
+  return localToday(moved);
+}
+
+/** Sum what the 06:00 bookings of `runs` booked and tried, as "slots booked / slots tried". */
+export function bookedOf(runs: readonly RunSummary[]): { booked: number; tried: number } {
+  const real = runs.filter(
+    (run) => !run.dry_run && run.trigger === "scheduled" && run.status !== "running",
+  );
+  return {
+    booked: real.reduce((sum, run) => sum + run.booked, 0),
+    tried: real.reduce((sum, run) => sum + run.total, 0),
+  };
+}
+
+/** Return what to look at: what keeps a machine from booking, and its last run's failure. */
+export function useAlerts(facts: MachineFacts[] | undefined): Alert[] {
+  const { t } = useTranslation();
+  const overview = useOverview();
+  const { accountless, clashing, short } = useReadiness();
+  const alerts: Alert[] = [];
+  const name = (place: number) => t("pages.ticket.instanceName", { number: place + 1 });
+  if (overview.data !== undefined && !overview.data.schedule.enabled) {
+    alerts.push({ level: "bad", text: t("pages.board.alerts.scheduleOff"), to: paths.overview });
+  }
+  for (const machine of accountless) {
+    alerts.push({
+      level: "bad",
+      text: t("pages.board.alerts.noAccount", { machine: name(machine.place) }),
+      to: paths.overview,
+    });
+  }
+  for (const clash of clashing) {
+    alerts.push({
+      level: "warn",
+      text: t("pages.board.alerts.clash", {
+        machines: clash.places.map((place) => place + 1).join(", "),
+      }),
+      to: paths.overview,
+    });
+  }
+  for (const item of short) {
+    alerts.push({
+      level: "warn",
+      text: t("pages.board.alerts.short", {
+        machine: name(item.place),
+        left: item.left,
+        slots: item.slots,
+      }),
+      to: paths.customers,
+    });
+  }
+  for (const item of facts ?? []) {
+    const run = item.lastRun;
+    if (item.booking !== undefined && run !== undefined && run.error !== null) {
+      alerts.push({
+        level: "bad",
+        text: t("pages.board.alerts.failed", { machine: name(item.machine.place) }),
+        to: `${paths.history}?run=${run.id}`,
+      });
+    }
+  }
+  return alerts;
+}

@@ -98,7 +98,7 @@ describe("AccountPicker", () => {
     expect(within(list).queryByText("Chưa có")).not.toBeInTheDocument();
     expect(within(list).getByRole("link", { name: "Quản lý khách hàng" })).toHaveAttribute(
       "href",
-      paths.management,
+      paths.customers,
     );
   });
 
