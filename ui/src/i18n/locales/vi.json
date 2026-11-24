@@ -425,14 +425,14 @@
       "open": "Mở MuMu {{index}} để xem màn hình",
       "account": {
         "title": "Tài khoản",
-        "empty": "Chọn tài khoản",
         "emptyHint": "Đang theo tài khoản có sẵn trong MuMu",
         "none": "Không chọn",
         "onMachine": "đang ở {{machine}}",
         "move": "Chuyển từ {{from}} sang {{to}}?",
         "moveYes": "Chuyển",
         "moveNo": "Thôi",
-        "manage": "Quản lý khách hàng"
+        "manage": "Quản lý khách hàng",
+        "otherCustomer": "Chọn khách khác"
       },
       "dryRun": {
         "button": "Chạy thử",

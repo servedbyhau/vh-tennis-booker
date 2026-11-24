@@ -89,6 +89,8 @@ uses [Semantic Versioning](https://semver.org/).
   others is on.
 
 ### Changed
+- The Setup's account shows "Account" over the phone number and name in use, without the quota;
+  its list asks for the customer first, then one of their phone numbers.
 - The customers' page shows each account's whole phone number with a button that copies it, and
   a search finds a customer by name or contact, or an account by its name or phone number. The
   quotas and their read again moved off it: they are in the quota section.

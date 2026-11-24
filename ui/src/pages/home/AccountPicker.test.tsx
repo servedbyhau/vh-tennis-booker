@@ -41,7 +41,17 @@ async function openMachine(customers: Customer[], extra: Record<string, Reply> =
   return { ...app, machine, button };
 }
 
-/** The accounts listed, the one in use in brackets. */
+/** Open the list and press `name`, a customer, to list their accounts. */
+function openCustomer(
+  machine: Awaited<ReturnType<typeof openMachine>>["machine"],
+  button: HTMLElement,
+  name: string,
+) {
+  fireEvent.click(button);
+  fireEvent.click(machine.getByRole("button", { name: new RegExp(`^${name}`) }));
+}
+
+/** The customers or accounts listed, the one in use in brackets. */
 function listed(list: HTMLElement) {
   return within(list)
     .getAllByRole<HTMLButtonElement>("button")
@@ -52,34 +62,9 @@ function listed(list: HTMLElement) {
 }
 
 describe("AccountPicker", () => {
-  it("shows what is left of each account's quota, to choose one with some left", async () => {
-    const read = {
-      sport: "tennis",
-      month: "2026-10",
-      month_limit: 8,
-      read_at: "2026-10-16T06:03:20.000",
-    };
-    const quoted = customer("a1", {
-      accounts: [
-        account("b1", { device: 0, quota: [{ utility: "Sân Tennis", used: 8, ...read }] }),
-        account("b2", {
-          phone: "0900000022",
-          quota: [{ utility: "Sân Tennis", used: 3, ...read }],
-        }),
-      ],
-    });
-    const { machine, button } = await openMachine([quoted]);
-    expect(button).toHaveTextContent("Tennis còn 0/8");
-
-    fireEvent.click(button);
-
-    const list = machine.getByRole("group", { name: "Tài khoản" });
-    expect(within(list).getByText(/^Tennis còn 5\/8/)).toBeInTheDocument();
-  });
-
-  it("shows the account in use, and every account once pressed", async () => {
+  it("shows the account in use under its title, and the customers once pressed", async () => {
     const { machine, button } = await openMachine([AN, BINH, customer("a4", { name: "Chưa có" })]);
-    expect(button).toHaveTextContent("Anh An0900000011 · Căn A");
+    expect(button).toHaveTextContent("Tài khoản0900000011 · Căn A");
     expect(button).toHaveAttribute("aria-expanded", "false");
     expect(machine.queryByRole("group", { name: "Tài khoản" })).not.toBeInTheDocument();
 
@@ -87,13 +72,7 @@ describe("AccountPicker", () => {
 
     expect(button).toHaveAttribute("aria-expanded", "true");
     const list = machine.getByRole("group", { name: "Tài khoản" });
-    expect(listed(list)).toEqual([
-      "[Anh An0900000011 · Căn A]",
-      "Anh An0900000022 · Căn B",
-      "Anh An0900000033đang ở Máy 2",
-      "Chị Bìnhmất mật khẩu, bấm sửa để nhập lại (off)",
-      "Không chọn",
-    ]);
+    expect(listed(list)).toEqual(["[Anh An3 tài khoản]", "Chị Bình1 tài khoản", "Không chọn"]);
     // A customer without accounts is none of them.
     expect(within(list).queryByText("Chưa có")).not.toBeInTheDocument();
     expect(within(list).getByRole("link", { name: "Quản lý khách hàng" })).toHaveAttribute(
@@ -102,12 +81,45 @@ describe("AccountPicker", () => {
     );
   });
 
+  it("lists a customer's accounts once pressed, and goes back to the customers", async () => {
+    const { machine, button } = await openMachine([AN, BINH]);
+    openCustomer(machine, button, "Anh An");
+
+    const list = machine.getByRole("group", { name: "Tài khoản" });
+    expect(listed(list)).toEqual([
+      "Anh AnChọn khách khác",
+      "[0900000011Căn A]",
+      "0900000022Căn B",
+      "0900000033đang ở Máy 2",
+    ]);
+    expect(within(list).getByRole("button", { name: /^Anh An/ })).toHaveFocus();
+
+    fireEvent.click(within(list).getByRole("button", { name: /^Anh An/ }));
+    fireEvent.click(machine.getByRole("button", { name: /^Chị Bình/ }));
+    expect(listed(list)).toEqual([
+      "Chị BìnhChọn khách khác",
+      "mất mật khẩu, bấm sửa để nhập lại (off)",
+    ]);
+  });
+
+  it("starts from the customers each time it opens", async () => {
+    const { machine, button } = await openMachine([AN, BINH]);
+    openCustomer(machine, button, "Chị Bình");
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    expect(machine.getByRole("button", { name: /^Anh An/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("books with the account pressed, and shuts", async () => {
     const { machine, button, fetch } = await openMachine([AN, FREE], {
       "PUT /api/machines/0/account": reply(FREE),
     });
     const read = requestsTo(fetch, "GET /api/customers");
-    fireEvent.click(button);
+    openCustomer(machine, button, "Anh Cường");
     fireEvent.click(machine.getByRole("button", { name: /0900000055/ }));
 
     await waitFor(() => expect(button).toHaveAttribute("aria-expanded", "false"));
@@ -120,7 +132,7 @@ describe("AccountPicker", () => {
     const { machine, button, fetch } = await openMachine([AN], {
       "PUT /api/machines/0/account": reply(AN),
     });
-    fireEvent.click(button);
+    openCustomer(machine, button, "Anh An");
     fireEvent.click(machine.getByRole("button", { name: /0900000033/ }));
     expect(machine.getByText("Chuyển từ Máy 2 sang Máy 1?")).toBeVisible();
     expect(requestsTo(fetch, "PUT /api/machines/0/account")).toBe(0);
@@ -144,15 +156,15 @@ describe("AccountPicker", () => {
 
   it("sends nothing for the choice there is", async () => {
     const { machine, button, fetch } = await openMachine([AN]);
-    fireEvent.click(button);
-    fireEvent.click(machine.getByRole("button", { name: /^Anh An.*0900000011/ }));
+    openCustomer(machine, button, "Anh An");
+    fireEvent.click(machine.getByRole("button", { name: /^0900000011/ }));
     expect(button).toHaveAttribute("aria-expanded", "false");
     expect(fetch.mock.calls.every(([request]) => request.method === "GET")).toBe(true);
   });
 
   it("shuts on Escape", async () => {
     const { machine, button } = await openMachine([AN]);
-    fireEvent.click(button);
+    openCustomer(machine, button, "Anh An");
     fireEvent.keyDown(machine.getByRole("button", { name: /0900000022/ }), { key: "Escape" });
     expect(button).toHaveAttribute("aria-expanded", "false");
     expect(button).toHaveFocus();
@@ -160,14 +172,14 @@ describe("AccountPicker", () => {
 
   it("says what a machine without an account books with", async () => {
     const { button } = await openMachine([FREE]);
-    expect(button).toHaveTextContent("Chọn tài khoảnĐang theo tài khoản có sẵn trong MuMu");
+    expect(button).toHaveTextContent("Tài khoảnĐang theo tài khoản có sẵn trong MuMu");
   });
 
   it("says why an account was not taken, and keeps the list open", async () => {
     const { machine, button } = await openMachine([AN], {
       "PUT /api/machines/0/account": reply({ error: "lock_held", detail: "running" }, 409),
     });
-    fireEvent.click(button);
+    openCustomer(machine, button, "Anh An");
     fireEvent.click(machine.getByRole("button", { name: /0900000022/ }));
     expect(await machine.findByRole("alert")).toHaveTextContent(
       "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
