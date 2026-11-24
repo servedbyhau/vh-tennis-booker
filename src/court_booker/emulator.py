@@ -151,6 +151,10 @@ class MuMu:
         """Ask MuMu to shut the instance down."""
         self._call("control", "shutdown")
 
+    def show_window(self) -> None:
+        """Bring the running instance's window to the front."""
+        self._call("control", "show_window")
+
     def settings(self, *keys: str) -> dict[str, str]:
         """Return the instance settings named ``keys``; readable while the instance is off."""
         output = self._call("setting", *[arg for key in keys for arg in ("-k", key)])

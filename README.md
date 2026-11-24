@@ -183,7 +183,8 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
   over, so writing them takes nothing from the booking.
 - **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
   once a dry run passed), the Windows notification, the account the machine books with, picked
-  from the customers', and a dry run. Before booking, a run reads the phone number logged in on the
+  from the customers', a button that opens the machine's MuMu to see its screen (launched, or its
+  window brought to the front), and a dry run. Before booking, a run reads the phone number logged in on the
   machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
   once; a machine that cannot be sure books nothing.
 - **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at

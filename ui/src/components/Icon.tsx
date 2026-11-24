@@ -1,5 +1,6 @@
 import {
   AlarmClock,
+  AppWindow,
   ArrowRight,
   Bell,
   CalendarX,
@@ -65,6 +66,8 @@ const DRAWINGS = {
   cancel: CalendarX,
   /** Read again in the app. */
   refresh: RotateCw,
+  /** A machine's MuMu window. */
+  window: AppWindow,
   /** Agree, keep what was typed. */
   check: Check,
   /** Close what is open, give it up. */

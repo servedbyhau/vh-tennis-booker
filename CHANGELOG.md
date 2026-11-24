@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Each machine's Setup has a button that opens its MuMu to see its screen: launched, or its window
+  brought to the front (`/api/machines/{index}/open`); not around the 06:00 booking or while a run
+  or task uses the machines.
 - An account on a machine has a button in the customers that reads its quota again in the
   Vinhomes app, for each sport it plays that month (`court-booker quota [--instance N]`,
   `/api/machines/{index}/quota`). The guide says to cancel a slot not needed in the tickets.

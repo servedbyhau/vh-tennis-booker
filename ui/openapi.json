@@ -1837,6 +1837,56 @@
         }
       }
     },
+    "/api/machines/{mumu_index}/open": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Open Machine",
+        "description": "Launch the MuMu instance of machine ``mumu_index``, or show its window if it runs.\n\nRefused as :func:`start` refuses (a run starts and shuts MuMu itself), and (503 ``device``)\nwhen MuMuManager is not found or fails.",
+        "operationId": "open_machine_api_machines__mumu_index__open_post",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/status": {
       "get": {
         "tags": [

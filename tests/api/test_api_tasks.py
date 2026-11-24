@@ -1,6 +1,7 @@
 """The quota read of a machine, started from the app, with the process launch replaced."""
 
 from datetime import datetime
+from typing import ClassVar
 
 import pytest
 
@@ -93,3 +94,68 @@ def test_no_quota_read_around_the_scheduled_run(client, launched, monkeypatch):
 
     assert client.post("/api/machines/2/quota").status_code == 400
     assert launched == []
+
+
+class FakeMuMu:
+    """MuMu as MuMuManager tells it: ``running`` instances, and what was asked."""
+
+    running: ClassVar[set] = set()
+    asked: ClassVar[list] = []
+
+    def __init__(self, manager, index):
+        self.index = index
+
+    def is_process_started(self):
+        return self.index in FakeMuMu.running
+
+    def launch(self):
+        FakeMuMu.asked.append(("launch", self.index))
+
+    def show_window(self):
+        FakeMuMu.asked.append(("show", self.index))
+
+
+@pytest.fixture
+def mumu(monkeypatch, tmp_path):
+    FakeMuMu.running, FakeMuMu.asked = set(), []
+    monkeypatch.setattr(tasks, "find_mumu_manager", lambda configured: tmp_path / "MuMu.exe")
+    monkeypatch.setattr(tasks, "MuMu", FakeMuMu)
+    monkeypatch.setattr(tasks, "datetime", At)
+    return FakeMuMu
+
+
+def test_a_machine_off_is_launched(client, mumu):
+    assert client.post("/api/machines/2/open").status_code == 204
+    assert mumu.asked == [("launch", 2)]
+
+
+def test_a_machine_on_shows_its_window(client, mumu):
+    mumu.running = {0}
+
+    assert client.post("/api/machines/0/open").status_code == 204
+    assert mumu.asked == [("show", 0)]
+
+
+def test_no_machine_opens_while_a_task_uses_it(app, client, mumu, launched):
+    attach_account(client, 2)
+    client.post("/api/machines/2/quota")
+
+    answer = client.post("/api/machines/1/open")
+
+    assert (answer.status_code, answer.json()["error"]) == (409, "lock_held")
+    assert mumu.asked == []
+
+
+def test_no_machine_opens_around_the_scheduled_run(client, mumu, monkeypatch):
+    monkeypatch.setattr(At, "moment", datetime(2026, 10, 2, 5, 50))
+
+    assert client.post("/api/machines/0/open").status_code == 400
+    assert mumu.asked == []
+
+
+def test_without_mumumanager_nothing_opens(client, mumu, monkeypatch):
+    monkeypatch.setattr(tasks, "find_mumu_manager", lambda configured: None)
+
+    answer = client.post("/api/machines/0/open")
+
+    assert (answer.status_code, answer.json()["error"]) == (503, "device")

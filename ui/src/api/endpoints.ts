@@ -70,6 +70,15 @@ export function readQuota(mumuIndex: number): Promise<TaskState> {
   );
 }
 
+/** Launch the MuMu instance `mumuIndex`, or bring its window to the front if it runs. */
+export function openMachine(mumuIndex: number): Promise<void> {
+  return call(
+    client.POST("/api/machines/{mumu_index}/open", {
+      params: { path: { mumu_index: mumuIndex } },
+    }),
+  ).then(() => undefined);
+}
+
 /** Read how the quota read started last goes. */
 export function getQuotaTask(): Promise<TaskState> {
   return call(client.GET("/api/machines/quota"));

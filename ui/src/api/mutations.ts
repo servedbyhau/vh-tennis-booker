@@ -10,6 +10,7 @@ import {
   changeCustomer,
   detachAccount,
   getNotifications,
+  openMachine,
   removeAccount,
   readQuota,
   removeCustomer,
@@ -46,6 +47,11 @@ export function useReadQuota() {
       await cache.invalidateQueries({ queryKey: queryKeys.overview });
     },
   });
+}
+
+/** Open a machine's MuMu: launched, or its window shown. */
+export function useOpenMachine() {
+  return useMutation({ mutationFn: openMachine });
 }
 
 /** Save the booking settings; the overview shows the next booking with them. */
