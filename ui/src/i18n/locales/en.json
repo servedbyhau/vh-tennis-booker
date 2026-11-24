@@ -229,6 +229,22 @@
       "savePrices": "Save the prices",
       "saved": "Saved"
     },
+    "stats": {
+      "title": "Statistics",
+      "since": "The 06:00 runs of the last {{days}} days ({{runs}} runs of the machines).",
+      "allBooked": "slots booked / tried",
+      "allRate": "share booked",
+      "allAverage": "average time of a slot booked",
+      "byMachine": "By machine",
+      "bySlot": "By slot",
+      "slot": "Slot",
+      "tried": "Tried",
+      "booked": "Booked",
+      "rate": "Share",
+      "average": "Average",
+      "reasons": "Why slots were lost",
+      "noLoss": "No slot lost."
+    },
     "management": {
       "sections": "Management sections"
     },
