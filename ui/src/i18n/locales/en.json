@@ -215,6 +215,7 @@
       "paidMark": "paid",
       "sums": "{{count}} tickets · {{owed}} owed · {{paid}} paid",
       "unpriced": "{{count}} tickets without a price",
+      "unpricedHint": "{{count}} tickets without a price are not in the sums yet: type their prices in the price list and save it.",
       "payAll": "All paid",
       "copy": "Copy the statement",
       "copied": "Copied, paste it in the chat",

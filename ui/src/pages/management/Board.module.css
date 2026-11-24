@@ -85,6 +85,15 @@
   font-size: var(--text-data);
 }
 
+/* A switch with its words beside it: the switch itself shows none. */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-small);
+  cursor: pointer;
+}
+
 .label {
   flex: none;
   width: 92px;

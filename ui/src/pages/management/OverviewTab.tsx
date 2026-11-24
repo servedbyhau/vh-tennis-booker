@@ -25,7 +25,7 @@ function Figures({ facts, tickets }: { facts: MachineFacts[]; tickets: Ticket[] 
   const { booked, tried } = bookedOf(runs.data ?? []);
   const rate = tried === 0 ? null : Math.round((booked / tried) * 100);
   const charges = useCharges(month);
-  const { left } = totalsOf(byCustomer(charges.data?.charges ?? [], ""));
+  const { left, unpriced } = totalsOf(byCustomer(charges.data?.charges ?? [], ""));
   const figures: [string, string][] = [
     [rate === null ? "–" : `${booked}/${tried}`, t("pages.board.booked", { rate: rate ?? 0 })],
     [String(tickets.length), t("pages.board.toPlay")],
@@ -33,7 +33,12 @@ function Figures({ facts, tickets }: { facts: MachineFacts[]; tickets: Ticket[] 
       `${facts.filter((item) => item.booking !== undefined).length}/${facts.length}`,
       t("pages.board.machinesOn"),
     ],
-    [formatMoney(left), t("pages.board.toCollect")],
+    [
+      formatMoney(left),
+      unpriced > 0
+        ? `${t("pages.board.toCollect")} · ${t("pages.money.unpriced", { count: unpriced })}`
+        : t("pages.board.toCollect"),
+    ],
   ];
   return (
     <div className={styles.figures}>

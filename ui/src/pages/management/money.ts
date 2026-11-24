@@ -49,11 +49,12 @@ export function byCustomer(charges: readonly Charge[], unknown: string): Custome
   return [...found.values()].sort((a, b) => b.owed - b.paid - (a.owed - a.paid));
 }
 
-/** Return the sums of the month: what is owed, paid and left. */
+/** Return the sums of the month: what is owed, paid and left, and the charges not priced yet. */
 export function totalsOf(customers: readonly CustomerMoney[]) {
   const owed = customers.reduce((sum, item) => sum + item.owed, 0);
   const paid = customers.reduce((sum, item) => sum + item.paid, 0);
-  return { owed, paid, left: owed - paid };
+  const unpriced = customers.reduce((sum, item) => sum + item.unpriced, 0);
+  return { owed, paid, left: owed - paid, unpriced };
 }
 
 /** Return "26/11" of a day of play "2026-11-26". */

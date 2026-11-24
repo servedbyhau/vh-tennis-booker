@@ -102,6 +102,9 @@ uses [Semantic Versioning](https://semver.org/).
   that another machine books with moves after a question. An account's form shows its saved login.
 
 ### Fixed
+- The money no longer says a customer has paid it all while their tickets have no price: it
+  says how many have none, and the sums say they are not counted yet. The switches of the money
+  and requests sections show their words.
 - A timed run keeps its history in memory from the warm-up to the end of its rounds and writes
   it after: at 06:00 five machines lost 0.2-0.8 s waiting for each other's writes, and two lost
   their run and tickets from the History. Its steps show once the rounds are over.
