@@ -50,6 +50,9 @@ class EventKind(str, Enum):
     SETUP_STARTED = "setup_started"
     SETUP_ITEM = "setup_item"
     SETUP_FINISHED = "setup_finished"
+    # A ticket cancelled, outside any run (court-booker cancel).
+    TICKET_CANCELLED = "ticket_cancelled"
+    TICKET_NOT_CANCELLED = "ticket_not_cancelled"
     # The app, outside any run.
     SETTINGS_SAVED = "settings_saved"
     SCHEDULE_ENABLED = "schedule_enabled"

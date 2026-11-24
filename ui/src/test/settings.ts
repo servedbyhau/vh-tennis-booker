@@ -53,6 +53,8 @@ export function settings(fields: Partial<Settings> = {}): Settings {
       account_tab: "Tài khoản",
       log_out: "Đăng xuất",
       log_out_yes: "Đồng ý",
+      cancel_ticket: "Hủy tiện ích",
+      cancel_question: "muốn hủy tiện ích",
     },
     ...fields,
   };

@@ -122,6 +122,19 @@ Details live in the docstrings; this page says where things are and what must st
   ticket's cancel button is in the same place) and a card by its whole label; pages are
   recognised by their shape, not by captions, so in either language. A picture counts only if
   the directions link is at the same place before and after it.
+- `cancel.py`: `court-booker cancel <code> [--instance N]` cancels a ticket in the app of its
+  machine, a task of its own like auto setup: refused in the scheduled run's quiet time, the
+  machine's run lock held (trigger `cancel`), no run in the history, its steps in the activity
+  log (`ticket_cancelled`, or `ticket_not_cancelled` with the reason, an error). A machine
+  switched off in the Setup is driven with the first machine's settings (`machine_config`).
+  `cancel_ticket` opens the history page, finds the card among the newest (3 swipes at most),
+  opens the ticket, taps its cancel button on the page of that code only, and "Xác nhận" only
+  in the dialog that asks the question (labels `cancel_ticket`, `cancel_question`); without the
+  question nothing is confirmed. The page the app shows after it still holds the old status,
+  so the ticket counts as cancelled once a page opened again shows it so; the tickets read
+  then are saved, and the quota of the ticket's utility is read again (`moment` `cancel`,
+  with the account's id in the event, as no run holds it). MuMu is shut again if the task
+  started it.
 - `quota.py`: what the account used of the quota of the utility it books, for the day of play
   (today + 2): the tickets of that month of play, and of that day, all but cancelled ones
   (`count`; 8 a month, 2 a day, field notes "Dialogs"). `read_back` swipes the history page

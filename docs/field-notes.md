@@ -126,6 +126,11 @@ English. It opens at any hour (02:12 to 02:43 on 2026-11-23), while the calendar
   status, and one element with the details, the booking code on a line of its own. Inside it
   are `Xem thêm` (left) and `Chỉ đường` (right, bottom at 1140), then the fees. Back returns
   to the history page.
+- **Cancelling** (2026-11-24, a badminton ticket booked for the test): `Hủy tiện ích` opens a
+  dialog titled the same, "Bạn chắc chắn muốn hủy tiện ích?", with `Hủy bỏ` and `Xác nhận`.
+  `Xác nhận` shows "Huỷ tiện ích thành công" for about a second over the history page, whose
+  card still reads `Đã đăng ký`; the page opened again reads `Đã huỷ`. The cancelled slot's
+  quota came back at once (0/8 of badminton read right after). Not seen in English.
 - The ticket moves its lower half while its description loads: the place of `Chỉ đường` read
   0.5 s after the ticket showed was 232 px too low by the time of the picture.
 - The app does not block screenshots of these pages. Reading the page and two tickets took

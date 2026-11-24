@@ -49,6 +49,10 @@ class BookingUnconfirmedError(BookingError):
     """The app showed neither the ticket nor a notice in time after the confirmation."""
 
 
+class TicketNotCancelledError(BookingError):
+    """The app still shows the ticket as booked after its cancel was confirmed."""
+
+
 class RequestError(CourtBookerError):
     """Invalid arguments or configuration; nothing was sent to the device."""
 

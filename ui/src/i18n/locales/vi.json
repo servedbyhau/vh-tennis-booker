@@ -433,6 +433,14 @@
       "plain": "Đã bật hẹn giờ"
     },
     "schedule_disabled": "Đã tắt hẹn giờ",
+    "ticket_cancelled": {
+      "full": "Đã huỷ vé {{code}}: {{slot}} {{day}}",
+      "plain": "Đã huỷ một vé"
+    },
+    "ticket_not_cancelled": {
+      "full": "Không huỷ được vé {{code}}",
+      "plain": "Không huỷ được một vé"
+    },
     "other": "Bước khác ({{kind}})"
   },
   "runs": {
