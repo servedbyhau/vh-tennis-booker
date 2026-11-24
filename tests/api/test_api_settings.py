@@ -52,8 +52,11 @@ OTHER = {
     "sport": "tennis",  # from the top of the file, which the file does not repeat
     "court": "S6 - Sân tennis",
     "venue_keyword": "Origami",
+    "days": [],  # every day: a machine's own, not written while empty
 }
-OTHER_IN_FILE = {key: value for key, value in OTHER.items() if key not in ("sport", "subdivision")}
+OTHER_IN_FILE = {
+    key: value for key, value in OTHER.items() if key not in ("sport", "subdivision", "days")
+}
 
 
 def test_settings_show_each_other_instance_in_full(client, saved):
@@ -234,3 +237,27 @@ def test_unchanged_settings_write_nothing(client, context):
     assert response.status_code == 200
     assert not context.config_path.exists()
     assert steps(context) == []
+
+
+def test_the_mumu_instances_on_the_pc_are_listed(client, monkeypatch, tmp_path):
+    import court_booker.api.settings as settings_route
+
+    manager = tmp_path / "MuMuManager.exe"
+    monkeypatch.setattr(settings_route, "find_mumu_manager", lambda configured: manager)
+    monkeypatch.setattr(settings_route, "instance_indexes", lambda path: [0, 1, 2, 4, 5])
+
+    assert client.get("/api/mumu-instances").json() == {"indexes": [0, 1, 2, 4, 5]}
+
+
+def test_no_mumu_lists_no_instance(client, monkeypatch, tmp_path):
+    import court_booker.api.settings as settings_route
+    from court_booker.errors import EmulatorError
+
+    def fail(path):
+        raise EmulatorError("MuMuManager info exited with 1")
+
+    monkeypatch.setattr(settings_route, "find_mumu_manager", lambda configured: None)
+    assert client.get("/api/mumu-instances").json() == {"indexes": []}
+    monkeypatch.setattr(settings_route, "find_mumu_manager", lambda configured: tmp_path)
+    monkeypatch.setattr(settings_route, "instance_indexes", fail)
+    assert client.get("/api/mumu-instances").json() == {"indexes": []}

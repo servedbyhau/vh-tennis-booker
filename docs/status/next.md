@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-19.
+Last updated: 2026-11-24.
 
 ## Start of a session
 
@@ -11,27 +11,42 @@ Last updated: 2026-11-19.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: watch the 06:00 runs of 1.1.2
+## Gathering: the opening's clocks
 
-1.1.2 repairs getting ready by itself (`ready.py`, see [architecture](../architecture.md)).
-Check each 06:00 log for `repaired` events and what they fixed; a failure that ended the run
-before 05:58 is a gap to study.
+Since 2026-11-25 each 06:00 run logs "Opening: ..." on each machine (`opening.py`). The user
+asked for 5-7 days of it before deciding whether the first tap should wait until the PC clock
+(and so Android's) has passed 06:00 too: the "chỉ nhận đăng ký từ 06:00" notice showed on about
+half the days, costing 0.5-1 s. Compare, per day, Android's offset, the first tap by Android's
+clock and the attempt that opened the calendar.
 
-Decided by the user (2026-11-19): during the rounds a frozen MuMu is only reported; the run
-still waits on the home screen and opens the utilities list at 05:59, as before. Repairs
-during the rounds come later, in their own task.
+## Next task: the management upgrade, tried by the user
 
-Known limits of the setup repairs: the deadline is checked between repairs, so a MuMu restart
-begun just before 05:58 may end after the warm-up (worst case about two minutes, 41-49 s
-seen); a fault in the last 15 s before the start is not repaired.
+Asked by the user on 2026-11-24, every part chosen and designed here: an overview and a
+machines section (#308), tickets as a week, filtered and marked sent (#309), a quota table
+(#310), the money (#311), statistics (#312), and the customers' requests with each machine's
+booking days (`feat/requests`). Each stacks on the one before: merge them in order, install
+`develop` (not from 05:45 to 06:05), then the user tries every section and says what to change.
+The cancel, quota and open buttons (#302-#305) are in the installed app already.
+
+Decided with the user on 2026-11-23: a run never changes the account by itself (a login at 05:46
+could cost the booking, a customer's phone may be logged out, two accounts may share an
+apartment's quota); with one left and two slots, the app books the first and refuses the second.
+Sharing the bookings out over a customer's accounts belongs with the schedule.
+
+Put off by the user: the days each machine books on (a schedule), and sending results and tickets
+over Zalo.
 
 ## After that
 
-- Add each 06:00 run to [progress.md](progress.md). After a week without a failure, remove the
+- Add each 06:00 run to [progress.md](progress.md). After a week without a failure (none since
+  2026-11-20), remove the
   runner folder (`git worktree remove ..\runner`) and its sections in CONTRIBUTING and
   CLAUDE.md.
 - Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
   keeps the popup away; two tries froze MuMu. Not needed by the run.
+- Decided 2026-11-24: three machines, two cores and 2 GB each (the user's own and two for
+  customers), as the app lets three through at once (known issues). Ideas, not decided: a guide
+  to make a MuMu instance.
 - Ruled out for now: code signing (SmartScreen's "Run anyway" stays). Waiting on something:
   another subdivision's survey needs access to one, and choosing days of the week is not
   decided.

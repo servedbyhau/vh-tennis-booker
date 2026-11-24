@@ -58,6 +58,32 @@ def run_mumu_command(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
     return run_command(args, timeout=MUMU_TIMEOUT)
 
 
+def instance_indexes(manager: Path, run: Run = run_mumu_command) -> list[int]:
+    """Return the indexes of the MuMu instances ``manager`` knows, lowest first.
+
+    Raises :class:`MuMuNotFoundError` without MuMuManager, :class:`EmulatorError` when it
+    fails or answers what is not known here.
+    """
+    if not manager.is_file():
+        raise MuMuNotFoundError(f"MuMuManager not found at {manager}")
+    argv = [str(manager), "info", "-v", "all"]
+    try:
+        result = run(argv)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise EmulatorError(f"MuMuManager info failed: {exc}") from exc
+    if result.returncode != 0:
+        raise EmulatorError(f"MuMuManager info exited with {result.returncode}")
+    try:
+        data = json.loads(result.stdout)
+    except ValueError as exc:
+        raise EmulatorError(f"Unexpected output from MuMuManager info: {result.stdout!r}") from exc
+    if not isinstance(data, dict):
+        raise EmulatorError(f"Unexpected output from MuMuManager info: {result.stdout!r}")
+    # One instance answers as itself, several keyed by their index.
+    keys = [str(data["index"])] if "index" in data else list(data)
+    return sorted(int(key) for key in keys if key.isdigit())
+
+
 class MuMu:
     """One MuMu Player instance, addressed by its index.
 
@@ -80,6 +106,10 @@ class MuMu:
         self._run = run
         self._clock = clock
         self._sleep = sleep
+
+    def sibling(self, index: int) -> MuMu:
+        """Return MuMu instance ``index`` of the same MuMuManager, asked once a call."""
+        return MuMu(self.manager, index, self._run, self._clock, self._sleep)
 
     def info(self) -> dict[str, Any]:
         """Return the instance state reported by ``MuMuManager.exe info``."""
@@ -120,6 +150,10 @@ class MuMu:
     def shutdown(self) -> None:
         """Ask MuMu to shut the instance down."""
         self._call("control", "shutdown")
+
+    def show_window(self) -> None:
+        """Bring the running instance's window to the front."""
+        self._call("control", "show_window")
 
     def settings(self, *keys: str) -> dict[str, str]:
         """Return the instance settings named ``keys``; readable while the instance is off."""

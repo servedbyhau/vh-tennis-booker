@@ -108,6 +108,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tickets
+         * @description List every machine's tickets, the latest day of play first, by slot within a day.
+         *
+         *     ``since`` keeps the tickets played that day or later.
+         */
+        get: operations["list_tickets_api_tickets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickets/{code}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ticket Photo
+         * @description Answer with the picture of a ticket, down to its directions link.
+         */
+        get: operations["ticket_photo_api_tickets__code__photo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickets/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Cancel
+         * @description Show the cancel started last: which ticket, on which machine, and how it ended.
+         */
+        get: operations["read_cancel_api_tickets_cancel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickets/{code}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Cancel
+         * @description Cancel the ticket in the app of the machine its account is on; it takes about a minute.
+         *
+         *     Refused when the ticket is not recorded (404 ``not_found``) or cancelled already (409
+         *     ``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), and as
+         *     :func:`court_booker.api.tasks.start` refuses (around the scheduled run, or another run or
+         *     task going on). The cancel checks again itself.
+         */
+        post: operations["start_cancel_api_tickets__code__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickets/{code}/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Ticket Sent
+         * @description Mark the ticket sent to its customer now, or not sent; 404 for a ticket not recorded.
+         */
+        put: operations["mark_ticket_sent_api_tickets__code__sent_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -160,6 +267,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mumu-instances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Mumu Instances
+         * @description List the MuMu instances MuMuManager knows, the machines the app shows.
+         */
+        get: operations["list_mumu_instances_api_mumu_instances_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts": {
         parameters: {
             query?: never;
@@ -180,7 +307,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/logins/{mumu_index}": {
+    "/api/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Customers
+         * @description List the customers in the order they were added, each with their accounts.
+         */
+        get: operations["list_customers_api_customers_get"];
+        put?: never;
+        /**
+         * Add Customer
+         * @description Add a customer without accounts.
+         */
+        post: operations["add_customer_api_customers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customers/{customer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Customer
+         * @description Change who a customer is; every fact not given is emptied.
+         */
+        put: operations["change_customer_api_customers__customer_id__put"];
+        post?: never;
+        /**
+         * Remove Customer
+         * @description Remove a customer with their accounts and saved logins.
+         *
+         *     Refused (409 ``account_attached``) while one of the accounts is attached to a machine, unless
+         *     ``detach`` takes it from there; not while a run goes on (409 ``lock_held``).
+         */
+        delete: operations["remove_customer_api_customers__customer_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customers/{customer_id}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Account
+         * @description Add an account to a customer and save its login; answers the customer.
+         *
+         *     The app does not check the login here: a wrong one shows when a run logs in with it. A
+         *     phone number another account has is refused (409 ``phone_taken``), and Windows refusing
+         *     to keep the login answers 503 ``credentials``.
+         */
+        post: operations["add_account_api_customers__customer_id__accounts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-accounts/{account_id}/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -189,24 +391,180 @@ export interface paths {
         };
         /**
          * Read Login
-         * @description Tell whether a login is saved for the instance, with its phone number masked.
-         */
-        get: operations["read_login_api_logins__mumu_index__get"];
-        /**
-         * Save Login
-         * @description Save the login a run of the instance types in once the app logged out.
+         * @description The account's saved login, whole, to fill the form that changes it.
          *
-         *     It replaces the one saved before. The app does not check it here: a wrong one shows at
-         *     the next logout, as a run that stops after one try (the app locks an account after 5
-         *     wrong passwords). Windows refusing to keep it answers 503 ``credentials``.
+         *     The user asked to see it there (2026-11-22). Only this PC reaches the backend
+         *     (``local_only.py``), and no cache keeps the answer.
          */
-        put: operations["save_login_api_logins__mumu_index__put"];
+        get: operations["read_login_api_customer_accounts__account_id__login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Account
+         * @description Change an account's label and, if given, phone number and password; answers the customer.
+         *
+         *     A new login of an attached account is the one its machine logs in with, so it is refused
+         *     (409 ``lock_held``) while a run goes on. A phone number belongs to one account only
+         *     (409 ``phone_taken``).
+         */
+        put: operations["change_account_api_customer_accounts__account_id__put"];
         post?: never;
         /**
-         * Delete Login
-         * @description Remove the saved login of the instance; a run then stops when the app logged out.
+         * Remove Account
+         * @description Remove an account with its saved login.
+         *
+         *     Refused (409 ``account_attached``) while it is attached to a machine, unless ``detach`` takes
+         *     it from there; not while a run goes on (409 ``lock_held``).
          */
-        delete: operations["delete_login_api_logins__mumu_index__delete"];
+        delete: operations["remove_account_api_customer_accounts__account_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/{mumu_index}/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Attach Account
+         * @description Let a machine book with an account from its next run on; answers the customer.
+         *
+         *     The run logs the machine's Vinhomes app in with it. An account on another machine moves.
+         *     Refused while a run goes on (409 ``lock_held``).
+         */
+        put: operations["attach_account_api_machines__mumu_index__account_put"];
+        post?: never;
+        /**
+         * Detach Account
+         * @description Let a machine book with whichever account its app has logged in.
+         *
+         *     A run then stops when the app logged out. Refused while a run goes on (409 ``lock_held``).
+         */
+        delete: operations["detach_account_api_machines__mumu_index__account_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Prices
+         * @description Show the price list.
+         */
+        get: operations["read_prices_api_money_prices_get"];
+        /**
+         * Save Prices
+         * @description Replace the price list; the charges not set by hand follow it.
+         */
+        put: operations["save_prices_api_money_prices_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Charges
+         * @description List the charges of a month of play (every month when not given), priced; the tickets
+         *     saved before the money was there are charged first.
+         */
+        get: operations["list_charges_api_money_charges_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/charges/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Charge
+         * @description Mark a charge paid or not, or set its amount; 404 for one not recorded.
+         */
+        put: operations["change_charge_api_money_charges__code__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Paid
+         * @description Mark several charges paid at once, or not paid (a customer's month, say).
+         */
+        put: operations["mark_paid_api_money_paid_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/customers/{customer_id}/free": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Free
+         * @description Book for a customer for free (their charges owe nothing), or not.
+         */
+        put: operations["mark_free_api_money_customers__customer_id__free_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -257,6 +615,54 @@ export interface paths {
          */
         post: operations["test_notification_api_notifications_test_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Requests
+         * @description List every request, by customer.
+         */
+        get: operations["list_requests_api_requests_get"];
+        put?: never;
+        /**
+         * Add Request
+         * @description Record a customer's request; 404 for an unknown customer.
+         */
+        post: operations["add_request_api_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Request
+         * @description Replace what a request asks.
+         */
+        put: operations["change_request_api_requests__request_id__put"];
+        post?: never;
+        /**
+         * Remove Request
+         * @description Remove a request.
+         */
+        delete: operations["remove_request_api_requests__request_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -326,10 +732,77 @@ export interface paths {
          * @description Start a dry run of the saved settings; it stops before "Xác nhận".
          *
          *     Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time and
-         *     (409 ``lock_held``) while a run holds the lock, or while the dry run started last is
-         *     still running (it may not hold the lock yet). The dry run checks again itself.
+         *     (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine
+         *     started last is still running (they may not hold the lock yet, or hold another machine's).
+         *     The dry run checks again itself.
          */
         post: operations["start_dry_run_api_runs_dry_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Quota Task
+         * @description Show the quota read started last: on which machine, and how it ended.
+         */
+        get: operations["read_quota_task_api_machines_quota_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/{mumu_index}/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Quota
+         * @description Read the quota of the account on machine ``mumu_index`` again, in its app (about a minute).
+         *
+         *     Refused for a machine without a chosen account (409 ``no_machine``), as the reading would be
+         *     of no customer, and as :func:`start` refuses.
+         */
+        post: operations["start_quota_api_machines__mumu_index__quota_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/machines/{mumu_index}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Machine
+         * @description Launch the MuMu instance of machine ``mumu_index``, or show its window if it runs.
+         *
+         *     Refused as :func:`start` refuses (a run starts and shuts MuMu itself), and (503 ``device``)
+         *     when MuMuManager is not found or fails.
+         */
+        post: operations["open_machine_api_machines__mumu_index__open_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -361,6 +834,28 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AccountChange
+         * @description Another label and, if given, phone number and password; what is not given stays.
+         */
+        AccountChange: {
+            /** Label */
+            label: string;
+            /** Phone */
+            phone?: string | null;
+            /** Password */
+            password?: string | null;
+        };
+        /**
+         * AccountLogin
+         * @description The saved login of an account as it is, ``None`` once it is gone.
+         */
+        AccountLogin: {
+            /** Phone */
+            phone: string | null;
+            /** Password */
+            password: string | null;
+        };
+        /**
          * AccountSubdivision
          * @description The subdivision a MuMu instance's account last told, read from its home screen.
          */
@@ -371,6 +866,162 @@ export interface components {
             subdivision: string;
             /** Seen At */
             seen_at: string;
+        };
+        /**
+         * AttachedAccount
+         * @description The account a machine books with from its next run on.
+         */
+        AttachedAccount: {
+            /** Account Id */
+            account_id: string;
+        };
+        /** BookingRequest */
+        BookingRequest: {
+            /** Customer Id */
+            customer_id: string;
+            /** Subdivision */
+            subdivision: string;
+            /** Sport */
+            sport: string;
+            /** Court */
+            court: string;
+            /** Slots */
+            slots: string[];
+            /** Days */
+            days?: number[];
+            /** Machine */
+            machine?: number | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Id */
+            id: string;
+            /** Created At */
+            created_at: string;
+        };
+        /**
+         * Charge
+         * @description What a ticket a customer's account booked costs, and whether it was paid.
+         */
+        Charge: {
+            /** Code */
+            code: string;
+            /** Customer Id */
+            customer_id: string | null;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
+            /** Sport */
+            sport: string | null;
+            /** Court */
+            court: string;
+            /** Play Date */
+            play_date: string;
+            /** Slot */
+            slot: string;
+            /** Golden */
+            golden: boolean;
+            /** Amount */
+            amount: number | null;
+            /** Set By Hand */
+            set_by_hand: boolean;
+            /** Cancelled */
+            cancelled: boolean;
+            /** Free */
+            free: boolean;
+            /** Paid At */
+            paid_at: string | null;
+        };
+        /**
+         * ChargeChange
+         * @description Mark a charge paid or not, and set its amount by hand (``null`` takes the price list's).
+         */
+        ChargeChange: {
+            /** Paid */
+            paid?: boolean | null;
+            /** Amount */
+            amount?: number | null;
+            /**
+             * Reset Amount
+             * @default false
+             */
+            reset_amount: boolean;
+        };
+        /** Charges */
+        Charges: {
+            /** Month */
+            month: string | null;
+            /** Months */
+            months: string[];
+            /** Charges */
+            charges: components["schemas"]["Charge"][];
+            /** Free Customers */
+            free_customers: string[];
+        };
+        /**
+         * CustomerAccount
+         * @description A customer's Vinhomes account, without its password.
+         */
+        CustomerAccount: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Phone */
+            phone: string | null;
+            /** Device */
+            device: number | null;
+            /** Quota */
+            quota: components["schemas"]["QuotaReading"][];
+        };
+        /**
+         * CustomerFields
+         * @description What is known of a customer.
+         */
+        CustomerFields: {
+            /** Name */
+            name: string;
+            /**
+             * Representative
+             * @default
+             */
+            representative: string;
+            /**
+             * Contact
+             * @default
+             */
+            contact: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /**
+         * CustomerRecord
+         * @description A customer with the accounts they gave.
+         */
+        CustomerRecord: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Representative */
+            representative: string;
+            /** Contact */
+            contact: string;
+            /** Note */
+            note: string;
+            /** Accounts */
+            accounts: components["schemas"]["CustomerAccount"][];
         };
         /**
          * DryRunStarted
@@ -387,7 +1038,12 @@ export interface components {
          * @description What happened. The value is stable: it becomes a database value and a message key.
          * @enum {string}
          */
-        EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
+        EventKind: "run_started" | "device_ready" | "app_ready" | "account_subdivision" | "logged_in" | "account_checked" | "screen_saved" | "repaired" | "waiting" | "booking_started" | "run_finished" | "tickets_saved" | "opening_measured" | "quota_read" | "slot_started" | "calendar_opened" | "date_selected" | "slot_selected" | "court_selected" | "terms_accepted" | "slot_booked" | "slot_failed" | "lock_cleared" | "lock_waiting" | "lock_taken_over" | "setup_started" | "setup_item" | "setup_finished" | "ticket_cancelled" | "ticket_not_cancelled" | "quota_not_read" | "settings_saved" | "schedule_enabled" | "schedule_disabled";
+        /** FreeMark */
+        FreeMark: {
+            /** Free */
+            free: boolean;
+        };
         /**
          * Health
          * @description The backend answers and runs this version.
@@ -415,6 +1071,11 @@ export interface components {
             court: string;
             /** Venue Keyword */
             venue_keyword: string;
+            /**
+             * Days
+             * @default []
+             */
+            days: number[];
         };
         /**
          * InstanceSwitch
@@ -473,6 +1134,18 @@ export interface components {
             login: string;
             /** Dont Show Again */
             dont_show_again: string;
+            /** Home Tab */
+            home_tab: string;
+            /** Account Tab */
+            account_tab: string;
+            /** Log Out */
+            log_out: string;
+            /** Log Out Yes */
+            log_out_yes: string;
+            /** Cancel Ticket */
+            cancel_ticket: string;
+            /** Cancel Question */
+            cancel_question: string;
         };
         /**
          * LogLine
@@ -501,10 +1174,18 @@ export interface components {
             booked: number;
         };
         /**
-         * NewLogin
-         * @description The phone number and password of the Vinhomes app, to save for a MuMu instance.
+         * MumuInstances
+         * @description The MuMu instances on this PC: each is a machine the app can book with.
          */
-        NewLogin: {
+        MumuInstances: {
+            /** Indexes */
+            indexes: number[];
+        };
+        /**
+         * NewAccount
+         * @description The login of an account of the Vinhomes app, and what tells it from the others.
+         */
+        NewAccount: {
             /** Phone */
             phone: string;
             /**
@@ -512,6 +1193,11 @@ export interface components {
              * Format: password
              */
             password: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
         };
         /**
          * NotificationSettings
@@ -539,6 +1225,34 @@ export interface components {
             /** Wake Blocked */
             wake_blocked: boolean;
         };
+        /** PaidMark */
+        PaidMark: {
+            /** Codes */
+            codes: string[];
+            /** Paid */
+            paid: boolean;
+        };
+        /** Price */
+        Price: {
+            /** Sport */
+            sport: string;
+            /** Normal */
+            normal: number;
+            /** Golden */
+            golden: number;
+        };
+        /**
+         * Prices
+         * @description The price list: the golden hours and a price per sport.
+         */
+        Prices: {
+            /** Golden From */
+            golden_from: string;
+            /** Golden To */
+            golden_to: string;
+            /** Prices */
+            prices: components["schemas"]["Price"][];
+        };
         /**
          * Problem
          * @description An error: ``error`` is a stable code, ``detail`` the English message for the log.
@@ -552,6 +1266,54 @@ export interface components {
             detail: string;
             /** Problems */
             problems?: string[] | null;
+        };
+        /**
+         * QuotaReading
+         * @description What an account used of a utility's quota in a month, as a run last read it.
+         */
+        QuotaReading: {
+            /** Utility */
+            utility: string;
+            /** Sport */
+            sport: string | null;
+            /** Month */
+            month: string;
+            /** Used */
+            used: number;
+            /** Month Limit */
+            month_limit: number;
+            /** Read At */
+            read_at: string;
+        };
+        /**
+         * RequestFields
+         * @description What a customer asks to book.
+         */
+        RequestFields: {
+            /** Customer Id */
+            customer_id: string;
+            /** Subdivision */
+            subdivision: string;
+            /** Sport */
+            sport: string;
+            /** Court */
+            court: string;
+            /** Slots */
+            slots: string[];
+            /** Days */
+            days?: number[];
+            /** Machine */
+            machine?: number | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
         };
         /**
          * RunDetail
@@ -580,6 +1342,10 @@ export interface components {
             error: string | null;
             /** Device */
             device: number | null;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
             /** Booked */
             booked: number;
             /** Total */
@@ -618,6 +1384,10 @@ export interface components {
             error: string | null;
             /** Device */
             device: number | null;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
             /** Booked */
             booked: number;
             /** Total */
@@ -641,18 +1411,6 @@ export interface components {
              * @default []
              */
             runs: number[];
-        };
-        /**
-         * SavedLogin
-         * @description Whether a login is saved for a MuMu instance; never its password.
-         */
-        SavedLogin: {
-            /** Mumu Index */
-            mumu_index: number;
-            /** Saved */
-            saved: boolean;
-            /** Phone */
-            phone?: string | null;
         };
         /**
          * ScheduleState
@@ -681,6 +1439,14 @@ export interface components {
             enabled: boolean;
         };
         /**
+         * SentMark
+         * @description Whether a ticket's picture was sent to its customer.
+         */
+        SentMark: {
+            /** Sent */
+            sent: boolean;
+        };
+        /**
          * Settings
          * @description Every booking setting; the UI changes the slots, subdivision, sport and court, and sends
          *     the rest back.
@@ -688,6 +1454,11 @@ export interface components {
         Settings: {
             /** Slots */
             slots: string[];
+            /**
+             * Days
+             * @default []
+             */
+            days: number[];
             /** Subdivision */
             subdivision: string;
             /** Sport */
@@ -799,6 +1570,64 @@ export interface components {
             data: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * TaskState
+         * @description The task of one kind started last from the app, going on or over; all empty before any.
+         */
+        TaskState: {
+            /** Code */
+            code?: string | null;
+            /** Machine */
+            machine?: number | null;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Running
+             * @default false
+             */
+            running: boolean;
+            /** Exit Code */
+            exit_code?: number | null;
+        };
+        /**
+         * Ticket
+         * @description One ticket of an account, as the app's history page last showed it.
+         */
+        Ticket: {
+            /** Code */
+            code: string;
+            /** Device */
+            device: number;
+            /** Customer */
+            customer: string | null;
+            /** Account */
+            account: string | null;
+            /** Court */
+            court: string;
+            /** Play Date */
+            play_date: string;
+            /** Slot */
+            slot: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "registered" | "processing" | "cancelled" | "other";
+            /** Status Text */
+            status_text: string;
+            /** Created At */
+            created_at: string | null;
+            /** Seen At */
+            seen_at: string;
+            /** Has Photo */
+            has_photo: boolean;
+            /** Sport */
+            sport: string | null;
+            /** Sent At */
+            sent_at: string | null;
+            /** Machine */
+            machine: number | null;
         };
     };
     responses: never;
@@ -1012,6 +1841,207 @@ export interface operations {
             };
         };
     };
+    list_tickets_api_tickets_get: {
+        parameters: {
+            query?: {
+                since?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ticket"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ticket_photo_api_tickets__code__photo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The ticket's picture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_cancel_api_tickets_cancel_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_cancel_api_tickets__code__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_ticket_sent_api_tickets__code__sent_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentMark"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     read_settings_api_settings_get: {
         parameters: {
             query?: never;
@@ -1136,6 +2166,44 @@ export interface operations {
             };
         };
     };
+    list_mumu_instances_api_mumu_instances_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MumuInstances"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     read_accounts_api_accounts_get: {
         parameters: {
             query?: never;
@@ -1174,14 +2242,11 @@ export interface operations {
             };
         };
     };
-    read_login_api_logins__mumu_index__get: {
+    list_customers_api_customers_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                /** @description The MuMu instance */
-                mumu_index: number;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -1192,7 +2257,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SavedLogin"];
+                    "application/json": components["schemas"]["CustomerRecord"][];
                 };
             };
             /** @description Invalid request values, one line per value */
@@ -1215,7 +2280,303 @@ export interface operations {
             };
         };
     };
-    save_login_api_logins__mumu_index__put: {
+    add_customer_api_customers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_customer_api_customers__customer_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_customer_api_customers__customer_id__delete: {
+        parameters: {
+            query?: {
+                /** @description Whether an account attached to a machine is taken from it */
+                detach?: boolean;
+            };
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    add_account_api_customers__customer_id__accounts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewAccount"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_login_api_customer_accounts__account_id__login_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountLogin"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_account_api_customer_accounts__account_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_account_api_customer_accounts__account_id__delete: {
+        parameters: {
+            query?: {
+                /** @description Whether an account attached to a machine is taken from it */
+                detach?: boolean;
+            };
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    attach_account_api_machines__mumu_index__account_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -1227,7 +2588,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NewLogin"];
+                "application/json": components["schemas"]["AttachedAccount"];
             };
         };
         responses: {
@@ -1237,7 +2598,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SavedLogin"];
+                    "application/json": components["schemas"]["CustomerRecord"];
                 };
             };
             /** @description Invalid request values, one line per value */
@@ -1260,7 +2621,7 @@ export interface operations {
             };
         };
     };
-    delete_login_api_logins__mumu_index__delete: {
+    detach_account_api_machines__mumu_index__account_delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -1271,6 +2632,250 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_prices_api_money_prices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prices"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    save_prices_api_money_prices_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Prices"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prices"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_charges_api_money_charges_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Charges"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_charge_api_money_charges__code__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChargeChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_paid_api_money_paid_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaidMark"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_free_api_money_customers__customer_id__free_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreeMark"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {
@@ -1384,6 +2989,168 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_requests_api_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingRequest"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    add_request_api_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingRequest"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    change_request_api_requests__request_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestFields"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingRequest"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    remove_request_api_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -1550,6 +3317,124 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DryRunStarted"];
                 };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_quota_task_api_machines_quota_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_quota_api_machines__mumu_index__quota_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The MuMu instance */
+                mumu_index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    open_machine_api_machines__mumu_index__open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The MuMu instance */
+                mumu_index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Invalid request values, one line per value */
             422: {

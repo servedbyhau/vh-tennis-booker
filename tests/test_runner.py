@@ -2,12 +2,13 @@
 
 import contextlib
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 import court_booker.runner as runner
+from court_booker import opening
 from court_booker.clock import NtpClock
 from court_booker.config import Config
 from court_booker.errors import (
@@ -24,8 +25,23 @@ from court_booker.screen import Node, Screen
 FULL_SLOT = Node("18:00 - 19:00\nHết chỗ", (38, 1178, 263, 1262), True)
 
 
+@pytest.fixture(autouse=True)
+def quota(monkeypatch):
+    """Note each read of the quota in the booker's events instead of reading the app."""
+    failure = []
+
+    def read_quota(booker, play_date, moment, report, slots=None):
+        booker.events.append(("quota", play_date, moment, slots))
+        if failure:
+            raise failure[0]
+
+    monkeypatch.setattr(runner, "read_quota", read_quota)
+    return failure
+
+
 class FakeBooker:
-    def __init__(self, device, config, report=None, login_for=None):
+    def __init__(self, device, config, report=None, login_for=None, account_seen=None):
+        self.report = report
         self.login_for = login_for
         self.booked = []
         self.events = []
@@ -69,6 +85,8 @@ def test_failed_round_does_not_stop_later_rounds(monkeypatch):
 class FakeClock:
     """Note each check of the time server in ``events``."""
 
+    offset = None
+
     def __init__(self, events):
         self.events = events
 
@@ -86,7 +104,7 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger="court_booker")
     events = []
 
-    def make_booker(device, config, report=None, login_for=None):
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
         booker = FakeBooker(device, config, report)
         booker.events = events
         return booker
@@ -96,13 +114,22 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
     start = datetime(2026, 10, 10, 6, 0)
 
     config = Config(slots=["19:00 - 20:00"], warm_up_seconds=60)
-    runner.run_booking(FakeDevice(), config, start=start, clock=FakeClock(events))
+    runner.run_booking(
+        FakeDevice(),
+        config,
+        start=start,
+        clock=FakeClock(events),
+        on_race=lambda: events.append("race"),
+    )
 
     # Checked every minute from 05:46 until the deadline, 05:58, while waiting on the home screen.
     checks = [datetime(2026, 10, 10, 5, 46) + timedelta(minutes=minute) for minute in range(12)]
     assert events == [
         "prepare",
+        ("quota", date(2026, 10, 12), "before", 1),  # what the app checks at 06:00
+        "check",  # back on the home screen
         *[step for tick in checks for step in (tick, "check")],
+        "race",  # the history waits in memory from the warm-up to the end of the rounds
         start - timedelta(seconds=60),
         "measure",  # once more, as Windows may have set the PC clock since the first check
         "locate",
@@ -111,6 +138,60 @@ def test_entry_is_located_just_before_the_start_time(monkeypatch, caplog):
         start + timedelta(seconds=0.1),  # a tap before 06:00 by the app's clock is refused
     ]
     assert "Start reached at 06:00:00.100 (NTP), PC clock 05:59:59.343" in caplog.text
+
+
+def test_the_opening_is_logged_once_the_rounds_are_over(monkeypatch, caplog):
+    caplog.set_level(logging.INFO, logger="court_booker")
+    steps = []
+
+    class TimedBooker(FakeBooker):
+        def book(self, slot, target, dry_run=False):
+            steps.append(("round", slot))
+            self.report(EventKind.CALENDAR_OPENED, attempt=2)
+            return super().book(slot, target, dry_run)
+
+    class Adb:
+        def device_time(self, serial):
+            steps.append(("android clock", serial))
+            return datetime(2026, 10, 10, 5, 59).timestamp()
+
+    config = Config(slots=["19:00 - 20:00", "20:00 - 21:00"])
+    clock = FakeClock([])
+    sink = MemorySink()
+    supervisor = runner.Supervisor(
+        config, report=Reporter(sink), device=FakeDevice(), now=clock.now
+    )
+    supervisor.adb, supervisor.serial = Adb(), "127.0.0.1:16384"
+    monkeypatch.setattr(runner, "Booker", TimedBooker)
+    monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
+
+    runner.run_booking(
+        FakeDevice(),
+        config,
+        start=datetime(2026, 10, 10, 6, 0),
+        clock=clock,
+        report=Reporter(sink),
+        supervisor=supervisor,
+    )
+
+    # Android's clock is read during the warm-up and after the rounds, never between them.
+    reads = ["android clock"] * opening.CLOCK_READS
+    assert [step[0] for step in steps] == [*reads, "round", "round", *reads]
+    (measured,) = [event for event in sink.events if event.kind is EventKind.OPENING_MEASURED]
+    assert measured.data["attempt"] == 2  # the first round's
+    assert measured.data["device_before"]["offset"] == measured.data["device_after"]["offset"]
+    assert "Opening: PC clock not known from NTP" in caplog.text
+
+
+def test_a_run_without_a_start_logs_no_opening(monkeypatch):
+    monkeypatch.setattr(runner, "Booker", FakeBooker)
+    sink = MemorySink()
+
+    runner.run_booking(
+        FakeDevice(), Config(slots=["19:00 - 20:00"]), dry_run=True, report=Reporter(sink)
+    )
+
+    assert EventKind.OPENING_MEASURED not in [event.kind for event in sink.events]
 
 
 @pytest.mark.parametrize(
@@ -150,7 +231,7 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
 
     bookers = []
 
-    def make_booker(device, config, report=None, login_for=None):
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
         bookers.append(SlowListBooker(device, config, report))
         return bookers[-1]
 
@@ -166,7 +247,7 @@ def test_failed_warm_up_is_retried_just_before_the_start(monkeypatch, caplog):
 
     # The app made ready again, then the list opened at once, and read just before the start.
     steps = ["prepare", "locate", "prepare", "locate", "locate"]
-    assert [e for e in bookers[0].events if e != "check"] == steps
+    assert [e for e in bookers[0].events if e != "check" and e[0] != "quota"] == steps
     assert results[0].ok
     assert "The run was no longer ready: Tapped 'Tiện ích' but the next screen" in caplog.text
 
@@ -386,3 +467,92 @@ def test_the_quota_notice_skips_the_rounds_left(monkeypatch, caplog, failing):
     }
     assert sink.kinds.count(EventKind.SLOT_STARTED) == failing + 1
     assert f"Booking quota used up; skipping {', '.join(slots[failing + 1 :])}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("ahead", "hurry"), [(timedelta(minutes=15), False), (timedelta(seconds=90), True)]
+)
+def test_a_run_begun_near_its_start_hurries(monkeypatch, ahead, hurry):
+    made = []
+
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
+        made.append(FakeBooker(device, config, report, login_for, account_seen))
+        return made[-1]
+
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    monkeypatch.setattr(runner, "wait_until", lambda moment, now: None)
+    clock = FakeClock([])
+    runner.run_booking(FakeDevice(), Config(slots=["a"]), start=clock.now() + ahead, clock=clock)
+    assert made[0].hurry is hurry
+
+
+def test_a_run_without_a_start_never_holds_the_history(monkeypatch):
+    monkeypatch.setattr(runner, "Booker", FakeBooker)
+    raced = []
+
+    results = runner.run_booking(
+        FakeDevice(), Config(slots=["19:00 - 20:00"]), dry_run=True, on_race=lambda: raced.append(1)
+    )
+
+    assert raced == []  # its steps show as they happen
+    assert [result.ok for result in results] == [True]
+
+
+def test_the_booker_is_handed_over_before_anything_runs(monkeypatch):
+    monkeypatch.setattr(runner, "Booker", FakeBooker)
+    handed = []
+
+    def on_booker(booker):
+        handed.append((booker, list(booker.events)))
+
+    runner.run_booking(
+        FakeDevice(), Config(slots=["19:00 - 20:00"]), dry_run=True, on_booker=on_booker
+    )
+
+    (booker, events), *others = handed
+    assert isinstance(booker, FakeBooker)
+    assert events == []
+    assert others == []
+
+
+class LateClock(FakeClock):
+    def now(self):
+        return datetime(2026, 10, 10, 5, 56)
+
+
+@pytest.mark.parametrize(("clock", "read"), [(FakeClock, True), (LateClock, False)])
+def test_the_quota_is_read_unless_the_start_is_near(monkeypatch, clock, read):
+    events = []
+
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
+        booker = FakeBooker(device, config, report)
+        booker.events = events
+        return booker
+
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    monkeypatch.setattr(runner, "wait_until", lambda target, now: None)
+    config = Config(slots=["18:00 - 19:00", "19:00 - 20:00"])
+
+    runner.run_booking(FakeDevice(), config, start=datetime(2026, 10, 10, 6), clock=clock([]))
+
+    quota = [event for event in events if event[0] == "quota"]
+    assert quota == ([("quota", date(2026, 10, 12), "before", 2)] if read else [])
+
+
+def test_a_quota_not_read_still_books(monkeypatch, caplog, quota):
+    events = []
+
+    def make_booker(device, config, report=None, login_for=None, account_seen=None):
+        booker = FakeBooker(device, config, report)
+        booker.events = events
+        return booker
+
+    quota.append(NavigationError("The history page did not show"))
+    monkeypatch.setattr(runner, "Booker", make_booker)
+    config = Config(slots=["19:00 - 20:00"])
+
+    results = runner.run_booking(FakeDevice(), config, dry_run=True)
+
+    assert events[1:3] == [("quota", events[1][1], "before", 1), "check"]
+    assert [result.ok for result in results] == [True]
+    assert "Quota not read: The history page did not show" in caplog.text

@@ -12,6 +12,7 @@ from court_booker import __version__, device_setup, history_read
 from court_booker.api.context import AppContext, Context
 from court_booker.api.history import RunSummary
 from court_booker.api.schedule import ScheduleState, schedule_state
+from court_booker.api.tasks import running_task
 from court_booker.device_setup import Status
 from court_booker.lock import RunLock
 
@@ -35,12 +36,17 @@ class Running(BaseModel):
 
 
 def running(
-    context: AppContext, dry_run: Any = None, recent: Sequence[dict[str, Any]] = ()
+    context: AppContext,
+    dry_run: Any = None,
+    recent: Sequence[dict[str, Any]] = (),
+    task: Any = None,
 ) -> Optional[Running]:
-    """Return the run going on now, from the lock or from the dry run started last.
+    """Return the run going on now, from the lock or from the dry run or task started last.
 
     ``dry_run`` is the process the backend started last; for its first moments it does not
     hold the lock yet. ``recent`` holds the newest runs, newest first, where its runs are.
+    ``task`` is the task on a machine still running (:mod:`court_booker.api.tasks`), which
+    holds the lock of another machine than the first one, or none yet; its kind is the trigger.
     """
     holder = RunLock(context.data.lock).running_holder()
     if holder is not None:
@@ -52,6 +58,8 @@ def running(
         )
     if dry_run is not None and dry_run.poll() is None:
         return Running(trigger="dry_run", pid=dry_run.pid, since=None)
+    if task is not None and task.process.poll() is None:
+        return Running(trigger=task.kind, pid=task.process.pid, since=None)
     return None
 
 
@@ -106,7 +114,9 @@ def read_status(context: Context, request: Request) -> Overview:
     finally:
         connection.close()
     last = recent[:1]
-    now = running(context, getattr(request.app.state, "dry_run", None), recent)
+    now = running(
+        context, getattr(request.app.state, "dry_run", None), recent, running_task(request)
+    )
     state = schedule_state(context)
     return Overview(
         version=__version__,

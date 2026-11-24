@@ -13,13 +13,15 @@ to be awake. Unattended, scheduled, as fast as possible.
   that ran its rounds closes MuMu at the end.
 - More accounts book side by side: each other MuMu instance (`[[instances]]`) runs the same
   run in its own process, with its own account, court and slots, switched on in the UI ("Máy 2",
-  "Dùng máy này"). Each books only its own slots, so 4 hours take 2 slots on each of 2
+  "Máy 3", each with its switch). Each books only its own slots, so 4 hours take 2 slots on each of 2
   instances.
 - Out of scope: getting around any check of the app, and accessibility services, which the app
   refuses (field notes, "Accessibility agent"). In scope: the project's own instrumentation
   driver (UiAutomation, as uiautomator2 uses); the app books with it running. Since
   2026-11-18 also logging in again with a login the user saved (the app logs an account out
-  when it logs in on another device): typed in as the user would, once a run.
+  when it logs in on another device): typed in as the user would, once a run. Since
+  2026-11-24 also what the user did in MuMu by hand, from the app: cancelling a ticket they
+  choose (its cancel button and the question, as they would) and reading a quota.
 
 ## Phases
 
@@ -31,13 +33,16 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 
 | Phase | Next | Scope |
 |---|---|---|
+| 4 UI | Without MuMu | What the user did in MuMu, from the app: cancel a ticket (`court-booker cancel` and its button in the tickets, done), read an account's quota on request (`court-booker quota` and its button in the customers,
+done), open a machine's MuMu (its button in the Setup, done). Adding or deleting machines stays by hand (three at most, on or off in the Setup) |
 | 1 Runs | Other subdivisions | Origami and BS are in `catalog.py` with every sport; BS tennis at BCX3 was booked for real on 2026-11-01. BE7 tennis and basketball have dry-run coverage; other BS courts have only the survey. Left: survey each other subdivision with `dev-tools/survey/walk.py` and add it to the catalog |
 
 ## Situations
 
 | Area | Situation | Today |
 |---|---|---|
-| App | Logged out (the account logged in on another device) | Closes the notice and types the login saved in the app's setup, tapping "Đăng nhập" once; refused, or none saved, the run stops at once (exit 4) with what to do |
+| App | Logged out (the account logged in on another device) | Closes the notice and types the login saved in the app's setup, tapping "Đăng nhập" once, again only if nothing changed for 20 s; refused, or none saved, the run stops at once (exit 4) with what to do |
+| App | Logged in with another account than the one saved for the machine | Read on the account tab while getting ready: logged out and the saved login typed in, the number read again. Still another one, or a number that cannot be read on a machine no run saw this account on: the machine books nothing (exit 4) |
 | App | App set to English | Works: the language is found on the first screen |
 | App | Closed-hours notice (tap before 06:00) | Closed with Back and the utility tapped again until `open_retry_seconds`; the wait goes by NTP time on a counter, the first tap 0.1 s after the start |
 | App | Promotion popup over the home screen | Closed with its X before the utilities list is opened (field notes); Back does not close it |

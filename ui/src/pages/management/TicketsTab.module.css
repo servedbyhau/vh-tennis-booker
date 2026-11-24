@@ -1,0 +1,248 @@
+/* One paper panel as tall as the window; the tickets scroll inside. */
+.paper {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: var(--space-3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-2);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.chips {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
+}
+
+/* The choices of the ticket, smaller: a list is picked here, nothing is saved. */
+.chip {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: var(--border-hairline) solid var(--color-line);
+  border-radius: var(--radius-button);
+  background: var(--color-field);
+  font-size: var(--text-data);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  background: var(--color-tint);
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative; /* holds its hidden screen reader text, which would grow the page */
+}
+
+/* The empty list keeps clear of the panel's edges. */
+.none {
+  display: block;
+  padding: var(--space-4) var(--space-5);
+}
+
+/* The day stays in sight while its tickets scroll under it. */
+.day {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-tint);
+  font-size: var(--text-data);
+  font-weight: var(--weight-bold);
+}
+
+.count {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: var(--weight-regular);
+}
+
+/* As many tickets side by side as the window has room for. */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: var(--space-3);
+}
+
+.item {
+  border: var(--border-hairline) solid var(--color-line);
+  border-radius: var(--radius-button);
+  overflow: hidden;
+  background: var(--color-field);
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--color-ground);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  font-weight: var(--weight-bold);
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+}
+
+/* A long customer's name ends in dots before their account does. */
+.holder {
+  min-width: 0;
+  display: flex;
+  white-space: nowrap;
+}
+
+.customer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account {
+  flex: none;
+}
+
+.account::before {
+  content: "· ";
+  white-space: pre;
+  margin-left: 1ch;
+}
+
+.line > :last-child {
+  flex: none;
+}
+
+.photo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-stamp);
+}
+
+/* The choices of a view side by side, apart from the others. */
+.group {
+  display: flex;
+  gap: var(--space-1);
+  margin-right: var(--space-3);
+}
+
+.sent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-stamp);
+}
+
+.unsent {
+  color: var(--color-failed);
+}
+
+/* The week: a column a day, a row a slot. */
+.week {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--text-small);
+}
+
+.week th {
+  position: sticky;
+  top: 0;
+  padding: var(--space-2);
+  background: var(--color-tint);
+  font-weight: var(--weight-bold);
+  text-align: left;
+}
+
+.week tbody th {
+  position: static;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-regular);
+  white-space: nowrap;
+}
+
+.weekSlot {
+  width: 110px;
+}
+
+.week td {
+  padding: var(--space-1);
+  border-top: var(--border-hairline) solid var(--color-hairline);
+  vertical-align: top;
+}
+
+.cell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-hairline) solid var(--color-line);
+  border-left: 3px solid var(--color-stamp);
+  border-radius: var(--radius-control);
+  background: var(--color-field);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell:hover {
+  background: var(--color-ground);
+}
+
+.cellUnsent {
+  border-left-color: var(--color-failed);
+}
+
+.cellCourt {
+  font-weight: var(--weight-bold);
+}
+
+.cellWho {
+  overflow: hidden;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

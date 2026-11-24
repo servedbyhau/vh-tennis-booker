@@ -1,0 +1,30 @@
+/* The sections under the header as the machines' tabs are; the one shown is filled with paper. */
+.sections {
+  flex: none;
+  display: flex;
+  gap: var(--space-1);
+  padding-top: var(--space-1);
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-button);
+  color: var(--color-muted);
+  font-size: var(--text-control);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.section:hover {
+  color: var(--color-ink);
+}
+
+.section[aria-current="page"] {
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+}

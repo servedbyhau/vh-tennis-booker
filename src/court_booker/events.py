@@ -25,11 +25,15 @@ class EventKind(str, Enum):
     APP_READY = "app_ready"
     ACCOUNT_SUBDIVISION = "account_subdivision"
     LOGGED_IN = "logged_in"
+    ACCOUNT_CHECKED = "account_checked"
     SCREEN_SAVED = "screen_saved"
     REPAIRED = "repaired"
     WAITING = "waiting"
     BOOKING_STARTED = "booking_started"
     RUN_FINISHED = "run_finished"
+    TICKETS_SAVED = "tickets_saved"
+    OPENING_MEASURED = "opening_measured"
+    QUOTA_READ = "quota_read"
     # One round, i.e. one slot.
     SLOT_STARTED = "slot_started"
     CALENDAR_OPENED = "calendar_opened"
@@ -47,6 +51,11 @@ class EventKind(str, Enum):
     SETUP_STARTED = "setup_started"
     SETUP_ITEM = "setup_item"
     SETUP_FINISHED = "setup_finished"
+    # A ticket cancelled, outside any run (court-booker cancel).
+    TICKET_CANCELLED = "ticket_cancelled"
+    TICKET_NOT_CANCELLED = "ticket_not_cancelled"
+    # The quota read when asked, outside any run (court-booker quota).
+    QUOTA_NOT_READ = "quota_not_read"
     # The app, outside any run.
     SETTINGS_SAVED = "settings_saved"
     SCHEDULE_ENABLED = "schedule_enabled"

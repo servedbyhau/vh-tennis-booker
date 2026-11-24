@@ -19,14 +19,27 @@
 }
 
 .secondary {
-  border: var(--border-hairline) solid var(--color-ink);
+  border: var(--border-hairline) solid var(--color-faint);
   background: transparent;
   color: var(--color-ink);
   font-weight: var(--weight-semibold);
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--color-paper);
+  background: var(--color-tint);
+}
+
+/* What cannot be taken back. */
+.danger {
+  border: var(--border-hairline) solid var(--color-failed);
+  background: transparent;
+  color: var(--color-failed);
+  font-weight: var(--weight-semibold);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-failed);
+  color: var(--color-on-ink);
 }
 
 .large {

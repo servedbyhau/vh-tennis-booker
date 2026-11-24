@@ -1,23 +1,102 @@
+import {
+  AlarmClock,
+  AppWindow,
+  ArrowRight,
+  Bell,
+  CalendarX,
+  Check,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Copy,
+  Download,
+  Image,
+  KeyRound,
+  LifeBuoy,
+  ListChecks,
+  Lock,
+  RotateCw,
+  Search,
+  MonitorSmartphone,
+  Pencil,
+  Phone,
+  Play,
+  Plus,
+  StickyNote,
+  Trash2,
+  UserRound,
+  UserRoundX,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import styles from "./Icon.module.css";
 
-/** Line drawings on a 16-unit grid, in the colour of the text around them. */
-const PATHS = {
-  /** A clock: a time set ahead, such as the wake time or a run on schedule. */
-  clock: "M8 2.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 1 0 0-11zM8 5v3.25l2 1.25",
-  /** A person: something someone started by hand. */
-  person: "M8 2.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5zM3 13.5c.7-2.4 2.6-3.5 5-3.5s4.3 1.1 5 3.5",
-} as const;
+/** The drawings the app uses, all of one set (Lucide), by what they stand for here. */
+const DRAWINGS = {
+  /** A time set ahead, such as the wake time or a run on schedule. */
+  clock: Clock,
+  /** Someone: a customer, who speaks for them, or a run started by hand. */
+  person: UserRound,
+  /** How to reach someone. */
+  phone: Phone,
+  /** Something written down. */
+  note: StickyNote,
+  /** A login. */
+  key: KeyRound,
+  /** Something that opens as a picture. */
+  picture: Image,
+  /** Something locked, or kept to itself. */
+  lock: Lock,
+  /** Tasks to tick. */
+  tasks: ListChecks,
+  /** What happens by itself every morning. */
+  alarm: AlarmClock,
+  /** The Windows notification. */
+  bell: Bell,
+  /** A MuMu instance. */
+  machine: MonitorSmartphone,
+  /** Start something now. */
+  play: Play,
+  /** What to do when something goes wrong. */
+  help: LifeBuoy,
+  add: Plus,
+  edit: Pencil,
+  remove: Trash2,
+  /** A ticket to cancel. */
+  cancel: CalendarX,
+  /** Read again in the app. */
+  refresh: RotateCw,
+  /** A machine's MuMu window. */
+  window: AppWindow,
+  /** Agree, keep what was typed. */
+  check: Check,
+  /** Close what is open, give it up. */
+  close: X,
+  /** Find among many. */
+  search: Search,
+  /** Copy, to paste elsewhere. */
+  copy: Copy,
+  /** Save as a file. */
+  save: Download,
+  /** Open the list under it, to choose another. */
+  choose: ChevronsUpDown,
+  /** Nothing chosen. */
+  none: UserRoundX,
+  /** Go to another page. */
+  go: ArrowRight,
+  /** The one before, the one after. */
+  back: ChevronLeft,
+  forward: ChevronRight,
+} as const satisfies Record<string, LucideIcon>;
 
-export type IconName = keyof typeof PATHS;
+export type IconName = keyof typeof DRAWINGS;
 
 /**
- * A small icon before a word or a value, sized to the text. It only adds to the words next
- * to it, so screen readers skip it.
+ * A small icon in the colour of the text around it, sized to it. Screen readers skip it: it
+ * only adds to the words next to it, and a button of an icon alone has a label of its own.
  */
 export function Icon({ name }: { name: IconName }) {
-  return (
-    <svg className={styles.icon} viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path d={PATHS[name]} />
-    </svg>
-  );
+  const Drawing = DRAWINGS[name];
+  return <Drawing className={styles.icon} aria-hidden="true" focusable="false" />;
 }

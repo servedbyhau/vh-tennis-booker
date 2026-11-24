@@ -1,0 +1,51 @@
+/* A paper panel as tall as the window; the Setup scrolls inside. */
+.panel {
+  flex: 0 0 var(--panel-width);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* As high as the machines beside it, so the two hairlines line up. */
+.title {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 64px;
+  padding: 0 var(--space-5);
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
+  font-size: var(--text-heading-xs);
+  font-weight: var(--weight-bold);
+}
+
+/* It scrolls inside the panel, the dry run staying at the foot. */
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative; /* holds its hidden screen reader text, which would grow the page */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* The bar's place is kept, so nothing moves as the list opens. */
+  scrollbar-gutter: stable;
+  padding: var(--space-4) var(--space-2) var(--space-4) var(--space-4); /* 8 px of it the bar */
+}
+
+/* Lines that belong together, parted by hairlines that start under their words. */
+.card {
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-field);
+}
+
+.card > * + * {
+  background: linear-gradient(var(--color-hairline), var(--color-hairline)) no-repeat right top /
+    calc(100% - 60px) var(--border-hairline);
+}

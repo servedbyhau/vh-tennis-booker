@@ -11,15 +11,36 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from court_booker.events import EventKind
 from court_booker.history import SCHEMA_VERSION, connect
 
 DEFAULT_LIMIT = 50
+DEFAULT_TICKETS = 500
 
-_RUN_COLUMNS = """
+
+def _holder_columns(table: str) -> str:
+    """Return the columns that name whose account a row of ``table`` is of.
+
+    The names of today, so a customer or account that takes another name shows under it;
+    those of then once it is removed.
+    """
+    return f"""
+    COALESCE(
+        (SELECT customers.name FROM accounts
+         JOIN customers ON customers.id = accounts.customer_id
+         WHERE accounts.id = {table}.account_id), {table}.customer) AS customer,
+    COALESCE(
+        (SELECT NULLIF(accounts.label, '') FROM accounts
+         WHERE accounts.id = {table}.account_id), {table}.account) AS account
+"""
+
+
+_RUN_COLUMNS = f"""
     runs.id, runs.trigger, runs.dry_run, runs.version, runs.started_at, runs.finished_at,
     runs.play_date, runs.court, runs.status, runs.error, runs.device,
     (SELECT COUNT(*) FROM run_slots WHERE run_slots.run_id = runs.id AND run_slots.ok) AS booked,
-    (SELECT COUNT(*) FROM run_slots WHERE run_slots.run_id = runs.id) AS total
+    (SELECT COUNT(*) FROM run_slots WHERE run_slots.run_id = runs.id) AS total,
+    {_holder_columns("runs")}
 """
 
 _RUN_DAY = "substr(runs.started_at, 1, 10)"
@@ -202,10 +223,92 @@ def account_subdivisions(db: sqlite3.Connection) -> list[dict[str, Any]]:
     return list(found.values())
 
 
+_TICKET_COLUMNS = f"""
+    code, device, utility, court, play_date, slot, status, status_text, created_at, seen_at,
+    photo, account_id, sent_at, {_holder_columns("tickets")}
+"""
+
+
+def list_tickets(
+    db: sqlite3.Connection, *, since: str | None = None, limit: int = DEFAULT_TICKETS
+) -> list[dict[str, Any]]:
+    """Return every machine's tickets, the latest day of play first, by slot within a day.
+
+    ``since`` (``YYYY-MM-DD``) keeps the tickets played that day or later.
+    """
+    rows = db.execute(
+        f"SELECT {_TICKET_COLUMNS} FROM tickets WHERE play_date >= ?"
+        " ORDER BY play_date DESC, slot, device, code LIMIT ?",
+        (since or "", limit),
+    )
+    return [dict(row) for row in rows]
+
+
+def get_ticket(db: sqlite3.Connection, code: str) -> dict[str, Any] | None:
+    """Return ticket ``code`` as :func:`list_tickets` lists it, ``None`` if not recorded."""
+    row = db.execute(f"SELECT {_TICKET_COLUMNS} FROM tickets WHERE code = ?", (code,)).fetchone()
+    return None if row is None else dict(row)
+
+
+def mark_sent(db: sqlite3.Connection, code: str, at: str | None) -> bool:
+    """Record ticket ``code`` as sent to its customer at ``at``, or not sent with ``None``.
+
+    Returns whether the ticket is recorded.
+    """
+    with db:
+        cursor = db.execute("UPDATE tickets SET sent_at = ? WHERE code = ?", (at, code))
+    return cursor.rowcount > 0
+
+
+def ticket_photo(db: sqlite3.Connection, code: str) -> str | None:
+    """Return the file name of the picture of ticket ``code``, if it has one."""
+    row = db.execute("SELECT photo FROM tickets WHERE code = ?", (code,)).fetchone()
+    return None if row is None else row["photo"]
+
+
 def dry_run_passed(db: sqlite3.Connection) -> bool:
     """Return whether any dry run went through every slot; scheduling requires one."""
     row = db.execute("SELECT 1 FROM runs WHERE trigger = 'dry_run' AND status = 'ok' LIMIT 1")
     return row.fetchone() is not None
+
+
+def quota_readings(db: sqlite3.Connection, since: str) -> dict[str, list[dict[str, Any]]]:
+    """Return the newest quota read of each account, utility and month from ``since`` on.
+
+    ``since`` is a month, ``YYYY-MM``; the app picks the month of the next booking, which may
+    be the next one. From the ``quota_read`` events of the runs that knew whose account they
+    booked with (:mod:`court_booker.quota`), and of a cancel, outside any run, that names it;
+    an event without its fields is left out, and ``sport`` is ``None`` in those read before it
+    was recorded.
+    """
+    newest: dict[tuple[str, str, str], dict[str, Any]] = {}
+    rows = db.execute(
+        "SELECT runs.account_id, events.time, events.data FROM events"
+        " LEFT JOIN runs ON runs.id = events.run_id"
+        " WHERE events.kind = ? ORDER BY events.id",
+        (EventKind.QUOTA_READ.value,),
+    )
+    for account_id, read_at, data in rows:
+        try:
+            fields = json.loads(data)
+        except ValueError:
+            continue
+        account_id = account_id or fields.get("account_id")
+        if not isinstance(account_id, str):
+            continue
+        utility, month = fields.get("utility"), fields.get("month")
+        used, limit, sport = fields.get("used"), fields.get("month_limit"), fields.get("sport")
+        if not isinstance(utility, str) or not isinstance(month, str) or month < since:
+            continue
+        if not isinstance(used, int) or not isinstance(limit, int):
+            continue
+        reading = {"utility": utility, "month": month, "used": used, "month_limit": limit}
+        sport = sport if isinstance(sport, str) else None
+        newest[(account_id, utility, month)] = {**reading, "sport": sport, "read_at": read_at}
+    found: dict[str, list[dict[str, Any]]] = {}
+    for (account_id, _, _), reading in newest.items():
+        found.setdefault(account_id, []).append(reading)
+    return found
 
 
 def _add_slots(db: sqlite3.Connection, runs: list[dict[str, Any]]) -> None:

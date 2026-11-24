@@ -1,0 +1,46 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-button);
+  background: var(--color-tint);
+}
+
+/* The fields in a row, what is said about them under it. */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}
+
+.field input {
+  padding: 7px 10px;
+  border: var(--border-hairline) solid var(--color-rule);
+  border-radius: var(--radius-stamp);
+  background: var(--color-field);
+  font-size: var(--text-control);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.error {
+  color: var(--color-failed);
+  font-size: var(--text-small);
+}

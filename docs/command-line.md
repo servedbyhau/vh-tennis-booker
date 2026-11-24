@@ -32,6 +32,7 @@ Edit `config.toml`, or use the UI. The keys you usually change:
 | Key | Example | Meaning |
 |---|---|---|
 | `slots` | `["18:00 - 19:00", "19:00 - 20:00"]` | Slots to book, one round each, in this order: put the most wanted first |
+| `days` | `[]` | The days of the week the day of play may fall on for the daily task to book with this machine, 0 Monday to 6 Sunday; empty books every day. Each `[[instances]]` table has its own (every day unless given). A machine off that day neither boots nor books, and the machines after it do not wait for it; the first machine still starts the others. Runs started by hand book whatever the day |
 | `sport` | `"tennis"` | What to book: `tennis`, `multi`, `volleyball`, `table-tennis`, `basketball`, `football`, `pickleball` or `badminton` |
 | `court` | `"S10 - Sân tennis"` | The court, as the app names it (S6, S8, S9 or S10 for tennis at Origami; BE7 or BCX3/CX2 01-02 at BS) |
 | `subdivision` | `""` | The account's subdivision, `origami` or `bs`; empty follows the account. The run books by `court` either way |
@@ -45,8 +46,8 @@ To book with more accounts at once, clone the MuMu instance in MuMu's multi-inst
 log the clone in to another account, and add an `[[instances]]` table for it (example in
 `config.example.toml`): its `mumu_index`, and any of `slots`, `subdivision`, `sport`, `court` and
 `venue_keyword` that differ. The UI shows a tab for each machine on top of the ticket, with its
-own settings and its own setup; "Máy 2" (MuMu 1) is always there, and its "Dùng máy này" switch
-adds or removes its `[[instances]]` table.
+own settings and, in the Setup beside it, its account; each MuMu instance on the PC is there (three at least), and each
+one's switch in the Setup adds or removes its `[[instances]]` table.
 
 ## Set up the PC and the emulator
 
@@ -110,6 +111,8 @@ are dropped); the next run reads it.
 | `court-booker --verbose` | Also print every screen read and every tap |
 | `court-booker --driver instrumentation` / `--driver uiautomator2` | Use only that driver; the default `auto` tries instrumentation, then falls back to uiautomator2 |
 | `court-booker setup [--auto]` | Check the PC and the emulator, or fix them |
+| `court-booker quota [--instance N]` | Read what is left of the quota of MuMu instance N's account in its app, for each sport it plays in the month of today + 2; exit 0 once read, 1 if not, 2 around the scheduled run, 5 if a run uses the machine |
+| `court-booker cancel <code> [--instance N]` | Cancel ticket `<code>` (its "Mã đặt") in the app of MuMu instance N (default: the config's first), then read that sport's quota again; exit 0 once the app shows it cancelled, 1 if not, 2 around the scheduled run, 5 if a run uses the machine |
 | `court-booker schedule install` / `status` / `remove` | The daily task |
 | `court-booker serve --config config.toml` | The backend of the UI |
 
@@ -129,7 +132,8 @@ the one in the data folder).
 - **Logs**: each run appends to `logs/court-booker-YYYY-MM-DD.log` beside its `config.toml`,
   with every screen it read and every tap; each other MuMu instance to its own
   `…-mumuN.log`.
-- **Data folder**: the history database `booker.db` and the run lock `run.lock` (and
+- **Data folder**: the history database `booker.db`, the ticket pictures (`tickets`, personal
+  data) and the run lock `run.lock` (and
   `run-mumuN.lock` for each other instance) are in `%LOCALAPPDATA%\CourtBooker`, where the
   installed app also keeps its `config.toml` and `logs`; set `COURT_BOOKER_HOME` to move them.
 - **One run at a time**: a second run is refused (exit code 5), and the scheduled run waits

@@ -4,6 +4,7 @@ device = "auto"                     # ADB serial, or "auto" to find the emulator
 adb_path = ""                       # adb.exe; empty searches PATH, then the MuMu folder
 package = "com.vinhomes.resident"
 slots = ["18:00 - 19:00", "19:00 - 20:00"]  # one booking round per slot
+# days = [0, 2, 4]                  # the daily task books for these days of play only (0 Monday)
 subdivision = ""                    # "origami" or "bs"; "" = the account's
 sport = "tennis"                    # tennis, multi, volleyball, table-tennis, basketball,
                                     # football, pickleball or badminton
@@ -66,13 +67,20 @@ processing = "Đang xử lý"            # ticket status while the server handle
 registered = "Đã đăng ký"            # ticket status once registered
 login = "Đăng nhập"                  # button of the login screen, once logged out
 dont_show_again = "Không hiện lại"   # on a popup over the home screen, closed with its X
+home_tab = "Trang chủ"               # the tabs at the bottom of the app
+account_tab = "Tài khoản"            # shows the phone number of the account logged in
+log_out = "Đăng xuất"                # on the account tab, and its dialog's title
+log_out_yes = "Đồng ý"               # in that dialog
+cancel_ticket = "Hủy tiện ích"       # on a ticket's page: cancels it after a question
+cancel_question = "muốn hủy tiện ích"  # in that question, answered with confirm
 
 # Optional: more MuMu instances, each logged in to its own account, booking side by side
 # with this one in a process of its own. Each table sets that instance's mumu_index and,
 # if they differ from the settings above, its slots, subdivision, sport, court and
-# venue_keyword. The UI's "Dùng máy này" switch adds a table (mumu_index alone) or removes it.
+# venue_keyword. The machine's switch in the UI's Setup adds a table (mumu_index alone) or removes it.
 # [[instances]]
 # mumu_index = 1
 # slots = ["20:00 - 21:00", "21:00 - 22:00"]
+# days = [5, 6]                     # its own; every day unless given
 # sport = "badminton"
 # court = "S6 - Sân cầu lông"

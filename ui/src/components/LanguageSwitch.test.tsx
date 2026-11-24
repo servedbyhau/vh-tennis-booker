@@ -32,7 +32,7 @@ describe("LanguageSwitch", () => {
     fireEvent.click(screen.getByRole("button", { name: "EN English" }));
 
     expect(await screen.findByRole("heading", { level: 1, name: "Overview" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "History" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Management" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "EN English" })).toHaveAttribute(
       "aria-pressed",
       "true",

@@ -83,6 +83,20 @@ def test_no_dry_run_while_a_run_holds_the_lock(client, context, launched):
     assert launched == []
 
 
+def test_no_dry_run_while_a_ticket_is_cancelled(app, client, launched):
+    from court_booker.api.tasks import Task
+
+    app.state.cancel = Task("cancel", 1, "2026-10-13T13:59:00", FakeProcess(), "1234567")
+
+    response = client.post("/api/runs/dry-run")
+
+    assert (response.status_code, response.json()["detail"]) == (
+        409,
+        "Another task is in progress: cancel on MuMu 1",
+    )
+    assert launched == []
+
+
 def test_no_dry_run_around_the_scheduled_run(client, launched, monkeypatch):
     monkeypatch.setattr(At, "moment", datetime(2026, 10, 14, 5, 50))
 

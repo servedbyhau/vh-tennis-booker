@@ -9,12 +9,13 @@
   --color-ground: #e7e6e1; /* page background */
   --color-paper: #f8f7f3; /* cards and tickets */
   --color-field: #ffffff; /* inputs and selects */
-  --color-ink: #1c1b19; /* text, rules, dark fills */
+  --color-ink: #1c1b19; /* text, the main action, the page shown; never a rule */
   --color-muted: #5c5850; /* secondary text */
-  --color-faint: #8f8a7f; /* markers of pending steps, never text */
-  --color-rule: #a9a59a; /* dotted rows of lists and tables */
+  --color-faint: #8f8a7f; /* markers of pending steps, edges of buttons, never text */
+  --color-rule: #a9a59a; /* edges of fields, scroll bars */
   --color-perforation: #b9b5aa; /* dashed ticket stub, steps not reached */
   --color-line: #d6d2c8; /* the edge of a choice not chosen */
+  --color-hairline: #e4e0d6; /* what parts the top of a card from the rest, rows of a list */
   --color-tint: #ecebe4; /* the fill of a chosen choice */
   --color-shadow: #c9c6bc; /* edge under a card */
 
@@ -28,7 +29,7 @@
   --color-stamp-strong: #1c3380; /* link hover */
   --color-failed: #b53c0b; /* the mockups' #c2410c, darkened to reach 4.5:1 on the ground */
   --color-highlight: #ecd78f; /* sand yellow: the 06:00 moment, the current step, the order */
-  --color-highlight-soft: #f4ebcc; /* a large area in the same yellow: the setup guide */
+  --color-highlight-soft: #f4ebcc; /* a large area in the same yellow: the first steps in the guide */
 
   /* Type: --font-sans and --font-mono come from fonts.css */
   --text-label: 12px; /* mono capitals above values */
@@ -91,7 +92,7 @@
   --home-width: 1360px;
   --home-min-width: 1240px;
   --home-min-height: 640px;
-  --panel-width: 384px; /* the History beside the ticket */
+  --panel-width: 384px; /* the Setup beside the ticket */
   --touch-target: 44px; /* smallest height of anything clickable */
   --focus-ring: 3px solid var(--color-stamp);
   --focus-offset: 2px;

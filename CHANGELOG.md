@@ -6,6 +6,123 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-25
+
+### Added
+- The money charges the tickets saved before it was there once its section is opened; the golden
+  hours are chosen as whole hours in 24-hour time; the quota table names the machines as their
+  tabs do.
+- A requests section keeps what each customer asks to book (court, slots, days of the week,
+  machine, note); applying one sets its machine to book it from the next 06:00 run. A machine
+  may book for some days of play only (`days`, 0 Monday to 6 Sunday, each machine its own):
+  off that day it neither boots nor books, and the machines after it do not wait for it.
+  The machines' cards say their days.
+- A statistics section sums the 06:00 runs of the last 30 days: the share of slots booked by
+  machine and by slot, the average time of a slot booked, and why slots were lost.
+- A money section: each ticket a customer's account books becomes a charge (kept once the ticket
+  is gone), priced by a price list of a normal and a golden price a sport, or set by hand; a
+  cancelled ticket and a customer booked for free owe nothing. A month's sums, each customer's
+  tickets marked paid one by one or all at once, and their statement copied to send
+  (`/api/money/...`, schema 8). The overview shows what is left to collect this month.
+- A quota section shows every account's quota left of each sport in one table, for the month
+  booked for or another month read, little left marked, with a read again on each account on a
+  machine; the overview's alert of an account short of quota leads there.
+- The tickets show as a list or a week (a column a day, a row a slot), of one sport or every one,
+  and every ticket or those not sent yet. A ticket is marked sent to its customer from its
+  picture (`PUT /api/tickets/{code}/sent`), and the overview counts those of today and tomorrow
+  still to send. Each ticket comes with its sport.
+- The management opens on an overview: this month's slots booked at 06:00, the tickets to play,
+  the machines booking, every machine in a line, the tickets of the next three days and what to
+  look at, each leading where it is set right. A machines section has a card per machine with its
+  account, what it books, its quota, its last 06:00 run and its buttons. The customers moved to
+  `/management/customers`.
+- A timed run logs its opening once the rounds are over: how far the PC clock and Android's are
+  from NTP time (Android's read during the warm-up and after the rounds), when the first tap
+  came and when the calendar opened, after how many taps (`opening_measured`). Nothing is added
+  between 06:00 and the last slot.
+- Each machine's Setup has a button that opens its MuMu to see its screen: launched, or its window
+  brought to the front (`/api/machines/{index}/open`); not around the 06:00 booking or while a run
+  or task uses the machines.
+- An account on a machine has a button in the customers that reads its quota again in the
+  Vinhomes app, for each sport it plays that month (`court-booker quota [--instance N]`,
+  `/api/machines/{index}/quota`). The guide says to cancel a slot not needed in the tickets.
+- A ticket still to play has a cancel button in the tickets: after a question, the machine its
+  account is on cancels it in the Vinhomes app and its words tell how that went; the ticket and
+  the quota are shown again once done (`/api/tickets/{code}/cancel`, `/api/tickets/cancel`).
+- `court-booker cancel <code> [--instance N]` cancels a ticket in the Vinhomes app of its
+  machine: its page's "Hủy tiện ích", then "Xác nhận" in the question, checked on the history
+  page opened again; the ticket takes its new status and that sport's quota is read again. It
+  is refused around the scheduled run and while a run uses the machine.
+- A run reads what is left of the account's quota for the day it books (8 a month, 2 a day, of
+  the sport) on the app's history page, at 05:46 while getting ready and again after the tickets,
+  and logs it; it warns when fewer are left than the slots chosen. What it books is the same.
+  Each account shows what is left of it in the month booked for, as the last run read it, in the
+  customers and in the Setup's list of accounts (`quota` of `/api/customers`). When the next
+  day's run has fewer left than its slots, a Windows notification after the tickets says so, the
+  machine's tab is marked and its account set off.
+- While getting ready, a run reads the phone number on the Vinhomes app's account tab, and logs
+  out and in again if it is not the account saved for the machine. It never books with another
+  one: a machine that stays in it, or cannot tell, books nothing and says so.
+- A management page ("Quản lý" / "Management" in the middle of the header) with three sections: the
+  customers (the people or groups booked for, with who speaks for them and the Vinhomes accounts
+  they gave), the tickets and the History, which leaves the panel beside the ticket. That panel is
+  the Setup of the machine shown, where its account is picked from the customers' in place of typing a
+  login; the logins saved before became customers (`/api/customers`,
+  `/api/machines/{index}/account` in place of `/api/logins`).
+- A guide page ("Hướng dẫn" / "Guide"): the steps to tick for each machine, with the count left in
+  the header, and how to use the app, out of the Setup.
+- The line at the top no longer says ready while a machine books with no account chosen, or two
+  machines would book the same court and slot; their tabs are marked, and the second is told at the
+  press that makes it so.
+- Removing a customer or an account asks first over the page, naming the accounts and saved passwords
+  lost for good and the machines left without one.
+- A "Vé" ("Tickets") section: the tickets booked and still to use, of every
+  customer in one list by day of play, with their status and whose account they are of; a press
+  opens the ticket's picture, which can be saved as a file or copied.
+- After a real run that booked, the app's tickets are read from its history page (code, court,
+  time, status) and a picture of each new ticket, with its QR code, is saved in the data
+  folder's `tickets`. It starts at 06:03, once no machine is booking any more, so MuMu closes
+  three minutes or so later than before. A ticket and its picture are deleted once its day of
+  play is over.
+- Each run and each ticket is recorded with whose account it is of, the customer and the account, so
+  it stays known when the accounts change machines; the History and the tickets name them.
+- A third machine on the ticket, "Máy 3" (MuMu 2), switched on and off like "Máy 2", so a
+  third account books alongside from the UI. Each machine keeps its tab whichever of the
+  others is on.
+
+### Changed
+- The quota section lists the customers on the left, with a search, marking those running out;
+  the chosen one's accounts show what each booked of a sport ("3/8", "Full" at the limit),
+  without the machine column. The overview's alert of a machine short of quota opens its
+  customer there.
+- The Setup's account shows "Account" over the phone number and name in use, without the quota;
+  its list asks for the customer first, then one of their phone numbers.
+- The customers' page shows each account's whole phone number with a button that copies it, and
+  a search finds a customer by name or contact, or an account by its name or phone number. The
+  quotas and their read again moved off it: they are in the quota section.
+- Every MuMu instance on the PC has its tab, not three only: a fourth or fifth machine is
+  switched on in the Setup instead of added to `config.toml` by hand (`/api/mumu-instances`).
+- The machines of a run launch MuMu one after another, each once the ones before it in the
+  config have booted (75 s each at most), instead of all at once: five booting together left
+  0.5 GB of memory free.
+- A lighter look: space, soft fills and hairlines part things in place of dark rules; ink is for the
+  main action and the page shown. Icons of one set (Lucide) take the place of words on the
+  customers' buttons and facts. The management's sections are tabs like the machines'.
+- The Setup beside the ticket holds the daily switch, the notification's, each machine's and the
+  dry run, which leave the ticket; the account is picked from one list of every customer's, and one
+  that another machine books with moves after a question. An account's form shows its saved login.
+
+### Fixed
+- The money no longer says a customer has paid it all while their tickets have no price: it
+  says how many have none, and the sums say they are not counted yet. The switches of the money
+  and requests sections show their words.
+- A timed run keeps its history in memory from the warm-up to the end of its rounds and writes
+  it after: at 06:00 five machines lost 0.2-0.8 s waiting for each other's writes, and two lost
+  their run and tickets from the History. Its steps show once the rounds are over.
+- Logging in again waits 20 s for the app to answer instead of 3 s before "Đăng nhập" is
+  tapped again, and taps it twice at most: the app was seen to take 11 s, so one login was
+  sent three times (the app locks an account after 5 wrong passwords).
+
 ## [1.1.2] - 2026-11-19
 
 ### Added

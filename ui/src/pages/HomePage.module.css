@@ -1,10 +1,10 @@
-/* The booking on the left, the History beside it; both fill the height of the window. */
+/* The booking on the left, the Setup beside it; both fill the height of the window. */
 .columns {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   gap: var(--space-6);
-  padding-top: var(--space-5);
+  padding-top: var(--space-2);
 }
 
 /* The ticket fills the column; a window lower than it scrolls the column. */

@@ -1,17 +1,26 @@
 /** The address of every screen; paths stay English in both languages. */
 export const paths = {
   overview: "/",
+  management: "/management",
+  machines: "/management/machines",
+  customers: "/management/customers",
+  tickets: "/management/tickets",
+  quota: "/management/quota",
+  money: "/management/money",
+  requests: "/management/requests",
+  history: "/management/history",
+  stats: "/management/stats",
+  guide: "/guide",
 } as const;
 
 /**
- * The addresses of the screens the home screen replaced. They lead to it, keeping the
- * query: a `?run=` of the old History opens that run in the panel.
+ * The addresses of screens there are no more, and where they lead, keeping the query: a
+ * `?run=` of the old History opens that run in the new one.
  */
 export const OLD_PATHS = [
-  "/schedule",
-  "/history/*",
-  "/activity",
-  "/settings/*",
-  "/guide",
-  "/welcome",
+  ["/schedule", paths.overview],
+  ["/history/*", paths.history],
+  ["/activity", paths.history],
+  ["/settings/*", paths.overview],
+  ["/welcome", paths.guide],
 ] as const;

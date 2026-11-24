@@ -5,9 +5,7 @@
   "common": {
     "loading": "Đang tải…",
     "retry": "Thử lại",
-    "more": "Xem thêm",
-    "on": "Đang bật",
-    "off": "Đang tắt"
+    "more": "Xem thêm"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -23,14 +21,23 @@
     "locked": "Cập nhật khi không có lần chạy nào và ngoài {{from}}–{{to}}",
     "failed": "Chưa cập nhật được, hãy thử lại sau"
   },
+  "nav": {
+    "label": "Trang",
+    "booking": "Đặt sân",
+    "management": "Quản lý",
+    "guide": "Hướng dẫn",
+    "left": ", còn {{count}} việc"
+  },
   "pages": {
     "overview": {
       "title": "Tổng quan",
       "status": {
-        "setupLeft": "Còn {{count}} việc thiết lập, xem khung bên phải",
-        "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử ngay",
+        "setupLeft": "Còn {{count}} việc chuẩn bị, xem Hướng dẫn",
+        "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử",
         "scheduleOff": "Chạy thử đạt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
+        "noAccount": "Máy {{machines}} chưa chọn tài khoản",
+        "clash": "Máy {{machines}} trùng {{court}} lúc {{start}}",
         "ready": "Sẵn sàng cho {{time}} {{when}}"
       },
       "live": {
@@ -39,6 +46,8 @@
           "dry_run": "Đang chạy thử",
           "manual": "Đang đặt sân (chạy thủ công)",
           "setup": "Đang thiết lập tự động",
+          "cancel": "Đang huỷ vé trong app Vinhomes",
+          "quota": "Đang đọc hạn mức trong app Vinhomes",
           "other": "Đang có một lần chạy"
         },
         "locked": "Chạy thử tạm khóa cho tới khi xong"
@@ -46,13 +55,6 @@
     },
     "ticket": {
       "title": "Lần đặt tiếp theo",
-      "auto": "Tự đặt mỗi sáng",
-      "autoShort": "Tự đặt",
-      "notifyShort": "Thông báo",
-      "notify": "Thông báo kết quả",
-      "notifyHint": "Góc màn hình Windows, sau mỗi lượt",
-      "on": "BẬT",
-      "off": "TẮT",
       "day": "Ngày",
       "chosenSlots": "Khung giờ",
       "offTitle": "Đang tắt",
@@ -60,11 +62,12 @@
       "instance": "Máy",
       "instanceName": "Máy {{number}}",
       "mumuName": "MuMu {{index}}",
-      "instanceLeft": "còn việc thiết lập",
+      "instanceLeft": "còn việc chuẩn bị",
+      "instanceClash": "trùng sân và giờ với máy khác",
+      "instanceNoAccount": "chưa chọn tài khoản",
+      "instanceQuota": "tài khoản không đủ hạn mức",
       "instanceOff": "đang tắt",
-      "use": "Dùng máy này",
-      "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
-      "useOff": "Máy {{number}} đang tắt: lượt chạy không dùng MuMu {{index}}. Bật khi MuMu {{index}} đã đăng nhập một tài khoản khác; máy này lấy lựa chọn của máy 1 cho tới khi bạn đổi.",
+      "useOff": "Máy {{number}} đang tắt. Bật ở Thiết lập để đặt bằng máy này.",
       "subdivision": "Phân khu",
       "byAccount": "Theo tài khoản",
       "sport": "Môn",
@@ -76,16 +79,7 @@
       "saved": "✓ Đã lưu",
       "full": "Đã đủ {{max}} khung: bỏ một khung trước",
       "oneSlot": "Cần ít nhất một khung giờ",
-      "dryRun": {
-        "button": "Chạy thử ngay",
-        "starting": "Đang bắt đầu…",
-        "none": "Chưa chạy thử lần nào. Mất khoảng một phút, không đặt thật.",
-        "last": "Chạy thử gần nhất: {{when}} lúc {{time}}",
-        "passed": "thành công",
-        "failed": "không qua: {{reason}}",
-        "stopped": "dừng giữa chừng",
-        "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
-      },
+      "clash": "Máy {{machines}} cũng chọn sân này lúc {{slot}}: chỉ một máy được",
       "live": {
         "booking": "Đang đặt cho {{day}} · sân {{court}}",
         "dryRun": "Đang chạy thử cho {{day}} · sân {{court}}",
@@ -97,9 +91,7 @@
         "running": "đang chạy",
         "waiting": "{{slot}} · chờ tới lượt",
         "locked": "Sân, khung giờ và chạy thử mở lại khi lần này xong. Bạn có thể đóng cửa sổ này."
-      },
-      "lockedTitle": "Chưa bật",
-      "locked": "Chạy thử thành công một lần thì mới bật được."
+      }
     },
     "history": {
       "title": "Lịch sử",
@@ -114,8 +106,6 @@
       "runOn": "Lần chạy {{day}}",
       "booked": "đặt {{when}} · {{by}}",
       "dry": "chạy thử {{when}}",
-      "instance": "{{text}} · MuMu {{index}}",
-      "back": "← Lịch sử",
       "slot": {
         "booked": "ĐÃ ĐẶT",
         "failed": "KHÔNG ĐẶT ĐƯỢC",
@@ -125,26 +115,261 @@
       "done": "Xong lúc {{time}} · mất {{seconds}}",
       "through": "Dừng trước nút \"Xác nhận\", không đặt thật",
       "steps": "Từng bước",
-      "technical": "Chi tiết kỹ thuật"
+      "technical": "Chi tiết kỹ thuật",
+      "choose": "Chọn một lượt ở bên trái để xem chi tiết."
     },
-    "panel": {
-      "title": "Lịch sử và thiết lập",
-      "setup": "Thiết lập",
-      "left": ", còn {{count}} việc"
+    "tickets": {
+      "title": "Vé",
+      "customer": "Vé của khách",
+      "all": "Mọi khách",
+      "unknown": "Không rõ khách",
+      "count": "{{count}} vé",
+      "row": "{{slot}} · {{court}}",
+      "noPhoto": "chưa có ảnh",
+      "empty": "Chưa có vé nào. Vé đặt được hiện ở đây đến hết ngày chơi.",
+      "status": {
+        "registered": "ĐÃ ĐĂNG KÝ",
+        "processing": "ĐANG XỬ LÝ",
+        "cancelled": "ĐÃ HỦY"
+      },
+      "photo": "Ảnh vé {{name}}",
+      "photoNone": "Vé này chưa có ảnh. Ảnh chỉ được chụp cho vé vừa đặt trong lượt chạy.",
+      "photoFailed": "Không mở được ảnh vé.",
+      "place": "{{place}}/{{total}}",
+      "previous": "Vé trước",
+      "next": "Vé sau",
+      "save": "Lưu vé",
+      "copy": "Copy ảnh",
+      "copied": "Đã copy ảnh, dán vào Zalo",
+      "copyFailed": "Không copy được ảnh, hãy dùng Lưu vé",
+      "close": "Đóng",
+      "cancel": {
+        "button": "Huỷ vé",
+        "question": "Huỷ vé {{name}}, {{day}}? App Vinhomes trên {{machine}} sẽ huỷ vé và hoàn lại hạn mức.",
+        "yes": "Có, huỷ vé",
+        "no": "Không",
+        "running": "Đang huỷ vé trong app Vinhomes, khoảng 1 phút…",
+        "done": "Đã huỷ vé, hạn mức đã được hoàn.",
+        "noMachine": "Tài khoản của vé này không gắn máy nào, nên chưa huỷ được ở đây. Hãy gắn tài khoản vào một máy, hoặc huỷ trong app Vinhomes.",
+        "failed": {
+          "1": "App Vinhomes chưa huỷ vé này. Xem nhật ký để biết lý do.",
+          "2": "Không huỷ vé trong giờ đặt sân buổi sáng.",
+          "3": "Không mở được MuMu của máy này.",
+          "4": "App Vinhomes trên máy này chưa sẵn sàng, có thể đã bị đăng xuất.",
+          "5": "Máy này đang chạy một lượt khác. Hãy thử lại sau.",
+          "other": "Có lỗi khi huỷ vé. Xem nhật ký."
+        }
+      },
+      "open": "Xem vé",
+      "view": {
+        "label": "Cách xem",
+        "list": "Danh sách",
+        "week": "Tuần"
+      },
+      "sport": "Môn",
+      "allSports": "Mọi môn",
+      "unsentOnly": "Chưa gửi khách",
+      "unsent": "chưa gửi",
+      "sentMark": "đã gửi",
+      "sent": "Đã gửi cho khách",
+      "markSent": "Đánh dấu đã gửi cho khách",
+      "slot": "Khung giờ",
+      "noneKept": "Không có vé nào khớp lựa chọn."
     },
-    "setup": {
+    "quota": {
+      "title": "Hạn mức",
+      "month": "Tháng {{month}}",
+      "months": "Tháng",
+      "account": "Tài khoản",
+      "machine": "MuMu {{index}}",
+      "readAt": "Đọc lúc {{time}} {{day}}",
+      "empty": "Chưa có tài khoản nào được đọc hạn mức. Hạn mức được đọc ở mỗi lượt 06:00, hoặc khi bấm Đọc lại.",
+      "used": "{{used}}/{{limit}}",
+      "full": "Full",
+      "readOn": "Đọc lại hạn mức trên {{machine}}",
+      "runningOut": "Có tài khoản sắp hết lượt"
+    },
+    "money": {
+      "title": "Thu tiền",
+      "months": "Tháng chơi",
+      "month": "Tháng {{month}}",
+      "owed": "phải thu",
+      "paidSum": "đã thu",
+      "left": "còn lại",
+      "none": "Chưa có vé nào của khách trong tháng này. Mỗi vé đặt bằng tài khoản của khách tự thành một khoản phải thu.",
+      "leftToPay": "còn {{left}}",
+      "allPaid": "đã thu đủ",
+      "freeLabel": "Không tính tiền (ví dụ tài khoản của chính bạn)",
+      "day": "Ngày",
+      "court": "Sân",
+      "amount": "Số tiền",
+      "paid": "Đã thu",
+      "golden": "giờ vàng",
+      "cancelled": "đã huỷ",
+      "free": "miễn phí",
+      "noPrice": "chưa có giá",
+      "byHand": "sửa tay",
+      "editAmount": "Sửa số tiền",
+      "save": "Lưu",
+      "markPaid": "Đã thu tiền vé ngày {{day}}",
+      "unpaid": "chưa thu",
+      "paidMark": "đã thu",
+      "sums": "{{count}} vé · phải thu {{owed}} · đã thu {{paid}}",
+      "unpriced": "{{count}} vé chưa có giá",
+      "unpricedHint": "{{count}} vé chưa có giá nên chưa tính vào tổng: nhập giá ở Bảng giá rồi bấm Lưu bảng giá.",
+      "payAll": "Đã thu hết",
+      "copy": "Copy bảng kê",
+      "copied": "Đã copy, dán vào Zalo",
+      "copyFailed": "Không copy được",
+      "statementTitle": "Bảng kê tháng {{month}} · {{name}}",
+      "statementSums": "Tổng {{owed}} · đã trả {{paid}} · còn lại {{left}}",
+      "pricesTitle": "Bảng giá",
+      "goldenHours": "Giờ vàng",
+      "sport": "Môn",
+      "normal": "Giá thường",
+      "goldenPrice": "Giá giờ vàng",
+      "savePrices": "Lưu bảng giá",
+      "saved": "Đã lưu",
+      "goldenFrom": "Giờ vàng bắt đầu",
+      "goldenTo": "Giờ vàng kết thúc"
+    },
+    "stats": {
+      "title": "Thống kê",
+      "since": "Các lượt 06:00 trong {{days}} ngày qua ({{runs}} lượt chạy của các máy).",
+      "allBooked": "giờ đặt được / giờ thử",
+      "allRate": "tỉ lệ đặt được",
+      "allAverage": "thời gian trung bình mỗi giờ đặt được",
+      "byMachine": "Theo máy",
+      "bySlot": "Theo khung giờ",
+      "slot": "Khung giờ",
+      "tried": "Thử",
+      "booked": "Được",
+      "rate": "Tỉ lệ",
+      "average": "Trung bình",
+      "reasons": "Vì sao không đặt được",
+      "noLoss": "Không mất giờ nào."
+    },
+    "management": {
+      "sections": "Các mục quản lý"
+    },
+    "board": {
+      "title": "Tổng quan",
+      "booked": "giờ đặt được lúc 06:00 tháng này ({{rate}}%)",
+      "toPlay": "vé sắp chơi",
+      "machinesOn": "máy đang đặt",
+      "alertsTitle": "Cần xử lý",
+      "allWell": "Mọi thứ đã sẵn sàng cho lượt 06:00 tới.",
+      "machinesTitle": "Các máy",
+      "upcomingTitle": "Vé mấy ngày tới",
+      "seeAll": "Xem hết",
+      "machine": "Máy",
+      "customer": "Khách",
+      "books": "Đặt",
+      "last": "Lượt 06:00 gần nhất",
+      "alerts": {
+        "scheduleOff": "Tự đặt đang tắt: sáng mai không đặt sân.",
+        "noAccount": "{{machine}} chưa chọn tài khoản nên sẽ không đặt.",
+        "clash": "Máy {{machines}} cùng đặt một sân và giờ: chỉ một máy lấy được.",
+        "short": "{{machine}}: tài khoản chỉ còn {{left}} lượt, ít hơn {{slots}} giờ đặt.",
+        "failed": "{{machine}}: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử.",
+        "unsent": "{{count}} vé hôm nay và ngày mai chưa gửi cho khách."
+      },
+      "toCollect": "còn phải thu tháng này"
+    },
+    "machines": {
+      "title": "Máy",
+      "on": "Đang đặt",
+      "off": "Đang tắt",
+      "account": "Tài khoản",
+      "noAccount": "Chưa chọn",
+      "books": "Đặt",
+      "booksNothing": "Không đặt (máy đang tắt)",
+      "quota": "Hạn mức",
+      "quotaUnknown": "Chưa đọc",
+      "last": "Lượt 06:00 gần nhất",
+      "never": "Chưa có",
+      "noSlots": "Không đặt giờ nào",
+      "runFor": "{{when}} · cho {{day}}",
+      "open": "Mở MuMu",
+      "change": "Đổi sân, giờ, tài khoản ở trang Đặt sân",
+      "days": "Ngày đặt"
+    },
+    "customers": {
+      "title": "Khách hàng",
+      "name": "Tên khách hoặc nhóm",
+      "representative": "Người đại diện",
+      "contact": "Liên hệ (SĐT, Zalo)",
+      "accounts": "Tài khoản Vinhomes",
+      "accountCount": "{{count}} tài khoản",
+      "noFacts": "Chưa có thông tin liên hệ.",
+      "empty": "Chưa có khách nào. Bấm dấu + để thêm.",
+      "editCustomer": "Sửa",
+      "label": "Tên",
+      "add": "Thêm khách",
+      "edit": "Sửa",
+      "note": "Ghi chú",
+      "noAccounts": "Chưa có tài khoản nào.",
+      "addAccount": "Thêm tài khoản",
+      "phone": "Số điện thoại",
+      "password": "Mật khẩu",
+      "noLogin": "mất mật khẩu, bấm sửa để nhập lại",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "remove": "Xóa",
+      "keep": "Giữ lại",
+      "inUse": "{{machines}} đang dùng, xóa rồi sẽ không còn tài khoản để đặt.",
+      "removeCustomer": "Xóa",
+      "removeAsk": "Xóa {{name}}?",
+      "lostAccounts": "Sẽ mất {{count}} tài khoản:",
+      "lostPasswords": "Mật khẩu đã lưu cũng mất, không lấy lại được.",
+      "lostFacts": "Thông tin của khách cũng mất, không lấy lại được.",
+      "search": "Tìm khách, tên tài khoản, SĐT",
+      "noMatch": "Không có khách nào khớp.",
+      "copyPhone": "Copy số điện thoại",
+      "copied": "Đã copy",
+      "copyFailed": "Không copy được"
+    },
+    "requests": {
+      "title": "Yêu cầu",
+      "hint": "Khách muốn đặt sân nào, giờ nào, những ngày nào. Áp dụng cho máy thì máy đó đặt đúng như vậy từ lượt 06:00 tới (máy dùng tài khoản đang chọn cho nó).",
+      "add": "Thêm yêu cầu",
+      "edit": "Sửa yêu cầu",
+      "remove": "Xoá yêu cầu",
+      "customer": "Khách",
+      "subdivision": "Phân khu",
+      "sport": "Môn",
+      "court": "Sân",
+      "slots": "Giờ (tối đa 2)",
+      "days": "Ngày chơi",
+      "machine": "Máy đặt",
+      "noMachine": "Chưa chọn máy",
+      "note": "Ghi chú",
+      "active": "Đang áp dụng",
+      "paused": "tạm dừng",
+      "save": "Lưu",
+      "cancel": "Thôi",
+      "apply": "Áp dụng cho máy",
+      "applied": "Đã áp dụng: máy sẽ đặt như vậy từ lượt 06:00 tới.",
+      "otherAccount": "Máy này đang dùng tài khoản của khách khác: chọn tài khoản ở trang Đặt sân.",
+      "none": "Chưa có yêu cầu.",
+      "noCustomer": "Thêm khách ở mục Khách hàng trước."
+    },
+    "guide": {
+      "title": "Hướng dẫn",
       "start": {
         "title": "Court Booker đặt sân thay bạn lúc {{start}} mỗi sáng, kể cả khi bạn ngủ",
         "steps": {
-          "1": "Làm các việc thiết lập bên dưới, một lần.",
-          "2": "Chọn môn, sân và khung giờ trên vé bên trái.",
+          "1": "Làm các việc chuẩn bị bên dưới, một lần.",
+          "2": "Ở trang Đặt sân, chọn tài khoản, môn, sân và khung giờ cho từng máy.",
           "3": "Bấm \"{{dryRun}}\", đạt thì bật \"{{daily}}\"."
         }
       },
-      "manual": {
-        "title": "Bạn tự làm, một lần · tích khi xong",
-        "machine": "Máy {{number}} · MuMu {{index}}",
-        "shared": "chung cho mọi máy",
+      "prepare": {
+        "title": "Chuẩn bị",
+        "note": "Bạn tự làm, một lần. Tích khi xong.",
+        "step": "Việc",
+        "off": "đang tắt",
+        "box": "{{title}}, {{machine}}",
         "mumu": {
           "title": "Đã cài MuMu Player",
           "hint": "Tải ở mumuplayer.com, cài như phần mềm thường."
@@ -155,50 +380,70 @@
         },
         "login": {
           "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Lưu ở mục bên dưới nếu muốn app tự đăng nhập lại."
-        },
-        "off": "đang tắt, không tính vào việc thiết lập"
-      },
-      "login": {
-        "title": "Tự đăng nhập lại",
-        "why": "App Vinhomes đăng xuất khi tài khoản đăng nhập ở máy khác. Đã lưu thì lượt đặt tự đăng nhập lại; mật khẩu nằm trong Windows, không bao giờ hiện lại.",
-        "saved": "Đã lưu cho số {{phone}}",
-        "change": "Đổi",
-        "remove": "Xóa",
-        "phone": "Số điện thoại",
-        "password": "Mật khẩu",
-        "save": "Lưu",
-        "cancel": "Hủy",
-        "failed": "Chưa lưu được, hãy thử lại."
-      },
-      "guide": {
-        "title": "Hướng dẫn",
-        "howto": "Cách dùng trong 3 bước",
-        "morning": {
-          "title": "Mỗi sáng diễn ra thế nào",
-          "text": "{{wake}} máy tự thức dậy, mở MuMu và app Vinhomes. {{start}} đặt các khung đã chọn, thường xong trong 15 giây.",
-          "needs": "Máy cần:",
-          "needsText": "Sleep chứ đừng Shut down, vẫn đăng nhập Windows, laptop thì cắm sạc."
-        },
-        "trouble": {
-          "title": "Khi có sự cố",
-          "notRunning": {
-            "question": "Sáng nay app không chạy",
-            "answer": "Máy đã Shut down thay vì Sleep, hoặc đã đăng xuất Windows."
-          },
-          "slotFull": {
-            "question": "Báo \"{{slotFull}}\"",
-            "answer": "Khung đó có người đặt trước. Chọn khung khác trên vé."
-          },
-          "quota": {
-            "question": "Căn hộ hết hạn mức",
-            "answer": "Tối đa 8 khung mỗi tháng. Hủy lượt không cần trong app Vinhomes."
-          },
-          "loggedOut": {
-            "question": "App bị đăng xuất",
-            "answer": "Lưu tài khoản ở mục \"Tự đăng nhập lại\" để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, lưu lại cho đúng: app khóa tài khoản sau 5 lần sai."
-          }
+          "hint": "Tài khoản cư dân. Chọn tài khoản ở trang Đặt sân để app tự đăng nhập."
         }
+      },
+      "morning": {
+        "title": "Mỗi sáng",
+        "wake": "Máy tự thức dậy, mở MuMu và app Vinhomes. Tài khoản đang đăng nhập khác tài khoản đã chọn thì tự đổi.",
+        "start": "Đặt các khung đã chọn, thường xong trong 15 giây.",
+        "afterTime": "Xong",
+        "after": "Ảnh vé nằm ở Quản lý, mục Vé.",
+        "needs": "Máy cần:",
+        "needsText": "Sleep chứ đừng Shut down, vẫn đăng nhập Windows, laptop thì cắm sạc."
+      },
+      "trouble": {
+        "title": "Khi có sự cố",
+        "notRunning": {
+          "question": "Sáng nay app không chạy",
+          "answer": "Máy đã Shut down thay vì Sleep, hoặc đã đăng xuất Windows."
+        },
+        "slotFull": {
+          "question": "Báo \"{{slotFull}}\"",
+          "answer": "Khung đó có người đặt trước. Chọn khung khác ở trang Đặt sân."
+        },
+        "quota": {
+          "question": "Căn hộ hết hạn mức",
+          "answer": "Tối đa 8 khung mỗi tháng. Hủy lượt không cần ở mục Vé (nút Huỷ vé), hạn mức được hoàn ngay."
+        },
+        "loggedOut": {
+          "question": "App bị đăng xuất",
+          "answer": "Chọn tài khoản cho máy ở trang Đặt sân để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở trang Quản lý: app khóa tài khoản sau 5 lần sai."
+        }
+      }
+    },
+    "panel": {
+      "setup": "Thiết lập"
+    },
+    "setup": {
+      "daily": {
+        "title": "Tự đặt",
+        "times": "{{start}} mỗi sáng, máy thức {{wake}}",
+        "locked": "Chạy thử đạt một lần thì mới bật được"
+      },
+      "notify": "Thông báo kết quả",
+      "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
+      "open": "Mở MuMu {{index}} để xem màn hình",
+      "account": {
+        "title": "Tài khoản",
+        "emptyHint": "Đang theo tài khoản có sẵn trong MuMu",
+        "none": "Không chọn",
+        "onMachine": "đang ở {{machine}}",
+        "move": "Chuyển từ {{from}} sang {{to}}?",
+        "moveYes": "Chuyển",
+        "moveNo": "Thôi",
+        "manage": "Quản lý khách hàng",
+        "otherCustomer": "Chọn khách khác"
+      },
+      "dryRun": {
+        "button": "Chạy thử",
+        "starting": "Đang bắt đầu…",
+        "none": "Mất khoảng một phút, không đặt thật",
+        "last": "Lần gần nhất: {{when}} {{time}}",
+        "passed": "thành công",
+        "failed": "không qua: {{reason}}",
+        "stopped": "dừng giữa chừng",
+        "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
       }
     },
     "notFound": {
@@ -248,6 +493,8 @@
     "dry_run": "chạy thử",
     "manual": "thủ công",
     "setup": "thiết lập tự động",
+    "cancel": "huỷ vé",
+    "quota": "đọc hạn mức",
     "unknown": "không rõ"
   },
   "setup": {
@@ -265,6 +512,23 @@
       "unknown": "chưa kiểm tra được"
     }
   },
+  "quota": {
+    "left": "{{sport}} còn {{left}}/{{limit}}",
+    "read": "đã dùng {{used}}/{{limit}} của tháng {{month}}, đọc lúc {{time}} {{day}}",
+    "refresh": {
+      "button": "Đọc lại hạn mức",
+      "running": "Đang đọc hạn mức trong app Vinhomes, khoảng 1 phút…",
+      "done": "Đã đọc lại hạn mức.",
+      "failed": {
+        "1": "Chưa đọc được hạn mức trong app. Xem nhật ký.",
+        "2": "Không đọc hạn mức trong giờ đặt sân buổi sáng.",
+        "3": "Không mở được MuMu của máy này.",
+        "4": "App Vinhomes trên máy này chưa sẵn sàng, có thể đã bị đăng xuất.",
+        "5": "Máy này đang chạy một lượt khác. Hãy thử lại sau.",
+        "other": "Có lỗi khi đọc hạn mức. Xem nhật ký."
+      }
+    }
+  },
   "steps": {
     "run_started": {
       "scheduled": "Bắt đầu theo hẹn giờ",
@@ -278,7 +542,9 @@
       "full": "Tài khoản thuộc phân khu {{name}}",
       "plain": "Đã đọc phân khu của tài khoản"
     },
-    "logged_in": "App đã bị đăng xuất, đã tự đăng nhập lại",
+    "logged_in": "Đã đăng nhập bằng tài khoản đã lưu",
+    "account_checked": "Đúng tài khoản {{phone}}",
+    "account_switched": "Đã đổi sang tài khoản {{phone}}",
     "repaired": {
       "restart_mumu": "Có lỗi khi chuẩn bị, đã tự khởi động lại MuMu",
       "reconnect_adb": "Có lỗi khi chuẩn bị, đã tự kết nối lại MuMu",
@@ -287,6 +553,16 @@
       "other": "Có lỗi khi chuẩn bị, đã tự sửa"
     },
     "screen_saved": "Đã lưu ảnh màn hình lúc lỗi, trong thư mục logs\\screens",
+    "opening_measured": {
+      "full": "Giờ mở cửa: lịch mở sau {{seconds}} s, lần bấm {{attempt}}",
+      "plain": "Đã ghi lại giờ mở cửa"
+    },
+    "tickets_saved": "Đã đọc {{tickets}} vé trong app, lưu {{photos}} ảnh vé",
+    "quota_read": {
+      "full": "Hạn mức {{sport}} tháng {{month}}: đã dùng {{used}}/{{monthLimit}}, ngày {{day}} có {{dayUsed}}/{{dayLimit}} vé, còn đặt được {{left}}",
+      "plain": "Đã đọc hạn mức đặt sân",
+      "short": ", thiếu {{short}} so với {{slots}} khung giờ đã chọn"
+    },
     "waiting": {
       "full": "Chờ đến {{time}}",
       "plain": "Chờ đến giờ đặt"
@@ -355,6 +631,15 @@
       "plain": "Đã bật hẹn giờ"
     },
     "schedule_disabled": "Đã tắt hẹn giờ",
+    "ticket_cancelled": {
+      "full": "Đã huỷ vé {{code}}: {{slot}} {{day}}",
+      "plain": "Đã huỷ một vé"
+    },
+    "ticket_not_cancelled": {
+      "full": "Không huỷ được vé {{code}}",
+      "plain": "Không huỷ được một vé"
+    },
+    "quota_not_read": "Không đọc được hạn mức",
     "other": "Bước khác ({{kind}})"
   },
   "runs": {
@@ -398,6 +683,7 @@
     "loggedOut": "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
     "loginRefused": "App từ chối tài khoản đã lưu: {{message}}",
     "loginFailed": "Chưa tự đăng nhập lại được",
+    "wrongAccount": "Không chắc Vinhomes đang ở đúng tài khoản, nên không đặt",
     "notReady": "App Vinhomes chưa mở được",
     "appMissing": "App Vinhomes chưa được cài trên MuMu",
     "other": "Có lỗi, xem nhật ký"
@@ -411,10 +697,25 @@
     "app_not_ready": "App Vinhomes chưa sẵn sàng. Có thể app đã bị đăng xuất.",
     "schedule": "Không đọc hoặc đổi được lịch hẹn giờ của Windows.",
     "notification": "Windows không hiện được thông báo.",
+    "credentials": "Windows chưa lưu được mật khẩu. Hãy thử lại.",
+    "phone_taken": "Số này đã có ở một khách.",
+    "account_attached": "Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được.",
+    "no_machine": "Tài khoản của vé này không gắn máy nào.",
+    "ticket_cancelled": "Vé này đã huỷ rồi.",
     "engine": "Court Booker gặp lỗi.",
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",
     "unreachable": "Không kết nối được phần chạy nền của Court Booker.",
     "http": "Phần chạy nền trả lời không như mong đợi."
+  },
+  "days": {
+    "0": "T2",
+    "1": "T3",
+    "2": "T4",
+    "3": "T5",
+    "4": "T6",
+    "5": "T7",
+    "6": "CN",
+    "every": "Mọi ngày"
   }
 }

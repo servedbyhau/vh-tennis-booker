@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
@@ -43,6 +44,7 @@ from court_booker.errors import (
     MultipleDevicesError,
     MuMuNotFoundError,
     RequestError,
+    WrongAccountError,
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
@@ -88,6 +90,11 @@ MIN_BUDGET = timedelta(minutes=2)
 """Least time for repairs, for a run started close to the start time."""
 UNTIMED_BUDGET = timedelta(minutes=5)
 """Time for repairs of a run without a start time, such as a dry run."""
+LAUNCH_TURN = timedelta(seconds=75)
+"""Longest a machine waits for each machine before it in the run to boot before it launches its
+own MuMu instance: Android booted in 42-54 s with five or six booting together (2026-11-23)."""
+TURN_POLL = 3.0
+"""Seconds between two looks at the machines before: one MuMuManager call each."""
 WATCH_INTERVAL = timedelta(seconds=60)
 """How often a run waiting on the home screen checks that it is still ready, until the
 deadline: two commands a minute, far from the bursts of reads that froze MuMu in tests."""
@@ -99,6 +106,7 @@ PERMANENT_ERRORS: tuple[type[BaseException], ...] = (
     MultipleDevicesError,
     LoggedOutError,
     LoginFailedError,
+    WrongAccountError,
     AppMissingError,
 )
 """Failures no repair can change; a person must act."""
@@ -137,6 +145,14 @@ def pause(seconds: float) -> None:
 def permanent(error: BaseException) -> bool:
     """Tell whether ``error`` is one no repair can change."""
     return isinstance(error, PERMANENT_ERRORS)
+
+
+def _booted(mumu: MuMu) -> bool:
+    """Return whether ``mumu`` has booted; one that MuMuManager cannot tell of counts as not."""
+    try:
+        return mumu.is_started()
+    except EmulatorError:
+        return False
 
 
 def setup_deadline(start: datetime | None, warm_up_seconds: float, now: datetime) -> datetime:
@@ -281,8 +297,13 @@ class Supervisor:
         device: Any = None,
         now: Callable[[], datetime] = datetime.now,
         sleep: Callable[[float], None] | None = None,
+        launch_after: Sequence[int] = (),
     ) -> None:
         self.config = config
+        self.launch_after = tuple(launch_after)
+        """The MuMu instances of the machines before this one in the run: each is launched once
+        those have booted (:meth:`_wait_for_turn`)."""
+        self._deadline: datetime | None = None
         self.driver_mode = driver
         self.report = Reporter() if report is None else report
         self.now = now
@@ -350,6 +371,7 @@ class Supervisor:
         Raises the failure no repair can change at once, and any other one still there at
         ``deadline``.
         """
+        self._deadline = deadline
         while True:
             try:
                 self._bring_up(booker)
@@ -404,8 +426,42 @@ class Supervisor:
             return
         if self._booted:
             return
+        self._wait_for_turn()
         self.mumu.ensure_started(self.config.boot_timeout)
         self._booted = True
+
+    def _wait_for_turn(self) -> None:
+        """Wait until the machines before this one in the run have booted, so one boots at a time.
+
+        Five or six instances booting together left 0.5 GB of the PC's 16 GB free (2026-11-23),
+        where a lack of memory froze all three on 2026-11-21. Each machine before is given
+        :data:`LAUNCH_TURN`, and the wait ends halfway to the deadline whatever happens, leaving
+        this machine time to boot and be repaired; one that is already running costs nothing.
+        """
+        if not self.launch_after or self.mumu is None:
+            return
+        started = self.now()
+        limit = started + LAUNCH_TURN * len(self.launch_after)
+        if self._deadline is not None:
+            limit = min(limit, started + (self._deadline - started) / 2)
+        before = [self.mumu.sibling(index) for index in self.launch_after]
+        while True:
+            waiting = [mumu.index for mumu in before if not _booted(mumu)]
+            if not waiting:
+                if self.now() > started:
+                    logger.info(
+                        "Machines before booted; launching after %.0f s",
+                        (self.now() - started).total_seconds(),
+                    )
+                return
+            if self.now() >= limit:
+                logger.warning(
+                    "MuMu %s not booted yet; launching instance %d all the same",
+                    ", ".join(map(str, waiting)),
+                    self.mumu.index,
+                )
+                return
+            self.sleep(TURN_POLL)
 
     def _restart_mumu(self) -> None:
         """Stop the instance, check that it stopped, and start it again.

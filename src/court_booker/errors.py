@@ -49,6 +49,10 @@ class BookingUnconfirmedError(BookingError):
     """The app showed neither the ticket nor a notice in time after the confirmation."""
 
 
+class TicketNotCancelledError(BookingError):
+    """The app still shows the ticket as booked after its cancel was confirmed."""
+
+
 class RequestError(CourtBookerError):
     """Invalid arguments or configuration; nothing was sent to the device."""
 
@@ -109,6 +113,10 @@ class LoggedOutError(AppNotReadyError):
 
 class LoginFailedError(AppNotReadyError):
     """The saved login was typed in once and the app did not take it; never tried again."""
+
+
+class WrongAccountError(AppNotReadyError):
+    """The app is not known to be logged in with the account saved for the MuMu instance."""
 
 
 class AppMissingError(AppNotReadyError):

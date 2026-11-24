@@ -89,6 +89,54 @@ The first read after "Xác nhận" holds the title `Chi tiết đặt lịch` an
 status `Đang xử lý` but no time or court yet; later the status `Đã đăng ký`, the codes, time,
 court and a clickable `Đặt lịch khác`.
 
+## History page
+
+Read on 2026-11-22 and 23 in Vietnamese, on three accounts (tennis and pickleball); not seen in
+English. It opens at any hour (02:12 to 02:43 on 2026-11-23), while the calendar is closed from
+21:00 to 06:00.
+
+- The icon at the top right of the utilities list (no label, `[472,42][528,100]`) opens
+  `Lịch sử tiện ích`: the account's bookings, newest first, one clickable card each (four on
+  the screen). A card's label, line by line: the utility, `Mã đặt: 1234567`,
+  `Vị trí: S6 - Sân tennis`, `Thời gian: 03/10/2026 08:00 - 09:00`, `Trạng thái:`, the status
+  (`Đã đăng ký`, `Đã huỷ`), `Thời gian tạo: 01/10/2026 - 06:00`. The page has an unlabelled
+  filter button where the list has the history icon.
+- It goes back far (486 cards read on the three accounts, the oldest of 2025-01-11, no end
+  reached) and loads as it is scrolled; a swipe of 0.7 of the height moves it about three cards.
+  Cards are in the order they were booked, the play day at most two days later, so a month's
+  cards end at the first one booked more than two days before the month.
+- The filter button opens a sheet, `Bộ lọc`, of three: `Tên tiện ích` (a long list, with the
+  tickets of VinWonders and others; several may be chosen), `Trạng thái tiện ích` (several) and
+  `Thời gian đặt tiện ích`, a calendar of **one day of play**, no range. `Đặt lại` clears it, its
+  `Xác nhận` applies it at once; opened again, it keeps the statuses, not the day.
+- The statuses there: `Đang xử lý`, `Thanh toán thất bại`, `Đã đăng ký`, `Đang sử dụng`,
+  `Đã sử dụng`, `Không sử dụng` (the slot passed without its code being scanned), `Đã huỷ`,
+  `Chờ hoàn tiền`, `Đã hoàn tiền`, `Từ chối hoàn tiền`. Of the courts, which cost nothing, only
+  `Đã đăng ký`, `Đã sử dụng`, `Không sử dụng` and `Đã huỷ` were seen (`Đang xử lý` right after a
+  booking).
+- **Rain**: the management cancels the ticket the morning after (08:52 and 10:51 on the two days
+  seen), so it reads `Đã huỷ` like one the resident cancelled; neither its card nor its page
+  tells them apart. The app's notifications (the bell on the home screen) do: "Tiện ích Sân
+  Tennis Quý cư dân đăng ký sử dụng ngày 03/10/2026 08:00-09:00 đã bị hủy do Hỗ trợ hoàn lượt do
+  trời mưa khung giờ 07:00 - 12:00 ngày 03/10/2026" (made-up day and times).
+- Reading a month's cards and returning to the home screen took 5.0-8.7 s (2-4 swipes, 10-18
+  cards); two reads in a row gave the same on each of three machines.
+- A card opens the ticket, `Chi tiết đặt lịch`, with **`Hủy tiện ích`** at its top right
+  (`[376,38][528,104]`, over the place of those icons), an element labelled `qr code`, the
+  status, and one element with the details, the booking code on a line of its own. Inside it
+  are `Xem thêm` (left) and `Chỉ đường` (right, bottom at 1140), then the fees. Back returns
+  to the history page.
+- **Cancelling** (2026-11-24, a badminton ticket booked for the test): `Hủy tiện ích` opens a
+  dialog titled the same, "Bạn chắc chắn muốn hủy tiện ích?", with `Hủy bỏ` and `Xác nhận`.
+  `Xác nhận` shows "Huỷ tiện ích thành công" for about a second over the history page, whose
+  card still reads `Đã đăng ký`; the page opened again reads `Đã huỷ`. The cancelled slot's
+  quota came back at once (0/8 of badminton read right after). Not seen in English.
+- The ticket moves its lower half while its description loads: the place of `Chỉ đường` read
+  0.5 s after the ticket showed was 232 px too low by the time of the picture.
+- The app does not block screenshots of these pages. Reading the page and two tickets took
+  5-6 s, one ticket 4 s. How long after 06:00 a ticket turns from `Đang xử lý` to `Đã đăng ký`
+  is not known yet.
+
 ## Dialogs
 
 All are titled "Thông báo": the title node spans `[0,33][540,1600]` and holds the message and a
@@ -104,7 +152,13 @@ clickable "Đóng"; the page beneath leaves the dump.
   shows "Căn hộ đã hết hạn mức đăng ký tiện ích cho phép." (the same message for the day and the
   month), usually after the calendar's "Tiếp tục" (0.9 s after the tap, 2026-10-24), once after
   "Xác nhận" (0.72 s after the tap). The flow knows it by `quota_full` ("hết hạn mức") and the run skips the rounds left,
-  which book the same day.
+  which book the same day. What counts, from 486 cards of three accounts (2026-11-23, 43
+  months of tennis): the tickets of the **month of play**, of that utility alone, but for those
+  `Đã huỷ`, whoever cancelled them; `Không sử dụng` counts. No month held more than 8, 26 held
+  exactly 8, 18 of those with more tickets cancelled beside them (66 in one month); nine of the
+  26 only reach 8 with their unused tickets. By the month of booking two months would hold 9 and
+  10. No day held more than 2. One account had 8 of 8 tennis used in November and still booked
+  pickleball on 2026-11-21 and 22. Not known: two accounts of one apartment.
 - **Slot taken** (someone booked it first): after "Xác nhận", "Tiện ích đã hết chỗ, vui lòng
   chọn vị trí/thời gian khác".
 
@@ -135,6 +189,29 @@ limit, and no apartment to choose after a login (the user, 2026-11-18).
   button stayed disabled). One tap on "Đăng nhập" 0.3 s after it turned enabled; the home
   screen showed 3 s later, then the rounds ran. An earlier try's screen stayed unchanged for
   30 s after the tap while MuMu was freezing, yet the account was logged in afterwards.
+- The login screen stays as it was while the server checks the login, its button enabled:
+  the home screen showed 7-11 s after the tap (5 logins on 2026-11-22, two with a single tap),
+  so a tap repeated sooner sends the password again.
+- The home screen may show although the session is over: it came from the app's store after a
+  restart, and the notice that the session expired some seconds later (2026-11-22).
+
+### Account tab (2026-11-22)
+
+Read on one account in both languages; the same page with other labels.
+
+- The home screen has two tabs at the bottom, `Trang chủ\nTab 1 trong tổng số 2` and
+  `Tài khoản\nTab 2 trong tổng số 2` (`Home\nTab 1 of 2`, `Account\nTab 2 of 2`). Back on the
+  account tab stays there; the home tab leads back.
+- The account tab shows `<name>\n<phone number>` in one clickable element, the number whole (10
+  digits from 0), then the apartment with `Thay đổi` (`Change`), and a list that ends with
+  **`Xóa tài khoản`** (`Delete account`) `[0,1288][540,1370]` right above `Đăng xuất`
+  (`Log out`) `[35,1418][505,1512]`: it is tapped by its whole label only.
+- `Đăng xuất` asks in a dialog of that title: "Bạn có muốn đăng xuất khỏi ứng dụng?",
+  `Hủy bỏ`, `Đồng ý` (`Cancel`, `Agree`); Back closes it. The login screen showed 0.8 s after
+  `Đồng ý`, the phone number still in its field.
+- Reading the number took 2.3 s of getting ready (two taps, and 2 s watching for the popup);
+  logging out and in again with the saved login 17 s. No OTP was asked.
+- `Ngôn ngữ` (`Language`) offers `Tiếng Việt` and `English`.
 
 ### Promotion popup over the home screen
 
@@ -300,6 +377,10 @@ slots and the booked date and time read the same.
 | `notice` | Thông báo | Notification |
 | `quota_full` | hết hạn mức | registration quota (seen in a dry run, 2026-10-25) |
 | `dont_show_again` | Không hiện lại | Don't show again (a guess, not seen) |
+| `home_tab` | Trang chủ | Home (2026-11-22) |
+| `account_tab` | Tài khoản | Account (2026-11-22) |
+| `log_out` | Đăng xuất | Log out (2026-11-22) |
+| `log_out_yes` | Đồng ý | Agree (2026-11-22) |
 | `login` | Đăng nhập | Login (2026-11-18) |
 | (dialog button) | Đóng | Close |
 
@@ -359,6 +440,34 @@ slots and the booked date and time read the same.
   from cold in 23-26 s, connected the driver in 4-5 s and were ready on the home screen in
   6 s, as one alone; both tapped the utility 0.06 s after the start, and both retapped through
   the closed-hours notice at the same pace (43-44 times in 5 s).
+- Three instances side by side (2026-11-21, i7-8750H with 12 threads and 16 GB, each
+  instance custom 4 cores and 3 GB, a third cloned from instance 0 on ADB port 16448):
+  with nothing else open they booked 3/3 for real in 4.8-6.0 s a round, ready 46 s after
+  a cold start. With VS Code and other apps open, free RAM fell to 0.5 GB while booking,
+  CPU stayed at 89-100% and the rounds took 7.6-8.4 s (the court list 3.3-4.6 s after
+  "Tiếp tục" instead of 2.4-3.2 s). Three cold starts at once that day (15:21) left 0.8 GB
+  free: on all three the driver or Android stopped answering within two minutes, and the runs
+  restarted each MuMu.
+- Five and six instances side by side (2026-11-23, timed dry runs of one volleyball slot, every
+  app closed, 10.5-11.3 GB free before): launched together, all booted in 42-54 s and were
+  ready about 1 min 45 s after the launch, but free RAM fell to 0.5 GB while they got ready
+  (0.7-2.0 GB while booking). With one core and 2 GB each (six) a round to the confirmation
+  page took 7.5-8.0 s and one screen read about 610 ms; with two cores and 2 GB each (five)
+  5.2-7.1 s and about 270 ms (three instances with two cores at 06:00: about 190 ms). The PC's
+  CPU averaged 23-36% while booking. Android uses 1.1-1.3 GB while booking (MemTotal less
+  MemAvailable, three instances of 3 GB each in a dry run, 2026-11-24), so 2 GB is enough.
+- **"Hệ thống giới hạn chỉ được đặt một tiện ích trong vòng 60s. Quý khách vui lòng thử lại
+  sau"** ("Thông báo", button "Đóng") shows 0.3-0.5 s after the day is selected on the
+  calendar (the slot list's query) when more than three machines select it in the same second:
+  exactly three get through, in 9 of 9 runs with four to six machines (2026-11-23 and 24, the
+  06:00 run of 24/11 among them), and none is stopped with three. The one stopped is mostly the
+  last to select the day, but once the second of four was (0.05 s after the first), so the
+  order the server gets them in decides. It counts across apartments, devices (each instance
+  has its own IMEI and Android id), sports and subdivisions (a BS account with three Origami
+  ones, 2026-11-24). It is short despite its text: a stopped machine got through 5-30 s later.
+  All the machines share the home network, the likeliest thing counted (not tried: a phone on
+  another network). The flow does not know this notice: it looks for the slot for 29 s, then
+  closes it and opens the calendar again. Since 2026-11-24 three machines book.
 - Two instances booked for real in parallel at 06:00 on 2026-11-01: Origami and BS each
   reached two tickets for 3/11, with every round finishing within 5 s. The one-day BS
   `[[instances]]` entry was removed at 07:05; the daily task still runs instance 0.

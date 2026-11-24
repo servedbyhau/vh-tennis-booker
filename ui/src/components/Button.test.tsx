@@ -5,9 +5,9 @@ import { Button } from "./Button";
 describe("Button", () => {
   it("is a plain button that reports clicks", () => {
     const onClick = vi.fn();
-    render(<Button onClick={onClick}>Chạy thử ngay</Button>);
+    render(<Button onClick={onClick}>Chạy thử</Button>);
 
-    const button = screen.getByRole("button", { name: "Chạy thử ngay" });
+    const button = screen.getByRole("button", { name: "Chạy thử" });
     fireEvent.click(button);
 
     expect(button).toHaveAttribute("type", "button");
@@ -28,13 +28,13 @@ describe("Button", () => {
     const onClick = vi.fn();
     render(
       <Button disabled onClick={onClick}>
-        Chạy thử ngay
+        Chạy thử
       </Button>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Chạy thử ngay" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chạy thử" }));
 
-    expect(screen.getByRole("button", { name: "Chạy thử ngay" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Chạy thử" })).toBeDisabled();
     expect(onClick).not.toHaveBeenCalled();
   });
 });

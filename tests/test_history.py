@@ -10,6 +10,7 @@ import pytest
 
 from court_booker import history, history_read
 from court_booker.events import EventKind, Reporter
+from court_booker.tickets import Ticket
 
 START = datetime(2026, 10, 13, 5, 50, 3, 257000)
 
@@ -70,10 +71,14 @@ def tables(connection):
     return {name for (name,) in rows}
 
 
+TABLES = {"runs", "run_slots", "events", "log_lines", "tickets", "customers", "accounts"}
+TABLES |= {"charges", "prices", "money_settings", "requests"}
+
+
 def test_connect_creates_the_tables(tmp_path):
     connection = history.connect(tmp_path / "data" / "booker.db")
 
-    assert tables(connection) == {"runs", "run_slots", "events", "log_lines"}
+    assert tables(connection) == TABLES
     assert connection.execute("PRAGMA user_version").fetchone()[0] == history.SCHEMA_VERSION
     assert connection.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     connection.close()
@@ -88,7 +93,7 @@ def test_newer_database_is_left_as_it_is(connection):
     connection.execute(f"PRAGMA user_version = {history.SCHEMA_VERSION + 1}")
 
     assert history.migrate(connection) == history.SCHEMA_VERSION + 1
-    assert tables(connection) == {"runs", "run_slots", "events", "log_lines"}
+    assert tables(connection) == TABLES
 
 
 def test_runs_of_the_first_schema_keep_no_device(tmp_path):
@@ -136,6 +141,9 @@ def test_a_run_and_its_slots_are_recorded(connection):
             "status": "partial",
             "error": None,
             "device": 1,
+            "account_id": None,
+            "customer": None,
+            "account": None,
         }
     ]
     assert rows(connection, "SELECT * FROM run_slots") == [
@@ -359,3 +367,138 @@ def test_a_database_error_turns_history_off_once(connection, caplog):
     assert store.failed
     assert caplog.text.count("History database failed") == 1
     assert "Event sink failed" not in caplog.text
+
+
+def test_held_writes_wait_in_memory_until_released(connection, capture):
+    store, log = capture
+    report = Reporter(store, clock=ticking_clock())
+    report(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="0.5.0")
+
+    store.hold()
+    store.hold()  # the second changes nothing
+    log.info("Tapped 'Sân Tennis'")
+    report(EventKind.SLOT_BOOKED, slot="18:00 - 19:00", seconds=5.4, commands=75, dry_run=False)
+    held = [line["message"] for line in log_lines(connection)]
+    slots_held = rows(connection, "SELECT slot FROM run_slots")
+    store.release()
+    log.info("Reading the tickets")
+
+    assert "Tapped 'Sân Tennis'" not in held
+    assert slots_held == []
+    messages = [line["message"] for line in log_lines(connection)]
+    assert messages.index("Tapped 'Sân Tennis'") < messages.index("Reading the tickets")
+    booked = rows(connection, "SELECT slot, ok FROM run_slots")
+    assert booked == [{"slot": "18:00 - 19:00", "ok": 1}]
+    assert not store.failed
+
+
+def test_closing_writes_what_is_held(tmp_path, connection, capture):
+    store, log = capture
+    Reporter(store, clock=ticking_clock())(
+        EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="0.5.0"
+    )
+    store.hold()
+    log.info("Booked 18:00 - 19:00")
+
+    log.removeHandler(store.handler)
+    store.close()
+
+    reader = sqlite3.connect(tmp_path / "booker.db")
+    messages = [message for (message,) in reader.execute("SELECT message FROM log_lines")]
+    reader.close()
+    assert "Booked 18:00 - 19:00" in messages
+
+
+def test_a_held_write_that_fails_turns_history_off_once(connection, caplog):
+    caplog.set_level(logging.WARNING, logger="court_booker")
+    store = history.History(connection)
+    report = Reporter(store, clock=ticking_clock())
+    report(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="0.5.0")
+    store.hold()
+    report(EventKind.SLOT_STARTED, slot="18:00 - 19:00", round=1, rounds=1)
+    connection.close()
+
+    store.release()
+    report(EventKind.RUN_FINISHED, status="ok", booked=1, total=1)
+
+    assert store.failed
+    assert caplog.text.count("History database failed") == 1
+
+
+def ticket(code="1234567", status_text="Đã đăng ký", **fields):
+    values = {
+        "code": code,
+        "utility": "Sân Tennis",
+        "court": "S6 - Sân tennis",
+        "play_date": "2026-10-03",
+        "slot": "19:00 - 20:00",
+        "status_text": status_text,
+        "created_at": "2026-10-01T06:00",
+    }
+    return Ticket(**{**values, **fields})
+
+
+SEEN = datetime(2026, 11, 22, 6, 1, 12)
+
+
+def test_a_ticket_keeps_its_picture_and_takes_its_new_status(connection):
+    store = history.History(connection)
+    store.save_tickets(1, [ticket()], {"1234567": "1234567.png"}, SEEN)
+    store.save_tickets(2, [ticket(status_text="Đã huỷ")], {}, SEEN + timedelta(days=1))
+    rows = connection.execute("SELECT code, device, status, seen_at, photo FROM tickets").fetchall()
+    assert rows == [("1234567", 2, "cancelled", "2026-11-23T06:01:12.000", "1234567.png")]
+
+
+def test_a_run_and_its_tickets_are_of_their_accounts_holder(connection):
+    names = "account_id, customer, account"
+    run = history.History(connection)
+    Reporter(run)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    run.set_holder(history.Holder("a1", "An", "Căn A"))
+    run.save_tickets(1, [ticket()], {}, SEEN)
+
+    assert connection.execute(f"SELECT {names} FROM runs").fetchall() == [("a1", "An", "Căn A")]
+    assert connection.execute(f"SELECT {names} FROM tickets").fetchall() == [("a1", "An", "Căn A")]
+
+    # Read again on a machine without a chosen account: it stays theirs.
+    history.History(connection).save_tickets(1, [ticket()], {}, SEEN)
+    assert connection.execute(f"SELECT {names} FROM tickets").fetchall() == [("a1", "An", "Căn A")]
+
+
+def test_tickets_that_cannot_be_saved_only_warn(connection, caplog):
+    store = history.History(connection)
+    connection.execute("DROP TABLE tickets")
+    with caplog.at_level(logging.WARNING):
+        store.save_tickets(1, [ticket()], {}, SEEN)
+    assert "History database failed" in caplog.text
+
+
+def test_the_account_last_seen_on_a_machine_is_told(connection):
+    store = history.History(connection)
+    assert store.last_account(1) is None
+    for device, phone in ((1, "09••••••11"), (1, "09••••••22"), (2, "09••••••33")):
+        run = history.History(connection)
+        report = Reporter(run)
+        report(
+            EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1", device=device
+        )
+        report(EventKind.ACCOUNT_CHECKED, phone=phone, switched=False)
+    assert store.last_account(1) == "09••••••22"
+    assert store.last_account(2) == "09••••••33"
+    connection.close()
+    assert store.last_account(1) is None  # a database that cannot be read
+
+
+def test_another_run_going_on_is_told(connection):
+    first, second = history.History(connection), history.History(connection)
+    Reporter(first)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    assert not first.other_runs_going()
+    Reporter(second)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+    assert first.other_runs_going()
+    Reporter(second)(EventKind.RUN_FINISHED, status="ok", error=None)
+    assert not first.other_runs_going()
+
+
+def test_a_database_that_cannot_be_read_tells_of_no_other_run(connection):
+    store = history.History(connection)
+    connection.close()
+    assert not store.other_runs_going()

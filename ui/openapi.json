@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Court Booker",
-    "version": "1.1.2"
+    "version": "1.2.0"
   },
   "paths": {
     "/api/health": {
@@ -394,6 +394,286 @@
         }
       }
     },
+    "/api/tickets": {
+      "get": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "List Tickets",
+        "description": "List every machine's tickets, the latest day of play first, by slot within a day.\n\n``since`` keeps the tickets played that day or later.",
+        "operationId": "list_tickets_api_tickets_get",
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 500,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Ticket"
+                  },
+                  "title": "Response List Tickets Api Tickets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/{code}/photo": {
+      "get": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Ticket Photo",
+        "description": "Answer with the picture of a ticket, down to its directions link.",
+        "operationId": "ticket_photo_api_tickets__code__photo_get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The ticket's picture",
+            "content": {
+              "image/png": {}
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/cancel": {
+      "get": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Read Cancel",
+        "description": "Show the cancel started last: which ticket, on which machine, and how it ended.",
+        "operationId": "read_cancel_api_tickets_cancel_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/{code}/cancel": {
+      "post": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Start Cancel",
+        "description": "Cancel the ticket in the app of the machine its account is on; it takes about a minute.\n\nRefused when the ticket is not recorded (404 ``not_found``) or cancelled already (409\n``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), and as\n:func:`court_booker.api.tasks.start` refuses (around the scheduled run, or another run or\ntask going on). The cancel checks again itself.",
+        "operationId": "start_cancel_api_tickets__code__cancel_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/{code}/sent": {
+      "put": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Mark Ticket Sent",
+        "description": "Mark the ticket sent to its customer now, or not sent; 404 for a ticket not recorded.",
+        "operationId": "mark_ticket_sent_api_tickets__code__sent_put",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentMark"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings": {
       "get": {
         "tags": [
@@ -549,6 +829,48 @@
         }
       }
     },
+    "/api/mumu-instances": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "List Mumu Instances",
+        "description": "List the MuMu instances MuMuManager knows, the machines the app shows.",
+        "operationId": "list_mumu_instances_api_mumu_instances_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MumuInstances"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/accounts": {
       "get": {
         "tags": [
@@ -595,36 +917,25 @@
         }
       }
     },
-    "/api/logins/{mumu_index}": {
+    "/api/customers": {
       "get": {
         "tags": [
-          "logins"
+          "customers"
         ],
-        "summary": "Read Login",
-        "description": "Tell whether a login is saved for the instance, with its phone number masked.",
-        "operationId": "read_login_api_logins__mumu_index__get",
-        "parameters": [
-          {
-            "name": "mumu_index",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "maximum": 63,
-              "minimum": 0,
-              "description": "The MuMu instance",
-              "title": "Mumu Index"
-            },
-            "description": "The MuMu instance"
-          }
-        ],
+        "summary": "List Customers",
+        "description": "List the customers in the order they were added, each with their accounts.",
+        "operationId": "list_customers_api_customers_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SavedLogin"
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerRecord"
+                  },
+                  "type": "array",
+                  "title": "Response List Customers Api Customers Get"
                 }
               }
             }
@@ -651,26 +962,75 @@
           }
         }
       },
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Add Customer",
+        "description": "Add a customer without accounts.",
+        "operationId": "add_customer_api_customers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerFields"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{customer_id}": {
       "put": {
         "tags": [
-          "logins"
+          "customers"
         ],
-        "summary": "Save Login",
-        "description": "Save the login a run of the instance types in once the app logged out.\n\nIt replaces the one saved before. The app does not check it here: a wrong one shows at\nthe next logout, as a run that stops after one try (the app locks an account after 5\nwrong passwords). Windows refusing to keep it answers 503 ``credentials``.",
-        "operationId": "save_login_api_logins__mumu_index__put",
+        "summary": "Change Customer",
+        "description": "Change who a customer is; every fact not given is emptied.",
+        "operationId": "change_customer_api_customers__customer_id__put",
         "parameters": [
           {
-            "name": "mumu_index",
+            "name": "customer_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "maximum": 63,
-              "minimum": 0,
-              "description": "The MuMu instance",
-              "title": "Mumu Index"
-            },
-            "description": "The MuMu instance"
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
           }
         ],
         "requestBody": {
@@ -678,7 +1038,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewLogin"
+                "$ref": "#/components/schemas/CustomerFields"
               }
             }
           }
@@ -689,7 +1049,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SavedLogin"
+                  "$ref": "#/components/schemas/CustomerRecord"
                 }
               }
             }
@@ -718,11 +1078,309 @@
       },
       "delete": {
         "tags": [
-          "logins"
+          "customers"
         ],
-        "summary": "Delete Login",
-        "description": "Remove the saved login of the instance; a run then stops when the app logged out.",
-        "operationId": "delete_login_api_logins__mumu_index__delete",
+        "summary": "Remove Customer",
+        "description": "Remove a customer with their accounts and saved logins.\n\nRefused (409 ``account_attached``) while one of the accounts is attached to a machine, unless\n``detach`` takes it from there; not while a run goes on (409 ``lock_held``).",
+        "operationId": "remove_customer_api_customers__customer_id__delete",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
+          },
+          {
+            "name": "detach",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether an account attached to a machine is taken from it",
+              "default": false,
+              "title": "Detach"
+            },
+            "description": "Whether an account attached to a machine is taken from it"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{customer_id}/accounts": {
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Add Account",
+        "description": "Add an account to a customer and save its login; answers the customer.\n\nThe app does not check the login here: a wrong one shows when a run logs in with it. A\nphone number another account has is refused (409 ``phone_taken``), and Windows refusing\nto keep the login answers 503 ``credentials``.",
+        "operationId": "add_account_api_customers__customer_id__accounts_post",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customer-accounts/{account_id}/login": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Read Login",
+        "description": "The account's saved login, whole, to fill the form that changes it.\n\nThe user asked to see it there (2026-11-22). Only this PC reaches the backend\n(``local_only.py``), and no cache keeps the answer.",
+        "operationId": "read_login_api_customer_accounts__account_id__login_get",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountLogin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customer-accounts/{account_id}": {
+      "put": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Change Account",
+        "description": "Change an account's label and, if given, phone number and password; answers the customer.\n\nA new login of an attached account is the one its machine logs in with, so it is refused\n(409 ``lock_held``) while a run goes on. A phone number belongs to one account only\n(409 ``phone_taken``).",
+        "operationId": "change_account_api_customer_accounts__account_id__put",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Remove Account",
+        "description": "Remove an account with its saved login.\n\nRefused (409 ``account_attached``) while it is attached to a machine, unless ``detach`` takes\nit from there; not while a run goes on (409 ``lock_held``).",
+        "operationId": "remove_account_api_customer_accounts__account_id__delete",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "detach",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether an account attached to a machine is taken from it",
+              "default": false,
+              "title": "Detach"
+            },
+            "description": "Whether an account attached to a machine is taken from it"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/{mumu_index}/account": {
+      "put": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Attach Account",
+        "description": "Let a machine book with an account from its next run on; answers the customer.\n\nThe run logs the machine's Vinhomes app in with it. An account on another machine moves.\nRefused while a run goes on (409 ``lock_held``).",
+        "operationId": "attach_account_api_machines__mumu_index__account_put",
         "parameters": [
           {
             "name": "mumu_index",
@@ -738,6 +1396,383 @@
             "description": "The MuMu instance"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachedAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Detach Account",
+        "description": "Let a machine book with whichever account its app has logged in.\n\nA run then stops when the app logged out. Refused while a run goes on (409 ``lock_held``).",
+        "operationId": "detach_account_api_machines__mumu_index__account_delete",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/money/prices": {
+      "get": {
+        "tags": [
+          "money"
+        ],
+        "summary": "Read Prices",
+        "description": "Show the price list.",
+        "operationId": "read_prices_api_money_prices_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prices"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "money"
+        ],
+        "summary": "Save Prices",
+        "description": "Replace the price list; the charges not set by hand follow it.",
+        "operationId": "save_prices_api_money_prices_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Prices"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Prices"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/money/charges": {
+      "get": {
+        "tags": [
+          "money"
+        ],
+        "summary": "List Charges",
+        "description": "List the charges of a month of play (every month when not given), priced; the tickets\nsaved before the money was there are charged first.",
+        "operationId": "list_charges_api_money_charges_get",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Charges"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/money/charges/{code}": {
+      "put": {
+        "tags": [
+          "money"
+        ],
+        "summary": "Change Charge",
+        "description": "Mark a charge paid or not, or set its amount; 404 for one not recorded.",
+        "operationId": "change_charge_api_money_charges__code__put",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChargeChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/money/paid": {
+      "put": {
+        "tags": [
+          "money"
+        ],
+        "summary": "Mark Paid",
+        "description": "Mark several charges paid at once, or not paid (a customer's month, say).",
+        "operationId": "mark_paid_api_money_paid_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaidMark"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/money/customers/{customer_id}/free": {
+      "put": {
+        "tags": [
+          "money"
+        ],
+        "summary": "Mark Free",
+        "description": "Book for a customer for free (their charges owe nothing), or not.",
+        "operationId": "mark_free_api_money_customers__customer_id__free_put",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Customer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FreeMark"
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -865,6 +1900,211 @@
         "summary": "Test Notification",
         "description": "Show a sample notification in the saved language, whether notifications are on or not.\n\nA notification that cannot be shown answers 503 ``notification``.",
         "operationId": "test_notification_api_notifications_test_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests": {
+      "get": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "List Requests",
+        "description": "List every request, by customer.",
+        "operationId": "list_requests_api_requests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BookingRequest"
+                  },
+                  "type": "array",
+                  "title": "Response List Requests Api Requests Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Add Request",
+        "description": "Record a customer's request; 404 for an unknown customer.",
+        "operationId": "add_request_api_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestFields"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/{request_id}": {
+      "put": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Change Request",
+        "description": "Replace what a request asks.",
+        "operationId": "change_request_api_requests__request_id__put",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestFields"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Remove Request",
+        "description": "Remove a request.",
+        "operationId": "remove_request_api_requests__request_id__delete",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Request Id"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -1036,7 +2276,7 @@
           "runs"
         ],
         "summary": "Start Dry Run",
-        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run started last is\nstill running (it may not hold the lock yet). The dry run checks again itself.",
+        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine\nstarted last is still running (they may not hold the lock yet, or hold another machine's).\nThe dry run checks again itself.",
         "operationId": "start_dry_run_api_runs_dry_run_post",
         "responses": {
           "202": {
@@ -1048,6 +2288,155 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/quota": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Read Quota Task",
+        "description": "Show the quota read started last: on which machine, and how it ended.",
+        "operationId": "read_quota_task_api_machines_quota_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/{mumu_index}/quota": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Start Quota",
+        "description": "Read the quota of the account on machine ``mumu_index`` again, in its app (about a minute).\n\nRefused for a machine without a chosen account (409 ``no_machine``), as the reading would be\nof no customer, and as :func:`start` refuses.",
+        "operationId": "start_quota_api_machines__mumu_index__quota_post",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/machines/{mumu_index}/open": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Open Machine",
+        "description": "Launch the MuMu instance of machine ``mumu_index``, or show its window if it runs.\n\nRefused as :func:`start` refuses (a run starts and shuts MuMu itself), and (503 ``device``)\nwhen MuMuManager is not found or fails.",
+        "operationId": "open_machine_api_machines__mumu_index__open_post",
+        "parameters": [
+          {
+            "name": "mumu_index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 63,
+              "minimum": 0,
+              "description": "The MuMu instance",
+              "title": "Mumu Index"
+            },
+            "description": "The MuMu instance"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Invalid request values, one line per value",
@@ -1117,6 +2506,82 @@
   },
   "components": {
     "schemas": {
+      "AccountChange": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Label"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^0\\d{9}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128,
+                "minLength": 1,
+                "format": "password",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "AccountChange",
+        "description": "Another label and, if given, phone number and password; what is not given stays."
+      },
+      "AccountLogin": {
+        "properties": {
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "password"
+        ],
+        "title": "AccountLogin",
+        "description": "The saved login of an account as it is, ``None`` once it is gone."
+      },
       "AccountSubdivision": {
         "properties": {
           "device": {
@@ -1148,6 +2613,442 @@
         "title": "AccountSubdivision",
         "description": "The subdivision a MuMu instance's account last told, read from its home screen."
       },
+      "AttachedAccount": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Account Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "account_id"
+        ],
+        "title": "AttachedAccount",
+        "description": "The account a machine books with from its next run on."
+      },
+      "BookingRequest": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Customer Id"
+          },
+          "subdivision": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Subdivision"
+          },
+          "sport": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Sport"
+          },
+          "court": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Court"
+          },
+          "slots": {
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2} - \\d{2}:\\d{2}$"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Slots"
+          },
+          "days": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 7,
+            "title": "Days"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 31.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "customer_id",
+          "subdivision",
+          "sport",
+          "court",
+          "slots",
+          "id",
+          "created_at"
+        ],
+        "title": "BookingRequest"
+      },
+      "Charge": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
+          "sport": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sport"
+          },
+          "court": {
+            "type": "string",
+            "title": "Court"
+          },
+          "play_date": {
+            "type": "string",
+            "title": "Play Date"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot"
+          },
+          "golden": {
+            "type": "boolean",
+            "title": "Golden"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "set_by_hand": {
+            "type": "boolean",
+            "title": "Set By Hand"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "free": {
+            "type": "boolean",
+            "title": "Free"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "customer_id",
+          "customer",
+          "account",
+          "sport",
+          "court",
+          "play_date",
+          "slot",
+          "golden",
+          "amount",
+          "set_by_hand",
+          "cancelled",
+          "free",
+          "paid_at"
+        ],
+        "title": "Charge",
+        "description": "What a ticket a customer's account booked costs, and whether it was paid."
+      },
+      "ChargeChange": {
+        "properties": {
+          "paid": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "reset_amount": {
+            "type": "boolean",
+            "title": "Reset Amount",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ChargeChange",
+        "description": "Mark a charge paid or not, and set its amount by hand (``null`` takes the price list's)."
+      },
+      "Charges": {
+        "properties": {
+          "month": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          },
+          "months": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Months"
+          },
+          "charges": {
+            "items": {
+              "$ref": "#/components/schemas/Charge"
+            },
+            "type": "array",
+            "title": "Charges"
+          },
+          "free_customers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Free Customers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "months",
+          "charges",
+          "free_customers"
+        ],
+        "title": "Charges"
+      },
+      "CustomerAccount": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "device": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          },
+          "quota": {
+            "items": {
+              "$ref": "#/components/schemas/QuotaReading"
+            },
+            "type": "array",
+            "title": "Quota"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "phone",
+          "device",
+          "quota"
+        ],
+        "title": "CustomerAccount",
+        "description": "A customer's Vinhomes account, without its password."
+      },
+      "CustomerFields": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "representative": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Representative",
+            "default": ""
+          },
+          "contact": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Contact",
+            "default": ""
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CustomerFields",
+        "description": "What is known of a customer."
+      },
+      "CustomerRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "representative": {
+            "type": "string",
+            "title": "Representative"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          },
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerAccount"
+            },
+            "type": "array",
+            "title": "Accounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "representative",
+          "contact",
+          "note",
+          "accounts"
+        ],
+        "title": "CustomerRecord",
+        "description": "A customer with the accounts they gave."
+      },
       "DryRunStarted": {
         "properties": {
           "pid": {
@@ -1175,11 +3076,15 @@
           "app_ready",
           "account_subdivision",
           "logged_in",
+          "account_checked",
           "screen_saved",
           "repaired",
           "waiting",
           "booking_started",
           "run_finished",
+          "tickets_saved",
+          "opening_measured",
+          "quota_read",
           "slot_started",
           "calendar_opened",
           "date_selected",
@@ -1194,12 +3099,29 @@
           "setup_started",
           "setup_item",
           "setup_finished",
+          "ticket_cancelled",
+          "ticket_not_cancelled",
+          "quota_not_read",
           "settings_saved",
           "schedule_enabled",
           "schedule_disabled"
         ],
         "title": "EventKind",
         "description": "What happened. The value is stable: it becomes a database value and a message key."
+      },
+      "FreeMark": {
+        "properties": {
+          "free": {
+            "type": "boolean",
+            "title": "Free"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "free"
+        ],
+        "title": "FreeMark"
       },
       "Health": {
         "properties": {
@@ -1248,6 +3170,14 @@
           "venue_keyword": {
             "type": "string",
             "title": "Venue Keyword"
+          },
+          "days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Days",
+            "default": []
           }
         },
         "additionalProperties": false,
@@ -1366,6 +3296,30 @@
           "dont_show_again": {
             "type": "string",
             "title": "Dont Show Again"
+          },
+          "home_tab": {
+            "type": "string",
+            "title": "Home Tab"
+          },
+          "account_tab": {
+            "type": "string",
+            "title": "Account Tab"
+          },
+          "log_out": {
+            "type": "string",
+            "title": "Log Out"
+          },
+          "log_out_yes": {
+            "type": "string",
+            "title": "Log Out Yes"
+          },
+          "cancel_ticket": {
+            "type": "string",
+            "title": "Cancel Ticket"
+          },
+          "cancel_question": {
+            "type": "string",
+            "title": "Cancel Question"
           }
         },
         "additionalProperties": false,
@@ -1392,7 +3346,13 @@
           "processing",
           "registered",
           "login",
-          "dont_show_again"
+          "dont_show_again",
+          "home_tab",
+          "account_tab",
+          "log_out",
+          "log_out_yes",
+          "cancel_ticket",
+          "cancel_question"
         ],
         "title": "LabelSettings",
         "description": "Accessibility labels of the Vinhomes app, in its language."
@@ -1450,7 +3410,24 @@
         "title": "MonthSummary",
         "description": "One month with real bookings: how many runs, how many slots they booked."
       },
-      "NewLogin": {
+      "MumuInstances": {
+        "properties": {
+          "indexes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Indexes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "indexes"
+        ],
+        "title": "MumuInstances",
+        "description": "The MuMu instances on this PC: each is a machine the app can book with."
+      },
+      "NewAccount": {
         "properties": {
           "phone": {
             "type": "string",
@@ -1464,6 +3441,12 @@
             "format": "password",
             "title": "Password",
             "writeOnly": true
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Label",
+            "default": ""
           }
         },
         "additionalProperties": false,
@@ -1472,8 +3455,8 @@
           "phone",
           "password"
         ],
-        "title": "NewLogin",
-        "description": "The phone number and password of the Vinhomes app, to save for a MuMu instance."
+        "title": "NewAccount",
+        "description": "The login of an account of the Vinhomes app, and what tells it from the others."
       },
       "NotificationSettings": {
         "properties": {
@@ -1544,6 +3527,89 @@
         "title": "Overview",
         "description": "Everything the Overview shows, in one call."
       },
+      "PaidMark": {
+        "properties": {
+          "codes": {
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$"
+            },
+            "type": "array",
+            "title": "Codes"
+          },
+          "paid": {
+            "type": "boolean",
+            "title": "Paid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "codes",
+          "paid"
+        ],
+        "title": "PaidMark"
+      },
+      "Price": {
+        "properties": {
+          "sport": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Sport"
+          },
+          "normal": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Normal"
+          },
+          "golden": {
+            "type": "integer",
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Golden"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sport",
+          "normal",
+          "golden"
+        ],
+        "title": "Price"
+      },
+      "Prices": {
+        "properties": {
+          "golden_from": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Golden From"
+          },
+          "golden_to": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Golden To"
+          },
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/Price"
+            },
+            "type": "array",
+            "title": "Prices"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "golden_from",
+          "golden_to",
+          "prices"
+        ],
+        "title": "Prices",
+        "description": "The price list: the golden hours and a price per sport."
+      },
       "Problem": {
         "properties": {
           "error": {
@@ -1576,6 +3642,133 @@
         ],
         "title": "Problem",
         "description": "An error: ``error`` is a stable code, ``detail`` the English message for the log.\n\n``problems`` lists each invalid value when there are several, one line per value."
+      },
+      "QuotaReading": {
+        "properties": {
+          "utility": {
+            "type": "string",
+            "title": "Utility"
+          },
+          "sport": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sport"
+          },
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "used": {
+            "type": "integer",
+            "title": "Used"
+          },
+          "month_limit": {
+            "type": "integer",
+            "title": "Month Limit"
+          },
+          "read_at": {
+            "type": "string",
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "utility",
+          "sport",
+          "month",
+          "used",
+          "month_limit",
+          "read_at"
+        ],
+        "title": "QuotaReading",
+        "description": "What an account used of a utility's quota in a month, as a run last read it."
+      },
+      "RequestFields": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Customer Id"
+          },
+          "subdivision": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Subdivision"
+          },
+          "sport": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Sport"
+          },
+          "court": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Court"
+          },
+          "slots": {
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2} - \\d{2}:\\d{2}$"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Slots"
+          },
+          "days": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 7,
+            "title": "Days"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 31.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "customer_id",
+          "subdivision",
+          "sport",
+          "court",
+          "slots"
+        ],
+        "title": "RequestFields",
+        "description": "What a customer asks to book."
       },
       "RunDetail": {
         "properties": {
@@ -1658,6 +3851,28 @@
             ],
             "title": "Device"
           },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
           "booked": {
             "type": "integer",
             "title": "Booked"
@@ -1701,6 +3916,8 @@
           "status",
           "error",
           "device",
+          "customer",
+          "account",
           "booked",
           "total",
           "slots",
@@ -1791,6 +4008,28 @@
             ],
             "title": "Device"
           },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
           "booked": {
             "type": "integer",
             "title": "Booked"
@@ -1820,6 +4059,8 @@
           "status",
           "error",
           "device",
+          "customer",
+          "account",
           "booked",
           "total",
           "slots"
@@ -1865,36 +4106,6 @@
         ],
         "title": "Running",
         "description": "The run that holds the emulator now; ``since`` is empty while a dry run starts."
-      },
-      "SavedLogin": {
-        "properties": {
-          "mumu_index": {
-            "type": "integer",
-            "title": "Mumu Index"
-          },
-          "saved": {
-            "type": "boolean",
-            "title": "Saved"
-          },
-          "phone": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Phone"
-          }
-        },
-        "type": "object",
-        "required": [
-          "mumu_index",
-          "saved"
-        ],
-        "title": "SavedLogin",
-        "description": "Whether a login is saved for a MuMu instance; never its password."
       },
       "ScheduleState": {
         "properties": {
@@ -1949,6 +4160,20 @@
         "title": "ScheduleSwitch",
         "description": "Switch the daily booking on or off."
       },
+      "SentMark": {
+        "properties": {
+          "sent": {
+            "type": "boolean",
+            "title": "Sent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent"
+        ],
+        "title": "SentMark",
+        "description": "Whether a ticket's picture was sent to its customer."
+      },
       "Settings": {
         "properties": {
           "slots": {
@@ -1957,6 +4182,14 @@
             },
             "type": "array",
             "title": "Slots"
+          },
+          "days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Days",
+            "default": []
           },
           "subdivision": {
             "type": "string",
@@ -2238,6 +4471,194 @@
         ],
         "title": "Step",
         "description": "One step of the activity log; ``kind`` is the message key, ``data`` its values.\n\n``kind`` and ``category`` are listed in the schema, so the UI's types name every step\nand a step without a message fails its type check."
+      },
+      "TaskState": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running",
+            "default": false
+          },
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          }
+        },
+        "type": "object",
+        "title": "TaskState",
+        "description": "The task of one kind started last from the app, going on or over; all empty before any."
+      },
+      "Ticket": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "device": {
+            "type": "integer",
+            "title": "Device"
+          },
+          "customer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account"
+          },
+          "court": {
+            "type": "string",
+            "title": "Court"
+          },
+          "play_date": {
+            "type": "string",
+            "title": "Play Date"
+          },
+          "slot": {
+            "type": "string",
+            "title": "Slot"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "registered",
+              "processing",
+              "cancelled",
+              "other"
+            ],
+            "title": "Status"
+          },
+          "status_text": {
+            "type": "string",
+            "title": "Status Text"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "seen_at": {
+            "type": "string",
+            "title": "Seen At"
+          },
+          "has_photo": {
+            "type": "boolean",
+            "title": "Has Photo"
+          },
+          "sport": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sport"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "device",
+          "customer",
+          "account",
+          "court",
+          "play_date",
+          "slot",
+          "status",
+          "status_text",
+          "created_at",
+          "seen_at",
+          "has_photo",
+          "sport",
+          "sent_at",
+          "machine"
+        ],
+        "title": "Ticket",
+        "description": "One ticket of an account, as the app's history page last showed it."
       }
     }
   }

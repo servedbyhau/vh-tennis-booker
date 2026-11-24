@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import styles from "./Switch.module.css";
 
 interface SwitchProps {
@@ -7,17 +6,10 @@ interface SwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
-  /** The visible state; "Đang bật" / "Đang tắt" unless given. */
-  onText?: string;
-  offText?: string;
 }
 
-/**
- * An on/off switch: a pill with a knob, filled with ink and a yellow knob while on. The
- * state is also written out, so it never depends on color alone.
- */
-export function Switch({ label, checked, onChange, disabled, onText, offText }: SwitchProps) {
-  const { t } = useTranslation();
+/** An on/off switch: a track with a knob, at the right of it and blue while on. */
+export function Switch({ label, checked, onChange, disabled }: SwitchProps) {
   return (
     <button
       type="button"
@@ -29,7 +21,6 @@ export function Switch({ label, checked, onChange, disabled, onText, offText }: 
       onClick={() => onChange(!checked)}
     >
       <span aria-hidden="true" className={styles.knob} />
-      {checked ? (onText ?? t("common.on")) : (offText ?? t("common.off"))}
     </button>
   );
 }

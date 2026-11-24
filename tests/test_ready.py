@@ -4,6 +4,7 @@ import logging
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -79,6 +80,27 @@ class FakeMuMu:
     def kill(self):
         self.script.step("kill")
         return self.has_process
+
+    def sibling(self, index):
+        return FakeSibling(self.script, index)
+
+
+class FakeSibling:
+    """Another machine's MuMu instance: ``booted[index]`` lists what each look finds."""
+
+    booted: ClassVar[dict] = {}
+
+    def __init__(self, script, index):
+        self.script = script
+        self.index = index
+
+    def is_started(self):
+        self.script.calls.append(f"booted {self.index}?")
+        answers = FakeSibling.booted.get(self.index, [True])
+        answer = answers.pop(0) if len(answers) > 1 else answers[0]
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
 
 
 class FakeAdb:
@@ -662,3 +684,68 @@ def test_a_mumu_in_no_process_is_repaired_again(world):
     assert world.script.calls.count("kill") == 1
     assert world.script.calls.count("shutdown") == 1
     assert world.repaired() == ["restart_mumu", "restart_mumu"]
+
+
+def turn_supervisor(world, monkeypatch, launch_after, booted):
+    monkeypatch.setattr(FakeSibling, "booted", booted)
+
+    def sleep(seconds):
+        world.clock[0] += timedelta(seconds=seconds)
+
+    return Supervisor(
+        Config(),
+        "auto",
+        Reporter(world.sink),
+        now=lambda: world.clock[0],
+        sleep=sleep,
+        launch_after=launch_after,
+    )
+
+
+def test_a_machine_launches_once_the_machines_before_it_booted(world, monkeypatch):
+    supervisor = turn_supervisor(world, monkeypatch, (0, 2), {0: [False, True], 2: [False, True]})
+
+    world.prepare(supervisor)
+
+    calls = world.script.calls
+    assert calls[: calls.index("boot")] == [
+        "screen",
+        "booted 0?",
+        "booted 2?",
+        "booted 0?",
+        "booted 2?",
+    ]
+    assert world.clock[0] == NOW + timedelta(seconds=ready.TURN_POLL)
+
+
+def test_a_machine_stops_waiting_after_its_turn(world, monkeypatch, caplog):
+    supervisor = turn_supervisor(world, monkeypatch, (0, 1), {0: [True], 1: [False]})
+
+    world.prepare(supervisor)
+
+    assert "boot" in world.script.calls
+    assert world.clock[0] >= NOW + 2 * ready.LAUNCH_TURN
+    assert "MuMu 1 not booted yet; launching instance 0 all the same" in caplog.text
+
+
+def test_the_wait_leaves_half_the_time_to_the_deadline(world, monkeypatch):
+    supervisor = turn_supervisor(world, monkeypatch, (0, 1, 2, 4), {0: [False]})
+
+    world.prepare(supervisor, deadline=NOW + timedelta(minutes=4))
+
+    assert NOW + timedelta(minutes=2) <= world.clock[0] < NOW + timedelta(minutes=2, seconds=4)
+
+
+def test_a_machine_mumu_cannot_tell_of_counts_as_not_booted(world, monkeypatch):
+    unknown = EmulatorError("MuMuManager failed")
+    supervisor = turn_supervisor(world, monkeypatch, (0,), {0: [unknown, True]})
+
+    world.prepare(supervisor)
+
+    assert world.script.calls.count("booted 0?") == 2
+
+
+def test_the_first_machine_launches_at_once(world):
+    world.prepare()
+
+    assert not any(call.startswith("booted") for call in world.script.calls)

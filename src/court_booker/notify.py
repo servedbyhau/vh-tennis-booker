@@ -15,6 +15,8 @@ from typing import Callable
 from xml.sax.saxutils import escape
 
 from court_booker import catalog
+from court_booker.app_language import ENGLISH_SPORTS
+from court_booker.config import SPORTS
 from court_booker.processes import powershell
 from court_booker.runner import RoundResult
 
@@ -63,6 +65,9 @@ TEXTS = {
         "dry_run": " (chạy thử)",
         "otherSubdivision": "⚠️ Tài khoản thuộc {subdivision}, sân {court} không thuộc phân khu này",
         "repaired": "🔧 Đã tự sửa {count} lỗi khi chuẩn bị",
+        "quota_title": "Lần đặt tới thiếu hạn mức",
+        "quota_body": "{account}{utility} còn {left}/{limit} của tháng {month}, mà đã chọn"
+        " {slots} khung giờ. Đổi tài khoản trong Thiết lập.",
         "test_title": "Thông báo thử",
         "test_body": "Court Booker sẽ báo kết quả ở đây sau mỗi lượt đặt sân.",
     },
@@ -74,6 +79,9 @@ TEXTS = {
         "dry_run": " (dry run)",
         "otherSubdivision": "⚠️ The account is in {subdivision}; court {court} is not",
         "repaired": "🔧 Repaired {count} problem(s) while getting ready",
+        "quota_title": "Next booking short of quota",
+        "quota_body": "{account}{utility}: {left}/{limit} left in {month}, {slots} slots chosen."
+        " Choose another account in the Setup.",
         "test_title": "Test notification",
         "test_body": "Court Booker will report here after every booking run.",
     },
@@ -94,6 +102,7 @@ REASONS = {
         "loggedOut": "App Vinhomes bị đăng xuất, chưa lưu tài khoản để tự đăng nhập",
         "loginRefused": "App từ chối tài khoản đã lưu: {message}",
         "loginFailed": "Chưa tự đăng nhập lại được",
+        "wrongAccount": "Không chắc Vinhomes đang ở đúng tài khoản, nên không đặt",
         "notReady": "App Vinhomes chưa mở được",
         "appMissing": "App Vinhomes chưa được cài trên MuMu",
         "other": "Có lỗi, xem nhật ký",
@@ -111,6 +120,7 @@ REASONS = {
         "loggedOut": "The Vinhomes app is logged out and no login is saved",
         "loginRefused": "The app refused the saved login: {message}",
         "loginFailed": "Could not log in again",
+        "wrongAccount": "Not sure Vinhomes is in the right account, so nothing was booked",
         "notReady": "The Vinhomes app did not open",
         "appMissing": "The Vinhomes app is not installed on MuMu",
         "other": "Error, see the activity log",
@@ -139,6 +149,10 @@ _PATTERNS = [
             r"|^The app logged out again"
         ),
         "loginFailed",
+    ),
+    (
+        re.compile(r"after logging in with the saved login|no earlier run saw the saved login"),
+        "wrongAccount",
     ),
     # Runs before the saved login asked to check the login; a logout is told apart since.
     (re.compile(r"check that it is logged in$|; check the app on MuMu \d+$"), "notReady"),
@@ -278,6 +292,44 @@ def format_notification(
     if repairs:
         lines.append(texts["repaired"].format(count=repairs))
     return title, "\n".join(lines)
+
+
+def format_quota_warning(
+    *,
+    utility: str,
+    month: str,
+    left: int,
+    limit: int,
+    slots: int,
+    account: str | None = None,
+    language: str = DEFAULT_LANGUAGE,
+    instance: int | None = None,
+    sport: str | None = None,
+) -> tuple[str, str]:
+    """Return the title and the text of the notice that the next run has too few left.
+
+    ``month`` is ``YYYY-MM``; ``account`` names whose account it is, if known. The ``sport``
+    is named as the app's tile is in the notification's language, else as ``utility``.
+    """
+    if language not in TEXTS:
+        language = DEFAULT_LANGUAGE
+    names = SPORTS if language == DEFAULT_LANGUAGE else ENGLISH_SPORTS
+    utility = names.get(sport or "", utility)
+    texts = TEXTS[language]
+    year, number = (int(part) for part in month.split("-"))
+    shown = f"{number}/{year}" if language == DEFAULT_LANGUAGE else f"{_MONTHS[number - 1]} {year}"
+    title = texts["quota_title"]
+    if instance is not None:
+        title = f"MuMu {instance} · {title}"
+    body = texts["quota_body"].format(
+        account="" if account is None else f"{account}: ",
+        utility=utility,
+        left=left,
+        limit=limit,
+        month=shown,
+        slots=slots,
+    )
+    return title, body
 
 
 def format_test_notification(language: str = DEFAULT_LANGUAGE) -> tuple[str, str]:

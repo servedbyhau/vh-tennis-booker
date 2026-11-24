@@ -28,6 +28,9 @@ export type StepKind = Schemas["EventKind"];
 export type StepCategory = Step["category"];
 export type LogLine = Schemas["LogLine"];
 
+/** One ticket of an account, as a run last read it in the app (`GET /api/tickets`). */
+export type Ticket = Schemas["Ticket"];
+
 /** The subdivision a MuMu instance's account last told (`GET /api/accounts`). */
 export type AccountSubdivision = Schemas["AccountSubdivision"];
 
@@ -35,16 +38,30 @@ export type Settings = Schemas["Settings"];
 export type LabelSettings = Schemas["LabelSettings"];
 /** Whether every run ends with a Windows notification, and its language. */
 export type NotificationSettings = Schemas["NotificationSettings"];
-/** Whether a Vinhomes login is saved for a MuMu instance, its phone masked; never the password. */
-export type SavedLogin = Schemas["SavedLogin"];
-/** A Vinhomes phone number and password to save for a MuMu instance. */
-export type NewLogin = Schemas["NewLogin"];
+/** A customer with the Vinhomes accounts they gave; phone numbers masked, never a password. */
+export type Customer = Schemas["CustomerRecord"];
+export type CustomerAccount = Schemas["CustomerAccount"];
+export type QuotaReading = Schemas["QuotaReading"];
+export type CustomerFields = Schemas["CustomerFields"];
+export type NewAccount = Schemas["NewAccount"];
+export type AccountChange = Schemas["AccountChange"];
+export type AccountLogin = Schemas["AccountLogin"];
 
 export type SetupItem = Schemas["SetupItem"];
 /** The state of one device setup item (the backend's `Status` enum). */
 export type SetupStatus = Schemas["Status"];
 
 export type DryRunStarted = Schemas["DryRunStarted"];
+export type Prices = Schemas["Prices"];
+export type BookingRequest = Schemas["BookingRequest"];
+export type RequestFields = Schemas["RequestFields"];
+export type Charge = Schemas["Charge"];
+export type Charges = Schemas["Charges"];
+export type ChargeChange = Schemas["ChargeChange"];
+/** A task on a machine started last from the app (a cancel, a quota read), going on or over. */
+export type TaskState = Schemas["TaskState"];
+/** The ticket cancel started last from the app (`court-booker cancel`). */
+export type CancelState = TaskState;
 export type Health = Schemas["Health"];
 
 /** Every error body: `error` is a stable code the UI translates, `detail` the English text. */

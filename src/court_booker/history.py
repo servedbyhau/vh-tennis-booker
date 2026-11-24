@@ -12,17 +12,23 @@ import logging
 import sqlite3
 import threading
 import time
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from court_booker.events import Event, EventKind
 from court_booker.logging_setup import LOGGER_NAME
 
+if TYPE_CHECKING:
+    from court_booker.tickets import Ticket
+
 logger = logging.getLogger(__name__)
 
-BUSY_TIMEOUT = 0.5
-"""Seconds to wait for another writer; longer would delay a booking round."""
+BUSY_TIMEOUT = 5.0
+"""Seconds to wait for another writer. The rounds write nothing (:meth:`History.hold`), so a
+wait costs no booking; 0.5 s gave up at 06:00 with five machines writing (2026-11-24)."""
 
 MIGRATIONS = (
     """
@@ -70,6 +76,102 @@ MIGRATIONS = (
     # The MuMu instance a run booked with, since runs can book side by side (0.13.0).
     """
     ALTER TABLE runs ADD COLUMN device INTEGER;
+    """,
+    # The accounts' tickets as the app's history page showed them (court_booker.tickets).
+    """
+    CREATE TABLE tickets (
+        code TEXT PRIMARY KEY,
+        device INTEGER NOT NULL,
+        utility TEXT NOT NULL,
+        court TEXT NOT NULL,
+        play_date TEXT NOT NULL,
+        slot TEXT NOT NULL,
+        status TEXT NOT NULL,
+        status_text TEXT NOT NULL,
+        created_at TEXT,
+        seen_at TEXT NOT NULL,
+        photo TEXT
+    );
+    CREATE INDEX tickets_by_day ON tickets (play_date);
+    """,
+    # The customers and their accounts (court_booker.customers); logins are in the vault.
+    """
+    CREATE TABLE customers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        note TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+    CREATE TABLE accounts (
+        id TEXT PRIMARY KEY,
+        customer_id TEXT NOT NULL REFERENCES customers (id),
+        label TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX accounts_by_customer ON accounts (customer_id);
+    """,
+    # Who speaks for a customer, often one person for a group, and how to reach them.
+    """
+    ALTER TABLE customers ADD COLUMN representative TEXT NOT NULL DEFAULT '';
+    ALTER TABLE customers ADD COLUMN contact TEXT NOT NULL DEFAULT '';
+    """,
+    # Whose account a run booked with and a ticket is of: which account, and the names it had
+    # then, for once it is removed. Empty on a machine without a chosen account.
+    """
+    ALTER TABLE runs ADD COLUMN account_id TEXT;
+    ALTER TABLE runs ADD COLUMN customer TEXT;
+    ALTER TABLE runs ADD COLUMN account TEXT;
+    ALTER TABLE tickets ADD COLUMN account_id TEXT;
+    ALTER TABLE tickets ADD COLUMN customer TEXT;
+    ALTER TABLE tickets ADD COLUMN account TEXT;
+    """,
+    # 7: when the ticket's picture was sent to its customer (the management marks it).
+    """
+    ALTER TABLE tickets ADD COLUMN sent_at TEXT;
+    """,
+    # 8: the money (court_booker.money): a charge per ticket a customer's account booked, kept
+    # once the ticket is gone; the prices by sport; a customer booked for free.
+    """
+    CREATE TABLE charges (
+        code TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        customer TEXT,
+        account TEXT,
+        utility TEXT NOT NULL,
+        court TEXT NOT NULL,
+        play_date TEXT NOT NULL,
+        slot TEXT NOT NULL,
+        cancelled INTEGER NOT NULL DEFAULT 0,
+        amount INTEGER,
+        paid_at TEXT,
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX charges_by_play_date ON charges (play_date);
+    CREATE TABLE prices (
+        sport TEXT PRIMARY KEY,
+        normal INTEGER NOT NULL,
+        golden INTEGER NOT NULL
+    );
+    CREATE TABLE money_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    ALTER TABLE customers ADD COLUMN free INTEGER NOT NULL DEFAULT 0;
+    """,
+    # 9: what each customer asks to book (court_booker.requests): a court, slots, the days of
+    # the week, and the machine that books it.
+    """
+    CREATE TABLE requests (
+        id TEXT PRIMARY KEY,
+        customer_id TEXT NOT NULL REFERENCES customers (id),
+        subdivision TEXT NOT NULL,
+        sport TEXT NOT NULL,
+        court TEXT NOT NULL,
+        slots TEXT NOT NULL,
+        days TEXT NOT NULL,
+        machine INTEGER,
+        active INTEGER NOT NULL DEFAULT 1,
+        note TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+    );
+    CREATE INDEX requests_by_customer ON requests (customer_id);
     """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
@@ -144,7 +246,11 @@ def category(event: Event) -> str:
 
     One of ``step``, ``slot``, ``setup``, ``settings``, ``schedule`` or ``error``.
     """
-    if event.kind is EventKind.SLOT_FAILED:
+    if event.kind in (
+        EventKind.SLOT_FAILED,
+        EventKind.TICKET_NOT_CANCELLED,
+        EventKind.QUOTA_NOT_READ,
+    ):
         return "error"
     if event.kind is EventKind.RUN_FINISHED and event.data.get("error"):
         return "error"
@@ -157,19 +263,33 @@ def category(event: Event) -> str:
     return "slot" if event.kind in _SLOT_KINDS else "step"
 
 
+@dataclass(frozen=True)
+class Holder:
+    """Whose account a run books with, with the names it has now."""
+
+    account_id: str
+    customer: str
+    account: str
+    """The account's name, else its phone number with the middle hidden."""
+
+
 class History:
     """Write the runs of this process to the history database; an event sink.
 
-    Writing must never cost a booking: after the first database error, history stops for
-    the rest of the process and the error is logged once.
+    Writing must never cost a booking: while held (:meth:`hold`, from the warm-up to the end
+    of the rounds) writes wait in memory, and after the first database error, history stops
+    for the rest of the process and the error is logged once.
     """
 
     def __init__(self, connection: sqlite3.Connection) -> None:
         self.connection = connection
         self.run_id: int | None = None
+        self.holder: Holder | None = None
         self.failed = False
         self.writes = 0
         self.seconds = 0.0
+        self._held: list[Callable[[sqlite3.Connection], None]] | None = None
+        """The writes kept while held, in order; ``None`` when not held."""
         self._lock = threading.Lock()
         """One write at a time: events come from the run, log lines from any thread."""
         # Added to a logger by the caller, so that logger's lines are kept with the run.
@@ -192,6 +312,16 @@ class History:
             )
 
         self._write(write)
+
+    def set_holder(self, holder: Holder) -> None:
+        """Record whose account this run books with, for it and the tickets it reads."""
+        self.holder = holder
+        self._write(
+            lambda db: db.execute(
+                "UPDATE runs SET account_id = ?, customer = ?, account = ? WHERE id = ?",
+                (holder.account_id, holder.customer, holder.account, self.run_id),
+            )
+        )
 
     def interrupt_stale_runs(self) -> None:
         """Mark runs left ``running`` by a process that is gone as ``interrupted``.
@@ -221,20 +351,164 @@ class History:
             )
         )
 
+    def other_runs_going(self) -> bool:
+        """Return whether another run is still recorded as running.
+
+        A database that cannot be read tells of none.
+        """
+        with self._lock:
+            try:
+                row = self.connection.execute(
+                    "SELECT 1 FROM runs WHERE status = 'running' AND id IS NOT ? LIMIT 1",
+                    (self.run_id,),
+                ).fetchone()
+            except sqlite3.Error:
+                return False
+        return row is not None
+
+    def last_account(self, device: int) -> str | None:
+        """Return the masked phone number last seen logged in on MuMu instance ``device``."""
+        with self._lock:
+            try:
+                row = self.connection.execute(
+                    "SELECT events.data FROM events JOIN runs ON runs.id = events.run_id"
+                    " WHERE events.kind = ? AND runs.device = ? ORDER BY events.id DESC LIMIT 1",
+                    (EventKind.ACCOUNT_CHECKED.value, device),
+                ).fetchone()
+                return None if row is None else json.loads(row[0]).get("phone")
+            except (sqlite3.Error, ValueError):
+                return None
+
+    def save_tickets(
+        self, device: int, tickets: Sequence[Ticket], photos: Mapping[str, str], seen_at: datetime
+    ) -> None:
+        """Record ``tickets`` as MuMu instance ``device`` showed them at ``seen_at``.
+
+        A ticket recorded before takes its new status; one without a new picture in
+        ``photos`` (booking code to file name) keeps the one it has, and its account's holder
+        while this run knows of none.
+
+        A ticket of a chosen account still to play becomes a charge of its customer
+        (:mod:`court_booker.money`), kept once the ticket is gone; a charge's ticket read
+        cancelled since is cancelled with it.
+        """
+        holder = self.holder
+        names = (
+            (None, None, None)
+            if holder is None
+            else (holder.account_id, holder.customer, holder.account)
+        )
+        rows = [
+            (
+                ticket.code,
+                device,
+                ticket.utility,
+                ticket.court,
+                ticket.play_date,
+                ticket.slot,
+                ticket.status,
+                ticket.status_text,
+                ticket.created_at,
+                _stamp(seen_at),
+                photos.get(ticket.code),
+                *names,
+            )
+            for ticket in tickets
+        ]
+        self._write(
+            lambda db: db.executemany(
+                "INSERT INTO tickets (code, device, utility, court, play_date, slot, status,"
+                " status_text, created_at, seen_at, photo, account_id, customer, account)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT (code) DO UPDATE SET device = excluded.device,"
+                " utility = excluded.utility, court = excluded.court,"
+                " play_date = excluded.play_date, slot = excluded.slot,"
+                " status = excluded.status, status_text = excluded.status_text,"
+                " created_at = excluded.created_at, seen_at = excluded.seen_at,"
+                " photo = COALESCE(excluded.photo, tickets.photo),"
+                " account_id = COALESCE(excluded.account_id, tickets.account_id),"
+                " customer = COALESCE(excluded.customer, tickets.customer),"
+                " account = COALESCE(excluded.account, tickets.account)",
+                rows,
+            )
+        )
+        today = seen_at.date().isoformat()
+        stamp = _stamp(seen_at)
+        charges = [
+            (
+                ticket.code,
+                *names,
+                ticket.utility,
+                ticket.court,
+                ticket.play_date,
+                ticket.slot,
+                stamp,
+            )
+            for ticket in tickets
+            if holder is not None and ticket.status != "cancelled" and ticket.play_date >= today
+        ]
+        cancelled = [(ticket.code,) for ticket in tickets if ticket.status == "cancelled"]
+
+        def write_charges(db: sqlite3.Connection) -> None:
+            db.executemany(
+                "INSERT INTO charges (code, account_id, customer, account, utility, court,"
+                " play_date, slot, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT (code) DO NOTHING",
+                charges,
+            )
+            db.executemany("UPDATE charges SET cancelled = 1 WHERE code = ?", cancelled)
+
+        self._write(write_charges)
+
+    def hold(self) -> None:
+        """Keep every write in memory until :meth:`release`.
+
+        Machines booking at once wait for each other to write: at 06:00 on 2026-11-24 five
+        lost 0.24-0.8 s to it in their first second, and two turned history off. Held, the
+        rounds never touch the database. Holding again changes nothing.
+        """
+        with self._lock:
+            if self._held is None:
+                self._held = []
+
+    def release(self) -> None:
+        """Write what was held, in one transaction, and write at once again from now on."""
+        with self._lock:
+            held, self._held = self._held, None
+        if not held:
+            return
+        started = time.perf_counter()
+
+        def write(db: sqlite3.Connection) -> None:
+            for each in held:
+                each(db)
+
+        self._write(write)
+        logger.debug(
+            "History: %d writes held during the rounds, stored in %.1f ms",
+            len(held),
+            (time.perf_counter() - started) * 1000,
+        )
+
     def close(self) -> None:
-        """Store the held log lines and close the database, logging what writing cost.
+        """Store the held writes and log lines and close the database, logging what writing
+        cost.
 
         Remove :attr:`handler` from its logger first.
         """
+        self.release()
         logger.debug("History: %d writes in %.1f ms", self.writes, self.seconds * 1000)
         self.handler.close()
         self.connection.close()
 
     def _write(self, write: Callable[[sqlite3.Connection], None]) -> None:
-        """Run ``write`` in one transaction, unless an earlier write failed."""
+        """Run ``write`` in one transaction, unless an earlier write failed; keep it while held."""
         error: sqlite3.Error | None = None
         with self._lock:
             if self.failed:
+                return
+            if self._held is not None:
+                self._held.append(write)
                 return
             started = time.perf_counter()
             try:

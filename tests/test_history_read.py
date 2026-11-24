@@ -1,11 +1,15 @@
 """Tests for reading the history back."""
 
 import sqlite3
+from datetime import datetime
 
 import pytest
 
 from court_booker import history, history_read
+from court_booker.credentials import Login, MemoryStore
+from court_booker.customers import CustomerBook
 from court_booker.events import EventKind, Reporter
+from court_booker.tickets import Ticket
 
 
 @pytest.fixture
@@ -231,3 +235,73 @@ def test_each_instance_comes_with_the_subdivision_it_told_last(path, read):
 
     assert [(item["device"], item["subdivision"]) for item in found] == [(0, "bs"), (1, "bs")]
     assert all(item["seen_at"].startswith("20") for item in found)
+
+
+def test_tickets_of_every_machine_come_by_day_then_slot(path, read):
+    def ticket(code, day, slot):
+        return Ticket(code, "Sân Tennis", "S6 - Sân tennis", day, slot, "Đã đăng ký", None)
+
+    store = history.History(history.connect(path))
+    seen = datetime(2026, 11, 22, 6, 1)
+    store.save_tickets(1, [ticket("11", "2026-10-03", "19:00 - 20:00")], {"11": "11.png"}, seen)
+    store.save_tickets(
+        2,
+        [
+            ticket("22", "2026-10-03", "18:00 - 19:00"),
+            ticket("33", "2026-10-04", "20:00 - 21:00"),
+            ticket("44", "2026-10-01", "06:00 - 07:00"),
+        ],
+        {},
+        seen,
+    )
+    store.close()
+    with sqlite3.connect(path):
+        rows = history_read.list_tickets(history_read.open_read_only(path))
+    assert [row["code"] for row in rows] == ["33", "22", "11", "44"]
+    db = history_read.open_read_only(path)
+    assert [row["code"] for row in history_read.list_tickets(db, since="2026-10-03")] == [
+        "33",
+        "22",
+        "11",
+    ]
+    assert [row["code"] for row in history_read.list_tickets(db, limit=1)] == ["33"]
+    assert history_read.ticket_photo(db, "11") == "11.png"
+    assert history_read.ticket_photo(db, "22") is None
+    assert history_read.ticket_photo(db, "99") is None
+    db.close()
+
+
+def test_a_run_and_a_ticket_show_whose_account_they_are_of(path, read, record_run):
+    unknown = record_run(path)
+    db = history.connect(path)
+    book = CustomerBook(db, MemoryStore())
+    an = book.add_customer("Khách 1")
+    named = book.add_account(an.id, Login("0900000011", "x"), "Căn A")
+    plain = book.add_account(an.id, Login("0900000022", "x"))
+    for account, name in ((named, "Căn A"), (plain, "09••••••22")):
+        store = history.History(db)
+        Reporter(store)(EventKind.RUN_STARTED, trigger="scheduled", dry_run=False, version="1")
+        store.set_holder(history.Holder(account.id, "Khách 1", name))
+        code = account.id[:6]
+        seen = datetime(2026, 11, 22, 6, 1)
+        day = Ticket(code, "Sân Tennis", "S6", "2026-11-24", "18:00 - 19:00", "Đã đăng ký", None)
+        store.save_tickets(0, [day], {}, seen)
+
+    def shown():
+        runs = history_read.list_runs(read())
+        tickets = history_read.list_tickets(read())
+        listed = {(row["customer"], row["account"]) for row in tickets}
+        return [(run["customer"], run["account"]) for run in runs], listed
+
+    runs, tickets = shown()
+    assert runs == [("Khách 1", "09••••••22"), ("Khách 1", "Căn A"), (None, None)]
+    assert tickets == {("Khách 1", "09••••••22"), ("Khách 1", "Căn A")}
+    assert history_read.get_run(read(), unknown)["customer"] is None
+
+    # Under the names they have now, and those of then once removed.
+    book.change_customer(an.id, "Nhóm An", "")
+    book.change_account(named.id, "Căn B")
+    assert shown()[0][:2] == [("Nhóm An", "09••••••22"), ("Nhóm An", "Căn B")]
+    book.remove_customer(an.id)
+    assert shown()[0][:2] == [("Khách 1", "09••••••22"), ("Khách 1", "Căn A")]
+    db.close()

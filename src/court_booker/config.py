@@ -6,6 +6,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field, fields, replace
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -39,12 +40,21 @@ SPORTS = {
 }
 """The sports the run books, each with its tile on the utilities list in Vietnamese (field
 notes, "Other sports"); the English tiles are in :mod:`court_booker.app_language`."""
-INSTANCE_KEYS = ("mumu_index", "slots", "subdivision", "sport", "court", "venue_keyword")
+INSTANCE_KEYS = (
+    "mumu_index",
+    "slots",
+    "subdivision",
+    "sport",
+    "court",
+    "venue_keyword",
+    "days",
+)
 """Keys of an ``[[instances]]`` table: the booking settings of another MuMu instance, which
 books with its own account; ``mumu_index`` is required, the others default to the file's."""
 _IGNORED_KEYS = ("days_ahead",)
 """Keys of older files, read and dropped: the play day was a setting until 0.13.1."""
 _WRITTEN_WHEN_CHANGED = (
+    "days",
     "windows_notification",
     "notification_language",
     "instances",
@@ -107,6 +117,18 @@ class Labels:
     dont_show_again: str = "Không hiện lại"
     """Caption of the tick box on a promotion popup over the home screen; the popup is closed
     with its unlabelled X, as Back leaves it open."""
+    home_tab: str = "Trang chủ"
+    account_tab: str = "Tài khoản"
+    """First lines of the two tabs at the bottom, such as ``Tài khoản\\nTab 2 trong tổng số 2``."""
+    log_out: str = "Đăng xuất"
+    """Button of the account tab, right under "Xóa tài khoản", and title of its dialog."""
+    log_out_yes: str = "Đồng ý"
+    """Button of the dialog that asks whether to log out."""
+    cancel_ticket: str = "Hủy tiện ích"
+    """Button at the top right of a ticket's page, and title of the dialog it opens."""
+    cancel_question: str = "muốn hủy tiện ích"
+    """Part of that dialog's question, "Bạn chắc chắn muốn hủy tiện ích?", whose buttons are
+    "Hủy bỏ" and ``confirm``."""
 
 
 @dataclass
@@ -119,6 +141,10 @@ class Config:
     """adb executable; empty searches PATH, then the emulator folder."""
     package: str = "com.vinhomes.resident"
     slots: list[str] = field(default_factory=lambda: ["11:00 - 12:00", "14:00 - 15:00"])
+    days: list[int] = field(default_factory=list)
+    """The days of the week the day of play may fall on for the daily task to book, 0 for
+    Monday to 6 for Sunday; empty books every day. A machine's own, never taken from the top
+    of the file by another machine (:func:`instance_config`)."""
     subdivision: str = ""
     """The account's subdivision, one of :data:`court_booker.catalog.SUBDIVISIONS`; empty
     leaves it to the account. Filters the choices of the app; the run books by ``court``."""
@@ -233,7 +259,8 @@ def save_config(config: Config, path: str | Path) -> None:
         {
             key: value
             for key, value in table.items()
-            if key not in _INHERITED_KEYS or value != getattr(config, key)
+            if (key not in _INHERITED_KEYS or value != getattr(config, key))
+            and not (key == "days" and not value)
         }
         for table in config.instances
     ]
@@ -274,6 +301,15 @@ def validate_config(config: Config) -> list[str]:
             problems.append(f"slot {slot!r} must look like '18:00 - 19:00'")
     if len(set(config.slots)) != len(config.slots):
         problems.append("a slot is listed twice")
+    days = config.days
+    if (
+        not isinstance(days, list)
+        or len(set(map(str, days))) != len(days)
+        or any(
+            isinstance(day, bool) or not isinstance(day, int) or not 0 <= day <= 6 for day in days
+        )
+    ):
+        problems.append("days must be different days of the week, 0 (Monday) to 6 (Sunday)")
     if config.sport not in SPORTS:
         problems.append(f"sport must be one of {', '.join(SPORTS)}")
     if config.subdivision:
@@ -325,8 +361,16 @@ def validate_config(config: Config) -> list[str]:
 
 
 def instance_config(config: Config, table: dict[str, Any]) -> Config:
-    """Return the settings of the instance ``table`` describes: ``config`` with its keys."""
-    return replace(config, **table, instances=[])
+    """Return the settings of the instance ``table`` describes: ``config`` with its keys.
+
+    Its ``days`` are its own: every day unless the table says.
+    """
+    return replace(config, **{"days": [], **table}, instances=[])
+
+
+def books_on(config: Config, day: date) -> bool:
+    """Tell whether the daily task books for ``day`` of play with ``config``'s machine."""
+    return not config.days or day.weekday() in config.days
 
 
 def _instance_tables(value: Any) -> list[dict[str, Any]]:

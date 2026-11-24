@@ -1,17 +1,28 @@
 import { call, client } from "./client";
 import type {
+  AccountChange,
+  AccountLogin,
   AccountSubdivision,
+  BookingRequest,
+  CancelState,
+  ChargeChange,
+  Charges,
+  Customer,
+  CustomerFields,
   DryRunStarted,
   Health,
-  NewLogin,
+  NewAccount,
   NotificationSettings,
   Overview,
+  Prices,
+  RequestFields,
   RunDetail,
   RunSummary,
-  SavedLogin,
   ScheduleState,
   Settings,
   Step,
+  TaskState,
+  Ticket,
   paths,
 } from "./types";
 
@@ -40,6 +51,115 @@ export function getRun(runId: number): Promise<RunDetail> {
   return call(client.GET("/api/runs/{run_id}", { params: { path: { run_id: runId } } }));
 }
 
+/** List every machine's tickets, the latest day of play first. */
+export function listTickets(): Promise<Ticket[]> {
+  return call(client.GET("/api/tickets"));
+}
+
+/** List every customer's requests. */
+export function listRequests(): Promise<BookingRequest[]> {
+  return call(client.GET("/api/requests"));
+}
+
+/** Record a customer's request. */
+export function addRequest(fields: RequestFields): Promise<BookingRequest> {
+  return call(client.POST("/api/requests", { body: fields }));
+}
+
+/** Replace what a request asks. */
+export function changeRequest({ id, fields }: { id: string; fields: RequestFields }) {
+  return call(
+    client.PUT("/api/requests/{request_id}", {
+      params: { path: { request_id: id } },
+      body: fields,
+    }),
+  );
+}
+
+/** Remove a request. */
+export function removeRequest(id: string): Promise<void> {
+  return call(
+    client.DELETE("/api/requests/{request_id}", { params: { path: { request_id: id } } }),
+  ).then(() => undefined);
+}
+
+/** Read the price list. */
+export function getPrices(): Promise<Prices> {
+  return call(client.GET("/api/money/prices"));
+}
+
+/** Replace the price list. */
+export function savePrices(prices: Prices): Promise<Prices> {
+  return call(client.PUT("/api/money/prices", { body: prices }));
+}
+
+/** Read the charges of a month of play (`YYYY-MM`), priced. */
+export function listCharges(month: string): Promise<Charges> {
+  return call(client.GET("/api/money/charges", { params: { query: { month } } }));
+}
+
+/** Mark a charge paid or not, or set its amount. */
+export function changeCharge({ code, change }: { code: string; change: ChargeChange }) {
+  return call(
+    client.PUT("/api/money/charges/{code}", { params: { path: { code } }, body: change }),
+  ).then(() => undefined);
+}
+
+/** Mark several charges paid, or not. */
+export function markPaid({ codes, paid }: { codes: string[]; paid: boolean }): Promise<void> {
+  return call(client.PUT("/api/money/paid", { body: { codes, paid } })).then(() => undefined);
+}
+
+/** Book for a customer for free, or not. */
+export function markFree({ id, free }: { id: string; free: boolean }): Promise<void> {
+  return call(
+    client.PUT("/api/money/customers/{customer_id}/free", {
+      params: { path: { customer_id: id } },
+      body: { free },
+    }),
+  ).then(() => undefined);
+}
+
+/** Mark ticket `code` sent to its customer, or not sent. */
+export function markSent({ code, sent }: { code: string; sent: boolean }): Promise<void> {
+  return call(
+    client.PUT("/api/tickets/{code}/sent", { params: { path: { code } }, body: { sent } }),
+  ).then(() => undefined);
+}
+
+/** Cancel ticket `code` in the app of the machine its account is on; it takes about a minute. */
+export function cancelTicket(code: string): Promise<CancelState> {
+  return call(client.POST("/api/tickets/{code}/cancel", { params: { path: { code } } }));
+}
+
+/** Read how the ticket cancel started last goes. */
+export function getCancel(): Promise<CancelState> {
+  return call(client.GET("/api/tickets/cancel"));
+}
+
+/** Read the quota of the account on MuMu instance `mumuIndex` again, in its app. */
+export function readQuota(mumuIndex: number): Promise<TaskState> {
+  return call(
+    client.POST("/api/machines/{mumu_index}/quota", {
+      params: { path: { mumu_index: mumuIndex } },
+    }),
+  );
+}
+
+/** Launch the MuMu instance `mumuIndex`, or bring its window to the front if it runs. */
+export function openMachine(mumuIndex: number): Promise<void> {
+  return call(
+    client.POST("/api/machines/{mumu_index}/open", {
+      params: { path: { mumu_index: mumuIndex } },
+    }),
+  ).then(() => undefined);
+}
+
+/** Read how the quota read started last goes. */
+export function getQuotaTask(): Promise<TaskState> {
+  return call(client.GET("/api/machines/quota"));
+}
+
 /** List activity log steps newest first. */
 export function listEvents(query: EventsQuery = {}): Promise<Step[]> {
   return call(client.GET("/api/events", { params: { query } }));
@@ -58,6 +178,11 @@ export function saveSettings(settings: Settings): Promise<Settings> {
   return call(client.PUT("/api/settings", { body: settings })) as Promise<Settings>;
 }
 
+/** List the MuMu instances on this PC; empty when MuMuManager does not answer. */
+export function getMumuInstances(): Promise<number[]> {
+  return call(client.GET("/api/mumu-instances")).then((answer) => answer.indexes);
+}
+
 /** Book with MuMu instance `mumuIndex` beside the first, or stop; answers the settings. */
 export function switchInstance(mumuIndex: number, enabled: boolean): Promise<Settings> {
   return call(
@@ -73,27 +198,89 @@ export function getAccounts(): Promise<AccountSubdivision[]> {
   return call(client.GET("/api/accounts"));
 }
 
-/** Tell whether a login is saved for MuMu instance `mumuIndex`, its phone number masked. */
-export function getLogin(mumuIndex: number): Promise<SavedLogin> {
-  return call(
-    client.GET("/api/logins/{mumu_index}", { params: { path: { mumu_index: mumuIndex } } }),
-  );
+/** Read the customers, each with their accounts. */
+export function listCustomers(): Promise<Customer[]> {
+  return call(client.GET("/api/customers"));
 }
 
-/** Save the login a run types in once the app logged out; the answer never holds it. */
-export function saveLogin(mumuIndex: number, login: NewLogin): Promise<SavedLogin> {
+/** Add a customer without accounts. */
+export function addCustomer(fields: CustomerFields): Promise<Customer> {
+  return call(client.POST("/api/customers", { body: fields }));
+}
+
+/** Change a customer's name and note. */
+export function changeCustomer(id: string, fields: CustomerFields): Promise<Customer> {
   return call(
-    client.PUT("/api/logins/{mumu_index}", {
-      params: { path: { mumu_index: mumuIndex } },
-      body: login,
+    client.PUT("/api/customers/{customer_id}", {
+      params: { path: { customer_id: id } },
+      body: fields,
     }),
   );
 }
 
-/** Remove the saved login of MuMu instance `mumuIndex`. */
-export async function deleteLogin(mumuIndex: number): Promise<void> {
+/** Remove a customer with their accounts, taken from the machines they are attached to. */
+export async function removeCustomer(id: string): Promise<void> {
   await call(
-    client.DELETE("/api/logins/{mumu_index}", { params: { path: { mumu_index: mumuIndex } } }),
+    client.DELETE("/api/customers/{customer_id}", {
+      params: { path: { customer_id: id }, query: { detach: true } },
+    }),
+  );
+}
+
+/** Add an account to a customer; the answer never holds its password. */
+export function addAccount(customerId: string, account: NewAccount): Promise<Customer> {
+  return call(
+    client.POST("/api/customers/{customer_id}/accounts", {
+      params: { path: { customer_id: customerId } },
+      body: account,
+    }),
+  );
+}
+
+/** Read the saved login of an account, whole, for the form that changes it. */
+export function getAccountLogin(id: string): Promise<AccountLogin> {
+  return call(
+    client.GET("/api/customer-accounts/{account_id}/login", {
+      params: { path: { account_id: id } },
+    }),
+  );
+}
+
+/** Change an account's label and, unless `null`, its phone number and password. */
+export function changeAccount(id: string, change: AccountChange): Promise<Customer> {
+  return call(
+    client.PUT("/api/customer-accounts/{account_id}", {
+      params: { path: { account_id: id } },
+      body: change,
+    }),
+  );
+}
+
+/** Remove an account, taken from the machine it is attached to. */
+export async function removeAccount(id: string): Promise<void> {
+  await call(
+    client.DELETE("/api/customer-accounts/{account_id}", {
+      params: { path: { account_id: id }, query: { detach: true } },
+    }),
+  );
+}
+
+/** Let MuMu instance `mumuIndex` book with the account from its next run on. */
+export function attachAccount(mumuIndex: number, accountId: string): Promise<Customer> {
+  return call(
+    client.PUT("/api/machines/{mumu_index}/account", {
+      params: { path: { mumu_index: mumuIndex } },
+      body: { account_id: accountId },
+    }),
+  );
+}
+
+/** Let MuMu instance `mumuIndex` book with whichever account its app has logged in. */
+export async function detachAccount(mumuIndex: number): Promise<void> {
+  await call(
+    client.DELETE("/api/machines/{mumu_index}/account", {
+      params: { path: { mumu_index: mumuIndex } },
+    }),
   );
 }
 

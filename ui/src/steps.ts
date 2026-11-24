@@ -5,6 +5,7 @@
  */
 import type { TFunction } from "i18next";
 import type { Step, StepKind } from "./api/types";
+import { sportName } from "./quota";
 import type { Formatter } from "./useFormat";
 
 /** How a step is marked: ✓ in stamp blue, ✕ in orange-red, the 06:00 moment, or nothing. */
@@ -39,7 +40,7 @@ function length(data: Data, key: string): number | undefined {
   return Array.isArray(value) ? value.length : undefined;
 }
 
-const TRIGGERS = ["scheduled", "dry_run", "manual", "setup"] as const;
+const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel", "quota"] as const;
 const SETUP_ITEMS = ["mumu_installed", "mumu_screen", "wake_timers", "app_installed"] as const;
 const SETUP_STATUSES = ["ok", "fixed", "fixable", "user", "unknown"] as const;
 
@@ -90,6 +91,12 @@ const MESSAGES: Record<StepKind, Describe> = {
     };
   },
   logged_in: ({ t }) => ({ text: t("steps.logged_in"), tone: "plain" }),
+  account_checked: ({ t }, data) => ({
+    text: t(data.switched === true ? "steps.account_switched" : "steps.account_checked", {
+      phone: text(data, "phone") ?? "",
+    }),
+    tone: "plain",
+  }),
   // The failure repaired is the engine's own words: the technical details show it.
   repaired: ({ t }, data) => {
     const action = known(REPAIR_ACTIONS, text(data, "action"));
@@ -105,6 +112,79 @@ const MESSAGES: Record<StepKind, Describe> = {
     detail: text(data, "path"),
     tone: "plain",
   }),
+  opening_measured: ({ t }, data) => {
+    const seconds = number(data, "seconds_to_calendar");
+    const attempt = number(data, "attempt");
+    const pc = number(data, "pc_offset");
+    const device = data["device_before"];
+    const android =
+      typeof device === "object" && device !== null && "offset" in device
+        ? Number(device.offset)
+        : undefined;
+    const clocks = [
+      pc === undefined ? undefined : `PC ${(-pc).toFixed(3)} s`,
+      android === undefined || Number.isNaN(android)
+        ? undefined
+        : `Android ${android.toFixed(3)} s`,
+    ].filter(Boolean);
+    return {
+      text:
+        seconds === undefined || attempt === undefined
+          ? t("steps.opening_measured.plain")
+          : t("steps.opening_measured.full", { seconds: seconds.toFixed(2), attempt }),
+      detail: clocks.length === 0 ? undefined : clocks.join(", "),
+      tone: "plain",
+    };
+  },
+  tickets_saved: ({ t }, data) => ({
+    text: t("steps.tickets_saved", {
+      tickets: number(data, "tickets") ?? 0,
+      photos: number(data, "photos") ?? 0,
+    }),
+    tone: "plain",
+  }),
+  // What the history page leaves of the quota (quota.py); short of the slots chosen, marked.
+  quota_read: ({ t, f }, data) => {
+    const utility = text(data, "utility");
+    const month = text(data, "month");
+    const day = text(data, "play_date");
+    const used = number(data, "used");
+    const monthLimit = number(data, "month_limit");
+    const dayUsed = number(data, "day_used");
+    const dayLimit = number(data, "day_limit");
+    const left = number(data, "left");
+    if (
+      utility === undefined ||
+      month === undefined ||
+      day === undefined ||
+      used === undefined ||
+      monthLimit === undefined ||
+      dayUsed === undefined ||
+      dayLimit === undefined ||
+      left === undefined
+    ) {
+      return { text: t("steps.quota_read.plain"), tone: "plain" };
+    }
+    const [year, monthNumber] = month.split("-");
+    const full = t("steps.quota_read.full", {
+      sport: sportName(t, text(data, "sport"), utility),
+      month: `${monthNumber}/${year}`,
+      used,
+      monthLimit,
+      day: f.shortDate(day),
+      dayUsed,
+      dayLimit,
+      left,
+    });
+    const slots = number(data, "slots");
+    if (slots === undefined || slots <= left) {
+      return { text: full, tone: "plain" };
+    }
+    return {
+      text: full + t("steps.quota_read.short", { short: slots - left, slots }),
+      tone: "failed",
+    };
+  },
   waiting: ({ t, f }, data) => {
     const until = text(data, "until");
     return {
@@ -284,6 +364,34 @@ const MESSAGES: Record<StepKind, Describe> = {
     };
   },
   schedule_disabled: ({ t }) => ({ text: t("steps.schedule_disabled"), tone: "plain" }),
+  ticket_cancelled: ({ t, f }, data) => {
+    const code = text(data, "code");
+    const day = text(data, "play_date");
+    const slot = text(data, "slot");
+    return {
+      text:
+        code === undefined || day === undefined || slot === undefined
+          ? t("steps.ticket_cancelled.plain")
+          : t("steps.ticket_cancelled.full", { code, slot: f.slot(slot), day: f.day(day) }),
+      tone: "booked",
+    };
+  },
+  quota_not_read: ({ t }, data) => ({
+    text: t("steps.quota_not_read"),
+    detail: text(data, "reason"),
+    tone: "failed",
+  }),
+  ticket_not_cancelled: ({ t }, data) => {
+    const code = text(data, "code");
+    return {
+      text:
+        code === undefined
+          ? t("steps.ticket_not_cancelled.plain")
+          : t("steps.ticket_not_cancelled.full", { code }),
+      detail: text(data, "reason"),
+      tone: "failed",
+    };
+  },
 };
 
 /** Return the words for a step in the current language of `t` and `f`. */

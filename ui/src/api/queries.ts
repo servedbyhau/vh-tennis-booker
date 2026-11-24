@@ -3,14 +3,22 @@ import { DAYS_SHOWN, runDay } from "../days";
 import type { Overview, RunSummary } from "./types";
 import {
   type EventsQuery,
+  getAccountLogin,
   getAccounts,
-  getLogin,
+  getCancel,
+  getMumuInstances,
+  getPrices,
+  getQuotaTask,
   getOverview,
   getRun,
   getNotifications,
   getSettings,
   listEvents,
   listRuns,
+  listCharges,
+  listCustomers,
+  listRequests,
+  listTickets,
   type RunsQuery,
 } from "./endpoints";
 
@@ -25,9 +33,17 @@ export const queryKeys = {
   run: (runId: number) => ["run", runId] as const,
   events: (query: EventsQuery = {}) => ["events", query] as const,
   settings: ["settings"] as const,
+  mumuInstances: ["mumuInstances"] as const,
   notifications: ["notifications"] as const,
   accounts: ["accounts"] as const,
-  login: (mumuIndex: number) => ["login", mumuIndex] as const,
+  tickets: ["tickets"] as const,
+  cancel: ["cancel"] as const,
+  quotaTask: ["quotaTask"] as const,
+  prices: ["prices"] as const,
+  requests: ["requests"] as const,
+  charges: (month: string) => ["charges", month] as const,
+  customers: ["customers"] as const,
+  accountLogin: (id: string) => ["accountLogin", id] as const,
 };
 
 /** How often the Overview is read while a run is starting or letting go of the emulator. */
@@ -44,8 +60,52 @@ export function settlingInterval(overview: Overview | undefined): number | false
   if (running === null || running === undefined) {
     return false;
   }
-  const settling = running.trigger === "setup" || overview?.last_run?.status !== "running";
+  const settling = !booking(running.trigger) || overview?.last_run?.status !== "running";
   return settling ? SETTLING_POLL_MS : false;
+}
+
+/**
+ * Tell whether a task that holds the emulator books (a booking or a dry run, whose steps show as
+ * they go), unlike auto setup, a ticket cancel and a quota read.
+ */
+export function booking(trigger: string): boolean {
+  return trigger !== "setup" && trigger !== "cancel" && trigger !== "quota";
+}
+
+/** How often the ticket cancel going on is read again. */
+export const CANCEL_POLL_MS = 2000;
+
+/** Read the ticket cancel started last, again every 2 s while it goes on. */
+export function useCancelState() {
+  return useQuery({
+    queryKey: queryKeys.cancel,
+    queryFn: getCancel,
+    refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
+  });
+}
+
+/** Read the quota read started last, again every 2 s while it goes on. */
+export function useQuotaTask() {
+  return useQuery({
+    queryKey: queryKeys.quotaTask,
+    queryFn: getQuotaTask,
+    refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
+  });
+}
+
+/** Read every customer's requests. */
+export function useRequests() {
+  return useQuery({ queryKey: queryKeys.requests, queryFn: listRequests });
+}
+
+/** Read the price list. */
+export function usePrices() {
+  return useQuery({ queryKey: queryKeys.prices, queryFn: getPrices });
+}
+
+/** Read the charges of a month of play, priced. */
+export function useCharges(month: string) {
+  return useQuery({ queryKey: queryKeys.charges(month), queryFn: () => listCharges(month) });
 }
 
 /** Read everything the Overview shows. */
@@ -105,6 +165,18 @@ export function useSettings() {
   return useQuery({ queryKey: queryKeys.settings, queryFn: getSettings });
 }
 
+/**
+ * Read the MuMu instances on this PC, once: an instance is made or deleted in MuMu, and the
+ * app is opened again after that.
+ */
+export function useMumuInstances() {
+  return useQuery({
+    queryKey: queryKeys.mumuInstances,
+    queryFn: getMumuInstances,
+    staleTime: Infinity,
+  });
+}
+
 /** Read the notification settings. */
 export function useNotifications() {
   return useQuery({ queryKey: queryKeys.notifications, queryFn: getNotifications });
@@ -115,11 +187,22 @@ export function useAccounts() {
   return useQuery({ queryKey: queryKeys.accounts, queryFn: getAccounts });
 }
 
-/** Read whether a login is saved for MuMu instance `mumuIndex`; waits for a known index. */
-export function useLogin(mumuIndex: number | null) {
+/** Read every machine's tickets; a run that read them again marks them stale. */
+export function useTickets() {
+  return useQuery({ queryKey: queryKeys.tickets, queryFn: listTickets });
+}
+
+/** Read the saved login of an account for its form; nothing keeps it once the form is shut. */
+export function useAccountLogin(id: string) {
   return useQuery({
-    queryKey: queryKeys.login(mumuIndex ?? -1),
-    queryFn: () => getLogin(mumuIndex ?? 0),
-    enabled: mumuIndex !== null,
+    queryKey: queryKeys.accountLogin(id),
+    queryFn: () => getAccountLogin(id),
+    staleTime: 0,
+    gcTime: 0,
   });
+}
+
+/** Read the customers, each with their accounts. */
+export function useCustomers() {
+  return useQuery({ queryKey: queryKeys.customers, queryFn: listCustomers });
 }

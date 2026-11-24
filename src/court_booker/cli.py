@@ -7,14 +7,16 @@ import logging
 import os
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, NoReturn
 
 from court_booker import __version__, credentials, device_setup, schedule
 from court_booker.adb import AUTO
-from court_booker.clock import NtpClock, ntp_offset, resolve_start
-from court_booker.config import DAYS_AHEAD, Config, instance_config, load_config
+from court_booker.clock import NtpClock, ntp_offset, resolve_start, wait_until
+from court_booker.config import DAYS_AHEAD, Config, books_on, instance_config, load_config
+from court_booker.customers import holder_on
 from court_booker.device_setup import Check, Status, Tools, find_tools, run_checks
 from court_booker.emulator import CALL_ATTEMPTS, MuMu
 from court_booker.engine import engine_command
@@ -28,14 +30,23 @@ from court_booker.errors import (
     RequestError,
 )
 from court_booker.events import Event, EventKind, LogSink, MultiSink, Reporter
-from court_booker.history import History, close_history, open_history
+from court_booker.flow import Booker
+from court_booker.history import History, Holder, close_history, open_history
 from court_booker.lock import TAKE_OVER_AHEAD, RunLock, check_quiet_time
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
-from court_booker.notify import format_notification, format_summary, send_telegram, send_windows
+from court_booker.notify import (
+    format_notification,
+    format_quota_warning,
+    format_summary,
+    send_telegram,
+    send_windows,
+)
 from court_booker.paths import data_folder
 from court_booker.power import keep_awake
+from court_booker.quota import AFTER, MONTH_LIMIT, Quota, next_short, read_quota
 from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
 from court_booker.runner import RoundResult, run_booking
+from court_booker.tickets import TicketReader, Wanted, forget_expired
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -46,6 +57,17 @@ EXIT_DEVICE = 3
 EXIT_APP_NOT_READY = 4
 EXIT_BUSY = 5
 EXIT_INTERRUPTED = 130
+
+TICKETS_AFTER = timedelta(minutes=3)
+"""When a timed run reads its tickets, from the start: of the 49 runs on schedule up to
+2026-11-22 the last to end did at 06:01:05, the other residents have booked and left the
+app, and a ticket shows as processing for a while."""
+TICKETS_LATEST = timedelta(minutes=3, seconds=30)
+"""How long past the start the tickets wait for a machine recorded as booking; its run may
+have been killed, so they are read all the same after it."""
+TICKETS_SECONDS = 90.0
+"""How long reading the tickets may take; a run so ends about when the quiet time does (5 min
+after the start), holding the lock until then."""
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -91,6 +113,16 @@ def apply_overrides(config: Config, args: argparse.Namespace) -> Config:
     if args.device:
         config.device = args.device
     return config
+
+
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
+def machine_of(config: Config, index: int | None) -> Config:
+    """Return the settings of MuMu instance ``index``: the first machine's, or its entry's."""
+    if index is None or index == config.mumu_index:
+        return config
+    return select_instance(config, index)
 
 
 def select_instance(config: Config, index: int) -> Config:
@@ -157,6 +189,21 @@ def start_instances(
     return started
 
 
+def note_holder(history: History, device: int) -> None:
+    """Record whose account the run books with, once the lock keeps it from changing.
+
+    The run books with that account or not at all (:meth:`Booker.check_account`), and books
+    all the same when it cannot be told.
+    """
+    try:
+        holder = holder_on(data_folder().database, credentials.default_store(), device)
+    except Exception:
+        logger.warning("Whose account MuMu %d books with is not known", device, exc_info=True)
+        return
+    if holder is not None:
+        history.set_holder(holder)
+
+
 def wait_for_instances(processes: list[tuple[int, subprocess.Popen[bytes]]]) -> None:
     """Wait for the other instances' processes, so a scheduled task ends after them too."""
     for index, process in processes:
@@ -219,6 +266,96 @@ def close_device(device: Any) -> None:
         device.close()
     except Exception:  # the rounds are over: a failure here only goes to the log
         logger.warning("Could not stop the driver", exc_info=True)
+
+
+def read_tickets(
+    booker: Booker,
+    results: list[RoundResult],
+    play_date: date,
+    start: datetime | None,
+    clock: NtpClock,
+    history: History,
+    report: Reporter,
+    instance: int | None = None,
+) -> None:
+    """Record the account's tickets, with a picture of each one booked, then its quota.
+
+    A quota too short for the next day's slots is told by a Windows notification
+    (:func:`warn_short_quota`), under ``instance`` if given.
+
+    Waits until every machine is done booking, a timed run until :data:`TICKETS_AFTER` the
+    start at least, so this takes nothing from the rounds still going on. Raises only
+    ``DeviceNotRespondingError`` (a frozen emulator) and ``KeyboardInterrupt``.
+    """
+    give_up = (start or clock.now()) + TICKETS_LATEST
+    if start is not None:
+        wait_until(start + TICKETS_AFTER, clock.now)
+    while history.other_runs_going():
+        if clock.now() >= give_up:
+            logger.warning("Another machine is still recorded as booking; reading the tickets")
+            break
+        time.sleep(1.0)
+    folder = data_folder().tickets
+    wanted = [
+        Wanted(play_date.isoformat(), result.slot, result.court or booker.config.court)
+        for result in results
+        if result.ok
+    ]
+    reader = TicketReader(booker, folder, time.monotonic() + TICKETS_SECONDS)
+    try:
+        reader.read(wanted)
+    finally:  # also what was read before the emulator froze
+        found = reader.collected
+        if found.tickets:
+            history.save_tickets(
+                booker.config.mumu_index, found.tickets, found.photos, datetime.now()
+            )
+            report(EventKind.TICKETS_SAVED, tickets=len(found.tickets), photos=len(found.photos))
+    try:
+        quota = read_quota(booker, play_date, AFTER, report)
+    except DeviceNotRespondingError:
+        raise
+    except Exception as exc:  # the tickets are saved: this only logs
+        logger.warning("Quota not read after the tickets: %s", exc)
+        return
+    if quota is not None:
+        warn_short_quota(booker.config, quota, history.holder, instance)
+
+
+def warn_short_quota(
+    config: Config, quota: Quota, holder: Holder | None, instance: int | None
+) -> None:
+    """Tell the user when the next day's run has fewer left than the slots it books.
+
+    They have the day to choose another account; a run never changes it by itself. Only
+    when Windows notifications are on; a failure only logs.
+    """
+    left = next_short(quota, len(config.slots))
+    if left is None:
+        return
+    logger.warning(
+        "The next run has %d of %s left for %d slot(s): choose another account",
+        left,
+        quota.utility,
+        len(config.slots),
+    )
+    if not config.windows_notification:
+        return
+    try:
+        title, body = format_quota_warning(
+            utility=quota.utility,
+            month=quota.month,
+            left=left,
+            limit=MONTH_LIMIT,
+            slots=len(config.slots),
+            account=None if holder is None else f"{holder.customer} · {holder.account}",
+            language=config.notification_language,
+            instance=instance,
+            sport=config.sport,
+        )
+        send_windows(title, body)
+    except Exception:  # reporting never costs anything
+        logger.warning("Windows notification not shown", exc_info=True)
 
 
 def run_trigger(args: argparse.Namespace) -> str:
@@ -357,6 +494,14 @@ def main(argv: list[str] | None = None) -> int:
         return setup_main(argv[1:])
     if argv[:1] == ["serve"]:
         return serve(argv[1:])
+    if argv[:1] == ["cancel"]:
+        from court_booker import cancel  # it uses this module's helpers
+
+        return cancel.main(argv[1:])
+    if argv[:1] == ["quota"]:
+        from court_booker import quota_command
+
+        return quota_command.main(argv[1:])
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose)
     trigger = run_trigger(args)
@@ -373,8 +518,15 @@ def main(argv: list[str] | None = None) -> int:
     frozen = False
     start: datetime | None = None
     instances: list[tuple[int, subprocess.Popen[bytes]]] = []
+    bookers: list[Booker] = []
+    clock: NtpClock | None = None
+    off_day = False
     try:
         config = apply_overrides(load_config(args.config), args)
+        full = config
+        # The machines are launched in the order the config lists them, one after another.
+        order = [config.mumu_index, *(table.get("mumu_index") for table in config.instances)]
+        launch_after = order[: order.index(args.instance)] if args.instance in order else []
         if args.instance is not None:
             config = select_instance(config, args.instance)
         log_dir: Path | None = None
@@ -395,16 +547,33 @@ def main(argv: list[str] | None = None) -> int:
             check_quiet_time(now, config.wake_at, config.start_at, "dry run")
         start_text = config.start_at if args.scheduled else args.at
         start = resolve_start(start_text, now) if start_text else None
-        report(
-            EventKind.RUN_STARTED,
-            trigger=trigger,
-            dry_run=args.dry_run,
-            slots=list(config.slots),
-            start=None if start is None else start.isoformat(timespec="seconds"),
-            version=__version__,
-            device=config.mumu_index,
-        )
-        started = True
+        play_day = (start or now).date() + timedelta(days=DAYS_AHEAD)
+        if args.scheduled:
+            # A machine off that day neither books nor boots: the ones after it need not wait.
+            launch_after = [i for i in launch_after if books_on(machine_of(full, i), play_day)]
+            off_day = not books_on(config, play_day)
+        if off_day:
+            logger.info(
+                "MuMu %d books for %s only, not for %s",
+                config.mumu_index,
+                ", ".join(WEEKDAYS[day] for day in sorted(config.days)),
+                play_day.isoformat(),
+            )
+        if off_day and args.instance is not None:
+            if history is not None:
+                close_history(history)
+            return EXIT_OK
+        if not off_day:
+            report(
+                EventKind.RUN_STARTED,
+                trigger=trigger,
+                dry_run=args.dry_run,
+                slots=list(config.slots),
+                start=None if start is None else start.isoformat(timespec="seconds"),
+                version=__version__,
+                device=config.mumu_index,
+            )
+        started = not off_day
         folder = data_folder()
         lock = RunLock(
             folder.lock if args.instance is None else folder.instance_lock(args.instance), report
@@ -420,23 +589,36 @@ def main(argv: list[str] | None = None) -> int:
                     history.interrupt_stale_runs()
                 # Only now: the cleanup above would take the instances' runs for stale ones.
                 instances = start_instances(args, config)
-            clock = NtpClock(config.ntp_server, ntp_offset)
-            if start is not None:
-                clock.measure()
-            supervisor = Supervisor(config, args.driver, report, now=clock.now)
-            device = supervisor.device
-            run_booking(
-                device,
-                config,
-                supervisor=supervisor,
-                dry_run=args.dry_run,
-                start=start,
-                clock=clock,
-                results=results,
-                report=report,
-                login_for=lambda: credentials.default_store().read(config.mumu_index),
-                screens=None if log_dir is None else log_dir / "screens",
-            )
+            if off_day:
+                wait_for_instances(instances)
+                instances = []
+            elif history is not None:
+                note_holder(history, config.mumu_index)
+            if not off_day:
+                clock = NtpClock(config.ntp_server, ntp_offset)
+                if start is not None:
+                    clock.measure()
+                supervisor = Supervisor(
+                    config, args.driver, report, now=clock.now, launch_after=launch_after
+                )
+                device = supervisor.device
+                run_booking(
+                    device,
+                    config,
+                    supervisor=supervisor,
+                    dry_run=args.dry_run,
+                    start=start,
+                    clock=clock,
+                    results=results,
+                    report=report,
+                    login_for=lambda: credentials.default_store().read(config.mumu_index),
+                    account_seen=lambda: (
+                        None if history is None else history.last_account(config.mumu_index)
+                    ),
+                    screens=None if log_dir is None else log_dir / "screens",
+                    on_booker=bookers.append,
+                    on_race=None if history is None else history.hold,
+                )
         code = EXIT_OK if all(result.ok for result in results) else EXIT_ROUND_FAILED
     except KeyboardInterrupt:
         logger.warning("Interrupted")
@@ -448,8 +630,19 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # an unattended run must still log and report
         logger.exception("Unexpected error")
         error, code = repr(exc), EXIT_ROUND_FAILED
+    if history is not None:  # the rounds are over: what they held is written now
+        history.release()
 
-    if device is not None and not frozen:
+    # The driver stays for the tickets, read once all the rest is done and reported.
+    tickets = (
+        bool(bookers)
+        and clock is not None
+        and history is not None
+        and error is None
+        and not args.dry_run
+        and any(result.ok for result in results)
+    )
+    if device is not None and not frozen and not tickets:
         close_device(device)
     print_summary(results)
     if started:
@@ -463,20 +656,38 @@ def main(argv: list[str] | None = None) -> int:
     # Each instance of a run with several reports on its own, under its number.
     shown = config or Config()  # also after a config that did not load: the defaults
     instance = shown.mumu_index if args.instance is not None or instances else None
-    if config is not None and config.telegram_token and config.telegram_chat_id:
+    if off_day:
+        pass  # nothing was booked or tried: nothing to tell
+    elif config is not None and config.telegram_token and config.telegram_chat_id:
         text = format_summary(results, error, dry_run=args.dry_run, instance=instance)
         send_telegram(config.telegram_token, config.telegram_chat_id, text)
-    notify_windows(
-        shown,
-        results,
-        error,
-        dry_run=args.dry_run,
-        interrupted=code == EXIT_INTERRUPTED,
-        target=(start or datetime.now()).date() + timedelta(days=DAYS_AHEAD),
-        instance=instance,
-        account=account.subdivision,
-        repairs=0 if supervisor is None else supervisor.repairs,
-    )
+    if not off_day:
+        notify_windows(
+            shown,
+            results,
+            error,
+            dry_run=args.dry_run,
+            interrupted=code == EXIT_INTERRUPTED,
+            target=(start or datetime.now()).date() + timedelta(days=DAYS_AHEAD),
+            instance=instance,
+            account=account.subdivision,
+            repairs=0 if supervisor is None else supervisor.repairs,
+        )
+    tickets_froze = False
+    if tickets and clock is not None and history is not None:
+        target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
+        try:
+            with keep_awake():
+                read_tickets(bookers[0], results, target, start, clock, history, report, instance)
+        except DeviceNotRespondingError as exc:
+            tickets_froze = True
+            logger.warning("Tickets not read: %s", exc)
+        except KeyboardInterrupt:
+            logger.warning("Interrupted while reading the tickets")
+        except Exception:  # the bookings are made and reported
+            logger.warning("Tickets not read", exc_info=True)
+        if not tickets_froze:
+            close_device(device)
     # A real run closes MuMu once its rounds ran; the next run starts it again. MuMu stays
     # open after a dry run, Ctrl+C or an error before the rounds, for whoever is at the PC,
     # and when frozen, since MuMuManager does not shut a frozen instance down.
@@ -487,11 +698,14 @@ def main(argv: list[str] | None = None) -> int:
         and results
         and code != EXIT_INTERRUPTED
         and not frozen
+        and not tickets_froze
     ):
         close_emulator(config)
     if not frozen:
         # Holding the lock meanwhile: the run, with its instances, is still going on.
         wait_for_instances(instances)
+        if args.instance is None and not args.dry_run:
+            forget_expired(data_folder(), datetime.now().date())
     if lock is not None:
         lock.release()
     if history is not None:

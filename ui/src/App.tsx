@@ -5,14 +5,18 @@ import { SiteHeader } from "./components/SiteHeader";
 import { paths } from "./paths";
 
 /**
- * Lay out every screen: the header, then the current screen in the main area. The home
- * screen fills the window; the not-found and error pages make one centred column.
+ * Lay out every screen: the header, then the current screen in the main area. The
+ * three pages of the header fill the window; the not-found and error pages make one centred
+ * column.
  */
 export function App() {
   const { t } = useTranslation();
-  const home = useMatch(paths.overview) !== null;
+  const booking = useMatch(paths.overview) !== null;
+  const management = useMatch(`${paths.management}/*`) !== null;
+  const guide = useMatch(paths.guide) !== null;
+  const fill = booking || management || guide;
   return (
-    <div className={home ? `${styles.page} ${styles.fill}` : styles.page}>
+    <div className={fill ? `${styles.page} ${styles.fill}` : styles.page}>
       <a className={styles.skipLink} href="#main">
         {t("app.skipToContent")}
       </a>

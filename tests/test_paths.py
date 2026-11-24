@@ -39,3 +39,7 @@ def test_ensure_creates_the_folder_once(tmp_path):
     folder.ensure()
 
     assert folder.logs.is_dir()
+
+
+def test_ticket_pictures_have_a_folder_of_their_own(tmp_path):
+    assert DataFolder(tmp_path).tickets == tmp_path / "tickets"

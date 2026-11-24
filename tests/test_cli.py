@@ -7,7 +7,7 @@ import os
 import sqlite3
 import subprocess
 import sys
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import ClassVar
 
@@ -17,15 +17,19 @@ import court_booker.cli as cli
 from court_booker import device_setup, processes
 from court_booker.cli import close_emulator
 from court_booker.config import Config
+from court_booker.credentials import Login
+from court_booker.customers import CustomerBook
 from court_booker.device_setup import Check, Status
 from court_booker.engine import engine_command
 from court_booker.errors import AppNotReadyError, DeviceNotRespondingError, EmulatorError
 from court_booker.events import EventKind
 from court_booker.history import History as HistoryStore
-from court_booker.history import HistoryHandler
+from court_booker.history import HistoryHandler, connect
 from court_booker.lock import Holder
+from court_booker.quota import Quota
 from court_booker.ready import DeviceHandle
 from court_booker.runner import RoundResult
+from court_booker.tickets import Collected, Ticket
 
 
 def fake_run(outcomes):
@@ -62,11 +66,17 @@ def fake_connect(config, driver="auto"):
 
 
 def use_connect(monkeypatch, connect):
-    """Make the run's supervisor connect its device with ``connect(config, driver)``."""
+    """Make the run's supervisor connect its device with ``connect(config, driver)``.
+
+    Returns the supervisors the run makes, as they are made.
+    """
+    made = []
 
     class FakeSupervisor:
-        def __init__(self, config, driver="auto", report=None, now=None):
+        def __init__(self, config, driver="auto", report=None, now=None, launch_after=()):
             self.config, self.driver, self.report = config, driver, report
+            self.launch_after = launch_after
+            made.append(self)
             self.device = DeviceHandle()
             self.repairs = 0
 
@@ -78,6 +88,7 @@ def use_connect(monkeypatch, connect):
             self.start()
 
     monkeypatch.setattr(cli, "Supervisor", FakeSupervisor)
+    return made
 
 
 def run_cli(monkeypatch, tmp_path, outcomes=(), connect=fake_connect, args=(), now=None):
@@ -466,6 +477,82 @@ def spawned(monkeypatch):
     return FakeProcess.started
 
 
+def days_config(tmp_path, top_days="", instance_days=""):
+    """Two machines booking 06:00 runs, with the days given (2026-10-10, played for on
+    2026-10-08, is a Saturday, 5)."""
+    path = tmp_path / "config.toml"
+    manager = (tmp_path / "MuMuManager.exe").as_posix()
+    path.write_text(
+        f'mumu_manager = "{manager}"\n{top_days}\n'
+        f'slots = ["18:00 - 19:00"]\n\n[[instances]]\nmumu_index = 1\n'
+        f'slots = ["20:00 - 21:00"]\n{instance_days}\n',
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_a_machine_off_that_day_neither_books_nor_boots(
+    monkeypatch, tmp_path, data_home, spawned, windows_notifications
+):
+    path = days_config(tmp_path, instance_days="days = [0, 2]")
+    supervisors = use_connect(monkeypatch, fake_connect)
+    run = fake_run([("20:00 - 21:00", True)])
+    monkeypatch.setattr(cli, "run_booking", run)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--instance", "1", "--scheduled"]) == cli.EXIT_OK
+
+    assert supervisors == []
+    assert not hasattr(run, "config")
+    assert windows_notifications == []
+    log = next((tmp_path / "logs").glob("court-booker-*-mumu1.log")).read_text(encoding="utf-8")
+    assert "MuMu 1 books for Monday, Wednesday only, not for 2026-10-10" in log
+    with sqlite3.connect(data_home / "booker.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM runs").fetchone() == (0,)
+
+
+def test_the_first_machine_off_that_day_still_starts_the_others(
+    monkeypatch, tmp_path, data_home, spawned, windows_notifications
+):
+    path = days_config(tmp_path, top_days="days = [6]")
+    monkeypatch.setattr(cli, "MuMu", lambda *args, **kwargs: None)
+    supervisors = use_connect(monkeypatch, fake_connect)
+    run = fake_run([("18:00 - 19:00", True)])
+    monkeypatch.setattr(cli, "run_booking", run)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--scheduled"]) == cli.EXIT_OK
+
+    command = spawned[0].command
+    assert command[command.index("--instance") + 1] == "1"
+    assert spawned[0].waited
+    assert supervisors == []
+    assert windows_notifications == []
+    assert not (data_home / "run.lock").exists()
+
+
+def test_a_machine_off_that_day_is_not_waited_for(monkeypatch, tmp_path, data_home, spawned):
+    path = days_config(tmp_path, top_days="days = [6]")
+    supervisors = use_connect(monkeypatch, fake_connect)
+    monkeypatch.setattr(cli, "run_booking", fake_run([("20:00 - 21:00", True)]))
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--instance", "1", "--scheduled"]) == cli.EXIT_OK
+
+    assert [supervisor.launch_after for supervisor in supervisors] == [[]]
+
+
+def test_a_machine_on_that_day_books(monkeypatch, tmp_path, data_home, spawned):
+    path = days_config(tmp_path, instance_days="days = [5]")
+    run = fake_run([("20:00 - 21:00", True)])
+    use_connect(monkeypatch, fake_connect)
+    monkeypatch.setattr(cli, "run_booking", run)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(path), "--instance", "1", "--scheduled"]) == cli.EXIT_OK
+    assert run.config.days == [5]
+
+
 def test_another_instance_books_on_its_own(
     monkeypatch, tmp_path, data_home, spawned, windows_notifications
 ):
@@ -480,13 +567,15 @@ def test_another_instance_books_on_its_own(
         locks.extend(sorted(item.name for item in data_home.glob("*.lock")))
         return run(device, config, results=results, **kwargs)
 
-    use_connect(monkeypatch, fake_connect)
+    supervisors = use_connect(monkeypatch, fake_connect)
     monkeypatch.setattr(cli, "run_booking", run_booking)
     monkeypatch.setattr(cli, "datetime", FixedDatetime)
 
     assert cli.main(["--config", str(path), "--instance", "1"]) == cli.EXIT_OK
 
     assert (run.config.mumu_index, run.config.slots) == (1, ["20:00 - 21:00"])
+    # Launched once the first machine has booted, the config's order.
+    assert [supervisor.launch_after for supervisor in supervisors] == [[0]]
     assert run.config.court == "S9 - Sân tennis"
     assert locks == ["run-mumu1.lock"]  # beside the first instance's run.lock
     assert next((tmp_path / "logs").glob("court-booker-*-mumu1.log")).exists()
@@ -580,6 +669,58 @@ def test_a_run_is_recorded_in_the_history(monkeypatch, tmp_path, data_home):
     assert kinds == ["run_started", "device_ready", "run_finished"]
     assert f"court-booker {cli.__version__}" in lines
     assert "Summary" in lines
+
+
+def test_the_rounds_write_the_history_once_they_are_over(monkeypatch, tmp_path, data_home):
+    seen = []
+
+    def run_booking(device, config, *, results, supervisor=None, on_race=None, **kwargs):
+        supervisor.start()
+        on_race()
+        logging.getLogger("court_booker.runner").info("Round 1/1: 18:00 - 19:00")
+        with sqlite3.connect(data_home / "booker.db") as db:
+            seen.extend(message for (message,) in db.execute("SELECT message FROM log_lines"))
+        results.append(RoundResult("18:00 - 19:00", True, "booked", 1.0))
+        return results
+
+    use_connect(monkeypatch, fake_connect)
+    monkeypatch.setattr(cli, "run_booking", run_booking)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+
+    assert cli.main(["--config", str(tmp_path / "missing.toml"), "--dry-run"]) == cli.EXIT_OK
+
+    connection = sqlite3.connect(data_home / "booker.db")
+    lines = [line for (line,) in connection.execute("SELECT message FROM log_lines ORDER BY id")]
+    connection.close()
+    assert f"court-booker {cli.__version__}" in seen  # written before the race
+    assert "Round 1/1: 18:00 - 19:00" not in seen
+    assert lines.index("Round 1/1: 18:00 - 19:00") < lines.index("Summary")
+
+
+def test_a_run_is_recorded_with_whose_account_it_books_with(
+    monkeypatch, tmp_path, data_home, saved_logins
+):
+    db = connect(data_home / "booker.db")
+    book = CustomerBook(db, saved_logins)
+    account = book.add_account(book.add_customer("An").id, Login("0900000011", "x"), "Căn A")
+    book.attach(account.id, 0)
+
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)])
+
+    names = db.execute("SELECT account_id, customer, account FROM runs").fetchall()
+    db.close()
+    assert names == [(account.id, "An", "Căn A")]
+
+
+def test_a_run_books_without_knowing_whose_account_it_is(
+    monkeypatch, tmp_path, data_home, saved_logins
+):
+    def refuse(key):
+        raise OSError("no vault")
+
+    monkeypatch.setattr(saved_logins, "read", refuse)
+    assert run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)]) == cli.EXIT_OK
+    assert "Whose account MuMu 0 books with is not known" in read_log(tmp_path)
 
 
 def test_the_history_stops_listening_after_the_run(monkeypatch, tmp_path):
@@ -793,3 +934,248 @@ def test_run_status():
     assert cli.run_status([failed], None, interrupted=False) == "failed"
     assert cli.run_status([], "MuMu did not start", interrupted=False) == "failed"
     assert cli.run_status([ok], "interrupted", interrupted=True) == "interrupted"
+
+
+class FakeReader:
+    """Reads one ticket and one picture, or fails as ``error`` says."""
+
+    error: ClassVar = None
+    made: ClassVar = []
+    quotas: ClassVar = []
+
+    def __init__(self, booker, folder, deadline):
+        self.booker, self.folder = booker, folder
+        self.collected = Collected()
+        FakeReader.made.append(self)
+
+    def read(self, wanted):
+        self.wanted = wanted
+        ticket = Ticket(
+            "1234567", "Sân Tennis", "S6", "2026-10-10", "18:00 - 19:00", "Đã đăng ký", None
+        )
+        self.collected.tickets.append(ticket)
+        self.collected.photos["1234567"] = "1234567.png"
+        if FakeReader.error is not None:
+            raise FakeReader.error
+        return self.collected
+
+
+@pytest.fixture
+def reader(monkeypatch):
+    """Read the tickets with :class:`FakeReader`, and record what the run did, in order."""
+    monkeypatch.setattr(FakeReader, "error", None)
+    monkeypatch.setattr(FakeReader, "made", [])
+    monkeypatch.setattr(cli, "TicketReader", FakeReader)
+    monkeypatch.setattr(FakeReader, "quotas", [])
+
+    def read_quota(booker, play_date, moment, report, slots=None):
+        FakeReader.quotas.append((play_date, moment))
+        report(EventKind.QUOTA_READ, moment=moment)
+
+    monkeypatch.setattr(cli, "read_quota", read_quota)
+    return FakeReader
+
+
+def run_with_booker(monkeypatch, tmp_path, outcomes, args=(), connect=fake_connect):
+    """Run the CLI with rounds that hand a booker over, as the real ones do."""
+    inner = fake_run(outcomes)
+
+    def run_booking(device, config, *, on_booker=None, **kwargs):
+        on_booker(argparse.Namespace(config=config, device=device))
+        return inner(device, config, **kwargs)
+
+    use_connect(monkeypatch, connect)
+    monkeypatch.setattr(cli, "run_booking", run_booking)
+    monkeypatch.setattr(cli, "datetime", FixedDatetime)
+    return cli.main(["--config", str(tmp_path / "missing.toml"), *args])
+
+
+BOOKED = [("18:00 - 19:00", True), ("19:00 - 20:00", False)]
+
+
+def test_a_real_run_reads_the_tickets_of_the_slots_it_booked(
+    monkeypatch, tmp_path, reader, data_home, closed_mumu
+):
+    assert run_with_booker(monkeypatch, tmp_path, BOOKED) == cli.EXIT_ROUND_FAILED
+    (made,) = reader.made
+    assert made.folder == data_home / "tickets"
+    (wanted,) = made.wanted
+    assert (wanted.slot, wanted.court) == ("18:00 - 19:00", Config().court)
+    with sqlite3.connect(data_home / "booker.db") as db:
+        assert db.execute("SELECT code, device, photo FROM tickets").fetchall() == [
+            ("1234567", 0, "1234567.png")
+        ]
+        kinds = [row[0] for row in db.execute("SELECT kind FROM events ORDER BY id")]
+    # After the run's own result, never before it; the quota once the tickets are saved.
+    assert kinds[-3:] == ["run_finished", "tickets_saved", "quota_read"]
+    assert reader.quotas == [(date(2026, 10, 10), "after")]
+
+
+def test_the_tickets_come_after_the_notification_and_before_the_driver_stops(
+    monkeypatch, tmp_path, reader
+):
+    order = []
+    devices = []
+
+    def connect(config, driver):
+        device = fake_connect(config, driver)
+        device.close = lambda: order.append("close")
+        devices.append(device)
+        return device
+
+    monkeypatch.setattr(cli, "send_windows", lambda title, body: order.append("notify"))
+    read = FakeReader.read
+    monkeypatch.setattr(
+        FakeReader, "read", lambda self, wanted: order.append("tickets") or read(self, wanted)
+    )
+    monkeypatch.setattr(cli, "close_emulator", lambda config: order.append("mumu"))
+    manager = tmp_path / "MuMuManager.exe"
+    (tmp_path / "missing.toml").write_text(f"mumu_manager = '{manager}'", encoding="utf-8")
+    run_with_booker(monkeypatch, tmp_path, BOOKED, connect=connect)
+    assert order == ["notify", "tickets", "close", "mumu"]
+
+
+@pytest.mark.parametrize(
+    ("outcomes", "args"),
+    [
+        ([("18:00 - 19:00", False)], ()),
+        (BOOKED, ("--dry-run",)),
+        ([("18:00 - 19:00", True), ("19:00 - 20:00", KeyboardInterrupt)], ()),
+    ],
+    ids=["nothing booked", "dry run", "interrupted"],
+)
+def test_no_tickets_are_read(monkeypatch, tmp_path, reader, outcomes, args):
+    run_with_booker(monkeypatch, tmp_path, outcomes, args)
+    assert reader.made == []
+
+
+@pytest.mark.parametrize("error", [RuntimeError("boom"), KeyboardInterrupt()])
+def test_tickets_that_fail_do_not_change_the_result(
+    monkeypatch, tmp_path, reader, closed_mumu, error
+):
+    monkeypatch.setattr(FakeReader, "error", error)
+    (tmp_path / "missing.toml").write_text("mumu_manager = 'MuMuManager.exe'", encoding="utf-8")
+    assert run_with_booker(monkeypatch, tmp_path, BOOKED[:1]) == cli.EXIT_OK
+    assert len(closed_mumu) == 1
+
+
+def test_an_emulator_frozen_at_the_tickets_keeps_the_result(
+    monkeypatch, tmp_path, reader, closed_mumu, data_home
+):
+    monkeypatch.setattr(FakeReader, "error", DeviceNotRespondingError("screenshot hung"))
+    (tmp_path / "missing.toml").write_text("mumu_manager = 'MuMuManager.exe'", encoding="utf-8")
+    assert run_with_booker(monkeypatch, tmp_path, BOOKED[:1]) == cli.EXIT_OK
+    assert closed_mumu == []  # MuMuManager does not shut a frozen instance down
+    with sqlite3.connect(data_home / "booker.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM tickets").fetchone() == (1,)
+        assert db.execute("SELECT status FROM runs").fetchall() == [("ok",)]
+
+
+class StepClock:
+    """A clock that moves one second with each look at it."""
+
+    def __init__(self, at):
+        self.at = at
+
+    def now(self):
+        self.at += timedelta(seconds=1)
+        return self.at
+
+
+class OtherRuns:
+    """A history in which another machine books for the first ``looks`` looks."""
+
+    def __init__(self, looks):
+        self.looks = looks
+        self.saved = []
+
+    def other_runs_going(self):
+        self.looks -= 1
+        return self.looks >= 0
+
+    def save_tickets(self, *args):
+        self.saved.append(args)
+
+
+def read_after(monkeypatch, looks):
+    """Read the tickets of a 06:00 run while another machine books; return what was saved."""
+    start = datetime(2026, 11, 22, 6, 0)
+    waits = []
+    monkeypatch.setattr(cli, "wait_until", lambda moment, now: waits.append(moment))
+    monkeypatch.setattr(cli.time, "sleep", lambda seconds: None)
+    others = OtherRuns(looks)
+    booker = argparse.Namespace(config=Config())
+    results = [RoundResult("18:00 - 19:00", True, "booked", 5.0, "S6 - Sân tennis")]
+    clock = StepClock(start + cli.TICKETS_AFTER)
+    cli.read_tickets(booker, results, start.date(), start, clock, others, lambda kind, **data: None)
+    assert waits == [start + timedelta(minutes=3)]
+    return others, clock.at - start
+
+
+def test_tickets_wait_for_the_other_machines_to_end_their_rounds(monkeypatch, reader):
+    others, _ = read_after(monkeypatch, looks=5)
+    assert others.looks < 0
+    assert len(others.saved) == 1
+    (wanted,) = reader.made[0].wanted
+    assert wanted.court == "S6 - Sân tennis"
+
+
+def test_tickets_are_read_all_the_same_after_a_run_that_was_killed(monkeypatch, reader, caplog):
+    with caplog.at_level(logging.WARNING):
+        others, after = read_after(monkeypatch, looks=10_000)
+    assert len(others.saved) == 1
+    assert after >= timedelta(minutes=3, seconds=30)
+    # Before the quiet time of the start ends, with the time reading may take.
+    assert after + timedelta(seconds=cli.TICKETS_SECONDS) <= timedelta(minutes=5, seconds=5)
+    assert "still recorded as booking" in caplog.text
+
+
+def test_a_run_by_hand_waits_for_the_other_machines_too(monkeypatch, reader):
+    monkeypatch.setattr(cli.time, "sleep", lambda seconds: None)
+    others = OtherRuns(3)
+    results = [RoundResult("18:00 - 19:00", True, "booked", 5.0)]
+    clock = StepClock(datetime(2026, 11, 22, 10, 0))
+    booker = argparse.Namespace(config=Config())
+    day = datetime(2026, 11, 24).date()
+    cli.read_tickets(booker, results, day, None, clock, others, lambda kind, **data: None)
+    assert others.looks < 0
+    assert len(others.saved) == 1
+
+
+@pytest.mark.parametrize(
+    ("args", "times"),
+    [((), 1), (("--dry-run",), 0), (("--instance", "1"), 0)],
+    ids=["real run", "dry run", "a run beside the first"],
+)
+def test_a_real_run_forgets_the_expired_tickets_once_all_is_done(
+    monkeypatch, tmp_path, reader, data_home, closed_mumu, args, times
+):
+    (tmp_path / "missing.toml").write_text("[[instances]]\nmumu_index = 1\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "start_instances", lambda *args, **kwargs: [])
+    order = []
+    monkeypatch.setattr(cli, "wait_for_instances", lambda instances: order.append("all done"))
+    monkeypatch.setattr(cli, "forget_expired", lambda data, today: order.append((data.root, today)))
+    run_with_booker(monkeypatch, tmp_path, BOOKED[:1], args)
+    assert order == ["all done"] + [(data_home, FixedDatetime.now().date())] * times
+
+
+def short_quota(used):
+    def read_quota(booker, play_date, moment, report, slots=None):
+        return Quota("Sân Tennis", play_date.isoformat()[:7], used, play_date.isoformat(), 1)
+
+    return read_quota
+
+
+@pytest.mark.parametrize(("used", "warned"), [(7, True), (6, False)])
+def test_a_quota_too_short_for_the_next_run_is_told(
+    monkeypatch, tmp_path, reader, data_home, closed_mumu, windows_notifications, used, warned
+):
+    monkeypatch.setattr(cli, "read_quota", short_quota(used))
+
+    run_with_booker(monkeypatch, tmp_path, BOOKED)
+
+    titles = [title for title, _ in windows_notifications]
+    assert ("Lần đặt tới thiếu hạn mức" in titles) is warned
+    if warned:
+        body = windows_notifications[-1][1]
+        assert body.startswith("Sân Tennis còn 1/8 của tháng 10/2026, mà đã chọn 2 khung giờ")

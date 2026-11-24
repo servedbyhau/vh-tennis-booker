@@ -1,9 +1,10 @@
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Overview } from "../api/types";
 import { paths } from "../paths";
 import { renderApp } from "../test/app";
 import { reply, requestsTo } from "../test/backend";
+import { account, customer } from "../test/customers";
 import { step } from "../test/liveSocket";
 import { overview } from "../test/overview";
 import { runSummary } from "../test/runs";
@@ -57,7 +58,7 @@ describe("HomePage status line", () => {
       schedule: { ...status.schedule, enabled: false, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Còn 2 việc thiết lập, xem khung bên phải");
+    expect(await statusLine()).toHaveTextContent("Còn 2 việc chuẩn bị, xem Hướng dẫn");
   });
 
   it("says when Windows keeps the PC from waking", async () => {
@@ -75,7 +76,88 @@ describe("HomePage status line", () => {
       schedule: { ...status.schedule, enabled: true, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Chưa chạy thử đạt · bấm Chạy thử ngay");
+    expect(await statusLine()).toHaveTextContent("Chưa chạy thử đạt · bấm Chạy thử");
+  });
+
+  it("names the machines that book without an account, once there are some to choose", async () => {
+    const an = customer("a1", { accounts: [account("b1"), account("b2")] });
+    renderApp(paths.overview, {
+      "GET /api/status": reply(overview()),
+      "GET /api/settings": reply(settings()),
+      "GET /api/runs": reply([]),
+      "GET /api/customers": reply([an]),
+    });
+
+    await waitFor(async () =>
+      expect(await statusLine()).toHaveTextContent("● Máy 1 chưa chọn tài khoản"),
+    );
+    const tabs = within(screen.getByRole("group", { name: "Máy" }));
+    expect(tabs.getByRole("button", { name: "Máy 1, chưa chọn tài khoản" })).toBeVisible();
+    // Off: it books nothing.
+    expect(tabs.getByRole("button", { name: "Máy 2, đang tắt" })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Tài khoản/ }).className).toMatch(/remind/);
+  });
+
+  it("names a machine whose account has too few left for its slots", async () => {
+    const read = { utility: "Sân Tennis", sport: "tennis", month_limit: 8, read_at: "" };
+    const quota = [{ ...read, month: "2026-10", used: 7 }];
+    const an = customer("a1", { accounts: [account("b1", { device: 0, quota })] });
+    renderApp(paths.overview, {
+      "GET /api/status": reply(overview()), // books for 18/10, two slots
+      "GET /api/settings": reply(settings()),
+      "GET /api/runs": reply([]),
+      "GET /api/customers": reply([an]),
+    });
+
+    const tabs = within(await screen.findByRole("group", { name: "Máy" }));
+    expect(
+      await tabs.findByRole("button", { name: "Máy 1, tài khoản không đủ hạn mức" }),
+    ).toBeVisible();
+    // The line at the top leaves it to the tab and the account.
+    expect(await statusLine()).not.toHaveTextContent("hạn mức");
+    expect(screen.getByRole("button", { name: /^Tài khoản/ }).className).toMatch(/remind/);
+  });
+
+  it("names the machines that would book the same court and slot, first", async () => {
+    const same = {
+      mumu_index: 1,
+      slots: ["16:00 - 17:00"],
+      subdivision: "",
+      sport: "tennis",
+      court: "S6 - Sân tennis",
+      venue_keyword: "Origami",
+      days: [],
+    };
+    tickSteps({ mumu: true, app: true, login: true });
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        mumu: true,
+        app: true,
+        login: true,
+        machines: { "1": { app: true, login: true } },
+      }),
+    );
+    renderApp(paths.overview, {
+      "GET /api/status": reply(overview()),
+      "GET /api/settings": reply(settings({ instances: [same] })),
+      "GET /api/runs": reply([]),
+      "GET /api/customers": reply([customer("a1", { accounts: [account("b1")] })]),
+    });
+
+    await waitFor(async () =>
+      expect(await statusLine()).toHaveTextContent("● Máy 1, 2 trùng Tennis S6 lúc 16:00"),
+    );
+    const tabs = within(screen.getByRole("group", { name: "Máy" }));
+    expect(
+      tabs.getByRole("button", {
+        name: "Máy 2, trùng sân và giờ với máy khác, chưa chọn tài khoản",
+      }),
+    ).toBeVisible();
+    // Where the choice is made too.
+    expect(
+      screen.getByText("Máy 2 cũng chọn sân này lúc 16:00–17:00: chỉ một máy được"),
+    ).toBeVisible();
   });
 
   it("asks to turn the daily booking on once a dry run passed", async () => {
@@ -312,68 +394,18 @@ describe("HomePage live run", () => {
     );
 
     expect(await screen.findByText("Đang thiết lập tự động")).toBeInTheDocument();
-    const ticket = await screen.findByRole("region", { name: "Lần đặt tiếp theo" });
-    expect(within(ticket).getByText("Chạy thử tạm khóa cho tới khi xong")).toBeInTheDocument();
-    expect(within(ticket).getByRole("button", { name: "Chạy thử ngay" })).toBeDisabled();
+    expect(await screen.findByRole("region", { name: "Lần đặt tiếp theo" })).toBeInTheDocument();
+    const setup = screen.getByRole("region", { name: "Thiết lập" });
+    expect(within(setup).getByText("Chạy thử tạm khóa cho tới khi xong")).toBeInTheDocument();
+    expect(within(setup).getByRole("button", { name: "Chạy thử" })).toBeDisabled();
   });
 });
 
 describe("HomePage panel", () => {
-  it("opens on the History once everything is set up", async () => {
+  it("is the Setup alone, with no tabs", async () => {
     renderOverview(overview());
     await statusLine();
-
-    expect(screen.getByRole("tab", { name: "Lịch sử" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
-  });
-
-  it("opens on the Setup while a task is left, with their count", async () => {
-    tickSteps({ mumu: true, app: true, login: false });
-    renderOverview(overview());
-
-    expect(await screen.findByRole("tab", { name: "Thiết lập, còn 1 việc" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(screen.getByRole("tabpanel", { name: "Thiết lập, còn 1 việc" })).toBeInTheDocument();
-  });
-
-  it("opens on the Setup until the daily booking is on", async () => {
-    const status = overview();
-    renderOverview({ ...status, schedule: { ...status.schedule, enabled: false } });
-
-    // The panel waits on the History until the status comes in.
-    await waitFor(() =>
-      expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveAttribute(
-        "aria-selected",
-        "true",
-      ),
-    );
-  });
-
-  it("opens on the History when the address asks for a run", async () => {
-    tickSteps({ mumu: false, app: false, login: false });
-    renderApp(`${paths.overview}?run=26`, { "GET /api/status": reply(overview()) });
-
-    expect(await screen.findByRole("tab", { name: /^Lịch sử/ })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-  });
-
-  it("changes tabs on a press and with the arrow keys", async () => {
-    renderOverview(overview());
-    await statusLine();
-    const history = screen.getByRole("tab", { name: "Lịch sử" });
-
-    fireEvent.click(screen.getByRole("tab", { name: "Thiết lập" }));
-    expect(screen.getByRole("tab", { name: "Thiết lập" })).toHaveAttribute("aria-selected", "true");
-
-    fireEvent.keyDown(screen.getByRole("tab", { name: "Thiết lập" }), { key: "ArrowLeft" });
-    expect(history).toHaveAttribute("aria-selected", "true");
-    expect(history).toHaveFocus();
+    expect(screen.getByRole("region", { name: "Thiết lập" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
   });
 });

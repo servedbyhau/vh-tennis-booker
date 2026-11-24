@@ -17,11 +17,12 @@ Python reads each screen in one accessibility dump and finds every button by its
 small Android instrumentation driver written for the project does the taps, with
 uiautomator2 as a fallback. It uses no private API and does not modify the app.
 
-**The result.** It has booked real courts at 06:00 since 2026-10-10. On 2026-11-01,
-two MuMu instances booked four slots in parallel, at Origami and BS; each first slot reached
-its ticket within five seconds. Beside the booking engine there is a local FastAPI backend
-and a React and TypeScript UI, in Vietnamese and English, for the settings, the schedule
-and the history of every run, in a Tauri window.
+**The result.** It has booked real courts at 06:00 since 2026-10-10, since 2026-11-22 with
+three MuMu instances side by side, each with its own account, court and slots; the first slot
+usually has its ticket five to six seconds after the start. Beside the booking engine there is a
+local FastAPI backend and a React and TypeScript UI, in Vietnamese and English, for the
+settings, the schedule, the people booked for with their accounts, the tickets and the history of
+every run, in a Tauri window.
 
 It books tennis and the other courts a subdivision offers (multi-purpose, volleyball, table
 tennis, basketball, football, pickleball, badminton), for the Origami and BS subdivisions so
@@ -32,9 +33,9 @@ itself with one button.
 > An educational, personal project, not affiliated with or endorsed by Vinhomes.
 
 ![The app during a dry run: the ticket shows round 2 of 2 being booked large, one slot
-through, and each step as it happens; the History is beside it](docs/img/running.png)
+through, and each step as it happens; a list of the last runs is beside it](docs/img/running.png)
 
-<sub>The app during a dry run. All screenshots show made-up data.</sub>
+<sub>The app during a dry run, as of 1.0.0. All screenshots show made-up data.</sub>
 
 ## Highlights
 
@@ -45,9 +46,20 @@ through, and each step as it happens; the History is beside it](docs/img/running
 - **Reports only what the app showed.** A slot counts as booked only once the app shows its
   ticket (the booking confirmation); otherwise the round fails with the app's own message,
   or as "outcome unknown", never as booked.
-- **Built for a slow app and a fragile emulator.** A tap the app ignores is repeated, a slow
-  screen is awaited up to 30 s, and a frozen emulator ends the run after 60 s instead of
+- **Built for a slow app and a fragile emulator.** A tap the app ignores is repeated and a slow
+  screen is awaited up to 30 s. Until two minutes before the start, whatever fails is repaired,
+  a frozen emulator by restarting it; during the rounds one ends the run after 60 s instead of
   hanging until the next morning.
+- **Books with the right account.** Before the start a run reads the phone number logged in, and
+  logs out and in again if it is not the chosen account's; one that cannot be sure books nothing.
+- **Tickets at hand.** After the rounds the app's own list of tickets is read and each new ticket
+  pictured with its QR code, kept by customer until its day of play is over.
+- **The quota in sight.** While getting ready and after the tickets, a run counts on the app's
+  history page what the account used of the month's 8 bookings and the day's 2, and warns when
+  fewer are left than the slots chosen; the quota section and each machine's card show what is
+  left. When the next day's run would have too few, a notification, the machine's tab and its
+  account say so, so another account can be chosen in time; a run never changes the account by
+  itself.
 - **Several accounts at once.** Each extra MuMu instance books with its own account, court
   and slots, in a process of its own, so one that fails holds up no other.
 - **Tested without a device.** Fakes replace the emulator, ADB, the clock and Task
@@ -132,12 +144,13 @@ Then:
 2. Run it. The installer is not code-signed, so Windows SmartScreen may say it protected your
    PC: choose **More info**, then **Run anyway**. It installs for you alone, without
    administrator rights.
-3. Open **Court Booker** from the Start menu. The **Setup** tab lists what only you can do
+3. Open **Court Booker** from the Start menu. The **Guide** page lists what only you can do
    (install MuMu and the Vinhomes app, log in); tick each step once it is done.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
-5. Press **Dry run now** between 06:00 and 21:00, while the Vinhomes app takes bookings. It
-   walks the whole booking and stops before the final confirmation, so nothing is booked.
+5. In the **Setup** beside it, press **Dry run** between 06:00 and 21:00, while the Vinhomes
+   app takes bookings. It walks the whole booking and stops before the final confirmation, so
+   nothing is booked.
 6. Once it has passed, turn **Auto-book** on. Every morning the PC wakes at the wake time and
    books at 06:00; the window does not need to be open.
 
@@ -145,8 +158,8 @@ The app is in Vietnamese by default, English is one click away.
 
 ### Update
 
-The version installed shows beside the app's name, at the top left. When a newer version is out, the top of the window shows **Update to x.y.z**. One press
-downloads it, installs it over the app and opens it again; your settings, history and
+The version installed shows beside the app's name, at the top left. When a newer version is
+out, the top of the window shows **Update to x.y.z**. One press downloads it, installs it over the app and opens it again; your settings, history and
 morning booking stay. The button waits while a run is going on and around 06:00.
 
 ### Uninstall
@@ -158,30 +171,79 @@ remove them too.
 
 ## Using the app
 
-The app is one screen, without a menu:
+The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** and
+**Hướng dẫn / Guide**. On the first:
 
-- **The line at the top** says whether the next start is ready, or the one thing to do first.
+- **The line at the top** says whether the next start is ready, or the one thing to do first:
+  the last steps of the setup, the daily switch, a machine that books with no account chosen, or
+  two machines that would book the same court and slot.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
-  on top the daily switch (it creates or removes the Windows task, once a dry run passed)
-  and what is set, the play day, court and slots; below, the subdivision, the sport, the
-  court and up to two slots to choose, saved on each press, and a dry run. During a run it
-  shows the steps as they happen.
-- **Lịch sử / History** on the right: each run in two lines, its play day, court and count
-  ("2/2"), then every slot booked or not and when it started (real bookings, dry runs on
-  request); one click opens the reasons, the steps and the technical log. A booking that
-  stopped on a failure the app did not explain also saved a screenshot of MuMu in
-  `%LOCALAPPDATA%\CourtBooker\logs\screens`.
-- **Thiết lập / Setup** beside it: the steps only you can do (install MuMu and the Vinhomes
-  app, log in), ticked by you, and a short guide; MuMu's place and screen and waking the PC
-  need no step (the runs and the daily switch see to them). Under **Tự đăng nhập lại / Log in
-  again by itself** you may save the Vinhomes phone number and password of each machine: the
-  Vinhomes app logs out when the account logs in on another device, and a booking that finds
-  it logged out then logs in again by itself, trying the password once. The password is kept
-  by Windows (Credential Manager) for your Windows account and never shown again. It
-  opens first, with a count, while anything is left. The Windows notification switch sits on
-  the ticket, beside the daily switch.
-- **A tab per machine** on top of the ticket: "Máy 2" (a second MuMu instance, logged in to
-  another account) books alongside the first once its "Dùng máy này" switch is on.
+  on top what is set, the play day, court and slots; below, the subdivision, the sport, the
+  court and up to two slots to choose, saved on each press. During a run it shows the steps as
+  they happen; those of the 06:00 race (from a minute before to the last slot) show once it is
+  over, so writing them takes nothing from the booking.
+- **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
+  once a dry run passed), the Windows notification, the account the machine books with (its phone
+  number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
+  window brought to the front), and a dry run. Before booking, a run reads the phone number logged in on the
+  machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
+  once; a machine that cannot be sure books nothing.
+- **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at
+  least: the others (each logged in to another account) book alongside the first once their
+  switch in the Setup is on.
+
+On the second:
+
+- **Yêu cầu / Requests**: what each customer asks to book (the court, up to two slots, the days
+  of the week, the machine that books it, a note). Applying one sets that machine to book it,
+  days included, from the next 06:00 run; a machine that books with another customer's account
+  is pointed out. A machine with days books only for those days of play.
+- **Tổng quan / Overview**, shown first: the slots the 06:00 runs booked this month, the tickets
+  to play and the machines booking; every machine in a line with whose account it books with,
+  what it books and how its last 06:00 run went; the tickets of the next three days; and what to
+  look at (the daily booking off, a machine without an account, two machines on one court and
+  slot, an account short of quota, a last run that failed), each leading where it is set right.
+- **Máy / Machines**: a card per machine with its account, what it books, its quota, its last
+  06:00 run, and buttons that open its MuMu and read its quota again.
+- **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
+  the Vinhomes accounts they gave, each with its whole phone number and a button that copies it. A
+  search over the list finds a customer by name or contact, or an account by its name or phone
+  number (marked once found). The quotas are in the quota section. The passwords are kept by
+  Windows (Credential Manager) for your Windows account; an account's form shows its own.
+- **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
+  by day of play or as a week (a column a day, a row a slot), of one sport or every one, every
+  ticket or those not sent to their customer yet, with their slot, court, status, whose account they
+  are of and whether they were sent; a press opens the ticket's picture, where a button marks it
+  sent
+  with its QR code, and buttons save it as a file and copy it, to paste it where it is sent. A
+  ticket still to play has a button that cancels it in the Vinhomes app, after a question: the
+  machine its account is on opens the ticket and cancels it (about a minute), and the quota
+  comes back. Not around the 06:00 booking, nor while a run uses that machine. They are read from the Vinhomes app at 06:03,
+  once every machine has booked, and stay on this PC, the pictures in
+  `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
+- **Hạn mức / Quota**: the customers on the left (with the same search as the customers' page),
+  one marked when an account has one booking or none left of a sport; beside them the chosen
+  customer's accounts in rows and their sports in columns, what each booked in the month booked
+  for (or another month read), "3/8", or "Full" at the limit, and a button that reads an account
+  on a machine again.
+- **Thu tiền / Money**: what the customers owe, a month of play at a time. Each ticket a
+  customer's account booked becomes a charge, priced by the price list (a normal and a golden
+  price a sport, the golden hours 17:00-21:00 unless changed), or by an amount set by hand; a
+  cancelled ticket owes nothing, nor a customer booked for free (your own account). Each
+  customer's tickets show with their price and whether paid, with a button that marks them all
+  paid and one that copies the statement to paste in a chat. The overview shows what is left to
+  collect this month.
+- **Thống kê / Statistics**: what the 06:00 runs of the last 30 days tell: the share of slots
+  booked by machine and by slot, how long a slot booked took on average, and why slots were lost.
+- **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every
+  slot booked or not and when it started (real bookings, dry runs on request); a press shows the
+  reasons, the steps and the technical log beside the list. A booking that stopped on a failure the
+  app did not explain also saved a screenshot of MuMu in `%LOCALAPPDATA%\CourtBooker\logs\screens`.
+
+The third, **Guide**, says how to use the app, what happens every morning and what to do when
+something goes wrong. It also holds the steps only you can do (install MuMu and the Vinhomes app,
+log in), ticked by you for each machine and counted in red while any is left; MuMu's place and
+screen and waking the PC need no step (the runs and the daily switch see to them).
 
 <p>
   <img src="docs/img/home.png" width="49%" alt="Ready for 06:00: the ticket with the daily
@@ -238,7 +300,8 @@ The UI ships the fonts [Bricolage Grotesque](https://github.com/ateliertriay/bri
 (© 2022 The Bricolage Grotesque Project Authors) and
 [IBM Plex Mono](https://github.com/IBM/plex) (© 2017 IBM Corp.), both under the
 [SIL Open Font License 1.1](https://openfontlicense.org), through the
-[Fontsource](https://fontsource.org) packages.
+[Fontsource](https://fontsource.org) packages. Its icons are [Lucide](https://lucide.dev)'s
+([ISC](https://lucide.dev/license)), through `lucide-react`.
 
 ## License
 

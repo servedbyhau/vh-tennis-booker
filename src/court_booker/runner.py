@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
@@ -21,6 +21,8 @@ from court_booker.errors import (
 )
 from court_booker.events import EventKind, Reporter
 from court_booker.flow import Booker, log_screen
+from court_booker.opening import DeviceClock, Opening, OpeningWatch, read_device_clock
+from court_booker.quota import BEFORE, read_quota
 from court_booker.ready import Supervisor, setup_deadline
 
 logger = logging.getLogger(__name__)
@@ -37,10 +39,15 @@ The app answered an early tap with a notice on 2026-10-19 (up to 0.76 s early). 
 0.1 s margin reduces that risk, but a notice still appeared on 2026-10-20 with the PC
 clock behind NTP. Which clock the app uses for opening hours remains unverified.
 The 06:00 logs show where the tap fell ("Start reached"); retaps handle a notice."""
+NEAR_START = timedelta(minutes=2)
+"""How near the start a run begins for the account not to be read again: that takes 3-5 s."""
 SCREENS_KEPT = 30
 """Screenshots of failures kept in the log folder's ``screens``; each holds personal data, so
 they stay on this PC and the oldest go."""
 QUOTA_SKIPPED = "Skipped: the booking quota is used up"
+QUOTA_LATEST = timedelta(minutes=5)
+"""How near the start the quota is no longer read: the read and getting back to the home
+screen take under a minute, and the warm-up must find the app ready."""
 """Why a round after the app's quota notice failed without running."""
 
 
@@ -109,8 +116,11 @@ def run_booking(
     results: list[RoundResult] | None = None,
     report: Reporter | None = None,
     login_for: Callable[[], Login | None] | None = None,
+    account_seen: Callable[[], str | None] | None = None,
     screens: Path | None = None,
     supervisor: Supervisor | None = None,
+    on_booker: Callable[[Booker], None] | None = None,
+    on_race: Callable[[], None] | None = None,
 ) -> list[RoundResult]:
     """Get ready, wait for ``start`` if given, then book every configured slot.
 
@@ -122,35 +132,54 @@ def run_booking(
     :data:`~court_booker.config.DAYS_AHEAD` after the start date. After the app's quota
     notice the slots left fail unrun. Results are appended to ``results`` as rounds finish,
     so an interrupted caller still sees them; progress goes to ``report`` as events.
-    ``login_for`` reads the saved login, typed in if the app logged out.
+    ``login_for`` reads the saved login: the app is logged in with it if it is logged out or
+    with another account. ``account_seen`` reads the masked phone number an earlier run saw.
 
     A real run that stops on a failure the app did not explain saves the screen in
     ``screens`` (:func:`save_screen`): when the app is not made ready, or when such a failure
     ends the last round. One in an earlier round saves none, to keep the next round on time;
     a dry run and a frozen emulator save none.
+
+    ``on_booker`` gets the booker before anything runs, for a caller that goes on with
+    the app after the rounds (:mod:`court_booker.tickets`). ``on_race`` is called when the
+    warm-up of a timed run begins: from then to the end of the rounds only the booking should
+    run (the caller holds the history then). A run without ``start`` races no one, and its
+    steps show as they happen.
     """
     results = [] if results is None else results
     report = Reporter() if report is None else report
     clock = NtpClock() if clock is None else clock
+    race = on_race or (lambda: None)
     if supervisor is None:
         supervisor = Supervisor(config, report=report, device=device, now=clock.now)
     device = supervisor.device
-    booker = Booker(device, config, report, login_for=login_for)
+    booker = Booker(device, config, report, login_for=login_for, account_seen=account_seen)
+    if on_booker is not None:
+        on_booker(booker)
     shots = None if dry_run else screens
     deadline = setup_deadline(start, config.warm_up_seconds, clock.now())
+    # Started with less time than getting ready is given: the account is not read again if
+    # an earlier run saw it.
+    booker.hurry = start is not None and start - clock.now() < NEAR_START
+    target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
+    android_clock = None
     try:
         supervisor.prepare(booker, deadline)
         report(EventKind.APP_READY)
+        if start is None or clock.now() < start - QUOTA_LATEST:
+            check_quota(booker, supervisor, deadline, target, len(config.slots), report)
         if start is not None:
             report(EventKind.WAITING, until=start.isoformat(timespec="seconds"))
             # Wait on the home screen, checked every minute until the deadline, then load the
             # utilities list shortly before the start, so the app has just talked to its
             # server when the first tap comes.
             supervisor.watch(booker, deadline, lambda moment: wait_until(moment, clock.now))
+            race()
             wait_until(start - timedelta(seconds=config.warm_up_seconds), clock.now)
             # A fresh answer leaves the counter only the warm-up to drift, and the log shows
             # how far Windows set the PC clock since the first one.
             clock.measure()
+            android_clock = device_clock(supervisor, clock)
             # A failure here is repaired as one while getting ready (the 2026-11-17 popup, a
             # driver lost after the last check), with time left for the read before the start.
             supervisor.run_step(booker, booker.locate_entry, start - WARM_UP_REPAIRS_END)
@@ -163,7 +192,6 @@ def run_booking(
         if not isinstance(exc, DeviceNotRespondingError) and getattr(device, "connected", True):
             save_screen(device, shots, report, config.mumu_index)
         raise
-    target = (start or datetime.now()).date() + timedelta(days=DAYS_AHEAD)
     logger.info(
         "Target date %s, slots: %s%s",
         target.isoformat(),
@@ -179,7 +207,13 @@ def run_booking(
         dry_run=dry_run,
     )
 
+    # The first round's calendar is timed for the log of the opening (court_booker.opening).
+    watch = OpeningWatch(booker.report, clock.now) if start is not None else None
+    first_tap = None
     for index, slot in enumerate(config.slots, start=1):
+        if watch is not None:
+            booker.report = watch if index == 1 else watch.report
+            first_tap = first_tap or clock.now()
         logger.info("Round %d/%d: %s", index, len(config.slots), slot)
         report(EventKind.SLOT_STARTED, slot=slot, round=index, rounds=len(config.slots))
         started = time.perf_counter()
@@ -238,7 +272,62 @@ def run_booking(
         if quota_full:
             skip_rounds(config.slots[index:], results, report)
             break
+    if watch is not None and start is not None:
+        booker.report = watch.report
+        report_opening(
+            Opening(
+                start + OPENING_MARGIN,
+                clock.offset,
+                android_clock,
+                device_clock(supervisor, clock),
+                first_tap,
+                watch.opened,
+                watch.attempt,
+            ),
+            report,
+        )
     return results
+
+
+def device_clock(supervisor: Supervisor, clock: NtpClock) -> DeviceClock | None:
+    """Read Android's clock against NTP time, for the log; ``None`` when it cannot be read.
+
+    Read during the warm-up and once the rounds are over only, never between them.
+    """
+    # A supervisor handed a device (no MuMu of its own) has no adb.
+    adb, serial = getattr(supervisor, "adb", None), getattr(supervisor, "serial", None)
+    if adb is None or serial is None:
+        return None
+    return read_device_clock(lambda: adb.device_time(serial), clock.now)
+
+
+def report_opening(opening: Opening, report: Reporter) -> None:
+    """Log what the clocks and the first round told at the opening, and report it."""
+    try:
+        logger.info("%s", opening.describe())
+        report(EventKind.OPENING_MEASURED, **opening.event_data())
+    except Exception:  # the log only: the rounds are over and stay as they are
+        logger.warning("The opening was not logged", exc_info=True)
+
+
+def check_quota(
+    booker: Booker,
+    supervisor: Supervisor,
+    deadline: datetime,
+    target: date,
+    slots: int,
+    report: Reporter,
+) -> None:
+    """Read what is left of the quota, then make sure the app is back on its home screen.
+
+    It only reports (:mod:`court_booker.quota`): a failure logs, and the app is made ready
+    again as while getting ready, until ``deadline``.
+    """
+    try:
+        read_quota(booker, target, BEFORE, report, slots)
+    except Exception as exc:  # the booking goes on without it
+        logger.warning("Quota not read: %s", exc)
+    supervisor.run_step(booker, booker.check_home, deadline)
 
 
 def skip_rounds(slots: list[str], results: list[RoundResult], report: Reporter) -> None:

@@ -5,9 +5,7 @@
   "common": {
     "loading": "Loading…",
     "retry": "Try again",
-    "more": "Show more",
-    "on": "On",
-    "off": "Off"
+    "more": "Show more"
   },
   "language": {
     "label": "Language",
@@ -23,14 +21,23 @@
     "locked": "Update when no run is going on, outside {{from}}–{{to}}",
     "failed": "The update did not go through; try again later"
   },
+  "nav": {
+    "label": "Pages",
+    "booking": "Booking",
+    "management": "Management",
+    "guide": "Guide",
+    "left": ", {{count}} left"
+  },
   "pages": {
     "overview": {
       "title": "Overview",
       "status": {
-        "setupLeft": "Setup: {{count}} left, see the panel on the right",
-        "noDryRun": "No dry run passed yet · press Dry run now",
+        "setupLeft": "Setup: {{count}} left, see the Guide",
+        "noDryRun": "No dry run passed yet · press Dry run",
         "scheduleOff": "Dry run passed · turn on Auto-book",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
+        "noAccount": "Machine {{machines}}: no account chosen",
+        "clash": "Machine {{machines}}: same {{court}} at {{start}}",
         "ready": "Ready for {{time}} {{when}}"
       },
       "live": {
@@ -39,6 +46,8 @@
           "dry_run": "Dry run in progress",
           "manual": "Booking (started by hand)",
           "setup": "Auto setup in progress",
+          "cancel": "Cancelling a ticket in the Vinhomes app",
+          "quota": "Reading a quota in the Vinhomes app",
           "other": "A run is in progress"
         },
         "locked": "Dry run is locked until it ends"
@@ -46,13 +55,6 @@
     },
     "ticket": {
       "title": "Next booking",
-      "auto": "Book every morning",
-      "autoShort": "Auto-book",
-      "notifyShort": "Notify",
-      "notify": "Result notifications",
-      "notifyHint": "In the corner of the Windows screen, after every run",
-      "on": "ON",
-      "off": "OFF",
       "day": "Day",
       "chosenSlots": "Slots",
       "offTitle": "Off",
@@ -61,10 +63,11 @@
       "instanceName": "Machine {{number}}",
       "mumuName": "MuMu {{index}}",
       "instanceLeft": "setup left",
+      "instanceClash": "same court and slot as another machine",
+      "instanceNoAccount": "no account chosen",
+      "instanceQuota": "account short of quota",
       "instanceOff": "off",
-      "use": "Use this machine",
-      "useLabel": "Book with machine {{number}} (MuMu {{index}})",
-      "useOff": "Machine {{number}} is off: runs leave MuMu {{index}} alone. Turn it on once MuMu {{index}} is logged in to another account; it takes machine 1's choices until you change them.",
+      "useOff": "Machine {{number}} is off. Turn it on in the Setup to book with it.",
       "subdivision": "Subdivision",
       "byAccount": "From the account",
       "sport": "Sport",
@@ -76,16 +79,7 @@
       "saved": "✓ Saved",
       "full": "{{max}} slots already: remove one first",
       "oneSlot": "Keep at least one slot",
-      "dryRun": {
-        "button": "Dry run now",
-        "starting": "Starting…",
-        "none": "No dry run yet. It takes about a minute and books nothing.",
-        "last": "Last dry run: {{when}} at {{time}}",
-        "passed": "passed",
-        "failed": "did not pass: {{reason}}",
-        "stopped": "stopped halfway",
-        "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
-      },
+      "clash": "Machine {{machines}} has this court at {{slot}} too: one of them gets it",
       "live": {
         "booking": "Booking for {{day}} · court {{court}}",
         "dryRun": "Dry run for {{day}} · court {{court}}",
@@ -97,9 +91,7 @@
         "running": "running",
         "waiting": "{{slot}} · waiting for its turn",
         "locked": "Court, slots and dry run open again when this ends. You can close this window."
-      },
-      "lockedTitle": "Not on yet",
-      "locked": "It turns on once a dry run has passed."
+      }
     },
     "history": {
       "title": "History",
@@ -114,8 +106,6 @@
       "runOn": "Run on {{day}}",
       "booked": "booked {{when}} · {{by}}",
       "dry": "dry run {{when}}",
-      "instance": "{{text}} · MuMu {{index}}",
-      "back": "← History",
       "slot": {
         "booked": "BOOKED",
         "failed": "NOT BOOKED",
@@ -125,26 +115,261 @@
       "done": "Done at {{time}} · took {{seconds}}",
       "through": "Stopped before \"Confirm\", nothing booked",
       "steps": "Every step",
-      "technical": "Technical details"
+      "technical": "Technical details",
+      "choose": "Choose a run on the left to see it."
     },
-    "panel": {
-      "title": "History and setup",
-      "setup": "Setup",
-      "left": ", {{count}} left"
+    "tickets": {
+      "title": "Tickets",
+      "customer": "Tickets of",
+      "all": "Every customer",
+      "unknown": "Not known",
+      "count": "Tickets: {{count}}",
+      "row": "{{slot}} · {{court}}",
+      "noPhoto": "no picture",
+      "empty": "No tickets yet. A booked ticket shows here until its day of play is over.",
+      "status": {
+        "registered": "REGISTERED",
+        "processing": "PROCESSING",
+        "cancelled": "CANCELLED"
+      },
+      "photo": "Picture of ticket {{name}}",
+      "photoNone": "No picture of this ticket. Only a ticket just booked by a run is pictured.",
+      "photoFailed": "The picture could not be opened.",
+      "place": "{{place}}/{{total}}",
+      "previous": "Previous ticket",
+      "next": "Next ticket",
+      "save": "Save",
+      "copy": "Copy the picture",
+      "copied": "Picture copied, paste it into Zalo",
+      "copyFailed": "The picture was not copied: save it instead",
+      "close": "Close",
+      "cancel": {
+        "button": "Cancel ticket",
+        "question": "Cancel {{name}}, {{day}}? The Vinhomes app on {{machine}} cancels it and gives the quota back.",
+        "yes": "Yes, cancel it",
+        "no": "No",
+        "running": "Cancelling the ticket in the Vinhomes app, about a minute…",
+        "done": "Ticket cancelled, the quota is given back.",
+        "noMachine": "The account of this ticket is on no machine, so it cannot be cancelled here. Choose it for a machine, or cancel it in the Vinhomes app.",
+        "failed": {
+          "1": "The Vinhomes app did not cancel this ticket. The activity log tells why.",
+          "2": "No cancel during the morning booking.",
+          "3": "This machine's MuMu did not open.",
+          "4": "The Vinhomes app on this machine is not ready; it may be logged out.",
+          "5": "This machine is busy with another run. Try again later.",
+          "other": "Something went wrong with the cancel. See the activity log."
+        }
+      },
+      "open": "View ticket",
+      "view": {
+        "label": "View",
+        "list": "List",
+        "week": "Week"
+      },
+      "sport": "Sport",
+      "allSports": "Every sport",
+      "unsentOnly": "Not sent yet",
+      "unsent": "not sent",
+      "sentMark": "sent",
+      "sent": "Sent to the customer",
+      "markSent": "Mark sent to the customer",
+      "slot": "Slot",
+      "noneKept": "No ticket matches the choices."
     },
-    "setup": {
+    "quota": {
+      "title": "Quota",
+      "month": "{{month}}",
+      "months": "Months",
+      "account": "Account",
+      "machine": "MuMu {{index}}",
+      "readAt": "Read at {{time}} on {{day}}",
+      "empty": "No account's quota has been read yet. It is read at each 06:00 run, or when asked.",
+      "used": "{{used}}/{{limit}}",
+      "full": "Full",
+      "readOn": "Read the quota again on {{machine}}",
+      "runningOut": "An account is running out"
+    },
+    "money": {
+      "title": "Money",
+      "months": "Month of play",
+      "month": "{{month}}",
+      "owed": "owed",
+      "paidSum": "paid",
+      "left": "left to pay",
+      "none": "No customer's ticket this month. Each ticket booked with a customer's account becomes a charge.",
+      "leftToPay": "{{left}} to pay",
+      "allPaid": "all paid",
+      "freeLabel": "Booked for free (your own account, say)",
+      "day": "Day",
+      "court": "Court",
+      "amount": "Amount",
+      "paid": "Paid",
+      "golden": "golden",
+      "cancelled": "cancelled",
+      "free": "free",
+      "noPrice": "no price",
+      "byHand": "set by hand",
+      "editAmount": "Change the amount",
+      "save": "Save",
+      "markPaid": "Paid for the ticket of {{day}}",
+      "unpaid": "not paid",
+      "paidMark": "paid",
+      "sums": "{{count}} tickets · {{owed}} owed · {{paid}} paid",
+      "unpriced": "{{count}} tickets without a price",
+      "unpricedHint": "{{count}} tickets without a price are not in the sums yet: type their prices in the price list and save it.",
+      "payAll": "All paid",
+      "copy": "Copy the statement",
+      "copied": "Copied, paste it in the chat",
+      "copyFailed": "Could not copy",
+      "statementTitle": "Statement of {{month}} · {{name}}",
+      "statementSums": "Total {{owed}} · paid {{paid}} · left {{left}}",
+      "pricesTitle": "Prices",
+      "goldenHours": "Golden hours",
+      "sport": "Sport",
+      "normal": "Normal",
+      "goldenPrice": "Golden",
+      "savePrices": "Save the prices",
+      "saved": "Saved",
+      "goldenFrom": "Golden hours from",
+      "goldenTo": "Golden hours to"
+    },
+    "stats": {
+      "title": "Statistics",
+      "since": "The 06:00 runs of the last {{days}} days ({{runs}} runs of the machines).",
+      "allBooked": "slots booked / tried",
+      "allRate": "share booked",
+      "allAverage": "average time of a slot booked",
+      "byMachine": "By machine",
+      "bySlot": "By slot",
+      "slot": "Slot",
+      "tried": "Tried",
+      "booked": "Booked",
+      "rate": "Share",
+      "average": "Average",
+      "reasons": "Why slots were lost",
+      "noLoss": "No slot lost."
+    },
+    "management": {
+      "sections": "Management sections"
+    },
+    "board": {
+      "title": "Overview",
+      "booked": "slots booked at 06:00 this month ({{rate}}%)",
+      "toPlay": "tickets to play",
+      "machinesOn": "machines booking",
+      "alertsTitle": "To look at",
+      "allWell": "All is ready for the next 06:00 run.",
+      "machinesTitle": "Machines",
+      "upcomingTitle": "Tickets of the next days",
+      "seeAll": "See all",
+      "machine": "Machine",
+      "customer": "Customer",
+      "books": "Books",
+      "last": "Last 06:00 run",
+      "alerts": {
+        "scheduleOff": "The daily booking is off: nothing is booked tomorrow.",
+        "noAccount": "{{machine}} has no account chosen, so it books nothing.",
+        "clash": "Machines {{machines}} book the same court and slot: one gets it at most.",
+        "short": "{{machine}}: its account has {{left}} left, fewer than its {{slots}} slots.",
+        "failed": "{{machine}}: its last booking failed. See the History.",
+        "unsent": "{{count}} tickets of today and tomorrow not sent to their customer yet."
+      },
+      "toCollect": "left to collect this month"
+    },
+    "machines": {
+      "title": "Machines",
+      "on": "Booking",
+      "off": "Off",
+      "account": "Account",
+      "noAccount": "None chosen",
+      "books": "Books",
+      "booksNothing": "Nothing (the machine is off)",
+      "quota": "Quota",
+      "quotaUnknown": "Not read yet",
+      "last": "Last 06:00 run",
+      "never": "None yet",
+      "noSlots": "No slot",
+      "runFor": "{{when}} · for {{day}}",
+      "open": "Open MuMu",
+      "change": "Change the court, slots or account on the Booking page",
+      "days": "Days"
+    },
+    "customers": {
+      "title": "Customers",
+      "name": "Customer or group name",
+      "representative": "Representative",
+      "contact": "Contact (phone, Zalo)",
+      "accounts": "Vinhomes accounts",
+      "accountCount": "Accounts: {{count}}",
+      "noFacts": "No contact yet.",
+      "empty": "No customers yet. Press + to add one.",
+      "editCustomer": "Edit",
+      "label": "Name",
+      "add": "Add customer",
+      "edit": "Edit",
+      "note": "Note",
+      "noAccounts": "No accounts yet.",
+      "addAccount": "Add account",
+      "phone": "Phone number",
+      "password": "Password",
+      "noLogin": "password lost, edit to type it again",
+      "save": "Save",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "keep": "Keep",
+      "inUse": "{{machines}} would have no account to book with.",
+      "removeCustomer": "Remove",
+      "removeAsk": "Remove {{name}}?",
+      "lostAccounts": "Accounts lost: {{count}}",
+      "lostPasswords": "The saved password goes too, for good.",
+      "lostFacts": "What is known of the customer goes too, for good.",
+      "search": "Find a customer, account name, phone",
+      "noMatch": "No customer matches.",
+      "copyPhone": "Copy the phone number",
+      "copied": "Copied",
+      "copyFailed": "Could not copy"
+    },
+    "requests": {
+      "title": "Requests",
+      "hint": "What each customer wants: the court, the slots, the days. Applied to a machine, it books exactly that from the next 06:00 run (with the account chosen for it).",
+      "add": "Add a request",
+      "edit": "Change the request",
+      "remove": "Remove the request",
+      "customer": "Customer",
+      "subdivision": "Subdivision",
+      "sport": "Sport",
+      "court": "Court",
+      "slots": "Slots (two at most)",
+      "days": "Days of play",
+      "machine": "Machine",
+      "noMachine": "No machine chosen",
+      "note": "Note",
+      "active": "In use",
+      "paused": "paused",
+      "save": "Save",
+      "cancel": "Cancel",
+      "apply": "Apply to the machine",
+      "applied": "Applied: the machine books it from the next 06:00 run.",
+      "otherAccount": "This machine books with another customer's account: choose the account on the Booking page.",
+      "none": "No request yet.",
+      "noCustomer": "Add a customer in Customers first."
+    },
+    "guide": {
+      "title": "Guide",
       "start": {
         "title": "Court Booker books for you at {{start}} every morning, even while you sleep",
         "steps": {
           "1": "Do the setup tasks below, once.",
-          "2": "Choose the sport, court and slots on the ticket on the left.",
+          "2": "On the Booking page, choose the account, sport, court and slots of each machine.",
           "3": "Press \"{{dryRun}}\"; once it passes, turn on \"{{daily}}\"."
         }
       },
-      "manual": {
-        "title": "Yours to do, once · tick when done",
-        "machine": "Machine {{number}} · MuMu {{index}}",
-        "shared": "for every machine",
+      "prepare": {
+        "title": "Getting ready",
+        "note": "Yours to do, once. Tick when done.",
+        "step": "Task",
+        "off": "off",
+        "box": "{{title}}, {{machine}}",
         "mumu": {
           "title": "MuMu Player is installed",
           "hint": "Download it from mumuplayer.com and install it like any program."
@@ -155,50 +380,70 @@
         },
         "login": {
           "title": "The Vinhomes app is logged in",
-          "hint": "The resident account. Save it below to have the app log in again by itself."
-        },
-        "off": "off, not counted in the setup"
-      },
-      "login": {
-        "title": "Log in again by itself",
-        "why": "The Vinhomes app logs out when the account logs in on another device. Once saved, a booking logs in again by itself; the password stays in Windows and never shows again.",
-        "saved": "Saved for {{phone}}",
-        "change": "Change",
-        "remove": "Remove",
-        "phone": "Phone number",
-        "password": "Password",
-        "save": "Save",
-        "cancel": "Cancel",
-        "failed": "Not saved, please try again."
-      },
-      "guide": {
-        "title": "Guide",
-        "howto": "How to use it, in 3 steps",
-        "morning": {
-          "title": "What happens every morning",
-          "text": "At {{wake}} the PC wakes and opens MuMu and the Vinhomes app. At {{start}} it books the slots chosen, usually within 15 seconds.",
-          "needs": "The PC needs to",
-          "needsText": "sleep rather than shut down, stay signed in to Windows, and be plugged in if it is a laptop."
-        },
-        "trouble": {
-          "title": "When something goes wrong",
-          "notRunning": {
-            "question": "Nothing ran this morning",
-            "answer": "The PC was shut down instead of asleep, or signed out of Windows."
-          },
-          "slotFull": {
-            "question": "It says \"{{slotFull}}\"",
-            "answer": "Someone booked that slot first. Choose another on the ticket."
-          },
-          "quota": {
-            "question": "The flat used up its bookings",
-            "answer": "8 slots a month at most. Cancel the ones you do not need in the Vinhomes app."
-          },
-          "loggedOut": {
-            "question": "The app was logged out",
-            "answer": "Save the account under \"Log in again by itself\" to have a booking log in. If the app says the password is wrong, save the right one: the app locks an account after 5 wrong passwords."
-          }
+          "hint": "A resident account. Choose one on the Booking page so the app logs in by itself."
         }
+      },
+      "morning": {
+        "title": "Every morning",
+        "wake": "The PC wakes and opens MuMu and the Vinhomes app. An account logged in that is not the chosen one is changed.",
+        "start": "The slots chosen are booked, usually within 15 seconds.",
+        "afterTime": "Then",
+        "after": "The tickets' pictures are in Management, under Tickets.",
+        "needs": "The PC needs to",
+        "needsText": "sleep rather than shut down, stay signed in to Windows, and be plugged in if it is a laptop."
+      },
+      "trouble": {
+        "title": "When something goes wrong",
+        "notRunning": {
+          "question": "Nothing ran this morning",
+          "answer": "The PC was shut down instead of asleep, or signed out of Windows."
+        },
+        "slotFull": {
+          "question": "It says \"{{slotFull}}\"",
+          "answer": "Someone booked that slot first. Choose another on the Booking page."
+        },
+        "quota": {
+          "question": "The flat used up its bookings",
+          "answer": "8 slots a month at most. Cancel the ones not needed in the Tickets (Cancel ticket): the quota comes back at once."
+        },
+        "loggedOut": {
+          "question": "The app was logged out",
+          "answer": "Choose the machine's account on the Booking page so a run logs in by itself. If the app says the password is wrong, change it on the Management page: the app locks an account after 5 wrong ones."
+        }
+      }
+    },
+    "panel": {
+      "setup": "Setup"
+    },
+    "setup": {
+      "daily": {
+        "title": "Auto-book",
+        "times": "Daily at {{start}}, PC wakes {{wake}}",
+        "locked": "It turns on once a dry run has passed"
+      },
+      "notify": "Result notifications",
+      "useLabel": "Book with machine {{number}} (MuMu {{index}})",
+      "open": "Open MuMu {{index}} to see its screen",
+      "account": {
+        "title": "Account",
+        "emptyHint": "Books with the one logged in on MuMu",
+        "none": "None",
+        "onMachine": "on {{machine}}",
+        "move": "Move it from {{from}} to {{to}}?",
+        "moveYes": "Move",
+        "moveNo": "No",
+        "manage": "Manage customers",
+        "otherCustomer": "Another customer"
+      },
+      "dryRun": {
+        "button": "Dry run",
+        "starting": "Starting…",
+        "none": "Takes about a minute, books nothing",
+        "last": "Last one: {{when}} {{time}}",
+        "passed": "passed",
+        "failed": "did not pass: {{reason}}",
+        "stopped": "stopped halfway",
+        "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
       }
     },
     "notFound": {
@@ -248,6 +493,8 @@
     "dry_run": "dry run",
     "manual": "by hand",
     "setup": "auto setup",
+    "cancel": "ticket cancel",
+    "quota": "quota read",
     "unknown": "unknown"
   },
   "setup": {
@@ -265,6 +512,23 @@
       "unknown": "could not be checked"
     }
   },
+  "quota": {
+    "left": "{{sport}} {{left}}/{{limit}} left",
+    "read": "{{used}}/{{limit}} of {{month}} used, read at {{time}} {{day}}",
+    "refresh": {
+      "button": "Read the quota again",
+      "running": "Reading the quota in the Vinhomes app, about a minute…",
+      "done": "Quota read again.",
+      "failed": {
+        "1": "The quota was not read in the app. See the activity log.",
+        "2": "No quota read during the morning booking.",
+        "3": "This machine's MuMu did not open.",
+        "4": "The Vinhomes app on this machine is not ready; it may be logged out.",
+        "5": "This machine is busy with another run. Try again later.",
+        "other": "Something went wrong reading the quota. See the activity log."
+      }
+    }
+  },
   "steps": {
     "run_started": {
       "scheduled": "Started by the schedule",
@@ -278,7 +542,9 @@
       "full": "The account is in the {{name}} subdivision",
       "plain": "Read the account's subdivision"
     },
-    "logged_in": "The app had logged out; logged in again",
+    "logged_in": "Logged in with the saved login",
+    "account_checked": "Right account {{phone}}",
+    "account_switched": "Changed to account {{phone}}",
     "repaired": {
       "restart_mumu": "Something failed while getting ready; restarted MuMu",
       "reconnect_adb": "Something failed while getting ready; connected to MuMu again",
@@ -287,6 +553,16 @@
       "other": "Something failed while getting ready; repaired it"
     },
     "screen_saved": "Saved the screen at the failure, in the logs\\screens folder",
+    "opening_measured": {
+      "full": "Opening: the calendar opened after {{seconds}} s, tap {{attempt}}",
+      "plain": "Opening logged"
+    },
+    "tickets_saved": "Read {{tickets}} tickets in the app, saved {{photos}} ticket pictures",
+    "quota_read": {
+      "full": "{{sport}} quota for {{month}}: {{used}}/{{monthLimit}} used, {{dayUsed}}/{{dayLimit}} on {{day}}, {{left}} left",
+      "plain": "Read the booking quota",
+      "short": ", {{short}} short of the {{slots}} slots chosen"
+    },
     "waiting": {
       "full": "Waiting until {{time}}",
       "plain": "Waiting for the start time"
@@ -355,6 +631,15 @@
       "plain": "Schedule on"
     },
     "schedule_disabled": "Schedule off",
+    "ticket_cancelled": {
+      "full": "Cancelled ticket {{code}}: {{slot}} {{day}}",
+      "plain": "Cancelled a ticket"
+    },
+    "ticket_not_cancelled": {
+      "full": "Could not cancel ticket {{code}}",
+      "plain": "Could not cancel a ticket"
+    },
+    "quota_not_read": "Quota not read",
     "other": "Other step ({{kind}})"
   },
   "runs": {
@@ -398,6 +683,7 @@
     "loggedOut": "The Vinhomes app is logged out and no login is saved",
     "loginRefused": "The app refused the saved login: {{message}}",
     "loginFailed": "Could not log in again",
+    "wrongAccount": "Not sure Vinhomes is in the right account, so nothing was booked",
     "notReady": "The Vinhomes app did not open",
     "appMissing": "The Vinhomes app is not installed on MuMu",
     "other": "Error, see the activity log"
@@ -411,10 +697,25 @@
     "app_not_ready": "The Vinhomes app is not ready. It may have been logged out.",
     "schedule": "Windows Task Scheduler could not be read or changed.",
     "notification": "Windows could not show the notification.",
+    "credentials": "Windows could not keep the password. Try again.",
+    "phone_taken": "A customer already has this number.",
+    "account_attached": "A machine books with it. Choose another one on the Booking page to remove it.",
+    "no_machine": "The account of this ticket is on no machine.",
+    "ticket_cancelled": "This ticket is cancelled already.",
     "engine": "Court Booker hit an error.",
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",
     "unreachable": "Court Booker's background service cannot be reached.",
     "http": "The background service gave an unexpected answer."
+  },
+  "days": {
+    "0": "Mon",
+    "1": "Tue",
+    "2": "Wed",
+    "3": "Thu",
+    "4": "Fri",
+    "5": "Sat",
+    "6": "Sun",
+    "every": "Every day"
   }
 }

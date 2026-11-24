@@ -1,10 +1,13 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import styles from "./Button.module.css";
 
-interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
-  /** `primary`: the one main action of a screen, filled with ink; `secondary`: outlined. */
-  variant?: "primary" | "secondary";
-  /** `large` for the action a whole section is about, such as "Chạy thử ngay". */
+interface ButtonProps extends ComponentPropsWithRef<"button"> {
+  /**
+   * `primary`: the one main action of a screen, filled with ink; `secondary`: outlined;
+   * `danger`: outlined in red, for what cannot be taken back.
+   */
+  variant?: "primary" | "secondary" | "danger";
+  /** `large` for the action a whole section is about, such as "Chạy thử". */
   size?: "normal" | "large";
 }
 
