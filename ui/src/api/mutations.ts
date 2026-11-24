@@ -5,6 +5,7 @@ import {
   addAccount,
   addCustomer,
   attachAccount,
+  cancelTicket,
   changeAccount,
   changeCustomer,
   detachAccount,
@@ -18,6 +19,21 @@ import {
   switchSchedule,
 } from "./endpoints";
 import { queryKeys } from "./queries";
+
+/**
+ * Start the cancel of a ticket in the app; how it goes is read from then on (`useCancelState`), and
+ * the Overview shows the machine taken meanwhile.
+ */
+export function useCancelTicket() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: cancelTicket,
+    onSuccess: async (state) => {
+      cache.setQueryData(queryKeys.cancel, state);
+      await cache.invalidateQueries({ queryKey: queryKeys.overview });
+    },
+  });
+}
 
 /** Save the booking settings; the overview shows the next booking with them. */
 export function useSaveSettings() {

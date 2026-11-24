@@ -521,6 +521,102 @@
         }
       }
     },
+    "/api/tickets/cancel": {
+      "get": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Read Cancel",
+        "description": "Show the cancel started last: which ticket, on which machine, and how it ended.",
+        "operationId": "read_cancel_api_tickets_cancel_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/{code}/cancel": {
+      "post": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Start Cancel",
+        "description": "Cancel the ticket in the app of the machine its account is on; it takes about a minute.\n\nRefused when the ticket is not recorded (404 ``not_found``) or cancelled already (409\n``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), from the wake\ntime to 5 minutes after the start (400 ``bad_request``), and while a run, a dry run or\nanother cancel goes on (409 ``lock_held``). The cancel checks again itself.",
+        "operationId": "start_cancel_api_tickets__code__cancel_post",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,20}$",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings": {
       "get": {
         "tags": [
@@ -1606,7 +1702,7 @@
           "runs"
         ],
         "summary": "Start Dry Run",
-        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run started last is\nstill running (it may not hold the lock yet). The dry run checks again itself.",
+        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run or ticket cancel\nstarted last is still running (they may not hold the lock yet, or hold another machine's).\nThe dry run checks again itself.",
         "operationId": "start_dry_run_api_runs_dry_run_post",
         "responses": {
           "202": {
@@ -1809,6 +1905,62 @@
         ],
         "title": "AttachedAccount",
         "description": "The account a machine books with from its next run on."
+      },
+      "CancelState": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running",
+            "default": false
+          },
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          }
+        },
+        "type": "object",
+        "title": "CancelState",
+        "description": "The cancel started last from the app, going on or over; all empty before any."
       },
       "CustomerAccount": {
         "properties": {
@@ -3227,6 +3379,17 @@
           "has_photo": {
             "type": "boolean",
             "title": "Has Photo"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
           }
         },
         "type": "object",
@@ -3242,7 +3405,8 @@
           "status_text",
           "created_at",
           "seen_at",
-          "has_photo"
+          "has_photo",
+          "machine"
         ],
         "title": "Ticket",
         "description": "One ticket of an account, as the app's history page last showed it."

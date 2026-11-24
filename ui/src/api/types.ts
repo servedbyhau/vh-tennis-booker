@@ -52,6 +52,8 @@ export type SetupItem = Schemas["SetupItem"];
 export type SetupStatus = Schemas["Status"];
 
 export type DryRunStarted = Schemas["DryRunStarted"];
+/** The ticket cancel started last from the app (`court-booker cancel`), going on or over. */
+export type CancelState = Schemas["CancelState"];
 export type Health = Schemas["Health"];
 
 /** Every error body: `error` is a stable code the UI translates, `detail` the English text. */

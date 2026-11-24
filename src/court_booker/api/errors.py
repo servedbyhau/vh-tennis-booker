@@ -32,6 +32,14 @@ class NotificationError(CourtBookerError):
     """Windows did not show the notification (PowerShell failed, or not on Windows)."""
 
 
+class NoMachineError(CourtBookerError):
+    """The ticket's account is attached to no machine, so none can cancel it."""
+
+
+class TicketCancelledError(CourtBookerError):
+    """The ticket is cancelled already."""
+
+
 class InvalidSettingsError(CourtBookerError):
     """Settings a run could not use; ``problems`` names each invalid value."""
 
@@ -58,6 +66,8 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (DryRunRequiredError, 409, "dry_run_required"),
     (PhoneTakenError, 409, "phone_taken"),
     (AccountAttachedError, 409, "account_attached"),
+    (NoMachineError, 409, "no_machine"),
+    (TicketCancelledError, 409, "ticket_cancelled"),
     (RequestError, 400, "bad_request"),
     (DeviceError, 503, "device"),
     (AppNotReadyError, 503, "app_not_ready"),

@@ -46,6 +46,7 @@
           "dry_run": "Dry run in progress",
           "manual": "Booking (started by hand)",
           "setup": "Auto setup in progress",
+          "cancel": "Cancelling a ticket in the Vinhomes app",
           "other": "A run is in progress"
         },
         "locked": "Dry run is locked until it ends"
@@ -141,7 +142,24 @@
       "copy": "Copy the picture",
       "copied": "Picture copied, paste it into Zalo",
       "copyFailed": "The picture was not copied: save it instead",
-      "close": "Close"
+      "close": "Close",
+      "cancel": {
+        "button": "Cancel ticket",
+        "question": "Cancel {{name}}, {{day}}? The Vinhomes app on {{machine}} cancels it and gives the quota back.",
+        "yes": "Yes, cancel it",
+        "no": "No",
+        "running": "Cancelling the ticket in the Vinhomes app, about a minute…",
+        "done": "Ticket cancelled, the quota is given back.",
+        "noMachine": "The account of this ticket is on no machine, so it cannot be cancelled here. Choose it for a machine, or cancel it in the Vinhomes app.",
+        "failed": {
+          "1": "The Vinhomes app did not cancel this ticket. The activity log tells why.",
+          "2": "No cancel during the morning booking.",
+          "3": "This machine's MuMu did not open.",
+          "4": "The Vinhomes app on this machine is not ready; it may be logged out.",
+          "5": "This machine is busy with another run. Try again later.",
+          "other": "Something went wrong with the cancel. See the activity log."
+        }
+      }
     },
     "management": {
       "sections": "Management sections"
@@ -314,6 +332,7 @@
     "dry_run": "dry run",
     "manual": "by hand",
     "setup": "auto setup",
+    "cancel": "ticket cancel",
     "unknown": "unknown"
   },
   "setup": {
@@ -501,6 +520,8 @@
     "credentials": "Windows could not keep the password. Try again.",
     "phone_taken": "A customer already has this number.",
     "account_attached": "A machine books with it. Choose another one on the Booking page to remove it.",
+    "no_machine": "The account of this ticket is on no machine.",
+    "ticket_cancelled": "This ticket is cancelled already.",
     "engine": "Court Booker hit an error.",
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",

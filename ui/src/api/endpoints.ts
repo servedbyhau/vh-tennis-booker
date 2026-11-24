@@ -3,6 +3,7 @@ import type {
   AccountChange,
   AccountLogin,
   AccountSubdivision,
+  CancelState,
   Customer,
   CustomerFields,
   DryRunStarted,
@@ -47,6 +48,16 @@ export function getRun(runId: number): Promise<RunDetail> {
 /** List every machine's tickets, the latest day of play first. */
 export function listTickets(): Promise<Ticket[]> {
   return call(client.GET("/api/tickets"));
+}
+
+/** Cancel ticket `code` in the app of the machine its account is on; it takes about a minute. */
+export function cancelTicket(code: string): Promise<CancelState> {
+  return call(client.POST("/api/tickets/{code}/cancel", { params: { path: { code } } }));
+}
+
+/** Read how the ticket cancel started last goes. */
+export function getCancel(): Promise<CancelState> {
+  return call(client.GET("/api/tickets/cancel"));
 }
 
 /** List activity log steps newest first. */

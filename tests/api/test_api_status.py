@@ -56,6 +56,16 @@ def test_a_starting_dry_run_runs(context):
     }
 
 
+def test_a_ticket_cancel_on_another_machine_runs(context):
+    assert status.running(context, cancel=Process()).model_dump() == {
+        "trigger": "cancel",
+        "pid": 4321,
+        "since": None,
+        "runs": [],
+    }
+    assert status.running(context, cancel=Process(code=0)) is None
+
+
 def run(run_id, started_at, device):
     return {"id": run_id, "started_at": f"2026-10-14T{started_at}", "device": device}
 

@@ -150,6 +150,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tickets/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Cancel
+         * @description Show the cancel started last: which ticket, on which machine, and how it ended.
+         */
+        get: operations["read_cancel_api_tickets_cancel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tickets/{code}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Cancel
+         * @description Cancel the ticket in the app of the machine its account is on; it takes about a minute.
+         *
+         *     Refused when the ticket is not recorded (404 ``not_found``) or cancelled already (409
+         *     ``ticket_cancelled``), when its account is on no machine (409 ``no_machine``), from the wake
+         *     time to 5 minutes after the start (400 ``bad_request``), and while a run, a dry run or
+         *     another cancel goes on (409 ``lock_held``). The cancel checks again itself.
+         */
+        post: operations["start_cancel_api_tickets__code__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -514,8 +559,9 @@ export interface paths {
          * @description Start a dry run of the saved settings; it stops before "Xác nhận".
          *
          *     Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time and
-         *     (409 ``lock_held``) while a run holds the lock, or while the dry run started last is
-         *     still running (it may not hold the lock yet). The dry run checks again itself.
+         *     (409 ``lock_held``) while a run holds the lock, or while the dry run or ticket cancel
+         *     started last is still running (they may not hold the lock yet, or hold another machine's).
+         *     The dry run checks again itself.
          */
         post: operations["start_dry_run_api_runs_dry_run_post"];
         delete?: never;
@@ -589,6 +635,25 @@ export interface components {
         AttachedAccount: {
             /** Account Id */
             account_id: string;
+        };
+        /**
+         * CancelState
+         * @description The cancel started last from the app, going on or over; all empty before any.
+         */
+        CancelState: {
+            /** Code */
+            code?: string | null;
+            /** Machine */
+            machine?: number | null;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Running
+             * @default false
+             */
+            running: boolean;
+            /** Exit Code */
+            exit_code?: number | null;
         };
         /**
          * CustomerAccount
@@ -1146,6 +1211,8 @@ export interface components {
             seen_at: string;
             /** Has Photo */
             has_photo: boolean;
+            /** Machine */
+            machine: number | null;
         };
     };
     responses: never;
@@ -1418,6 +1485,84 @@ export interface operations {
                 };
                 content: {
                     "image/png": unknown;
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_cancel_api_tickets_cancel_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CancelState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_cancel_api_tickets__code__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CancelState"];
                 };
             };
             /** @description Invalid request values, one line per value */

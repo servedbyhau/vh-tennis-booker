@@ -199,7 +199,10 @@ On the second:
 - **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
   by day of play, with their slot, court, status and whose account they are of; a press opens the
   ticket's picture
-  with its QR code, and buttons save it as a file and copy it, to paste it where it is sent. They are read from the Vinhomes app at 06:03,
+  with its QR code, and buttons save it as a file and copy it, to paste it where it is sent. A
+  ticket still to play has a button that cancels it in the Vinhomes app, after a question: the
+  machine its account is on opens the ticket and cancels it (about a minute), and the quota
+  comes back. Not around the 06:00 booking, nor while a run uses that machine. They are read from the Vinhomes app at 06:03,
   once every machine has booked, and stay on this PC, the pictures in
   `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
 - **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every

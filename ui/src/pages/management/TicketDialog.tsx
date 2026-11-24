@@ -5,6 +5,8 @@ import type { Ticket } from "../../api/types";
 import { Icon } from "../../components/Icon";
 import { copyPicture, photoFileName, photoUrl } from "../../tickets";
 import { useFormat } from "../../useFormat";
+import { TicketCancel } from "./TicketCancel";
+import { cancellable, useTicketCancel } from "./cancelling";
 import styles from "./TicketDialog.module.css";
 
 /** How long it shows how a copy went. */
@@ -20,9 +22,10 @@ interface TicketDialogProps {
 }
 
 /**
- * One ticket's picture over the page, with buttons to save and to copy it and the ones before and
- * after it in the list. The arrow keys move between them; Escape, or a press beside it, closes it, and
- * the focus returns to where it was.
+ * One ticket's picture over the page, with buttons to save and to copy it, to cancel it in the app
+ * while its slot is still to come, and the ones before and after it in the list. The arrow keys
+ * move between them; Escape, or a press beside it, closes it, and the focus returns to where it
+ * was.
  */
 export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogProps) {
   const { t } = useTranslation();
@@ -33,6 +36,7 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
   /** How the last copy went, shown for a moment. */
   const [copy, setCopy] = useState<"copied" | "copyFailed" | null>(null);
   const ticket = tickets[place];
+  const cancel = useTicketCancel(ticket);
 
   useEffect(() => {
     const before = document.activeElement;
@@ -103,7 +107,10 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
       className={styles.backdrop}
       onClick={(event) => {
         // Beside the picture and the buttons, between them too.
-        if (event.target instanceof Element && !event.target.closest("img, p, a, button")) {
+        if (
+          event.target instanceof Element &&
+          !event.target.closest("img, p, a, button, section")
+        ) {
           onClose();
         }
       }}
@@ -184,6 +191,18 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
                 <Icon name="copy" />
               </button>
             )}
+            {cancellable(ticket) && (
+              <button
+                type="button"
+                aria-label={t("pages.tickets.cancel.button")}
+                title={t("pages.tickets.cancel.button")}
+                disabled={cancel.phase.kind === "running"}
+                className={styles.round}
+                onClick={cancel.ask}
+              >
+                <Icon name="cancel" />
+              </button>
+            )}
           </div>
           <button
             type="button"
@@ -199,6 +218,12 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
         <p role="status" className={styles.notice}>
           {copy !== null && t(`pages.tickets.${copy}`)}
         </p>
+        <TicketCancel
+          ticket={ticket}
+          phase={cancel.phase}
+          onConfirm={cancel.confirm}
+          onDismiss={cancel.dismiss}
+        />
       </div>
     </div>,
     document.body,

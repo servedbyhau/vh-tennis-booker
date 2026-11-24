@@ -33,7 +33,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 
 | Phase | Next | Scope |
 |---|---|---|
-| 4 UI | Without MuMu | What the user did in MuMu, from the app: cancel a ticket (`court-booker cancel`, done; its button in the tickets left), read an account's quota on request, open a machine's MuMu. Adding or deleting machines stays by hand (three at most, on or off in the Setup) |
+| 4 UI | Without MuMu | What the user did in MuMu, from the app: cancel a ticket (`court-booker cancel` and its button in the tickets, done), read an account's quota on request, open a machine's MuMu. Adding or deleting machines stays by hand (three at most, on or off in the Setup) |
 | 1 Runs | Other subdivisions | Origami and BS are in `catalog.py` with every sport; BS tennis at BCX3 was booked for real on 2026-11-01. BE7 tennis and basketball have dry-run coverage; other BS courts have only the survey. Left: survey each other subdivision with `dev-tools/survey/walk.py` and add it to the catalog |
 
 ## Situations
