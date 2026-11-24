@@ -165,6 +165,45 @@
     "management": {
       "sections": "Management sections"
     },
+    "board": {
+      "title": "Overview",
+      "booked": "slots booked at 06:00 this month ({{rate}}%)",
+      "toPlay": "tickets to play",
+      "machinesOn": "machines booking",
+      "alertsTitle": "To look at",
+      "allWell": "All is ready for the next 06:00 run.",
+      "machinesTitle": "Machines",
+      "upcomingTitle": "Tickets of the next days",
+      "seeAll": "See all",
+      "machine": "Machine",
+      "customer": "Customer",
+      "books": "Books",
+      "last": "Last 06:00 run",
+      "alerts": {
+        "scheduleOff": "The daily booking is off: nothing is booked tomorrow.",
+        "noAccount": "{{machine}} has no account chosen, so it books nothing.",
+        "clash": "Machines {{machines}} book the same court and slot: one gets it at most.",
+        "short": "{{machine}}: its account has {{left}} left, fewer than its {{slots}} slots.",
+        "failed": "{{machine}}: its last booking failed. See the History."
+      }
+    },
+    "machines": {
+      "title": "Machines",
+      "on": "Booking",
+      "off": "Off",
+      "account": "Account",
+      "noAccount": "None chosen",
+      "books": "Books",
+      "booksNothing": "Nothing (the machine is off)",
+      "quota": "Quota",
+      "quotaUnknown": "Not read yet",
+      "last": "Last 06:00 run",
+      "never": "None yet",
+      "noSlots": "No slot",
+      "runFor": "{{when}} · for {{day}}",
+      "open": "Open MuMu",
+      "change": "Change the court, slots or account on the Booking page"
+    },
     "customers": {
       "title": "Customers",
       "name": "Customer or group name",

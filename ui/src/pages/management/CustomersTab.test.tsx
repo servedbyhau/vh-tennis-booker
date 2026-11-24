@@ -18,7 +18,7 @@ const AN = customer("a1", {
 const BINH = customer("a2", { name: "Chị Bình" });
 
 async function openPage(customers: Customer[] = [AN, BINH], extra: Record<string, Reply> = {}) {
-  const app = renderApp(paths.management, {
+  const app = renderApp(paths.customers, {
     "GET /api/status": reply(overview()),
     "GET /api/settings": reply(settings()),
     "GET /api/customers": reply(customers),
@@ -206,7 +206,7 @@ describe("Management customers", () => {
 
   it("is worded in English too", async () => {
     await i18n.changeLanguage("en");
-    renderApp(paths.management, {
+    renderApp(paths.customers, {
       "GET /api/status": reply(overview()),
       "GET /api/customers": reply([AN]),
     });

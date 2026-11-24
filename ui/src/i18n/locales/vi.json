@@ -165,6 +165,45 @@
     "management": {
       "sections": "Các mục quản lý"
     },
+    "board": {
+      "title": "Tổng quan",
+      "booked": "giờ đặt được lúc 06:00 tháng này ({{rate}}%)",
+      "toPlay": "vé sắp chơi",
+      "machinesOn": "máy đang đặt",
+      "alertsTitle": "Cần xử lý",
+      "allWell": "Mọi thứ đã sẵn sàng cho lượt 06:00 tới.",
+      "machinesTitle": "Các máy",
+      "upcomingTitle": "Vé mấy ngày tới",
+      "seeAll": "Xem hết",
+      "machine": "Máy",
+      "customer": "Khách",
+      "books": "Đặt",
+      "last": "Lượt 06:00 gần nhất",
+      "alerts": {
+        "scheduleOff": "Tự đặt đang tắt: sáng mai không đặt sân.",
+        "noAccount": "{{machine}} chưa chọn tài khoản nên sẽ không đặt.",
+        "clash": "Máy {{machines}} cùng đặt một sân và giờ: chỉ một máy lấy được.",
+        "short": "{{machine}}: tài khoản chỉ còn {{left}} lượt, ít hơn {{slots}} giờ đặt.",
+        "failed": "{{machine}}: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử."
+      }
+    },
+    "machines": {
+      "title": "Máy",
+      "on": "Đang đặt",
+      "off": "Đang tắt",
+      "account": "Tài khoản",
+      "noAccount": "Chưa chọn",
+      "books": "Đặt",
+      "booksNothing": "Không đặt (máy đang tắt)",
+      "quota": "Hạn mức",
+      "quotaUnknown": "Chưa đọc",
+      "last": "Lượt 06:00 gần nhất",
+      "never": "Chưa có",
+      "noSlots": "Không đặt giờ nào",
+      "runFor": "{{when}} · cho {{day}}",
+      "open": "Mở MuMu",
+      "change": "Đổi sân, giờ, tài khoản ở trang Đặt sân"
+    },
     "customers": {
       "title": "Khách hàng",
       "name": "Tên khách hoặc nhóm",

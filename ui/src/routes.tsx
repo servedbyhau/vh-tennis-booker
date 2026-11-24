@@ -6,6 +6,8 @@ import { GuidePage } from "./pages/GuidePage";
 import { HomePage } from "./pages/HomePage";
 import { CustomersTab } from "./pages/management/CustomersTab";
 import { HistoryTab } from "./pages/management/HistoryTab";
+import { MachinesTab } from "./pages/management/MachinesTab";
+import { OverviewTab } from "./pages/management/OverviewTab";
 import { TicketsTab } from "./pages/management/TicketsTab";
 import { ManagementPage } from "./pages/ManagementPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -23,7 +25,9 @@ export const routes: RouteObject[] = [
         path: paths.management,
         element: <ManagementPage />,
         children: [
-          { index: true, element: <CustomersTab /> },
+          { index: true, element: <OverviewTab /> },
+          { path: paths.machines, element: <MachinesTab /> },
+          { path: paths.customers, element: <CustomersTab /> },
           { path: paths.tickets, element: <TicketsTab /> },
           { path: paths.history, element: <HistoryTab /> },
         ],

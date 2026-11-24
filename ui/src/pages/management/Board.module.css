@@ -1,0 +1,253 @@
+/*
+ * The look the management's boards share: a page that scrolls under the sections, cards of paper
+ * in a grid, small facts in lines, and marks that tell good, to look at and wrong apart.
+ */
+.page {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-3) 0 var(--space-6);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.wide {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-5);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+}
+
+.cardTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-heading-sm);
+  font-weight: var(--weight-heavy);
+  letter-spacing: var(--tracking-heading);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--text-control);
+  font-weight: var(--weight-bold);
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+  font-size: var(--text-data);
+}
+
+.label {
+  flex: none;
+  width: 92px;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+/* Small marks: a slot booked or not, a state, a count. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-field);
+  color: var(--color-ink);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.good {
+  background: var(--color-tint);
+  color: var(--color-stamp-strong);
+}
+
+.bad {
+  background: color-mix(in srgb, var(--color-failed) 14%, transparent);
+  color: var(--color-failed);
+}
+
+.warn {
+  background: var(--color-highlight-soft);
+  color: var(--color-ink);
+}
+
+/* The numbers at the top of a board. */
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-card);
+}
+
+.figureValue {
+  font-size: var(--text-heading-sm);
+  font-weight: var(--weight-heavy);
+  font-variant-numeric: tabular-nums;
+}
+
+.figureLabel {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* What to look at: one line each, marked by how much it matters. */
+.alerts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-button);
+  background: var(--color-field);
+  font-size: var(--text-data);
+}
+
+.alert svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.alertBad {
+  background: color-mix(in srgb, var(--color-failed) 10%, transparent);
+}
+
+.alertWarn {
+  background: var(--color-highlight-soft);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-data);
+}
+
+.table th {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-hairline);
+  vertical-align: middle;
+}
+
+.table td:first-child {
+  white-space: nowrap;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+  .wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
