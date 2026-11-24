@@ -13,9 +13,10 @@ Last updated: 2026-11-23.
   the morning, before 1.1.2) and 2026-11-22 (the second try, 2 s later, started it); on
   2026-11-21 at 15:21 three cold starts froze all three, which the runs restarted. Since
   `feat/launch-in-turn` each machine launches once the ones before it have booted.
-- **The app's "only one utility within 60 s" notice** when five or six machines start booking
-  in the same second (field notes, "Emulator (MuMu)"): two or three of them lose the race. The flow does
-  not know it yet and retries after 29 s.
+- **The app's "only one utility within 60 s" notice**: only three machines that select the day in
+  the same second get through (field notes, "Emulator (MuMu)"), so three book since 2026-11-24.
+  The flow does not know the notice yet and retries after 29 s; more machines would need it known
+  at once and the machines past three started a few seconds later.
 
 ## Severity 2
 
