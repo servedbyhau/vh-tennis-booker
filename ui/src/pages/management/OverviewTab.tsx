@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import { useRuns, useTickets } from "../../api/queries";
+import { useCharges, useRuns, useTickets } from "../../api/queries";
 import type { Ticket } from "../../api/types";
 import { Icon, type IconName } from "../../components/Icon";
 import { PageTitle } from "../../components/PageTitle";
@@ -12,6 +12,7 @@ import { useFormat } from "../../useFormat";
 import { type Alert, addDays, bookedOf, useAlerts } from "./board";
 import styles from "./Board.module.css";
 import { type MachineFacts, runWhen, useMachineFacts } from "./machineFacts";
+import { byCustomer, formatMoney, totalsOf } from "./money";
 import { RunSlots } from "./RunSlots";
 
 /** How many days of tickets to play the board lists. */
@@ -23,6 +24,8 @@ function Figures({ facts, tickets }: { facts: MachineFacts[]; tickets: Ticket[] 
   const runs = useRuns({ month, dry_run: false, limit: 500 });
   const { booked, tried } = bookedOf(runs.data ?? []);
   const rate = tried === 0 ? null : Math.round((booked / tried) * 100);
+  const charges = useCharges(month);
+  const { left } = totalsOf(byCustomer(charges.data?.charges ?? [], ""));
   const figures: [string, string][] = [
     [rate === null ? "–" : `${booked}/${tried}`, t("pages.board.booked", { rate: rate ?? 0 })],
     [String(tickets.length), t("pages.board.toPlay")],
@@ -30,6 +33,7 @@ function Figures({ facts, tickets }: { facts: MachineFacts[]; tickets: Ticket[] 
       `${facts.filter((item) => item.booking !== undefined).length}/${facts.length}`,
       t("pages.board.machinesOn"),
     ],
+    [formatMoney(left), t("pages.board.toCollect")],
   ];
   return (
     <div className={styles.figures}>

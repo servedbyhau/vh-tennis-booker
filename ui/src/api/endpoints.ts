@@ -4,6 +4,8 @@ import type {
   AccountLogin,
   AccountSubdivision,
   CancelState,
+  ChargeChange,
+  Charges,
   Customer,
   CustomerFields,
   DryRunStarted,
@@ -11,6 +13,7 @@ import type {
   NewAccount,
   NotificationSettings,
   Overview,
+  Prices,
   RunDetail,
   RunSummary,
   ScheduleState,
@@ -49,6 +52,43 @@ export function getRun(runId: number): Promise<RunDetail> {
 /** List every machine's tickets, the latest day of play first. */
 export function listTickets(): Promise<Ticket[]> {
   return call(client.GET("/api/tickets"));
+}
+
+/** Read the price list. */
+export function getPrices(): Promise<Prices> {
+  return call(client.GET("/api/money/prices"));
+}
+
+/** Replace the price list. */
+export function savePrices(prices: Prices): Promise<Prices> {
+  return call(client.PUT("/api/money/prices", { body: prices }));
+}
+
+/** Read the charges of a month of play (`YYYY-MM`), priced. */
+export function listCharges(month: string): Promise<Charges> {
+  return call(client.GET("/api/money/charges", { params: { query: { month } } }));
+}
+
+/** Mark a charge paid or not, or set its amount. */
+export function changeCharge({ code, change }: { code: string; change: ChargeChange }) {
+  return call(
+    client.PUT("/api/money/charges/{code}", { params: { path: { code } }, body: change }),
+  ).then(() => undefined);
+}
+
+/** Mark several charges paid, or not. */
+export function markPaid({ codes, paid }: { codes: string[]; paid: boolean }): Promise<void> {
+  return call(client.PUT("/api/money/paid", { body: { codes, paid } })).then(() => undefined);
+}
+
+/** Book for a customer for free, or not. */
+export function markFree({ id, free }: { id: string; free: boolean }): Promise<void> {
+  return call(
+    client.PUT("/api/money/customers/{customer_id}/free", {
+      params: { path: { customer_id: id } },
+      body: { free },
+    }),
+  ).then(() => undefined);
 }
 
 /** Mark ticket `code` sent to its customer, or not sent. */

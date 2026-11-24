@@ -219,6 +219,13 @@ On the second:
 - **Hạn mức / Quota**: every account in a row and every sport in a column, what is left of each
   in the month booked for (or another month read), little left marked, and a button that reads
   an account on a machine again.
+- **Thu tiền / Money**: what the customers owe, a month of play at a time. Each ticket a
+  customer's account booked becomes a charge, priced by the price list (a normal and a golden
+  price a sport, the golden hours 17:00-21:00 unless changed), or by an amount set by hand; a
+  cancelled ticket owes nothing, nor a customer booked for free (your own account). Each
+  customer's tickets show with their price and whether paid, with a button that marks them all
+  paid and one that copies the statement to paste in a chat. The overview shows what is left to
+  collect this month.
 - **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every
   slot booked or not and when it started (real bookings, dry runs on request); a press shows the
   reasons, the steps and the technical log beside the list. A booking that stopped on a failure the

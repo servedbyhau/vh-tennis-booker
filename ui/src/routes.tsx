@@ -7,6 +7,7 @@ import { HomePage } from "./pages/HomePage";
 import { CustomersTab } from "./pages/management/CustomersTab";
 import { HistoryTab } from "./pages/management/HistoryTab";
 import { MachinesTab } from "./pages/management/MachinesTab";
+import { MoneyTab } from "./pages/management/MoneyTab";
 import { OverviewTab } from "./pages/management/OverviewTab";
 import { QuotaTab } from "./pages/management/QuotaTab";
 import { TicketsTab } from "./pages/management/TicketsTab";
@@ -31,6 +32,7 @@ export const routes: RouteObject[] = [
           { path: paths.customers, element: <CustomersTab /> },
           { path: paths.tickets, element: <TicketsTab /> },
           { path: paths.quota, element: <QuotaTab /> },
+          { path: paths.money, element: <MoneyTab /> },
           { path: paths.history, element: <HistoryTab /> },
         ],
       },

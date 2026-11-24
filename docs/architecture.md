@@ -142,6 +142,12 @@ Details live in the docstrings; this page says where things are and what must st
   (`moment` `asked`, with the account's id) for the machine's own utility and each other one
   with a ticket that month (`quota.read_quotas`); `quota_not_read` when the page was not read
   far enough.
+- `money.py`: the charges of the tickets booked for customers (schema 8: `charges`, kept once
+  the ticket is gone; `prices` by sport and `money_settings` for the golden hours; the customers'
+  `free`). `History.save_tickets` makes a charge of each ticket of a chosen account still to play
+  (the ones played before are never charged) and cancels the charge of a ticket read cancelled.
+  `list_charges` prices them: the amount set by hand, else the price list's (golden for a slot
+  starting in the golden hours), nothing for a cancelled ticket or a customer booked for free.
 - `opening.py`: the log of the opening of a timed run, to learn what the app's 06:00 is checked
   against before changing when the first tap comes. Android's clock is read through adb
   (`Adb.device_time`, `date +%s.%N`; the best of 3 reads) during the warm-up and again once the
@@ -347,6 +353,7 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |
+| `GET`, `PUT /api/money/prices`; `GET /api/money/charges?month=`; `PUT /api/money/charges/{code}`, `/api/money/paid`, `/api/money/customers/{id}/free` | The price list; the charges of a month of play, priced, with the months that have charges and the customers booked for free; a charge marked paid or its amount set by hand (`reset_amount` takes the price list's again); several marked paid at once; a customer booked for free or not (`court_booker.money`) |
 | `PUT /api/tickets/{code}/sent` | Mark the ticket sent to its customer now (`sent_at`, schema 7), or not; a later run reading it again keeps the mark |
 | `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine` (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`), and how the one started last goes (`running`, its `exit_code`) |
 | `POST /api/machines/{mumu_index}/open` | Launch the machine's MuMu, or show its window if it runs (`MuMu.show_window`); refused as a task is (no process of its own), 503 `device` without MuMuManager |
@@ -385,7 +392,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose sections each have an
   address: `OverviewTab` (the index: this month's figures, the machines in a table, the tickets of
   the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), `QuotaTab` (a row an account, a column a sport, from the
-  customers' readings of the month chosen), the first two from
+  customers' readings of the month chosen), `MoneyTab` (the month's sums, a card per customer
+  from `money.ts`, the price list), the first two from
   `machineFacts.ts` (the settings, the customers and the newest scheduled run of each MuMu
   instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
   `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes,

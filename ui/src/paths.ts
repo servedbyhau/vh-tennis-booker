@@ -6,6 +6,7 @@ export const paths = {
   customers: "/management/customers",
   tickets: "/management/tickets",
   quota: "/management/quota",
+  money: "/management/money",
   history: "/management/history",
   guide: "/guide",
 } as const;

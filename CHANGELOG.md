@@ -7,6 +7,11 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A money section: each ticket a customer's account books becomes a charge (kept once the ticket
+  is gone), priced by a price list of a normal and a golden price a sport, or set by hand; a
+  cancelled ticket and a customer booked for free owe nothing. A month's sums, each customer's
+  tickets marked paid one by one or all at once, and their statement copied to send
+  (`/api/money/...`, schema 8). The overview shows what is left to collect this month.
 - A quota section shows every account's quota left of each sport in one table, for the month
   booked for or another month read, little left marked, with a read again on each account on a
   machine; the overview's alert of an account short of quota leads there.
