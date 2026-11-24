@@ -4,11 +4,16 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-23.
+Last updated: 2026-11-25.
 
 ## Release and daily run
 
-- Released: **1.1.2** (tag `v1.1.2`, 2026-11-19): getting ready before 06:00 repairs itself
+- Released: **1.2.0** (tag `v1.2.0`, 2026-11-25): the management upgrade (overview, machines,
+  customers with search and whole phone numbers, requests and days of the week, tickets as a list or
+  a week with sent marks and cancelling, quota by customer, money, statistics), quota read again
+  and MuMu opened from the app, the history held during the rounds, the opening's clocks logged,
+  three machines. No new setting is needed: `days` is optional (every day unless given).
+- 1.1.2 (2026-11-19): getting ready before 06:00 repairs itself
   (`ready.py`): MuMu, ADB, the driver and the app layer by layer until 05:58, a check every
   minute while waiting, a frozen MuMu restarted by ending its process. A real timed booking
   on `develop` booked 2/2 to the ticket before the release. 1.1.1 (2026-11-18): the installer
@@ -24,18 +29,12 @@ Last updated: 2026-11-23.
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
 - Since 2026-11-22 the installed app on the dev PC is a local build of `develop`, to try it before
-  a release; it is at #299 since 2026-11-23. The apps before are in
-  `D:\VH-Booker\app-backup-2026-11-22` (before the tickets) and `...-tickets` (before the account
-  check). #300 is merged and not installed.
+  a release; it was at #318 when 1.2.0 was cut, and is updated to the release with its button.
 - Runner folder: at `v0.18.1`, still there as a way back (it was to go after 2026-11-10). To go back:
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
-- Merged since 1.1.2, not released: the tickets (#265 to #269), the customers, their accounts and
-  the account check (#270 to #272), the pages and their look (#273 to #285), what is ready, whose
-  account a run and a ticket are of, the copied picture and the question before a removal (#286 to
-  #290), the quota (#292 to #298), launching in turn and every MuMu instance's tab (#297, #299),
-  the history held during the rounds (#300). No open branch but the docs.
+- Merged since 1.2.0, not released: nothing.
 - Tried on real machines: the ticket reading on three accounts, the account check and a forced change
   of account on one. Not yet: either after a real 06:00 booking, a change between two different
   accounts, a changed phone number, whose account a run is of.
