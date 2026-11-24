@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Customer } from "../../api/types";
 import i18n from "../../i18n";
 import { paths } from "../../paths";
@@ -13,7 +13,7 @@ const AN = customer("a1", {
   representative: "Nguyễn Văn An",
   contact: "Zalo An",
   note: "gọi trước",
-  accounts: [account("b1", { device: 1 }), account("b2", { label: "", phone: "09••••••22" })],
+  accounts: [account("b1", { device: 1 }), account("b2", { label: "", phone: "0900000022" })],
 });
 const BINH = customer("a2", { name: "Chị Bình" });
 
@@ -80,7 +80,7 @@ describe("Management customers", () => {
       card("Anh An")
         .getAllByRole("listitem")
         .map((row) => row.textContent),
-    ).toEqual(["09••••••11Căn A", "09••••••22"]);
+    ).toEqual(["0900000011Căn A", "0900000022"]);
   });
 
   it("shows the one pressed, with no form left open, and keeps it in the address", async () => {
@@ -155,7 +155,7 @@ describe("Management customers", () => {
       within(question)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual(["09••••••11 · Căn A", "09••••••22"]);
+    ).toEqual(["0900000011 · Căn A", "0900000022"]);
     expect(question).toHaveTextContent("Mật khẩu đã lưu cũng mất, không lấy lại được.");
     expect(question).toHaveTextContent("Máy 2 đang dùng, xóa rồi sẽ không còn tài khoản để đặt.");
     fireEvent.click(within(question).getByRole("button", { name: "Giữ lại" }));
@@ -276,7 +276,7 @@ describe("Management accounts", () => {
       phone: null,
       password: null,
     });
-    expect(document.body.innerHTML).not.toContain("0900000022");
+    expect(screen.queryByDisplayValue("cu")).not.toBeInTheDocument(); // the password not kept
 
     press("Sửa", 2);
     await screen.findByRole("form");
@@ -308,7 +308,7 @@ describe("Management accounts", () => {
       "DELETE /api/customer-accounts/b2": reply(null, 204),
     });
     press("Xóa", 2); // the customer's, then one per account
-    const question = screen.getByRole("alertdialog", { name: "Xóa 09••••••22?" });
+    const question = screen.getByRole("alertdialog", { name: "Xóa 0900000022?" });
     expect(question).toHaveTextContent("Mật khẩu đã lưu cũng mất, không lấy lại được.");
     expect(question).not.toHaveTextContent("đang dùng");
     expect(within(question).queryByRole("listitem")).not.toBeInTheDocument(); // named above
@@ -350,37 +350,58 @@ describe("the pages", () => {
   });
 });
 
-describe("Reading a quota again", () => {
-  const RUNNING = { code: null, machine: 1, started_at: "2026-10-15T09:30:00", running: true };
-
-  it("reads the quota of an account on a machine again, and says when it is done", async () => {
-    const app = await openPage([AN], {
-      "POST /api/machines/1/quota": reply({ ...RUNNING, exit_code: null }, 202),
-      "GET /api/machines/quota": reply({ ...RUNNING, running: false, exit_code: 0 }),
-    });
-    const row = card("Anh An");
-
-    // Only the account on a machine can be read again.
-    expect(row.getAllByRole("button", { name: "Đọc lại hạn mức" })).toHaveLength(1);
-    fireEvent.click(row.getByRole("button", { name: "Đọc lại hạn mức" }));
-
-    expect(await row.findByText(/^Đang đọc hạn mức trong app Vinhomes/)).toBeVisible();
-    expect(await row.findByText("Đã đọc lại hạn mức.", {}, { timeout: 4000 })).toBeVisible();
-    expect(requestsTo(app.fetch, "POST /api/machines/1/quota")).toBe(1);
-    await waitFor(() => expect(requestsTo(app.fetch, "GET /api/customers")).toBeGreaterThan(1));
+describe("Searching the customers", () => {
+  const CHI = customer("a3", {
+    name: "Nhóm Thuyền",
+    accounts: [account("b3", { label: "BONBON", phone: "0912345678" })],
   });
 
-  it("says why when it is refused", async () => {
-    await openPage([AN], {
-      "POST /api/machines/1/quota": reply({ error: "lock_held", detail: "busy" }, 409),
-      "GET /api/machines/quota": reply({}),
+  function search(text: string) {
+    fireEvent.change(screen.getByRole("searchbox", { name: /^Tìm khách/ }), {
+      target: { value: text },
     });
-    const row = card("Anh An");
+  }
 
-    fireEvent.click(row.getByRole("button", { name: "Đọc lại hạn mức" }));
+  it("finds a customer by name without its marks, the first found shown", async () => {
+    await openPage([AN, BINH, CHI]);
 
-    expect(
-      await row.findByText("Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại."),
-    ).toBeVisible();
+    search("thuyen");
+
+    expect(listed()).toEqual(["[Nhóm Thuyền11 tài khoản]"]);
+    expect(card("Nhóm Thuyền").getByText("0912345678")).toBeVisible();
+  });
+
+  it("finds an account by its name or whole phone number, and marks it", async () => {
+    await openPage([AN, BINH, CHI]);
+
+    search("bonbon");
+    expect(listed()).toEqual(["[Nhóm Thuyền11 tài khoản]"]);
+
+    search("0912 345 678");
+    expect(listed()).toEqual(["[Nhóm Thuyền11 tài khoản]"]);
+    expect(card("Nhóm Thuyền").getByRole("listitem").firstElementChild?.className).toMatch(/found/);
+  });
+
+  it("says when nothing matches", async () => {
+    await openPage([AN, BINH, CHI]);
+
+    search("không có ai");
+
+    expect(screen.getAllByText("Không có khách nào khớp.").length).toBeGreaterThan(0);
+  });
+});
+
+describe("An account's phone number", () => {
+  it("shows whole and is copied with a press, with no quota on the customers' page", async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    await openPage([AN]);
+    const row = within(card("Anh An").getAllByRole("listitem")[0]!);
+
+    fireEvent.click(row.getByRole("button", { name: "Copy số điện thoại" }));
+
+    expect(await row.findByText("Đã copy")).toBeVisible();
+    expect(writeText).toHaveBeenCalledWith("0900000011");
+    expect(row.queryByRole("button", { name: "Đọc lại hạn mức" })).not.toBeInTheDocument();
   });
 });

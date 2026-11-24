@@ -17,6 +17,7 @@ import {
   ListChecks,
   Lock,
   RotateCw,
+  Search,
   MonitorSmartphone,
   Pencil,
   Phone,
@@ -72,6 +73,8 @@ const DRAWINGS = {
   check: Check,
   /** Close what is open, give it up. */
   close: X,
+  /** Find among many. */
+  search: Search,
   /** Copy, to paste elsewhere. */
   copy: Copy,
   /** Save as a file. */

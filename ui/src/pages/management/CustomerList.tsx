@@ -5,11 +5,14 @@ import { IconButton } from "../../components/IconButton";
 import styles from "./CustomerList.module.css";
 
 interface CustomerListProps {
+  /** The customers the search keeps. */
   customers: readonly Customer[];
   /** The customer shown beside the list, `null` while one is added. */
   shown: string | null;
   onChoose: (id: string) => void;
   onAdd: () => void;
+  query: string;
+  onQuery: (query: string) => void;
 }
 
 /** How many accounts a customer gave: a key and the number, in words for screen readers. */
@@ -25,8 +28,18 @@ function AccountCount({ count }: { count: number }) {
   );
 }
 
-/** Every customer, with who speaks for them and how many accounts they gave. */
-export function CustomerList({ customers, shown, onChoose, onAdd }: CustomerListProps) {
+/**
+ * The customers, with who speaks for them and how many accounts they gave, under a search by
+ * their name and facts or an account's name or phone number.
+ */
+export function CustomerList({
+  customers,
+  shown,
+  onChoose,
+  onAdd,
+  query,
+  onQuery,
+}: CustomerListProps) {
   const { t } = useTranslation();
   return (
     <div className={styles.panel}>
@@ -36,7 +49,20 @@ export function CustomerList({ customers, shown, onChoose, onAdd }: CustomerList
         </h2>
         <IconButton icon="add" variant="solid" label={t("pages.customers.add")} onClick={onAdd} />
       </div>
+      <label className={styles.search}>
+        <Icon name="search" />
+        <input
+          type="search"
+          aria-label={t("pages.customers.search")}
+          placeholder={t("pages.customers.search")}
+          value={query}
+          onChange={(event) => onQuery(event.target.value)}
+        />
+      </label>
       <nav aria-labelledby="customers-title" className={styles.scroll}>
+        {customers.length === 0 && query.trim() !== "" && (
+          <p className={styles.none}>{t("pages.customers.noMatch")}</p>
+        )}
         <ul className={styles.list}>
           {customers.map((customer) => (
             <li key={customer.id}>

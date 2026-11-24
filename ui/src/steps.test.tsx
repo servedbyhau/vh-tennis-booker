@@ -28,11 +28,11 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
   ["account_subdivision", { subdivision: "bs" }, "Tài khoản thuộc phân khu BS", "plain"],
   ["account_subdivision", { subdivision: "khu-b" }, "Đã đọc phân khu của tài khoản", "plain"],
   ["logged_in", {}, "Đã đăng nhập bằng tài khoản đã lưu", "plain"],
-  ["account_checked", { phone: "09••••••79" }, "Đúng tài khoản 09••••••79", "plain"],
+  ["account_checked", { phone: "0900000079" }, "Đúng tài khoản 0900000079", "plain"],
   [
     "account_checked",
-    { phone: "09••••••79", switched: true },
-    "Đã đổi sang tài khoản 09••••••79",
+    { phone: "0900000079", switched: true },
+    "Đã đổi sang tài khoản 0900000079",
     "plain",
   ],
   [

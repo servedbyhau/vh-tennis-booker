@@ -365,7 +365,7 @@ values 422 `invalid_request`.
 | `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine` (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`), and how the one started last goes (`running`, its `exit_code`) |
 | `POST /api/machines/{mumu_index}/open` | Launch the machine's MuMu, or show its window if it runs (`MuMu.show_window`); refused as a task is (no process of its own), 503 `device` without MuMuManager |
 | `POST /api/machines/{mumu_index}/quota`, `GET /api/machines/quota` | Start `court-booker quota` on the machine (refused for one without a chosen account, 409 `no_machine`), and how the one started last goes. Both are tasks (`api/tasks.py`): each in its own process like the dry run, one at a time, refused in the quiet time and while a run, a dry run or another task goes on (409 `lock_held`); `/api/status` shows one running (its kind as the trigger), and no dry run starts meanwhile |
-| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password), each with the last quota read of every utility and month from this one on (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`; the app shows the month of the next booking); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
+| `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers whole, never a password; logs and events still mask them), each with the last quota read of every utility and month from this one on (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`; the app shows the month of the next booking); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
 | `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |
 | `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine (it moves from another one), or none; refused while a run goes on (409 `lock_held`) |
@@ -405,8 +405,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   customer with their requests, the form, and "apply to the machine": `requests.ts` sets the
   machine's court, slots and days in the settings, switching it on first), the first two from
   `machineFacts.ts` (the settings, the customers and the newest scheduled run of each MuMu
-  instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
-  `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes,
+  instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList` with its search, `customerSearch.ts`: by name and facts without
+  Vietnamese marks, an account by its name or, for digits, its phone number; and `CustomerDetail`
+  beside it, the one in the address, `?customer=`, else the first found: who they are and their
+  accounts, each phone number whole with a copy button, those found marked; one form is open at a time, under what it changes,
   an account's filled with its saved login, read then and kept nowhere else, a removal is beside each edit and
   asks first over the page (`RemoveQuestion`), naming the accounts lost and the machines left without
   one), `TicketsTab` (the tickets still to use by day of play, of one customer or
@@ -436,7 +438,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
   (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's, a line
   each; a press saves one, and one that another machine books with moves only after a question.
-  Under each account there and in `CustomerDetail`, `components/QuotaLine.tsx` shows what is left
+  Under each account there and on the machines' cards, `components/QuotaLine.tsx` shows what is left
   of each utility's quota in the month the next booking is for (`quota.ts`, from the schedule's
   `next_play_date`), as the last run read it ("Tennis còn 1/8", the sport in the interface's language, the app's words for a read without it), none left marked, when it was
   read in the tooltip. The header's status line (`components/StatusLine.tsx`)

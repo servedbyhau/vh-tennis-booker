@@ -42,19 +42,18 @@ def test_there_are_no_customers_at_first(client):
     assert client.get("/api/customers").json() == []
 
 
-def test_a_customer_and_their_account_answer_no_password_and_a_masked_phone(
+def test_a_customer_and_their_account_answer_their_phone_but_no_password(
     client, customer, saved_logins
 ):
     reply = client.post(f"/api/customers/{customer['id']}/accounts", json=ACCOUNT)
 
     assert reply.status_code == 201
     (shown,) = reply.json()["accounts"]
-    assert (shown["phone"], shown["label"], shown["device"]) == ("09••••••79", "Căn A", None)
+    assert (shown["phone"], shown["label"], shown["device"]) == (ACCOUNT["phone"], "Căn A", None)
     listed = client.get("/api/customers")
     assert listed.json() == [reply.json()]
     for text in (reply.text, listed.text):
         assert ACCOUNT["password"] not in text
-        assert ACCOUNT["phone"] not in text
     assert saved_logins.read(shown["id"]) == Login("0900000079", "mat-khau-bi-mat")
 
 
@@ -99,8 +98,7 @@ def test_an_account_takes_another_phone_number(client, customer, account, saved_
     url = f"/api/customer-accounts/{account['id']}"
     reply = client.put(url, json={"label": "Căn A", "phone": "0900000080"})
     (shown,) = reply.json()["accounts"]
-    assert (shown["phone"], shown["device"]) == ("09••••••80", 2)
-    assert "0900000080" not in reply.text
+    assert (shown["phone"], shown["device"]) == ("0900000080", 2)
     assert saved_logins.read(2) == Login("0900000080", ACCOUNT["password"])
 
     other = client.post(f"/api/customers/{customer['id']}/accounts", json=ACCOUNT)

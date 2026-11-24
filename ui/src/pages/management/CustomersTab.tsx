@@ -10,6 +10,7 @@ import styles from "./CustomersTab.module.css";
 import { CustomerDetail } from "./CustomerDetail";
 import { CustomerForm } from "./CustomerForms";
 import { CustomerList } from "./CustomerList";
+import { customerFound } from "./customerSearch";
 
 interface ColumnsProps {
   customers: readonly Customer[];
@@ -21,7 +22,9 @@ interface ColumnsProps {
 function Columns({ customers, chosen, onChoose }: ColumnsProps) {
   const { t } = useTranslation();
   const [adding, setAdding] = useState(false);
-  const shown = customers.find((customer) => customer.id === chosen) ?? customers[0];
+  const [query, setQuery] = useState("");
+  const found = customers.filter((customer) => customerFound(customer, query));
+  const shown = found.find((customer) => customer.id === chosen) ?? found[0];
 
   function choose(id: string) {
     setAdding(false);
@@ -31,10 +34,12 @@ function Columns({ customers, chosen, onChoose }: ColumnsProps) {
   return (
     <div className={styles.columns}>
       <CustomerList
-        customers={customers}
+        customers={found}
         shown={adding ? null : (shown?.id ?? null)}
         onChoose={choose}
         onAdd={() => setAdding(true)}
+        query={query}
+        onQuery={setQuery}
       />
       <div className={styles.detail}>
         {adding ? (
@@ -48,11 +53,13 @@ function Columns({ customers, chosen, onChoose }: ColumnsProps) {
           </div>
         ) : shown === undefined ? (
           <div className={styles.form}>
-            <EmptyState>{t("pages.customers.empty")}</EmptyState>
+            <EmptyState>
+              {t(customers.length === 0 ? "pages.customers.empty" : "pages.customers.noMatch")}
+            </EmptyState>
           </div>
         ) : (
           // Another customer starts with no form open.
-          <CustomerDetail key={shown.id} customer={shown} />
+          <CustomerDetail key={shown.id} customer={shown} query={query} />
         )}
       </div>
     </div>
