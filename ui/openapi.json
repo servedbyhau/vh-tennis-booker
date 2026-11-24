@@ -1927,6 +1927,211 @@
         }
       }
     },
+    "/api/requests": {
+      "get": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "List Requests",
+        "description": "List every request, by customer.",
+        "operationId": "list_requests_api_requests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BookingRequest"
+                  },
+                  "type": "array",
+                  "title": "Response List Requests Api Requests Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Add Request",
+        "description": "Record a customer's request; 404 for an unknown customer.",
+        "operationId": "add_request_api_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestFields"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/requests/{request_id}": {
+      "put": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Change Request",
+        "description": "Replace what a request asks.",
+        "operationId": "change_request_api_requests__request_id__put",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestFields"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "requests"
+        ],
+        "summary": "Remove Request",
+        "description": "Remove a request.",
+        "operationId": "remove_request_api_requests__request_id__delete",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/setup": {
       "get": {
         "tags": [
@@ -2424,6 +2629,96 @@
         "title": "AttachedAccount",
         "description": "The account a machine books with from its next run on."
       },
+      "BookingRequest": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Customer Id"
+          },
+          "subdivision": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Subdivision"
+          },
+          "sport": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Sport"
+          },
+          "court": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Court"
+          },
+          "slots": {
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2} - \\d{2}:\\d{2}$"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Slots"
+          },
+          "days": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 7,
+            "title": "Days"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 31.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "customer_id",
+          "subdivision",
+          "sport",
+          "court",
+          "slots",
+          "id",
+          "created_at"
+        ],
+        "title": "BookingRequest"
+      },
       "Charge": {
         "properties": {
           "code": {
@@ -2875,6 +3170,14 @@
           "venue_keyword": {
             "type": "string",
             "title": "Venue Keyword"
+          },
+          "days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Days",
+            "default": []
           }
         },
         "additionalProperties": false,
@@ -3386,6 +3689,87 @@
         "title": "QuotaReading",
         "description": "What an account used of a utility's quota in a month, as a run last read it."
       },
+      "RequestFields": {
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$",
+            "title": "Customer Id"
+          },
+          "subdivision": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Subdivision"
+          },
+          "sport": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Sport"
+          },
+          "court": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Court"
+          },
+          "slots": {
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2} - \\d{2}:\\d{2}$"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 1,
+            "title": "Slots"
+          },
+          "days": {
+            "items": {
+              "type": "integer",
+              "maximum": 6.0,
+              "minimum": 0.0
+            },
+            "type": "array",
+            "maxItems": 7,
+            "title": "Days"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 31.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "customer_id",
+          "subdivision",
+          "sport",
+          "court",
+          "slots"
+        ],
+        "title": "RequestFields",
+        "description": "What a customer asks to book."
+      },
       "RunDetail": {
         "properties": {
           "id": {
@@ -3798,6 +4182,14 @@
             },
             "type": "array",
             "title": "Slots"
+          },
+          "days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Days",
+            "default": []
           },
           "subdivision": {
             "type": "string",

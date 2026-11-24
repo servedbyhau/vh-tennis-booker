@@ -19,16 +19,14 @@ asked for 5-7 days of it before deciding whether the first tap should wait until
 half the days, costing 0.5-1 s. Compare, per day, Android's offset, the first tap by Android's
 clock and the attempt that opened the calendar.
 
-## Next task: what needed MuMu, from the app
+## Next task: the management upgrade, tried by the user
 
-Chosen by the user on 2026-11-24, one branch each: (1) `court-booker cancel <code>`
-(#302; a real cancel of a ticket booked for the test went through), (2) its button on a
-ticket of the tickets section (`feat/cancel-ticket-button`; a real cancel through the API went
-through), (3, `feat/read-quota`, a real read on MuMu 0 went through) a button that reads
-an account's quota again, (4, `feat/open-machine`, opened MuMu 0 for real) one that opens a
-machine's MuMu. Each stacks on the one before: merge them in order, then install `develop`. Adding or deleting machines stays
-by hand (three at most, on or off in the Setup). The quota read since #292 is in the installed
-app since #299; the first 06:00 runs read it on every machine.
+Asked by the user on 2026-11-24, every part chosen and designed here: an overview and a
+machines section (#308), tickets as a week, filtered and marked sent (#309), a quota table
+(#310), the money (#311), statistics (#312), and the customers' requests with each machine's
+booking days (`feat/requests`). Each stacks on the one before: merge them in order, install
+`develop` (not from 05:45 to 06:05), then the user tries every section and says what to change.
+The cancel, quota and open buttons (#302-#305) are in the installed app already.
 
 Decided with the user on 2026-11-23: a run never changes the account by itself (a login at 05:46
 could cost the booking, a customer's phone may be logged out, two accounts may share an

@@ -14,6 +14,7 @@ function instance(index: number, court: string, slots: string[]) {
     sport: "tennis",
     court,
     venue_keyword: "Origami",
+    days: [],
   };
 }
 

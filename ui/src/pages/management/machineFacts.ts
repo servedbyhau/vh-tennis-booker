@@ -20,6 +20,8 @@ export interface Booking {
   sport: string;
   court: string;
   slots: string[];
+  /** 0 Monday to 6 Sunday; empty: every day. */
+  days: number[];
 }
 
 export interface MachineFacts {
@@ -45,6 +47,7 @@ export function bookingOf(settings: Settings, machine: Machine): Booking | undef
     sport: entry.sport,
     court: entry.court,
     slots: [...entry.slots],
+    days: [...(entry.days ?? [])],
   };
 }
 

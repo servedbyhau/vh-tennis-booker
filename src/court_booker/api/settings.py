@@ -81,6 +81,9 @@ class InstanceSettings(BaseModel):
     sport: str
     court: str
     venue_keyword: str
+    days: list[int] = []
+    """Days of the week the day of play may fall on to book, 0 Monday to 6 Sunday; empty: every
+    day."""
 
 
 class Settings(BaseModel):
@@ -90,6 +93,8 @@ class Settings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     slots: list[str]
+    days: list[int] = []
+    """Days of the week the first machine books for, as an instance's ``days``."""
     subdivision: str
     """The account's subdivision, ``origami`` or ``bs``; empty leaves it to the account."""
     sport: str

@@ -10,6 +10,7 @@ export function settings(fields: Partial<Settings> = {}): Settings {
     wake_at: "05:50",
     start_at: "06:00",
     venue_keyword: "Origami",
+    days: [],
     device: "auto",
     adb_path: "",
     package: "com.vinhomes.resident",
