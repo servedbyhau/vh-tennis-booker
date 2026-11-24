@@ -13,6 +13,7 @@ const SECTIONS = [
   { to: paths.quota, title: "pages.quota.title" },
   { to: paths.money, title: "pages.money.title" },
   { to: paths.history, title: "pages.history.title" },
+  { to: paths.stats, title: "pages.stats.title" },
 ] as const;
 
 /**

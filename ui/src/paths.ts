@@ -8,6 +8,7 @@ export const paths = {
   quota: "/management/quota",
   money: "/management/money",
   history: "/management/history",
+  stats: "/management/stats",
   guide: "/guide",
 } as const;
 

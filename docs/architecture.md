@@ -393,7 +393,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   address: `OverviewTab` (the index: this month's figures, the machines in a table, the tickets of
   the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), `QuotaTab` (a row an account, a column a sport, from the
   customers' readings of the month chosen), `MoneyTab` (the month's sums, a card per customer
-  from `money.ts`, the price list), the first two from
+  from `money.ts`, the price list), `StatsTab` (the scheduled runs of the last 30 days summed by
+  `stats.ts`: by machine, by slot, the reasons of the slots lost), the first two from
   `machineFacts.ts` (the settings, the customers and the newest scheduled run of each MuMu
   instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
   `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes,

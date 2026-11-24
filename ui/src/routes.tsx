@@ -10,6 +10,7 @@ import { MachinesTab } from "./pages/management/MachinesTab";
 import { MoneyTab } from "./pages/management/MoneyTab";
 import { OverviewTab } from "./pages/management/OverviewTab";
 import { QuotaTab } from "./pages/management/QuotaTab";
+import { StatsTab } from "./pages/management/StatsTab";
 import { TicketsTab } from "./pages/management/TicketsTab";
 import { ManagementPage } from "./pages/ManagementPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -34,6 +35,7 @@ export const routes: RouteObject[] = [
           { path: paths.quota, element: <QuotaTab /> },
           { path: paths.money, element: <MoneyTab /> },
           { path: paths.history, element: <HistoryTab /> },
+          { path: paths.stats, element: <StatsTab /> },
         ],
       },
       { path: paths.guide, element: <GuidePage /> },

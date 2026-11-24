@@ -7,6 +7,8 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A statistics section sums the 06:00 runs of the last 30 days: the share of slots booked by
+  machine and by slot, the average time of a slot booked, and why slots were lost.
 - A money section: each ticket a customer's account books becomes a charge (kept once the ticket
   is gone), priced by a price list of a normal and a golden price a sport, or set by hand; a
   cancelled ticket and a customer booked for free owe nothing. A month's sums, each customer's

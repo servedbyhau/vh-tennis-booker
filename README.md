@@ -226,6 +226,8 @@ On the second:
   customer's tickets show with their price and whether paid, with a button that marks them all
   paid and one that copies the statement to paste in a chat. The overview shows what is left to
   collect this month.
+- **Thống kê / Statistics**: what the 06:00 runs of the last 30 days tell: the share of slots
+  booked by machine and by slot, how long a slot booked took on average, and why slots were lost.
 - **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every
   slot booked or not and when it started (real bookings, dry runs on request); a press shows the
   reasons, the steps and the technical log beside the list. A booking that stopped on a failure the

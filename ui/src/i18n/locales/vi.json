@@ -229,6 +229,22 @@
       "savePrices": "Lưu bảng giá",
       "saved": "Đã lưu"
     },
+    "stats": {
+      "title": "Thống kê",
+      "since": "Các lượt 06:00 trong {{days}} ngày qua ({{runs}} lượt chạy của các máy).",
+      "allBooked": "giờ đặt được / giờ thử",
+      "allRate": "tỉ lệ đặt được",
+      "allAverage": "thời gian trung bình mỗi giờ đặt được",
+      "byMachine": "Theo máy",
+      "bySlot": "Theo khung giờ",
+      "slot": "Khung giờ",
+      "tried": "Thử",
+      "booked": "Được",
+      "rate": "Tỉ lệ",
+      "average": "Trung bình",
+      "reasons": "Vì sao không đặt được",
+      "noLoss": "Không mất giờ nào."
+    },
     "management": {
       "sections": "Các mục quản lý"
     },
