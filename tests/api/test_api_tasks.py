@@ -84,7 +84,7 @@ def test_one_task_at_a_time_across_kinds(app, client, launched):
     second = client.post("/api/machines/2/quota")
 
     assert (second.status_code, second.json()["error"]) == (409, "lock_held")
-    assert client.get("/api/status").json()["running"]["trigger"] == "quota"
+    assert second.json()["detail"] == "Another task is in progress: quota on MuMu 2"
 
 
 def test_no_quota_read_around_the_scheduled_run(client, launched, monkeypatch):
