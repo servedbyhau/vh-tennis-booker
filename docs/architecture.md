@@ -436,9 +436,11 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   `SetupSwitches.tsx` (the daily booking, the result notification and, for a machine beside the
   first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
-  (`DryRun`). `AccountPicker` shows the account in use and, once pressed, every customer's, a line
-  each; a press saves one, and one that another machine books with moves only after a question.
-  Under each account there and on the machines' cards, `components/QuotaLine.tsx` shows what is left
+  (`DryRun`). `AccountPicker` shows the account in use under its title and, once pressed, the
+  customers who have accounts; a customer pressed, their accounts (back to the customers above
+  them, each opening starts from the customers); a press saves one, and one that another machine
+  books with moves only after a question.
+  On the machines' cards, `components/QuotaLine.tsx` shows what is left
   of each utility's quota in the month the next booking is for (`quota.ts`, from the schedule's
   `next_play_date`), as the last run read it ("Tennis còn 1/8", the sport in the interface's language, the app's words for a read without it), none left marked, when it was
   read in the tooltip. The header's status line (`components/StatusLine.tsx`)

@@ -16,6 +16,11 @@
   padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
 }
 
+/* What it is, set off from the account under it. */
+.current .name {
+  font-weight: var(--weight-bold);
+}
+
 .current:hover {
   background: var(--color-paper);
 }
@@ -170,6 +175,35 @@
   min-height: 34px;
   padding: 0 var(--space-3);
   font-size: var(--text-small);
+}
+
+/* Back to the customers, over the accounts of the one pressed. */
+.back {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-bottom: var(--border-hairline) solid var(--color-hairline);
+  background: transparent;
+  color: var(--color-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.back:hover {
+  background: var(--color-paper);
+}
+
+.backName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-data);
+  font-weight: var(--weight-semibold);
 }
 
 .manage {

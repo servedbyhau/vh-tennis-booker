@@ -4,14 +4,12 @@ import { Link } from "react-router";
 import { errorMessage } from "../../api/errors";
 import { useAttachAccount, useDetachAccount } from "../../api/mutations";
 import { useCustomers } from "../../api/queries";
-import type { Customer, CustomerAccount, QuotaReading } from "../../api/types";
+import type { Customer, CustomerAccount } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Icon, type IconName } from "../../components/Icon";
 import { QueryView } from "../../components/QueryView";
-import { QuotaLine } from "../../components/QuotaLine";
 import { accountOn, useMachines } from "../../machines";
 import { paths } from "../../paths";
-import { useBookingMonth } from "../../quota";
 import { useReadiness } from "../../readiness";
 import styles from "./AccountPicker.module.css";
 import { machineName } from "./ticketText";
@@ -19,26 +17,24 @@ import { machineName } from "./ticketText";
 interface ChoiceProps {
   icon: IconName;
   title: string;
-  phone?: string;
-  label?: string;
+  /** A phone number, written as one. */
+  mono?: boolean;
+  hint?: string;
   /** Where it is now, on another machine. */
   place?: string;
-  /** What is left of its quota, as the last run read it, and the month booked for. */
-  quota?: readonly QuotaReading[];
-  month?: string;
   chosen: boolean;
   disabled: boolean;
   onPick: () => void;
 }
 
-/** One line to choose: who, the account, and a tick in place of the icon once chosen. */
+/** One line to choose: a customer or an account, a tick in place of the icon once chosen. */
 function Choice(props: ChoiceProps) {
-  const { icon, title, phone, label, place, quota, month, chosen, disabled, onPick } = props;
+  const { icon, title, mono, hint, place, chosen, disabled, onPick } = props;
   return (
     <button
       type="button"
       aria-pressed={chosen}
-      title={[title, phone, label].filter(Boolean).join(" · ")}
+      title={[title, hint].filter(Boolean).join(" · ")}
       disabled={disabled}
       className={styles.choice}
       onClick={onPick}
@@ -47,9 +43,8 @@ function Choice(props: ChoiceProps) {
         <Icon name={chosen ? "check" : icon} />
       </span>
       <span className={styles.text}>
-        <span className={styles.name}>{title}</span>
-        {phone !== undefined && <AccountLine phone={phone} label={label} />}
-        {quota !== undefined && <QuotaLine quota={quota} month={month} />}
+        <span className={mono ? `${styles.name} ${styles.phone}` : styles.name}>{title}</span>
+        {hint !== undefined && hint !== "" && <span className={styles.hint}>{hint}</span>}
       </span>
       {place !== undefined && <span className={styles.place}>{place}</span>}
     </button>
@@ -71,18 +66,23 @@ interface PickerProps {
   mumuIndex: number;
 }
 
-/** The account in use as a button, and under it, once pressed, every one to choose from. */
+/**
+ * The account in use as a button, and under it, once pressed, the customers; a customer pressed,
+ * their accounts, a phone number each.
+ */
 function Picker({ customers, mumuIndex }: PickerProps) {
   const { t } = useTranslation();
   const id = useId();
   const machines = useMachines();
   const { accountless, short } = useReadiness();
-  const month = useBookingMonth();
   const attach = useAttachAccount();
   const detach = useDetachAccount();
   const button = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  /** The customer whose accounts are listed, `null` while the customers are. */
+  const [chosenCustomer, setChosenCustomer] = useState<string | null>(null);
+  const back = useRef<HTMLButtonElement>(null);
   /** The account of another machine asked about, before it moves here. */
   const [asked, setAsked] = useState<CustomerAccount | null>(null);
   const attached = accountOn(customers, mumuIndex);
@@ -94,7 +94,14 @@ function Picker({ customers, mumuIndex }: PickerProps) {
     if (open) {
       list.current?.scrollIntoView?.({ block: "nearest" });
     }
-  }, [open, asked]);
+  }, [open, asked, chosenCustomer]);
+
+  // Keys go on from the customer pressed to their accounts.
+  useEffect(() => {
+    if (chosenCustomer !== null) {
+      back.current?.focus();
+    }
+  }, [chosenCustomer]);
 
   function close() {
     setOpen(false);
@@ -106,6 +113,7 @@ function Picker({ customers, mumuIndex }: PickerProps) {
     attach.reset();
     detach.reset();
     setAsked(null);
+    setChosenCustomer(null);
     setOpen(!open);
   }
 
@@ -144,9 +152,9 @@ function Picker({ customers, mumuIndex }: PickerProps) {
   const remind =
     accountless.some((machine) => machine.mumuIndex === mumuIndex) ||
     short.some(({ place }) => machines[place]?.mumuIndex === mumuIndex);
-  const choices = customers.flatMap((customer) =>
-    customer.accounts.map((account) => ({ customer, account })),
-  );
+  // A customer without accounts has none to choose.
+  const choices = customers.filter((customer) => customer.accounts.length > 0);
+  const shown = choices.find((customer) => customer.id === chosenCustomer);
   return (
     <div onKeyDown={onKeyDown}>
       <button
@@ -161,17 +169,11 @@ function Picker({ customers, mumuIndex }: PickerProps) {
           <Icon name="person" />
         </span>
         <span className={styles.text}>
-          <span className="visually-hidden">{t("pages.setup.account.title")}: </span>
-          <span className={styles.name}>
-            {attached?.customer.name ?? t("pages.setup.account.empty")}
-          </span>
+          <span className={styles.name}>{t("pages.setup.account.title")}</span>
           {attached === null ? (
             <span className={styles.hint}>{t("pages.setup.account.emptyHint")}</span>
           ) : (
-            <>
-              <AccountLine phone={attached.account.phone ?? ""} label={attached.account.label} />
-              <QuotaLine quota={attached.account.quota} month={month} />
-            </>
+            <AccountLine phone={attached.account.phone ?? ""} label={attached.account.label} />
           )}
         </span>
         <span className={styles.chevron}>
@@ -191,9 +193,49 @@ function Picker({ customers, mumuIndex }: PickerProps) {
         hidden={!open}
         className={styles.list}
       >
-        {open && (
+        {open && shown === undefined && (
           <>
-            {choices.map(({ customer, account }) => (
+            {choices.map((customer) => (
+              <div key={customer.id} className={styles.item}>
+                <Choice
+                  icon="person"
+                  title={customer.name}
+                  hint={t("pages.customers.accountCount", { count: customer.accounts.length })}
+                  chosen={attached?.customer.id === customer.id}
+                  disabled={pending}
+                  onPick={() => setChosenCustomer(customer.id)}
+                />
+              </div>
+            ))}
+            {choices.length > 0 && (
+              <div className={styles.item}>
+                <Choice
+                  icon="none"
+                  title={t("pages.setup.account.none")}
+                  chosen={attached === null}
+                  disabled={pending}
+                  onPick={pickNone}
+                />
+              </div>
+            )}
+          </>
+        )}
+        {open && shown !== undefined && (
+          <>
+            <button
+              ref={back}
+              type="button"
+              className={styles.back}
+              onClick={() => {
+                setAsked(null);
+                setChosenCustomer(null);
+              }}
+            >
+              <Icon name="back" />
+              <span className={styles.backName}>{shown.name}</span>
+              <span className={styles.hint}>{t("pages.setup.account.otherCustomer")}</span>
+            </button>
+            {shown.accounts.map((account) => (
               <div
                 key={account.id}
                 className={
@@ -201,12 +243,10 @@ function Picker({ customers, mumuIndex }: PickerProps) {
                 }
               >
                 <Choice
-                  icon="person"
-                  title={customer.name}
-                  phone={account.phone ?? t("pages.customers.noLogin")}
-                  label={account.label}
-                  quota={account.quota}
-                  month={month}
+                  icon="key"
+                  title={account.phone ?? t("pages.customers.noLogin")}
+                  mono={account.phone !== null}
+                  hint={account.label}
                   place={
                     account.device === null || account.device === mumuIndex
                       ? undefined
@@ -243,22 +283,13 @@ function Picker({ customers, mumuIndex }: PickerProps) {
                 )}
               </div>
             ))}
-            {choices.length > 0 && (
-              <div className={styles.item}>
-                <Choice
-                  icon="none"
-                  title={t("pages.setup.account.none")}
-                  chosen={attached === null}
-                  disabled={pending}
-                  onPick={pickNone}
-                />
-              </div>
-            )}
-            <Link to={paths.customers} className={styles.manage}>
-              {t("pages.setup.account.manage")}
-              <Icon name="go" />
-            </Link>
           </>
+        )}
+        {open && (
+          <Link to={paths.customers} className={styles.manage}>
+            {t("pages.setup.account.manage")}
+            <Icon name="go" />
+          </Link>
         )}
       </div>
     </div>

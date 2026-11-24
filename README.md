@@ -56,9 +56,10 @@ through, and each step as it happens; a list of the last runs is beside it](docs
   pictured with its QR code, kept by customer until its day of play is over.
 - **The quota in sight.** While getting ready and after the tickets, a run counts on the app's
   history page what the account used of the month's 8 bookings and the day's 2, and warns when
-  fewer are left than the slots chosen; each account shows what is left of it. When the next
-  day's run would have too few, a notification, the machine's tab and its account say so, so
-  another account can be chosen in time; a run never changes the account by itself.
+  fewer are left than the slots chosen; the quota section and each machine's card show what is
+  left. When the next day's run would have too few, a notification, the machine's tab and its
+  account say so, so another account can be chosen in time; a run never changes the account by
+  itself.
 - **Several accounts at once.** Each extra MuMu instance books with its own account, court
   and slots, in a process of its own, so one that fails holds up no other.
 - **Tested without a device.** Fakes replace the emulator, ADB, the clock and Task
@@ -182,8 +183,8 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
   they happen; those of the 06:00 race (from a minute before to the last slot) show once it is
   over, so writing them takes nothing from the booking.
 - **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
-  once a dry run passed), the Windows notification, the account the machine books with, picked
-  from the customers', a button that opens the machine's MuMu to see its screen (launched, or its
+  once a dry run passed), the Windows notification, the account the machine books with (its phone
+  number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
   window brought to the front), and a dry run. Before booking, a run reads the phone number logged in on the
   machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
   once; a machine that cannot be sure books nothing.

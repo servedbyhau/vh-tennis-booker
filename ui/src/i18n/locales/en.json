@@ -425,14 +425,14 @@
       "open": "Open MuMu {{index}} to see its screen",
       "account": {
         "title": "Account",
-        "empty": "Choose an account",
         "emptyHint": "Books with the one logged in on MuMu",
         "none": "None",
         "onMachine": "on {{machine}}",
         "move": "Move it from {{from}} to {{to}}?",
         "moveYes": "Move",
         "moveNo": "No",
-        "manage": "Manage customers"
+        "manage": "Manage customers",
+        "otherCustomer": "Another customer"
       },
       "dryRun": {
         "button": "Dry run",
