@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints
 
 from court_booker import credentials
 from court_booker.api.context import Context
-from court_booker.credentials import Login, mask_phone
+from court_booker.credentials import Login
 from court_booker.customers import Account, Customer, CustomerBook
 from court_booker.errors import LockHeldError
 from court_booker.history import connect
@@ -63,7 +63,7 @@ class CustomerAccount(BaseModel):
     id: str
     label: str
     phone: Optional[str]
-    """The phone number with its middle hidden, ``None`` once its saved login is gone."""
+    """The phone number, ``None`` once its saved login is gone."""
     device: Optional[int]
     """The MuMu instance it is attached to."""
     quota: list[QuotaReading]
@@ -156,11 +156,10 @@ def readings(book: CustomerBook) -> Readings:
 
 
 def shown_account(account: Account, read: Readings) -> CustomerAccount:
-    phone = None if account.phone is None else mask_phone(account.phone)
     return CustomerAccount(
         id=account.id,
         label=account.label,
-        phone=phone,
+        phone=account.phone,
         device=account.device,
         quota=[QuotaReading(**reading) for reading in read.get(account.id, [])],
     )

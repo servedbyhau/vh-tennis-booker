@@ -205,10 +205,10 @@ On the second:
 - **Máy / Machines**: a card per machine with its account, what it books, its quota, its last
   06:00 run, and buttons that open its MuMu and read its quota again.
 - **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
-  the Vinhomes accounts they gave, each with what is left of its quota in the month booked for, as
-  the last run read it (also in the Setup's list of accounts); an account on a machine has a
-  button that reads it again in the Vinhomes app (about a minute). The passwords are kept by Windows
-  (Credential Manager) for your Windows account; an account's form shows its own.
+  the Vinhomes accounts they gave, each with its whole phone number and a button that copies it. A
+  search over the list finds a customer by name or contact, or an account by its name or phone
+  number (marked once found). The quotas are in the quota section. The passwords are kept by
+  Windows (Credential Manager) for your Windows account; an account's form shows its own.
 - **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
   by day of play or as a week (a column a day, a row a slot), of one sport or every one, every
   ticket or those not sent to their customer yet, with their slot, court, status, whose account they

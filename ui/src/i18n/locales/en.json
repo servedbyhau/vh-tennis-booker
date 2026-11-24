@@ -321,7 +321,12 @@
       "removeAsk": "Remove {{name}}?",
       "lostAccounts": "Accounts lost: {{count}}",
       "lostPasswords": "The saved password goes too, for good.",
-      "lostFacts": "What is known of the customer goes too, for good."
+      "lostFacts": "What is known of the customer goes too, for good.",
+      "search": "Find a customer, account name, phone",
+      "noMatch": "No customer matches.",
+      "copyPhone": "Copy the phone number",
+      "copied": "Copied",
+      "copyFailed": "Could not copy"
     },
     "requests": {
       "title": "Requests",

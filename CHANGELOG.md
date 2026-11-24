@@ -89,6 +89,9 @@ uses [Semantic Versioning](https://semver.org/).
   others is on.
 
 ### Changed
+- The customers' page shows each account's whole phone number with a button that copies it, and
+  a search finds a customer by name or contact, or an account by its name or phone number. The
+  quotas and their read again moved off it: they are in the quota section.
 - Every MuMu instance on the PC has its tab, not three only: a fourth or fifth machine is
   switched on in the Setup instead of added to `config.toml` by hand (`/api/mumu-instances`).
 - The machines of a run launch MuMu one after another, each once the ones before it in the

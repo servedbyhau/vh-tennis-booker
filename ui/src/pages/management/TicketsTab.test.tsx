@@ -11,7 +11,7 @@ import { settings } from "../../test/settings";
 import { ticket } from "../../test/tickets";
 
 const AN = { customer: "Anh An", account: "Căn A" };
-const BINH = { customer: "Chị Bình", account: "09••••••44" };
+const BINH = { customer: "Chị Bình", account: "0900000044" };
 
 /** Two customers' tickets around 15/10, with made-up codes. */
 const TICKETS = [
@@ -83,7 +83,7 @@ describe("Tickets list", () => {
       ],
       [
         "Thứ Bảy 17/101 vé",
-        "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝChị Bình09••••••44chưa gửiXem vé",
+        "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝChị Bình0900000044chưa gửiXem vé",
       ],
     ]);
   });

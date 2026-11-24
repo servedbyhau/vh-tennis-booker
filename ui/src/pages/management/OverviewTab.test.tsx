@@ -27,11 +27,11 @@ const SETTINGS: Settings = settings({
 
 const AN: Customer = customer("a1", {
   name: "Anh An",
-  accounts: [account("b1", { device: 0, phone: "09••••••12" })],
+  accounts: [account("b1", { device: 0, phone: "0900000012" })],
 });
 const BINH: Customer = customer("a2", {
   name: "Chị Bình",
-  accounts: [account("b2", { device: 1, phone: "09••••••62" })],
+  accounts: [account("b2", { device: 1, phone: "0900000062" })],
 });
 
 const BOOKED = runSummary(7, { device: 0, started_at: "2026-10-15T05:45:00.000" });

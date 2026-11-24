@@ -1,14 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRemoveAccount, useRemoveCustomer } from "../../api/mutations";
 import type { Customer, CustomerAccount } from "../../api/types";
 import { Icon, type IconName } from "../../components/Icon";
 import { IconButton } from "../../components/IconButton";
-import { QuotaLine } from "../../components/QuotaLine";
-import { useBookingMonth } from "../../quota";
 import styles from "./CustomerDetail.module.css";
 import { AccountForm, CustomerForm } from "./CustomerForms";
-import { useQuotaRefresh } from "./quotaRefresh";
+import { accountFound } from "./customerSearch";
 import { RemoveQuestion } from "./RemoveQuestion";
 
 /** What is open: the customer's form, an account's (a new one without `id`), or a removal. */
@@ -77,44 +75,63 @@ function RemoveAccount({ account, onClose }: { account: CustomerAccount; onClose
   );
 }
 
+/** How long "copied" shows after the phone number is copied. */
+const COPIED_MS = 2000;
+
+/** Copy `phone` to paste it elsewhere; return what to say of it until it fades. */
+function useCopy(phone: string | null) {
+  const [said, setSaid] = useState<"copied" | "failed" | null>(null);
+  useEffect(() => {
+    if (said === null) {
+      return;
+    }
+    const timer = setTimeout(() => setSaid(null), COPIED_MS);
+    return () => clearTimeout(timer);
+  }, [said]);
+  const copy = () => {
+    if (phone !== null) {
+      void navigator.clipboard.writeText(phone).then(
+        () => setSaid("copied"),
+        () => setSaid("failed"),
+      );
+    }
+  };
+  return { said, copy };
+}
+
 interface AccountRowProps {
   customerId: string;
   account: CustomerAccount;
+  /** Whether the search found this account by its name or phone number. */
+  found: boolean;
   open: Open | null;
   onOpen: (open: Open | null) => void;
 }
 
 /** An account: its phone and label, its form under it, or the question before its removal. */
-function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
+function AccountRow({ customerId, account, found, open, onOpen }: AccountRowProps) {
   const { t } = useTranslation();
-  const month = useBookingMonth();
   const close = () => onOpen(null);
   const edited = open?.form === "account" && open.id === account.id;
   const removed = open?.form === "removeAccount" && open.id === account.id;
-  const refresh = useQuotaRefresh(account.device);
+  const { said, copy } = useCopy(account.phone);
   return (
     <li className={styles.account}>
-      <div className={styles.row}>
+      <div className={`${styles.row} ${found ? styles.found : ""}`}>
         <span className={styles.mark}>
           <Icon name="key" />
         </span>
         <span className={styles.login}>
           <span className={styles.phone}>{account.phone ?? t("pages.customers.noLogin")}</span>
           {account.label !== "" && <span className={styles.label}>{account.label}</span>}
-          <QuotaLine quota={account.quota} month={month} />
-          {refresh.text !== null && (
-            <span role="status" className={styles.label}>
-              {refresh.text}
-            </span>
-          )}
         </span>
-        {account.device !== null && (
-          <IconButton
-            icon="refresh"
-            label={t("quota.refresh.button")}
-            disabled={refresh.running}
-            onClick={refresh.read}
-          />
+        {said !== null && (
+          <span role="status" className={styles.label}>
+            {t(said === "copied" ? "pages.customers.copied" : "pages.customers.copyFailed")}
+          </span>
+        )}
+        {account.phone !== null && (
+          <IconButton icon="copy" label={t("pages.customers.copyPhone")} onClick={copy} />
         )}
         <IconButton
           icon="edit"
@@ -136,8 +153,11 @@ function AccountRow({ customerId, account, open, onOpen }: AccountRowProps) {
   );
 }
 
-/** A customer: who they are, then the Vinhomes accounts they gave. One form is open at a time. */
-export function CustomerDetail({ customer }: { customer: Customer }) {
+/**
+ * A customer: who they are, then the Vinhomes accounts they gave, those the search found by
+ * their name or number marked. One form is open at a time.
+ */
+export function CustomerDetail({ customer, query }: { customer: Customer; query: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState<Open | null>(null);
   const close = () => setOpen(null);
@@ -185,6 +205,7 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
               key={account.id}
               customerId={customer.id}
               account={account}
+              found={accountFound(account, query)}
               open={open}
               onOpen={setOpen}
             />

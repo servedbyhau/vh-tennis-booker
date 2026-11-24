@@ -50,7 +50,7 @@ class Account:
     label: str
     """What tells it from the customer's others, such as ``Căn A``; may be empty."""
     phone: str | None
-    """The whole phone number, ``None`` once its saved login is gone; mask it to show it."""
+    """The whole phone number, ``None`` once its saved login is gone; mask it in logs."""
     device: int | None
     """The MuMu instance it is attached to."""
 

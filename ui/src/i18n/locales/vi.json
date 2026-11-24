@@ -321,7 +321,12 @@
       "removeAsk": "Xóa {{name}}?",
       "lostAccounts": "Sẽ mất {{count}} tài khoản:",
       "lostPasswords": "Mật khẩu đã lưu cũng mất, không lấy lại được.",
-      "lostFacts": "Thông tin của khách cũng mất, không lấy lại được."
+      "lostFacts": "Thông tin của khách cũng mất, không lấy lại được.",
+      "search": "Tìm khách, tên tài khoản, SĐT",
+      "noMatch": "Không có khách nào khớp.",
+      "copyPhone": "Copy số điện thoại",
+      "copied": "Đã copy",
+      "copyFailed": "Không copy được"
     },
     "requests": {
       "title": "Yêu cầu",
