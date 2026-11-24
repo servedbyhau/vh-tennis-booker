@@ -264,6 +264,7 @@
       },
       "notify": "Thông báo kết quả",
       "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
+      "open": "Mở MuMu {{index}} để xem màn hình",
       "account": {
         "title": "Tài khoản",
         "empty": "Chọn tài khoản",

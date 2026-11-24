@@ -264,6 +264,7 @@
       },
       "notify": "Result notifications",
       "useLabel": "Book with machine {{number}} (MuMu {{index}})",
+      "open": "Open MuMu {{index}} to see its screen",
       "account": {
         "title": "Account",
         "empty": "Choose an account",

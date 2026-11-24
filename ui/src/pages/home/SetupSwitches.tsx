@@ -1,8 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { errorMessage } from "../../api/errors";
-import { useSaveNotifications, useSwitchInstance, useSwitchSchedule } from "../../api/mutations";
+import {
+  useOpenMachine,
+  useSaveNotifications,
+  useSwitchInstance,
+  useSwitchSchedule,
+} from "../../api/mutations";
 import { useNotifications } from "../../api/queries";
 import type { ScheduleState } from "../../api/types";
+import { IconButton } from "../../components/IconButton";
 import { Switch } from "../../components/Switch";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "../../i18n";
 import type { Machine } from "../../machines";
@@ -76,13 +82,23 @@ export function NotifyRow() {
 export function MachineRow({ machine, running }: { machine: Machine; running: boolean }) {
   const { t } = useTranslation();
   const use = useSwitchInstance();
+  const open = useOpenMachine();
   const { mumuIndex } = machine;
+  const failed = use.isError ? use.error : open.isError ? open.error : null;
   return (
     <SetupRow
       icon="machine"
       title={t("pages.ticket.instanceName", { number: machine.place + 1 })}
-      problem={use.isError ? errorMessage(t, use.error) : null}
+      problem={failed === null ? null : errorMessage(t, failed)}
     >
+      {mumuIndex !== null && (
+        <IconButton
+          icon="window"
+          label={t("pages.setup.open", { index: mumuIndex })}
+          disabled={running || open.isPending}
+          onClick={() => open.mutate(mumuIndex)}
+        />
+      )}
       {machine.place > 0 && (
         <Switch
           label={t("pages.setup.useLabel", { number: machine.place + 1, index: mumuIndex })}

@@ -1,5 +1,5 @@
 """Tasks the app starts on one machine: a ticket's cancel and a quota read, each in its own
-process (``court-booker cancel``, ``court-booker quota``).
+process (``court-booker cancel``, ``court-booker quota``), and opening a machine's MuMu.
 
 One task at a time, and none while a run or a dry run goes on: each drives a machine's app, and
 the run lock of the machine it uses may not be held yet when it starts.
@@ -7,6 +7,7 @@ the run lock of the machine it uses may not be held yet when it starts.
 
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
 # time, where Python 3.9 has no `X | None`, so `Optional` is used instead.
+import logging
 import subprocess
 import threading
 from dataclasses import dataclass
@@ -14,15 +15,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
 
 from court_booker.api.context import AppContext, Context
 from court_booker.api.customers import Book, MumuIndex
 from court_booker.api.errors import NoMachineError
+from court_booker.device_setup import find_mumu_manager
+from court_booker.emulator import MuMu
 from court_booker.engine import engine_command
-from court_booker.errors import LockHeldError
+from court_booker.errors import EmulatorError, LockHeldError, MuMuNotFoundError
 from court_booker.lock import RunLock, check_quiet_time
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["tasks"])
 
@@ -170,3 +175,29 @@ def start_quota(context: Context, book: Book, request: Request, mumu_index: Mumu
     if not machine_has_account(book, mumu_index):
         raise NoMachineError(f"MuMu {mumu_index} books with no chosen account")
     return start(request, context, "quota", mumu_index, ["quota"])
+
+
+@router.post("/machines/{mumu_index}/open", status_code=204, response_class=Response)
+def open_machine(context: Context, request: Request, mumu_index: MumuIndex) -> Response:
+    """Launch the MuMu instance of machine ``mumu_index``, or show its window if it runs.
+
+    Refused as :func:`start` refuses (a run starts and shuts MuMu itself), and (503 ``device``)
+    when MuMuManager is not found or fails.
+    """
+    config = context.config()
+    check_quiet_time(datetime.now(), config.wake_at, config.start_at, "MuMu opening")
+    with starting:
+        check_free(request, context, mumu_index)
+        manager = find_mumu_manager(config.mumu_manager)
+        if manager is None:
+            raise MuMuNotFoundError("MuMuManager not found")
+        mumu = MuMu(manager, mumu_index)
+        try:
+            if mumu.is_process_started():
+                mumu.show_window()
+            else:
+                mumu.launch()
+        except EmulatorError:
+            logger.warning("MuMu %d not opened", mumu_index, exc_info=True)
+            raise
+    return Response(status_code=204)

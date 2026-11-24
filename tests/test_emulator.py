@@ -151,6 +151,18 @@ def test_shutdown_asks_mumu_to_shut_the_instance_down(manager_path):
     assert calls == [[str(manager_path), "control", "-v", "1", "shutdown"]]
 
 
+def test_show_window_brings_the_instance_to_the_front(manager_path):
+    calls = []
+
+    def run(argv):
+        calls.append(argv)
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    MuMu(manager_path, 2, run=run).show_window()
+
+    assert calls == [[str(manager_path), "control", "-v", "2", "show_window"]]
+
+
 def test_failed_command_raises(manager_path):
     calls = []
 

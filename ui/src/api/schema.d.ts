@@ -613,6 +613,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/machines/{mumu_index}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Machine
+         * @description Launch the MuMu instance of machine ``mumu_index``, or show its window if it runs.
+         *
+         *     Refused as :func:`start` refuses (a run starts and shuts MuMu itself), and (503 ``device``)
+         *     when MuMuManager is not found or fails.
+         */
+        post: operations["open_machine_api_machines__mumu_index__open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -2576,6 +2599,45 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskState"];
                 };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    open_machine_api_machines__mumu_index__open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The MuMu instance */
+                mumu_index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Invalid request values, one line per value */
             422: {
