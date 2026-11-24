@@ -10,6 +10,7 @@ const SECTIONS = [
   { to: paths.machines, title: "pages.machines.title" },
   { to: paths.customers, title: "pages.customers.title" },
   { to: paths.tickets, title: "pages.tickets.title" },
+  { to: paths.quota, title: "pages.quota.title" },
   { to: paths.history, title: "pages.history.title" },
 ] as const;
 

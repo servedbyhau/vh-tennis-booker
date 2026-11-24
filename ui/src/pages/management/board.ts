@@ -82,7 +82,7 @@ export function useAlerts(facts: MachineFacts[] | undefined, tickets: readonly T
         left: item.left,
         slots: item.slots,
       }),
-      to: paths.customers,
+      to: paths.quota,
     });
   }
   for (const item of facts ?? []) {
