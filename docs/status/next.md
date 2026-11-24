@@ -37,10 +37,9 @@ over Zalo.
   CLAUDE.md.
 - Open question (field notes, "Promotion popup"): whether ticking "Không hiện lại" before the X
   keeps the popup away; two tries froze MuMu. Not needed by the run.
-- Decided 2026-11-23: five machines, two cores and 2 GB each (the user's own and four for
-  customers). Launching in turn is in `develop`, machines past three in the app in
-  `feat/more-machines`; left: knowing the 60 s notice. Ideas, not decided: a guide to
-  make a MuMu instance.
+- Decided 2026-11-24: three machines, two cores and 3 GB each (the user's own and two for
+  customers), as the app lets three through at once (known issues). Ideas, not decided: a guide
+  to make a MuMu instance.
 - Ruled out for now: code signing (SmartScreen's "Run anyway" stays). Waiting on something:
   another subdivision's survey needs access to one, and choosing days of the week is not
   decided.

@@ -451,12 +451,17 @@ slots and the booked date and time read the same.
   5.2-7.1 s and about 270 ms (three instances with two cores at 06:00: about 190 ms). The PC's
   CPU averaged 23-36% while booking.
 - **"Hệ thống giới hạn chỉ được đặt một tiện ích trong vòng 60s. Quý khách vui lòng thử lại
-  sau"** ("Thông báo", button "Đóng") showed 0.6 s after the day was tapped on the calendar, on
-  3 of 6 machines and on 2 of 5 started in the same second (2026-11-23); 3 got through each
-  time, and never one with three machines. The six accounts are of six apartments; what the
-  app counts is not known (the network, the cloned instances' device identity or the owner are
-  guesses). The flow does not know this notice: it looked for the slot for 29 s, then closed
-  it and opened the calendar again.
+  sau"** ("Thông báo", button "Đóng") shows 0.3-0.5 s after the day is selected on the
+  calendar (the slot list's query) when more than three machines select it in the same second:
+  exactly three get through, in 9 of 9 runs with four to six machines (2026-11-23 and 24, the
+  06:00 run of 24/11 among them), and none is stopped with three. The one stopped is mostly the
+  last to select the day, but once the second of four was (0.05 s after the first), so the
+  order the server gets them in decides. It counts across apartments, devices (each instance
+  has its own IMEI and Android id), sports and subdivisions (a BS account with three Origami
+  ones, 2026-11-24). It is short despite its text: a stopped machine got through 5-30 s later.
+  All the machines share the home network, the likeliest thing counted (not tried: a phone on
+  another network). The flow does not know this notice: it looks for the slot for 29 s, then
+  closes it and opens the calendar again. Since 2026-11-24 three machines book.
 - Two instances booked for real in parallel at 06:00 on 2026-11-01: Origami and BS each
   reached two tickets for 3/11, with every round finishing within 5 s. The one-day BS
   `[[instances]]` entry was removed at 07:05; the daily task still runs instance 0.

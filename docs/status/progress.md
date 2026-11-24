@@ -23,11 +23,10 @@ Last updated: 2026-11-23.
   `%LOCALAPPDATA%\Court Booker\court-booker\court-booker.exe`, with the data folder's
   `config.toml`; logs and history are in `%LOCALAPPDATA%\CourtBooker`. It wakes the PC at
   05:45 and books at 06:00. The app's "Tự đặt" switch sets it.
-- Since 2026-11-22 the installed app on the dev PC is a local build of `develop` at #285 (1.1.2
-  plus the third machine, the tickets, the customers' accounts and the new pages), to try it
-  before a release; its first 06:00 run is 2026-11-23. The apps before are in
+- Since 2026-11-22 the installed app on the dev PC is a local build of `develop`, to try it before
+  a release; it is at #299 since 2026-11-23. The apps before are in
   `D:\VH-Booker\app-backup-2026-11-22` (before the tickets) and `...-tickets` (before the account
-  check). #286 to #290 are merged and not installed.
+  check). #300 is merged and not installed.
 - Runner folder: at `v0.18.1`, still there as a way back (it was to go after 2026-11-10). To go back:
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
@@ -35,7 +34,8 @@ Last updated: 2026-11-23.
 - Merged since 1.1.2, not released: the tickets (#265 to #269), the customers, their accounts and
   the account check (#270 to #272), the pages and their look (#273 to #285), what is ready, whose
   account a run and a ticket are of, the copied picture and the question before a removal (#286 to
-  #290). No open branch but the docs.
+  #290), the quota (#292 to #298), launching in turn and every MuMu instance's tab (#297, #299),
+  the history held during the rounds (#300). No open branch but the docs.
 - Tried on real machines: the ticket reading on three accounts, the account check and a forced change
   of account on one. Not yet: either after a real 06:00 booking, a change between two different
   accounts, a changed phone number, whose account a run is of.
@@ -46,7 +46,7 @@ Last updated: 2026-11-23.
 
 | Date | Version | Result |
 |---|---|---|
-| 2026-11-24 | local `develop` build | Five machines, 2 cores and 2 GB each, launched in turn (all ready at 05:47:35), 5/10: instance 0 0/2, 1 1/2 (8.7 s), 2 1/2 (6.7 s), 4 2/2 (5.4 s, 4.8 s), 5 1/2. The two whose day tap came last (06:00:01.07, 01.22) got the 60 s notice; three got the "not open yet" notice (the PC clock 0.15 s behind NTP); each lost 0.2-0.8 s waiting for another's history write, and instances 4 and 5 turned history off (fixed on `fix/history-held-in-race`) |
+| 2026-11-24 | local `develop` build | Five machines, 2 cores and 2 GB each, launched in turn (all ready at 05:47:35), 5/10: instance 0 0/2, 1 1/2 (8.7 s), 2 1/2 (6.7 s), 4 2/2 (5.4 s, 4.8 s), 5 1/2. The two whose day tap came last (06:00:01.07, 01.22) got the 60 s notice; three got the "not open yet" notice (the PC clock 0.15 s behind NTP); each lost 0.2-0.8 s waiting for another's history write, and instances 4 and 5 turned history off (fixed in #300) |
 | 2026-11-23 | local `develop` build | Three machines, 3/6: instance 0 1/2 (5.6 s, the court full for the second), 1 2/2 (5.7 s, 3.5 s), 2 1/2 (5.4 s) |
 | 2026-11-22 | 1.1.2 | First run of three machines, 4 cores and 3 GB each, 4/6: instance 0 1/2 (7.2 s), instance 1 2/2 (6.7 s, 5.5 s), instance 2 1/2 (5.7 s); both lost slots were second ones, full by 06:00:10.5. The PC clock was 3.18 s slow after a power cut; the run made up for it |
 | 2026-11-21 | 1.1.2 | Instance 0 2/2 (6.3 s, 6.5 s), instance 1 2/2 (5.5 s, 3.8 s) |
@@ -73,6 +73,9 @@ These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 - The app is one PyInstaller folder inside a per-user NSIS installer, and the backend serves the
   built UI. The installer is built by the `Desktop` workflow, as this PC has no Rust.
 - Choosing days of the week: later, not decided.
+- Three machines book (MuMu 0, 1, 2; two cores and 3 GB each), since 2026-11-24: the app lets
+  only three through when more select the day in the same second (known issues). Five were tried
+  on 2026-11-23 and 24.
 - From 1.0.0 each version has a GitHub release page with its installer; the pages of
   0.1.0 to 0.9.0 were deleted on 2026-11-03, their tags kept. Releases go ahead without
   asking again.
