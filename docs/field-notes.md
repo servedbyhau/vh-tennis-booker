@@ -454,7 +454,8 @@ slots and the booked date and time read the same.
   (0.7-2.0 GB while booking). With one core and 2 GB each (six) a round to the confirmation
   page took 7.5-8.0 s and one screen read about 610 ms; with two cores and 2 GB each (five)
   5.2-7.1 s and about 270 ms (three instances with two cores at 06:00: about 190 ms). The PC's
-  CPU averaged 23-36% while booking.
+  CPU averaged 23-36% while booking. Android uses 1.1-1.3 GB while booking (MemTotal less
+  MemAvailable, three instances of 3 GB each in a dry run, 2026-11-24), so 2 GB is enough.
 - **"Hệ thống giới hạn chỉ được đặt một tiện ích trong vòng 60s. Quý khách vui lòng thử lại
   sau"** ("Thông báo", button "Đóng") shows 0.3-0.5 s after the day is selected on the
   calendar (the slot list's query) when more than three machines select it in the same second:
