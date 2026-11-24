@@ -119,7 +119,7 @@ const MESSAGES: Record<StepKind, Describe> = {
     const device = data["device_before"];
     const android =
       typeof device === "object" && device !== null && "offset" in device
-        ? Number((device).offset)
+        ? Number(device.offset)
         : undefined;
     const clocks = [
       pc === undefined ? undefined : `PC ${(-pc).toFixed(3)} s`,
