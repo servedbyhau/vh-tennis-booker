@@ -138,7 +138,9 @@ def save_prices(db: MoneyDb, prices: Prices) -> Prices:
 
 @router.get("/charges", response_model=Charges)
 def list_charges(db: MoneyDb, month: Month = None) -> dict[str, Any]:
-    """List the charges of a month of play (every month when not given), priced."""
+    """List the charges of a month of play (every month when not given), priced; the tickets
+    saved before the money was there are charged first."""
+    money.charge_saved_tickets(db, datetime.now().date().isoformat())
     return {
         "month": month,
         "months": money.charge_months(db),

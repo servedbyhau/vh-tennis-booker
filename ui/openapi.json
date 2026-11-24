@@ -1586,7 +1586,7 @@
           "money"
         ],
         "summary": "List Charges",
-        "description": "List the charges of a month of play (every month when not given), priced.",
+        "description": "List the charges of a month of play (every month when not given), priced; the tickets\nsaved before the money was there are charged first.",
         "operationId": "list_charges_api_money_charges_get",
         "parameters": [
           {

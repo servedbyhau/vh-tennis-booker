@@ -498,7 +498,8 @@ export interface paths {
         };
         /**
          * List Charges
-         * @description List the charges of a month of play (every month when not given), priced.
+         * @description List the charges of a month of play (every month when not given), priced; the tickets
+         *     saved before the money was there are charged first.
          */
         get: operations["list_charges_api_money_charges_get"];
         put?: never;

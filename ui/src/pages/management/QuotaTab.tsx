@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCustomers } from "../../api/queries";
 import type { Customer, CustomerAccount, QuotaReading } from "../../api/types";
-import { Icon } from "../../components/Icon";
 import { IconButton } from "../../components/IconButton";
 import { PageTitle } from "../../components/PageTitle";
 import { QueryView } from "../../components/QueryView";
 import { EmptyState } from "../../components/States";
+import { useMachines } from "../../machines";
 import { leftOf, sportName, useBookingMonth } from "../../quota";
 import { useFormat } from "../../useFormat";
 import styles from "./Board.module.css";
@@ -79,6 +79,7 @@ interface RowProps {
 function Row({ customer, account, columns, month }: RowProps) {
   const { t } = useTranslation();
   const refresh = useQuotaRefresh(account.device);
+  const machine = useMachines().find((item) => item.mumuIndex === account.device);
   const name = [customer.name, account.label].filter(Boolean).join(" · ");
   return (
     <tr>
@@ -90,8 +91,10 @@ function Row({ customer, account, columns, month }: RowProps) {
       <td>
         {account.device === null ? (
           <span className={styles.muted}>–</span>
-        ) : (
+        ) : machine === undefined ? (
           t("pages.quota.machine", { index: account.device })
+        ) : (
+          t("pages.ticket.instanceName", { number: machine.place + 1 })
         )}
       </td>
       {columns.map((column) => (
@@ -159,9 +162,7 @@ function Table({ customers }: { customers: Customer[] }) {
           </span>
         )}
       </div>
-      <p className={styles.muted}>
-        <Icon name="alarm" /> {t("pages.quota.hint")}
-      </p>
+      <p className={styles.muted}>{t("pages.quota.hint")}</p>
       <table className={styles.table}>
         <thead>
           <tr>

@@ -78,6 +78,28 @@ def save_prices(db: sqlite3.Connection, prices: PriceList) -> None:
         )
 
 
+def charge_saved_tickets(db: sqlite3.Connection, today: str) -> None:
+    """Make the charges of the tickets of a chosen account still to play that have none yet,
+    and cancel those of the tickets read cancelled.
+
+    A run makes them as it saves the tickets; this catches the ones saved before there was
+    money (schema 8), each once.
+    """
+    with db:
+        db.execute(
+            "INSERT INTO charges (code, account_id, customer, account, utility, court,"
+            " play_date, slot, created_at)"
+            " SELECT code, account_id, customer, account, utility, court, play_date, slot, seen_at"
+            " FROM tickets WHERE account_id IS NOT NULL AND status != 'cancelled'"
+            " AND play_date >= ? ON CONFLICT (code) DO NOTHING",
+            (today,),
+        )
+        db.execute(
+            "UPDATE charges SET cancelled = 1"
+            " WHERE code IN (SELECT code FROM tickets WHERE status = 'cancelled')"
+        )
+
+
 def list_charges(db: sqlite3.Connection, month: str | None = None) -> list[dict[str, Any]]:
     """Return the charges of ``month`` (``YYYY-MM`` of the day of play), or all, priced.
 
