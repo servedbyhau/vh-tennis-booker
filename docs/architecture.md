@@ -398,8 +398,11 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   the problems; the header counts the ticks left) and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose sections each have an
   address: `OverviewTab` (the index: this month's figures, the machines in a table, the tickets of
-  the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), `QuotaTab` (a row an account, a column a sport, from the
-  customers' readings of the month chosen), `MoneyTab` (the month's sums, a card per customer
+  the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), `QuotaTab` (`CustomerList` with its search, a customer marked
+  when an account has one booking or none left of a sport; beside it the one in the address,
+  `?customer=`, else the first found: a row an account, a column a sport it was read for, what
+  was booked of the limit, "Full" at it, from the readings of the month chosen; the overview's
+  alert of a machine short of quota opens its customer there), `MoneyTab` (the month's sums, a card per customer
   from `money.ts`, the price list), `StatsTab` (the scheduled runs of the last 30 days summed by
   `stats.ts`: by machine, by slot, the reasons of the slots lost), `RequestsTab` (a card per
   customer with their requests, the form, and "apply to the machine": `requests.ts` sets the

@@ -101,7 +101,7 @@ describe("shortOfQuota", () => {
   it("names a machine with fewer left in the month than its slots", () => {
     // Machine 1 books two slots, machine 2 one.
     const short = shortOfQuota(TWO, machines, holding([reading(7)], [reading(7)]), "2026-11");
-    expect(short).toEqual([{ place: 0, left: 1, slots: 2 }]);
+    expect(short).toEqual([{ place: 0, left: 1, slots: 2, customer: "a1" }]);
   });
 
   it("counts only the sport the machine books and the month booked for", () => {

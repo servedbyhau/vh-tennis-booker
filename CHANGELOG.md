@@ -89,6 +89,10 @@ uses [Semantic Versioning](https://semver.org/).
   others is on.
 
 ### Changed
+- The quota section lists the customers on the left, with a search, marking those running out;
+  the chosen one's accounts show what each booked of a sport ("3/8", "Full" at the limit),
+  without the machine column. The overview's alert of a machine short of quota opens its
+  customer there.
 - The Setup's account shows "Account" over the phone number and name in use, without the quota;
   its list asks for the customer first, then one of their phone numbers.
 - The customers' page shows each account's whole phone number with a button that copies it, and

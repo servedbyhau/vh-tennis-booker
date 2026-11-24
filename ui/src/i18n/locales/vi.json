@@ -180,13 +180,14 @@
       "title": "Hạn mức",
       "month": "Tháng {{month}}",
       "months": "Tháng",
-      "hint": "Mỗi môn 8 lượt một tháng, 2 lượt một ngày. Vé đã huỷ được hoàn lượt.",
       "account": "Tài khoản",
-      "onMachine": "Máy",
       "machine": "MuMu {{index}}",
-      "left": "còn {{left}}/{{limit}}",
       "readAt": "Đọc lúc {{time}} {{day}}",
-      "empty": "Chưa có tài khoản nào được đọc hạn mức. Hạn mức được đọc ở mỗi lượt 06:00, hoặc khi bấm Đọc lại."
+      "empty": "Chưa có tài khoản nào được đọc hạn mức. Hạn mức được đọc ở mỗi lượt 06:00, hoặc khi bấm Đọc lại.",
+      "used": "{{used}}/{{limit}}",
+      "full": "Full",
+      "readOn": "Đọc lại hạn mức trên {{machine}}",
+      "runningOut": "Có tài khoản sắp hết lượt"
     },
     "money": {
       "title": "Thu tiền",

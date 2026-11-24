@@ -10,9 +10,12 @@ interface CustomerListProps {
   /** The customer shown beside the list, `null` while one is added. */
   shown: string | null;
   onChoose: (id: string) => void;
-  onAdd: () => void;
+  /** Add a customer; no button without it. */
+  onAdd?: () => void;
   query: string;
   onQuery: (query: string) => void;
+  /** Whether a customer is marked as running out of quota; none is without it. */
+  marked?: (customer: Customer) => boolean;
 }
 
 /** How many accounts a customer gave: a key and the number, in words for screen readers. */
@@ -39,6 +42,7 @@ export function CustomerList({
   onAdd,
   query,
   onQuery,
+  marked,
 }: CustomerListProps) {
   const { t } = useTranslation();
   return (
@@ -47,7 +51,9 @@ export function CustomerList({
         <h2 id="customers-title" className={styles.title}>
           {t("pages.customers.title")}
         </h2>
-        <IconButton icon="add" variant="solid" label={t("pages.customers.add")} onClick={onAdd} />
+        {onAdd !== undefined && (
+          <IconButton icon="add" variant="solid" label={t("pages.customers.add")} onClick={onAdd} />
+        )}
       </div>
       <label className={styles.search}>
         <Icon name="search" />
@@ -81,6 +87,12 @@ export function CustomerList({
                     <span className={styles.sub}>{customer.representative}</span>
                   )}
                 </span>
+                {marked?.(customer) === true && (
+                  <span className={styles.mark} title={t("pages.quota.runningOut")}>
+                    <Icon name="alarm" />
+                    <span className="visually-hidden">{t("pages.quota.runningOut")}</span>
+                  </span>
+                )}
                 <AccountCount count={customer.accounts.length} />
               </button>
             </li>
