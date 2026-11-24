@@ -261,20 +261,24 @@ def quota_readings(db: sqlite3.Connection, since: str) -> dict[str, list[dict[st
 
     ``since`` is a month, ``YYYY-MM``; the app picks the month of the next booking, which may
     be the next one. From the ``quota_read`` events of the runs that knew whose account they
-    booked with (:mod:`court_booker.quota`); an event without its fields is left out, and
-    ``sport`` is ``None`` in those read before it was recorded.
+    booked with (:mod:`court_booker.quota`), and of a cancel, outside any run, that names it;
+    an event without its fields is left out, and ``sport`` is ``None`` in those read before it
+    was recorded.
     """
     newest: dict[tuple[str, str, str], dict[str, Any]] = {}
     rows = db.execute(
         "SELECT runs.account_id, events.time, events.data FROM events"
-        " JOIN runs ON runs.id = events.run_id"
-        " WHERE events.kind = ? AND runs.account_id IS NOT NULL ORDER BY events.id",
+        " LEFT JOIN runs ON runs.id = events.run_id"
+        " WHERE events.kind = ? ORDER BY events.id",
         (EventKind.QUOTA_READ.value,),
     )
     for account_id, read_at, data in rows:
         try:
             fields = json.loads(data)
         except ValueError:
+            continue
+        account_id = account_id or fields.get("account_id")
+        if not isinstance(account_id, str):
             continue
         utility, month = fields.get("utility"), fields.get("month")
         used, limit, sport = fields.get("used"), fields.get("month_limit"), fields.get("sport")

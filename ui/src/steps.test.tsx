@@ -206,6 +206,20 @@ const CASES: [Step["kind"], Step["data"], string, StepMessage["tone"]][] = [
     "booked",
   ],
   ["schedule_disabled", {}, "Đã tắt hẹn giờ", "plain"],
+  [
+    "ticket_cancelled",
+    { code: "2546028", play_date: "2026-11-26", slot: "10:00 - 11:00" },
+    "Đã huỷ vé 2546028: 10:00–11:00 Thứ Năm 26/11",
+    "booked",
+  ],
+  ["ticket_cancelled", {}, "Đã huỷ một vé", "booked"],
+  [
+    "ticket_not_cancelled",
+    { code: "2546028", reason: "Ticket 2546028 is not among the newest" },
+    "Không huỷ được vé 2546028",
+    "failed",
+  ],
+  ["ticket_not_cancelled", {}, "Không huỷ được một vé", "failed"],
 ];
 
 describe("stepMessage", () => {

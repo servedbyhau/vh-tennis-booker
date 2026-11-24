@@ -42,6 +42,8 @@ ENGLISH_LABELS = Labels(  # read from the app in English on 2026-10-20
     account_tab="Account",
     log_out="Log out",
     log_out_yes="Agree",
+    cancel_ticket="Cancel utility",  # not seen: a ticket was cancelled in Vietnamese only
+    cancel_question="cancel",
 )
 """The English labels. The Vietnamese ones are the config's ``[labels]``."""
 

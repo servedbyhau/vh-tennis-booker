@@ -484,6 +484,10 @@ def main(argv: list[str] | None = None) -> int:
         return setup_main(argv[1:])
     if argv[:1] == ["serve"]:
         return serve(argv[1:])
+    if argv[:1] == ["cancel"]:
+        from court_booker import cancel  # it uses this module's helpers
+
+        return cancel.main(argv[1:])
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose)
     trigger = run_trigger(args)

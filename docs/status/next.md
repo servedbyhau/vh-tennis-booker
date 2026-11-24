@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-23.
+Last updated: 2026-11-24.
 
 ## Start of a session
 
@@ -11,15 +11,15 @@ Last updated: 2026-11-23.
 3. Check the newest 06:00 log in `%LOCALAPPDATA%\CourtBooker\logs` for failed rounds or new
    situations.
 
-## Next task: the quota, in the installed app
+## Next task: what needed MuMu, from the app
 
-What counts is known since 2026-11-23 ([field notes](../field-notes.md), "Dialogs"). In
-`develop`: the run reads it at 05:46 and after the tickets (`quota.py`; dry runs on the three
-machines on 2026-11-23 counted what their history pages show, card by card), each account shows
-the last read, and a run warns when the next day's has too few left (`feat/quota-warning`). Once
-merged, install `develop` (not from 05:45 to 06:05) and check the next 06:00 run: a `quota_read`
-before the rounds and one after the tickets on each machine, the time they took, the warning
-where one is due, and each account's quota in the window.
+Chosen by the user on 2026-11-24, one branch each: (1) `court-booker cancel <code>`
+(`feat/cancel-ticket`; a real cancel of a ticket booked for the test went through), (2) its
+button on a ticket of the tickets section, with a question first, refused around 06:00 and
+while a run holds the lock, the ticket and quota shown again once done, (3) a button that reads
+an account's quota again, (4) one that opens a machine's MuMu. Adding or deleting machines stays
+by hand (three at most, on or off in the Setup). The quota read since #292 is in the installed
+app since #299; the first 06:00 runs read it on every machine.
 
 Decided with the user on 2026-11-23: a run never changes the account by itself (a login at 05:46
 could cost the booking, a customer's phone may be logged out, two accounts may share an

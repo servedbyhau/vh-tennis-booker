@@ -70,6 +70,8 @@ home_tab = "Trang chủ"               # the tabs at the bottom of the app
 account_tab = "Tài khoản"            # shows the phone number of the account logged in
 log_out = "Đăng xuất"                # on the account tab, and its dialog's title
 log_out_yes = "Đồng ý"               # in that dialog
+cancel_ticket = "Hủy tiện ích"       # on a ticket's page: cancels it after a question
+cancel_question = "muốn hủy tiện ích"  # in that question, answered with confirm
 
 # Optional: more MuMu instances, each logged in to its own account, booking side by side
 # with this one in a process of its own. Each table sets that instance's mumu_index and,

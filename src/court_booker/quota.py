@@ -36,6 +36,8 @@ QUOTA_SECONDS = 60.0
 """How long a read may take; a month took 5-9 s on each of three machines (2026-11-23)."""
 BEFORE = "before"
 AFTER = "after"
+CANCEL = "cancel"
+"""Read once a ticket was cancelled (:mod:`court_booker.cancel`)."""
 """When a read was made: while getting ready, or after the tickets."""
 
 _PAGES = 25
@@ -158,12 +160,14 @@ def read_back(
         if idle:
             sleep(_LOAD_WAIT)
         booker.scroll_page(screen)
-        screen = _settled(booker, clock, sleep)
+        screen = settled_page(booker, clock, sleep)
     logger.warning("The history page was not read back to %s", oldest)
     return None
 
 
-def _settled(booker: Booker, clock: Callable[[], float], sleep: Callable[[float], None]) -> Screen:
+def settled_page(
+    booker: Booker, clock: Callable[[], float], sleep: Callable[[float], None]
+) -> Screen:
     """Read the page until two reads place its cards alike: a swipe goes on for a moment."""
     until = clock() + _SETTLE_TIMEOUT
     before = None
@@ -193,21 +197,30 @@ def read_quota(
     moment: str,
     report: Reporter,
     slots: int | None = None,
+    *,
+    utility: str | None = None,
+    sport: str | None = None,
+    account_id: str | None = None,
 ) -> Quota | None:
     """Read what the account used of the quota for ``play_date`` and report it.
 
     Starts from any screen and leaves the history page shown, within :data:`QUOTA_SECONDS`.
     ``None`` when the page was not read far enough. Raises what the device raises.
+    ``utility`` and ``sport`` are those of the config unless given; ``account_id`` goes into
+    the event for a reading without a run, which knows whose account it is of.
     """
     reader = TicketReader(booker, Path(), time.monotonic() + QUOTA_SECONDS)
     tickets = read_back(booker, reader, first_booking_day(play_date))
     if tickets is None:
         return None
-    quota = count(tickets, booker.labels.utility, play_date)
+    quota = count(tickets, utility or booker.labels.utility, play_date)
     shown = describe(quota, slots)
     if slots is not None and slots > quota.left:
         logger.warning("%s", shown)
     else:
         logger.info("%s", shown)
-    report(EventKind.QUOTA_READ, **quota.event_data(moment, slots), sport=booker.config.sport)
+    data = quota.event_data(moment, slots)
+    if account_id is not None:
+        data["account_id"] = account_id
+    report(EventKind.QUOTA_READ, **data, sport=sport or booker.config.sport)
     return quota

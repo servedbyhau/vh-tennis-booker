@@ -260,6 +260,28 @@ def test_an_account_shows_its_last_quota_read_of_each_sport_and_month(client, co
     ]
 
 
+def test_a_quota_read_after_a_cancel_counts_for_the_account_it_names(client, context, account):
+    """A cancel is no run (court_booker.cancel): its reading names the account itself."""
+    month = date.today().isoformat()[:7]
+    read_quota(context, account["id"], month, 5)
+    data = {"moment": "cancel", "utility": "Sân Tennis", "month": month, "used": 4}
+    data.update(month_limit=8, play_date=f"{month}-26", day_used=0, day_limit=2, left=2)
+    data.update(sport="tennis", account_id=account["id"])
+    unnamed = {**data, "used": 1}
+    del unnamed["account_id"]
+    with contextlib.closing(connect(context.data.database)) as db, db:
+        for fields, second in ((data, "11"), (unnamed, "12")):
+            db.execute(
+                "INSERT INTO events (run_id, time, category, kind, data)"
+                " VALUES (NULL, ?, 'step', 'quota_read', ?)",
+                (f"{month}-24T14:{second}:00.000", json.dumps(fields, ensure_ascii=False)),
+            )
+
+    (shown,) = client.get("/api/customers").json()[0]["accounts"]
+
+    assert [(q["used"], q["read_at"]) for q in shown["quota"]] == [(4, f"{month}-24T14:11:00.000")]
+
+
 def test_a_read_before_the_sport_was_recorded_has_none(client, context, account):
     read_quota(context, account["id"], date.today().isoformat()[:7], 3, sport=None)
 

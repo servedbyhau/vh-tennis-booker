@@ -433,6 +433,14 @@
       "plain": "Schedule on"
     },
     "schedule_disabled": "Schedule off",
+    "ticket_cancelled": {
+      "full": "Cancelled ticket {{code}}: {{slot}} {{day}}",
+      "plain": "Cancelled a ticket"
+    },
+    "ticket_not_cancelled": {
+      "full": "Could not cancel ticket {{code}}",
+      "plain": "Could not cancel a ticket"
+    },
     "other": "Other step ({{kind}})"
   },
   "runs": {

@@ -66,6 +66,8 @@ class LabelSettings(BaseModel):
     account_tab: str
     log_out: str
     log_out_yes: str
+    cancel_ticket: str
+    cancel_question: str
 
 
 class InstanceSettings(BaseModel):

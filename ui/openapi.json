@@ -1987,6 +1987,8 @@
           "setup_started",
           "setup_item",
           "setup_finished",
+          "ticket_cancelled",
+          "ticket_not_cancelled",
           "settings_saved",
           "schedule_enabled",
           "schedule_disabled"
@@ -2175,6 +2177,14 @@
           "log_out_yes": {
             "type": "string",
             "title": "Log Out Yes"
+          },
+          "cancel_ticket": {
+            "type": "string",
+            "title": "Cancel Ticket"
+          },
+          "cancel_question": {
+            "type": "string",
+            "title": "Cancel Question"
           }
         },
         "additionalProperties": false,
@@ -2205,7 +2215,9 @@
           "home_tab",
           "account_tab",
           "log_out",
-          "log_out_yes"
+          "log_out_yes",
+          "cancel_ticket",
+          "cancel_question"
         ],
         "title": "LabelSettings",
         "description": "Accessibility labels of the Vinhomes app, in its language."

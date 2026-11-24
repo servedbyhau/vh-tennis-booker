@@ -114,6 +114,11 @@ class Labels:
     """Button of the account tab, right under "Xóa tài khoản", and title of its dialog."""
     log_out_yes: str = "Đồng ý"
     """Button of the dialog that asks whether to log out."""
+    cancel_ticket: str = "Hủy tiện ích"
+    """Button at the top right of a ticket's page, and title of the dialog it opens."""
+    cancel_question: str = "muốn hủy tiện ích"
+    """Part of that dialog's question, "Bạn chắc chắn muốn hủy tiện ích?", whose buttons are
+    "Hủy bỏ" and ``confirm``."""
 
 
 @dataclass

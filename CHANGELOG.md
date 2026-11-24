@@ -7,6 +7,10 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `court-booker cancel <code> [--instance N]` cancels a ticket in the Vinhomes app of its
+  machine: its page's "Hủy tiện ích", then "Xác nhận" in the question, checked on the history
+  page opened again; the ticket takes its new status and that sport's quota is read again. It
+  is refused around the scheduled run and while a run uses the machine.
 - A run reads what is left of the account's quota for the day it books (8 a month, 2 a day, of
   the sport) on the app's history page, at 05:46 while getting ready and again after the tickets,
   and logs it; it warns when fewer are left than the slots chosen. What it books is the same.

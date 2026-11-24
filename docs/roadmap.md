@@ -19,7 +19,9 @@ to be awake. Unattended, scheduled, as fast as possible.
   refuses (field notes, "Accessibility agent"). In scope: the project's own instrumentation
   driver (UiAutomation, as uiautomator2 uses); the app books with it running. Since
   2026-11-18 also logging in again with a login the user saved (the app logs an account out
-  when it logs in on another device): typed in as the user would, once a run.
+  when it logs in on another device): typed in as the user would, once a run. Since
+  2026-11-24 also what the user did in MuMu by hand, from the app: cancelling a ticket they
+  choose (its cancel button and the question, as they would) and reading a quota.
 
 ## Phases
 
@@ -31,6 +33,7 @@ the update button. Failures are fixed as the 06:00 logs show them. What is left:
 
 | Phase | Next | Scope |
 |---|---|---|
+| 4 UI | Without MuMu | What the user did in MuMu, from the app: cancel a ticket (`court-booker cancel`, done; its button in the tickets left), read an account's quota on request, open a machine's MuMu. Adding or deleting machines stays by hand (three at most, on or off in the Setup) |
 | 1 Runs | Other subdivisions | Origami and BS are in `catalog.py` with every sport; BS tennis at BCX3 was booked for real on 2026-11-01. BE7 tennis and basketball have dry-run coverage; other BS courts have only the survey. Left: survey each other subdivision with `dev-tools/survey/walk.py` and add it to the catalog |
 
 ## Situations

@@ -340,6 +340,29 @@ const MESSAGES: Record<StepKind, Describe> = {
     };
   },
   schedule_disabled: ({ t }) => ({ text: t("steps.schedule_disabled"), tone: "plain" }),
+  ticket_cancelled: ({ t, f }, data) => {
+    const code = text(data, "code");
+    const day = text(data, "play_date");
+    const slot = text(data, "slot");
+    return {
+      text:
+        code === undefined || day === undefined || slot === undefined
+          ? t("steps.ticket_cancelled.plain")
+          : t("steps.ticket_cancelled.full", { code, slot: f.slot(slot), day: f.day(day) }),
+      tone: "booked",
+    };
+  },
+  ticket_not_cancelled: ({ t }, data) => {
+    const code = text(data, "code");
+    return {
+      text:
+        code === undefined
+          ? t("steps.ticket_not_cancelled.plain")
+          : t("steps.ticket_not_cancelled.full", { code }),
+      detail: text(data, "reason"),
+      tone: "failed",
+    };
+  },
 };
 
 /** Return the words for a step in the current language of `t` and `f`. */
