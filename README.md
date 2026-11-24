@@ -206,8 +206,10 @@ On the second:
   button that reads it again in the Vinhomes app (about a minute). The passwords are kept by Windows
   (Credential Manager) for your Windows account; an account's form shows its own.
 - **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
-  by day of play, with their slot, court, status and whose account they are of; a press opens the
-  ticket's picture
+  by day of play or as a week (a column a day, a row a slot), of one sport or every one, every
+  ticket or those not sent to their customer yet, with their slot, court, status, whose account they
+  are of and whether they were sent; a press opens the ticket's picture, where a button marks it
+  sent
   with its QR code, and buttons save it as a file and copy it, to paste it where it is sent. A
   ticket still to play has a button that cancels it in the Vinhomes app, after a question: the
   machine its account is on opens the ticket and cancels it (about a minute), and the quota

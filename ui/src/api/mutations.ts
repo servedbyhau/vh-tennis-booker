@@ -10,6 +10,7 @@ import {
   changeCustomer,
   detachAccount,
   getNotifications,
+  markSent,
   openMachine,
   removeAccount,
   readQuota,
@@ -46,6 +47,15 @@ export function useReadQuota() {
       cache.setQueryData(queryKeys.quotaTask, state);
       await cache.invalidateQueries({ queryKey: queryKeys.overview });
     },
+  });
+}
+
+/** Mark a ticket sent to its customer, or not; the tickets are read again. */
+export function useMarkSent() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: markSent,
+    onSuccess: () => cache.invalidateQueries({ queryKey: queryKeys.tickets }),
   });
 }
 

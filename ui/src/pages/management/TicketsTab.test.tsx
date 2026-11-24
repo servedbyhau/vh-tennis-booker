@@ -78,10 +78,13 @@ describe("Tickets list", () => {
     expect(await days()).toEqual([
       [
         "Thứ Sáu 16/102 vé",
-        "18:00–19:00 · Tennis S6ĐÃ ĐĂNG KÝAnh AnCăn AXem vé",
-        "19:00–20:00 · Tennis S6ĐANG XỬ LÝAnh AnCăn Achưa có ảnh",
+        "18:00–19:00 · Tennis S6ĐÃ ĐĂNG KÝAnh AnCăn Achưa gửiXem vé",
+        "19:00–20:00 · Tennis S6ĐANG XỬ LÝAnh AnCăn Achưa gửichưa có ảnh",
       ],
-      ["Thứ Bảy 17/101 vé", "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝChị Bình09••••••44Xem vé"],
+      [
+        "Thứ Bảy 17/101 vé",
+        "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝChị Bình09••••••44chưa gửiXem vé",
+      ],
     ]);
   });
 
@@ -114,7 +117,7 @@ describe("Tickets list", () => {
 
     fireEvent.click(customers.getByRole("button", { name: "Không rõ khách" }));
     expect((await days()).map((day) => day.slice(1))).toEqual([
-      ["06:00–07:00 · Tennis S6ĐÃ ĐĂNG KÝMáy 2Xem vé"], // the machine it was read on
+      ["06:00–07:00 · Tennis S6ĐÃ ĐĂNG KÝMáy 2chưa gửiXem vé"], // the machine it was read on
     ]);
   });
 
@@ -474,5 +477,65 @@ describe("Cancelling a ticket", () => {
     const dialog = await openTicket(/^08:00–09:00 · Tennis/);
 
     expect(within(dialog).queryByRole("button", { name: "Huỷ vé" })).not.toBeInTheDocument();
+  });
+});
+
+describe("Tickets views", () => {
+  it("shows the week as a grid of days and slots, the tickets not sent marked", async () => {
+    await openTab([
+      ticket("1000002", { slot: "18:00 - 19:00", sent_at: "2026-10-15T07:00:00", ...AN }),
+      ticket("1000004", { play_date: "2026-10-17", slot: "17:00 - 18:00", ...BINH }),
+    ]);
+    fireEvent.click(await within(panel()).findByRole("button", { name: "Tuần" }));
+
+    const grid = within(panel()).getByRole("table");
+    const head = within(grid)
+      .getAllByRole("columnheader")
+      .map((cell) => cell.textContent);
+    expect(head.slice(1, 4)).toEqual(["T5 15/10", "T6 16/10", "T7 17/10"]);
+    const rows = within(grid).getAllByRole("row").slice(1);
+    expect(rows.map((row) => within(row).getByRole("rowheader").textContent)).toEqual([
+      "17:00–18:00",
+      "18:00–19:00",
+    ]);
+    expect(within(grid).getByRole("button", { name: /Chị Bình/ })).toHaveAttribute(
+      "title",
+      "chưa gửi",
+    );
+
+    fireEvent.click(within(grid).getByRole("button", { name: /Anh An/ }));
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("18:00–19:00 · Tennis S6");
+  });
+
+  it("keeps the tickets not sent yet, and those of one sport", async () => {
+    await openTab([
+      ticket("1000002", { sent_at: "2026-10-15T07:00:00", ...AN }),
+      ticket("1000004", {
+        slot: "17:00 - 18:00",
+        sport: "pickleball",
+        court: "S9 - Sân Pickleball",
+      }),
+    ]);
+    await days();
+
+    fireEvent.click(within(panel()).getByRole("button", { name: "Chưa gửi khách" }));
+    expect((await days()).flat().join(" ")).not.toContain("18:00–19:00");
+
+    fireEvent.click(within(panel()).getByRole("button", { name: "Chưa gửi khách" }));
+    fireEvent.click(within(panel()).getByRole("button", { name: "Tennis" }));
+    expect((await days()).flat().join(" ")).not.toContain("Pickleball");
+  });
+
+  it("marks a ticket sent from its picture", async () => {
+    const app = await openTab(TICKETS, {
+      "PUT /api/tickets/1000002/sent": { status: 204, body: null },
+    });
+    const dialog = await openTicket(/^18:00–19:00 · Tennis/);
+
+    const mark = within(dialog).getByRole("button", { name: "Đã gửi cho khách" });
+    expect(mark).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(mark);
+
+    await waitFor(() => expect(requestsTo(app.fetch, "PUT /api/tickets/1000002/sent")).toBe(1));
   });
 });

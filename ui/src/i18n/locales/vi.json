@@ -125,7 +125,6 @@
       "unknown": "Không rõ khách",
       "count": "{{count}} vé",
       "row": "{{slot}} · {{court}}",
-      "view": "Xem vé",
       "noPhoto": "chưa có ảnh",
       "empty": "Chưa có vé nào. Vé đặt được hiện ở đây đến hết ngày chơi.",
       "status": {
@@ -160,7 +159,22 @@
           "5": "Máy này đang chạy một lượt khác. Hãy thử lại sau.",
           "other": "Có lỗi khi huỷ vé. Xem nhật ký."
         }
-      }
+      },
+      "open": "Xem vé",
+      "view": {
+        "label": "Cách xem",
+        "list": "Danh sách",
+        "week": "Tuần"
+      },
+      "sport": "Môn",
+      "allSports": "Mọi môn",
+      "unsentOnly": "Chưa gửi khách",
+      "unsent": "chưa gửi",
+      "sentMark": "đã gửi",
+      "sent": "Đã gửi cho khách",
+      "markSent": "Đánh dấu đã gửi cho khách",
+      "slot": "Khung giờ",
+      "noneKept": "Không có vé nào khớp lựa chọn."
     },
     "management": {
       "sections": "Các mục quản lý"
@@ -184,7 +198,8 @@
         "noAccount": "{{machine}} chưa chọn tài khoản nên sẽ không đặt.",
         "clash": "Máy {{machines}} cùng đặt một sân và giờ: chỉ một máy lấy được.",
         "short": "{{machine}}: tài khoản chỉ còn {{left}} lượt, ít hơn {{slots}} giờ đặt.",
-        "failed": "{{machine}}: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử."
+        "failed": "{{machine}}: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử.",
+        "unsent": "{{count}} vé hôm nay và ngày mai chưa gửi cho khách."
       }
     },
     "machines": {

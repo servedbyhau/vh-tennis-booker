@@ -5,6 +5,7 @@ import type { Ticket } from "../../api/types";
 import { Icon } from "../../components/Icon";
 import { copyPicture, photoFileName, photoUrl } from "../../tickets";
 import { useFormat } from "../../useFormat";
+import { useMarkSent } from "../../api/mutations";
 import { TicketCancel } from "./TicketCancel";
 import { cancellable, useTicketCancel } from "./cancelling";
 import styles from "./TicketDialog.module.css";
@@ -37,6 +38,7 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
   const [copy, setCopy] = useState<"copied" | "copyFailed" | null>(null);
   const ticket = tickets[place];
   const cancel = useTicketCancel(ticket);
+  const mark = useMarkSent();
 
   useEffect(() => {
     const before = document.activeElement;
@@ -191,6 +193,19 @@ export function TicketDialog({ tickets, place, onPlace, onClose }: TicketDialogP
                 <Icon name="copy" />
               </button>
             )}
+            <button
+              type="button"
+              aria-pressed={ticket.sent_at !== null}
+              aria-label={t("pages.tickets.sent")}
+              title={t(
+                ticket.sent_at === null ? "pages.tickets.markSent" : "pages.tickets.sentMark",
+              )}
+              disabled={mark.isPending}
+              className={ticket.sent_at === null ? styles.round : `${styles.round} ${styles.save}`}
+              onClick={() => mark.mutate({ code: ticket.code, sent: ticket.sent_at === null })}
+            >
+              <Icon name="check" />
+            </button>
             {cancellable(ticket) && (
               <button
                 type="button"

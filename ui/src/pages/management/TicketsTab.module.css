@@ -158,3 +158,91 @@
   gap: var(--space-1);
   color: var(--color-stamp);
 }
+
+/* The choices of a view side by side, apart from the others. */
+.group {
+  display: flex;
+  gap: var(--space-1);
+  margin-right: var(--space-3);
+}
+
+.sent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-stamp);
+}
+
+.unsent {
+  color: var(--color-failed);
+}
+
+/* The week: a column a day, a row a slot. */
+.week {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--text-small);
+}
+
+.week th {
+  position: sticky;
+  top: 0;
+  padding: var(--space-2);
+  background: var(--color-tint);
+  font-weight: var(--weight-bold);
+  text-align: left;
+}
+
+.week tbody th {
+  position: static;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-regular);
+  white-space: nowrap;
+}
+
+.weekSlot {
+  width: 110px;
+}
+
+.week td {
+  padding: var(--space-1);
+  border-top: var(--border-hairline) solid var(--color-hairline);
+  vertical-align: top;
+}
+
+.cell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-hairline) solid var(--color-line);
+  border-left: 3px solid var(--color-stamp);
+  border-radius: var(--radius-control);
+  background: var(--color-field);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell:hover {
+  background: var(--color-ground);
+}
+
+.cellUnsent {
+  border-left-color: var(--color-failed);
+}
+
+.cellCourt {
+  font-weight: var(--weight-bold);
+}
+
+.cellWho {
+  overflow: hidden;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

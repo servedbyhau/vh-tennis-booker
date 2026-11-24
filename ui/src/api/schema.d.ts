@@ -195,6 +195,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tickets/{code}/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Ticket Sent
+         * @description Mark the ticket sent to its customer now, or not sent; 404 for a ticket not recorded.
+         */
+        put: operations["mark_ticket_sent_api_tickets__code__sent_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -1107,6 +1127,14 @@ export interface components {
             enabled: boolean;
         };
         /**
+         * SentMark
+         * @description Whether a ticket's picture was sent to its customer.
+         */
+        SentMark: {
+            /** Sent */
+            sent: boolean;
+        };
+        /**
          * Settings
          * @description Every booking setting; the UI changes the slots, subdivision, sport and court, and sends
          *     the rest back.
@@ -1277,6 +1305,10 @@ export interface components {
             seen_at: string;
             /** Has Photo */
             has_photo: boolean;
+            /** Sport */
+            sport: string | null;
+            /** Sent At */
+            sent_at: string | null;
             /** Machine */
             machine: number | null;
         };
@@ -1630,6 +1662,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskState"];
                 };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_ticket_sent_api_tickets__code__sent_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentMark"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Invalid request values, one line per value */
             422: {

@@ -7,6 +7,10 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The tickets show as a list or a week (a column a day, a row a slot), of one sport or every one,
+  and every ticket or those not sent yet. A ticket is marked sent to its customer from its
+  picture (`PUT /api/tickets/{code}/sent`), and the overview counts those of today and tomorrow
+  still to send. Each ticket comes with its sport.
 - The management opens on an overview: this month's slots booked at 06:00, the tickets to play,
   the machines booking, every machine in a line, the tickets of the next three days and what to
   look at, each leading where it is set right. A machines section has a card per machine with its

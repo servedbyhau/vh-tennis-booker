@@ -51,6 +51,13 @@ export function listTickets(): Promise<Ticket[]> {
   return call(client.GET("/api/tickets"));
 }
 
+/** Mark ticket `code` sent to its customer, or not sent. */
+export function markSent({ code, sent }: { code: string; sent: boolean }): Promise<void> {
+  return call(
+    client.PUT("/api/tickets/{code}/sent", { params: { path: { code } }, body: { sent } }),
+  ).then(() => undefined);
+}
+
 /** Cancel ticket `code` in the app of the machine its account is on; it takes about a minute. */
 export function cancelTicket(code: string): Promise<CancelState> {
   return call(client.POST("/api/tickets/{code}/cancel", { params: { path: { code } } }));

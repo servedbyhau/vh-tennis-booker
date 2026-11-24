@@ -1,7 +1,7 @@
 /** What the management's first board puts together: this month's figures and what to look at. */
 import { useTranslation } from "react-i18next";
 import { useOverview } from "../../api/queries";
-import type { RunSummary } from "../../api/types";
+import type { RunSummary, Ticket } from "../../api/types";
 import { localToday } from "../../format";
 import { paths } from "../../paths";
 import { useReadiness } from "../../readiness";
@@ -33,8 +33,23 @@ export function bookedOf(runs: readonly RunSummary[]): { booked: number; tried: 
   };
 }
 
-/** Return what to look at: what keeps a machine from booking, and its last run's failure. */
-export function useAlerts(facts: MachineFacts[] | undefined): Alert[] {
+/** Return the tickets of today and tomorrow not yet sent to their customer. */
+export function unsentSoon(tickets: readonly Ticket[], today: string): Ticket[] {
+  const tomorrow = addDays(today, 1);
+  return tickets.filter(
+    (ticket) =>
+      ticket.sent_at === null &&
+      ticket.status !== "cancelled" &&
+      ticket.play_date >= today &&
+      ticket.play_date <= tomorrow,
+  );
+}
+
+/**
+ * Return what to look at: what keeps a machine from booking, its last run's failure, and the
+ * tickets of today and tomorrow not sent to their customer.
+ */
+export function useAlerts(facts: MachineFacts[] | undefined, tickets: readonly Ticket[]): Alert[] {
   const { t } = useTranslation();
   const overview = useOverview();
   const { accountless, clashing, short } = useReadiness();
@@ -79,6 +94,14 @@ export function useAlerts(facts: MachineFacts[] | undefined): Alert[] {
         to: `${paths.history}?run=${run.id}`,
       });
     }
+  }
+  const unsent = unsentSoon(tickets, localToday());
+  if (unsent.length > 0) {
+    alerts.push({
+      level: "warn",
+      text: t("pages.board.alerts.unsent", { count: unsent.length }),
+      to: paths.tickets,
+    });
   }
   return alerts;
 }
