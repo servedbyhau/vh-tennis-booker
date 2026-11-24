@@ -221,9 +221,11 @@ On the second:
   comes back. Not around the 06:00 booking, nor while a run uses that machine. They are read from the Vinhomes app at 06:03,
   once every machine has booked, and stay on this PC, the pictures in
   `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
-- **Hạn mức / Quota**: every account in a row and every sport in a column, what is left of each
-  in the month booked for (or another month read), little left marked, and a button that reads
-  an account on a machine again.
+- **Hạn mức / Quota**: the customers on the left (with the same search as the customers' page),
+  one marked when an account has one booking or none left of a sport; beside them the chosen
+  customer's accounts in rows and their sports in columns, what each booked in the month booked
+  for (or another month read), "3/8", or "Full" at the limit, and a button that reads an account
+  on a machine again.
 - **Thu tiền / Money**: what the customers owe, a month of play at a time. Each ticket a
   customer's account booked becomes a charge, priced by the price list (a normal and a golden
   price a sport, the golden hours 17:00-21:00 unless changed), or by an amount set by hand; a

@@ -53,6 +53,8 @@ export interface Short {
   place: number;
   left: number;
   slots: number;
+  /** The customer whose account it is. */
+  customer: string;
 }
 
 /**
@@ -75,7 +77,10 @@ export function shortOfQuota(
       return [];
     }
     const left = leftOf(reading);
-    return left < booking.slots.length ? [{ place, left, slots: booking.slots.length }] : [];
+    const slots = booking.slots.length;
+    return left < slots && attached !== null
+      ? [{ place, left, slots, customer: attached.customer.id }]
+      : [];
   });
 }
 

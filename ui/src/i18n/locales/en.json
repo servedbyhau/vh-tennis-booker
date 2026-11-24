@@ -180,13 +180,14 @@
       "title": "Quota",
       "month": "{{month}}",
       "months": "Months",
-      "hint": "8 bookings of a sport a month, 2 a day. A cancelled ticket gives its booking back.",
       "account": "Account",
-      "onMachine": "Machine",
       "machine": "MuMu {{index}}",
-      "left": "{{left}}/{{limit}} left",
       "readAt": "Read at {{time}} on {{day}}",
-      "empty": "No account's quota has been read yet. It is read at each 06:00 run, or when asked."
+      "empty": "No account's quota has been read yet. It is read at each 06:00 run, or when asked.",
+      "used": "{{used}}/{{limit}}",
+      "full": "Full",
+      "readOn": "Read the quota again on {{machine}}",
+      "runningOut": "An account is running out"
     },
     "money": {
       "title": "Money",

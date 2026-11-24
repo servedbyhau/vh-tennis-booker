@@ -151,3 +151,10 @@
   font-family: var(--font-mono);
   font-size: var(--text-small);
 }
+
+/* A customer with an account running out of quota. */
+.mark {
+  flex: none;
+  display: grid;
+  color: var(--color-failed);
+}
