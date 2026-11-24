@@ -123,3 +123,14 @@ def test_the_price_list_keeps_its_golden_hours(db):
     money.save_prices(db, money.PriceList("16:00", "20:00", [money.Price("tennis", 1, 2)]))
 
     assert money.read_prices(db) == money.PriceList("16:00", "20:00", [money.Price("tennis", 1, 2)])
+
+
+def test_a_ticket_saved_before_the_money_is_charged_once_listed(db):
+    save(db, ticket("1"), ticket("2", play_date="2026-11-20"))
+    db.execute("DELETE FROM charges")  # as saved before schema 8
+    db.commit()
+
+    money.charge_saved_tickets(db, "2026-11-24")
+    money.charge_saved_tickets(db, "2026-11-24")  # once only
+
+    assert [charge["code"] for charge in money.list_charges(db)] == ["1"]

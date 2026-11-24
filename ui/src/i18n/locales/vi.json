@@ -227,7 +227,9 @@
       "normal": "Giá thường",
       "goldenPrice": "Giá giờ vàng",
       "savePrices": "Lưu bảng giá",
-      "saved": "Đã lưu"
+      "saved": "Đã lưu",
+      "goldenFrom": "Giờ vàng bắt đầu",
+      "goldenTo": "Giờ vàng kết thúc"
     },
     "stats": {
       "title": "Thống kê",

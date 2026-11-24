@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The money charges the tickets saved before it was there once its section is opened; the golden
+  hours are chosen as whole hours in 24-hour time; the quota table names the machines as their
+  tabs do.
 - A requests section keeps what each customer asks to book (court, slots, days of the week,
   machine, note); applying one sets its machine to book it from the next 06:00 run. A machine
   may book for some days of play only (`days`, 0 Monday to 6 Sunday, each machine its own):

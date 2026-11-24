@@ -21,6 +21,9 @@ import { byCustomer, type CustomerMoney, formatMoney, statementOf, totalsOf } fr
 /** Every sport the language files name, for the price list. */
 const SPORTS: Sport[] = Object.keys(texts.sports).filter(isSport);
 
+/** The whole hours the golden ones may start and end at, as the app's slots run. */
+const HOURS = Array.from({ length: 17 }, (_, index) => `${String(index + 6).padStart(2, "0")}:00`);
+
 /** "11/2026" of "2026-11". */
 function monthText(month: string): string {
   return `${month.slice(5)}/${month.slice(0, 4)}`;
@@ -259,9 +262,25 @@ function PriceCard({ prices }: { prices: Prices }) {
       >
         <label className={styles.line}>
           <span className={styles.label}>{t("pages.money.goldenHours")}</span>
-          <input type="time" value={from} onChange={(event) => setFrom(event.target.value)} />
+          <select
+            aria-label={t("pages.money.goldenFrom")}
+            value={from}
+            onChange={(event) => setFrom(event.target.value)}
+          >
+            {HOURS.map((hour) => (
+              <option key={hour}>{hour}</option>
+            ))}
+          </select>
           –
-          <input type="time" value={to} onChange={(event) => setTo(event.target.value)} />
+          <select
+            aria-label={t("pages.money.goldenTo")}
+            value={to}
+            onChange={(event) => setTo(event.target.value)}
+          >
+            {HOURS.map((hour) => (
+              <option key={hour}>{hour}</option>
+            ))}
+          </select>
         </label>
         <table className={styles.table}>
           <thead>

@@ -227,7 +227,9 @@
       "normal": "Normal",
       "goldenPrice": "Golden",
       "savePrices": "Save the prices",
-      "saved": "Saved"
+      "saved": "Saved",
+      "goldenFrom": "Golden hours from",
+      "goldenTo": "Golden hours to"
     },
     "stats": {
       "title": "Statistics",
