@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useOverview } from "../api/queries";
+import { booking, useOverview } from "../api/queries";
 import { PageTitle } from "../components/PageTitle";
 import { QueryView } from "../components/QueryView";
 import styles from "./HomePage.module.css";
@@ -26,7 +26,7 @@ export function HomePage() {
         <div className={styles.booking}>
           <QueryView query={overview}>
             {(data) =>
-              data.running !== null && data.running.trigger !== "setup" ? (
+              data.running !== null && booking(data.running.trigger) ? (
                 // A booking or a dry run: the run as it goes, in place of the choices.
                 <LiveTicket runs={data.running.runs} />
               ) : (

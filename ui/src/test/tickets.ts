@@ -15,6 +15,7 @@ export function ticket(code: string, fields: Partial<Ticket> = {}): Ticket {
     created_at: "2026-10-14T06:00",
     seen_at: "2026-10-14T06:01:12.000",
     has_photo: true,
+    machine: 0,
     ...fields,
   };
 }

@@ -364,3 +364,115 @@ describe("Ticket dialog", () => {
     expect(last).toHaveFocus();
   });
 });
+
+describe("Cancelling a ticket", () => {
+  const RUNNING = {
+    code: "1000002",
+    machine: 0,
+    started_at: "2026-10-15T09:30:00",
+    running: true,
+    exit_code: null,
+  };
+
+  /** Open the 18:00 ticket of Anh An, with the cancel answering `extra`. */
+  async function openWith(extra: Record<string, Reply>, tickets: Ticket[] = TICKETS) {
+    const app = await openTab(tickets, extra);
+    const dialog = await openTicket(/^18:00–19:00 · Tennis/);
+    return { app, dialog };
+  }
+
+  function ended(exit_code: number): Reply {
+    return reply({ ...RUNNING, running: false, exit_code });
+  }
+
+  it("cancels the ticket in the app once asked, and says when it is done", async () => {
+    const { app, dialog } = await openWith({
+      "POST /api/tickets/1000002/cancel": reply(RUNNING, 202),
+      "GET /api/tickets/cancel": ended(0),
+    });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ vé" }));
+    const asked = within(dialog).getByRole("region", { name: "Huỷ vé" });
+    expect(asked.textContent).toContain(
+      "Huỷ vé 18:00–19:00 · Tennis S6, Thứ Sáu 16/10? App Vinhomes trên Máy 1 sẽ huỷ vé",
+    );
+    expect(requestsTo(app.fetch, "POST /api/tickets/1000002/cancel")).toBe(0);
+
+    fireEvent.click(within(asked).getByRole("button", { name: "Có, huỷ vé" }));
+
+    expect(await within(dialog).findByText(/^Đang huỷ vé trong app Vinhomes/)).toBeVisible();
+    expect(
+      await within(dialog).findByText("Đã huỷ vé, hạn mức đã được hoàn.", {}, { timeout: 4000 }),
+    ).toBeVisible();
+    expect(requestsTo(app.fetch, "POST /api/tickets/1000002/cancel")).toBe(1);
+  });
+
+  it("sends nothing when the answer is no", async () => {
+    const { app, dialog } = await openWith({ "GET /api/tickets/cancel": reply({}) });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ vé" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Không" }));
+
+    expect(within(dialog).queryByRole("region", { name: "Huỷ vé" })).not.toBeInTheDocument();
+    expect(requestsTo(app.fetch, "POST /api/tickets/1000002/cancel")).toBe(0);
+  });
+
+  it("says why when the backend refuses it", async () => {
+    const { dialog } = await openWith({
+      "POST /api/tickets/1000002/cancel": reply(
+        { error: "lock_held", detail: "Another run is in progress" },
+        409,
+      ),
+      "GET /api/tickets/cancel": reply({}),
+    });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ vé" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Có, huỷ vé" }));
+
+    expect(
+      await within(dialog).findByText("Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại."),
+    ).toBeVisible();
+  });
+
+  it("says why when the app did not cancel it", async () => {
+    const { dialog } = await openWith({
+      "POST /api/tickets/1000002/cancel": reply(RUNNING, 202),
+      "GET /api/tickets/cancel": ended(5),
+    });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ vé" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Có, huỷ vé" }));
+
+    expect(
+      await within(dialog).findByText(
+        "Máy này đang chạy một lượt khác. Hãy thử lại sau.",
+        {},
+        { timeout: 4000 },
+      ),
+    ).toBeVisible();
+  });
+
+  it("says so, and sends nothing, for a ticket whose account is on no machine", async () => {
+    const tickets = TICKETS.map((item) =>
+      item.code === "1000002" ? { ...item, machine: null } : item,
+    );
+    const { app, dialog } = await openWith({ "GET /api/tickets/cancel": reply({}) }, tickets);
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ vé" }));
+
+    expect(within(dialog).getByRole("region", { name: "Huỷ vé" }).textContent).toContain(
+      "không gắn máy nào",
+    );
+    expect(within(dialog).queryByRole("button", { name: "Có, huỷ vé" })).not.toBeInTheDocument();
+    expect(requestsTo(app.fetch, "POST /api/tickets/1000002/cancel")).toBe(0);
+  });
+
+  it("offers no cancel for a slot begun already", async () => {
+    await openTab([ticket("1000006", { play_date: "2026-10-15", slot: "08:00 - 09:00" })], {
+      "GET /api/tickets/cancel": reply({}),
+    });
+    const dialog = await openTicket(/^08:00–09:00 · Tennis/);
+
+    expect(within(dialog).queryByRole("button", { name: "Huỷ vé" })).not.toBeInTheDocument();
+  });
+});

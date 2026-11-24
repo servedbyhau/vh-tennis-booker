@@ -5,6 +5,7 @@ import {
   type EventsQuery,
   getAccountLogin,
   getAccounts,
+  getCancel,
   getMumuInstances,
   getOverview,
   getRun,
@@ -32,6 +33,7 @@ export const queryKeys = {
   notifications: ["notifications"] as const,
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
+  cancel: ["cancel"] as const,
   customers: ["customers"] as const,
   accountLogin: (id: string) => ["accountLogin", id] as const,
 };
@@ -50,8 +52,28 @@ export function settlingInterval(overview: Overview | undefined): number | false
   if (running === null || running === undefined) {
     return false;
   }
-  const settling = running.trigger === "setup" || overview?.last_run?.status !== "running";
+  const settling = !booking(running.trigger) || overview?.last_run?.status !== "running";
   return settling ? SETTLING_POLL_MS : false;
+}
+
+/**
+ * Tell whether a task that holds the emulator books (a booking or a dry run, whose steps show as
+ * they go), unlike auto setup and a ticket cancel.
+ */
+export function booking(trigger: string): boolean {
+  return trigger !== "setup" && trigger !== "cancel";
+}
+
+/** How often the ticket cancel going on is read again. */
+export const CANCEL_POLL_MS = 2000;
+
+/** Read the ticket cancel started last, again every 2 s while it goes on. */
+export function useCancelState() {
+  return useQuery({
+    queryKey: queryKeys.cancel,
+    queryFn: getCancel,
+    refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
+  });
 }
 
 /** Read everything the Overview shows. */

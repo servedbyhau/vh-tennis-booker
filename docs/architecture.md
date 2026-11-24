@@ -331,7 +331,8 @@ values 422 `invalid_request`.
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
 | `GET`/`PUT /api/schedule` | The task: state, times; switching on needs a passed dry run and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
-| `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of, and a ticket's picture from the data folder's `tickets`, by its code alone |
+| `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |
+| `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine`, in its own process like the dry run (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`, in the quiet time, and while a run, a dry run or another cancel goes on); and how the one started last goes (`running`, its `exit_code`). `/api/status` shows it running (trigger `cancel`), and no dry run starts meanwhile |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers masked, never a password), each with the last quota read of every utility and month from this one on (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`; the app shows the month of the next booking); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
 | `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |
@@ -371,7 +372,11 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   one), `TicketsTab` (the tickets still to use by day of play, of one customer or
   all, no cancelled ones; those whose holder is not known name the machine, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`; read
-  again after `tickets_saved`) and `HistoryTab` (runs ten days at a time, real bookings unless
+  again after `tickets_saved`. A ticket whose slot is still to come has a cancel button there:
+  a question over the picture first (`TicketCancel`; for a ticket on no machine, why it cannot),
+  then how it goes, read every 2 s (`cancelling.ts`), and how it ended; the customers' quotas are
+  read again once it is over, the tickets once its words are put away, as a cancelled ticket
+  leaves the list) and `HistoryTab` (runs ten days at a time, real bookings unless
   dry runs are ticked; `?run=` shows one run's slots, steps and log beside the list). What a
   section lists is kept while another shows (`state.ts`).
 - The booking page (`pages/HomePage.tsx`, parts in `pages/home/`): the ticket (`BookingTicket`:

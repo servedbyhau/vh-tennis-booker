@@ -17,6 +17,8 @@ export const ERROR_CODES = [
   "credentials",
   "phone_taken",
   "account_attached",
+  "no_machine",
+  "ticket_cancelled",
   "engine",
   "invalid_settings",
   "invalid_request",

@@ -35,12 +35,17 @@ class Running(BaseModel):
 
 
 def running(
-    context: AppContext, dry_run: Any = None, recent: Sequence[dict[str, Any]] = ()
+    context: AppContext,
+    dry_run: Any = None,
+    recent: Sequence[dict[str, Any]] = (),
+    cancel: Any = None,
 ) -> Optional[Running]:
-    """Return the run going on now, from the lock or from the dry run started last.
+    """Return the run going on now, from the lock or from the dry run or cancel started last.
 
     ``dry_run`` is the process the backend started last; for its first moments it does not
     hold the lock yet. ``recent`` holds the newest runs, newest first, where its runs are.
+    ``cancel`` is the process of the ticket cancel started last (``court-booker cancel``),
+    which holds the lock of another machine than the first one, or none yet.
     """
     holder = RunLock(context.data.lock).running_holder()
     if holder is not None:
@@ -52,6 +57,8 @@ def running(
         )
     if dry_run is not None and dry_run.poll() is None:
         return Running(trigger="dry_run", pid=dry_run.pid, since=None)
+    if cancel is not None and cancel.poll() is None:
+        return Running(trigger="cancel", pid=cancel.pid, since=None)
     return None
 
 
@@ -106,7 +113,13 @@ def read_status(context: Context, request: Request) -> Overview:
     finally:
         connection.close()
     last = recent[:1]
-    now = running(context, getattr(request.app.state, "dry_run", None), recent)
+    cancel = getattr(request.app.state, "cancel", None)
+    now = running(
+        context,
+        getattr(request.app.state, "dry_run", None),
+        recent,
+        None if cancel is None else cancel.process,
+    )
     state = schedule_state(context)
     return Overview(
         version=__version__,

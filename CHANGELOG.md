@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A ticket still to play has a cancel button in the tickets: after a question, the machine its
+  account is on cancels it in the Vinhomes app and its words tell how that went; the ticket and
+  the quota are shown again once done (`/api/tickets/{code}/cancel`, `/api/tickets/cancel`).
 - `court-booker cancel <code> [--instance N]` cancels a ticket in the Vinhomes app of its
   machine: its page's "Hủy tiện ích", then "Xác nhận" in the question, checked on the history
   page opened again; the ticket takes its new status and that sport's quota is read again. It

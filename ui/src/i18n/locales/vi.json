@@ -46,6 +46,7 @@
           "dry_run": "Đang chạy thử",
           "manual": "Đang đặt sân (chạy thủ công)",
           "setup": "Đang thiết lập tự động",
+          "cancel": "Đang huỷ vé trong app Vinhomes",
           "other": "Đang có một lần chạy"
         },
         "locked": "Chạy thử tạm khóa cho tới khi xong"
@@ -141,7 +142,24 @@
       "copy": "Copy ảnh",
       "copied": "Đã copy ảnh, dán vào Zalo",
       "copyFailed": "Không copy được ảnh, hãy dùng Lưu vé",
-      "close": "Đóng"
+      "close": "Đóng",
+      "cancel": {
+        "button": "Huỷ vé",
+        "question": "Huỷ vé {{name}}, {{day}}? App Vinhomes trên {{machine}} sẽ huỷ vé và hoàn lại hạn mức.",
+        "yes": "Có, huỷ vé",
+        "no": "Không",
+        "running": "Đang huỷ vé trong app Vinhomes, khoảng 1 phút…",
+        "done": "Đã huỷ vé, hạn mức đã được hoàn.",
+        "noMachine": "Tài khoản của vé này không gắn máy nào, nên chưa huỷ được ở đây. Hãy gắn tài khoản vào một máy, hoặc huỷ trong app Vinhomes.",
+        "failed": {
+          "1": "App Vinhomes chưa huỷ vé này. Xem nhật ký để biết lý do.",
+          "2": "Không huỷ vé trong giờ đặt sân buổi sáng.",
+          "3": "Không mở được MuMu của máy này.",
+          "4": "App Vinhomes trên máy này chưa sẵn sàng, có thể đã bị đăng xuất.",
+          "5": "Máy này đang chạy một lượt khác. Hãy thử lại sau.",
+          "other": "Có lỗi khi huỷ vé. Xem nhật ký."
+        }
+      }
     },
     "management": {
       "sections": "Các mục quản lý"
@@ -314,6 +332,7 @@
     "dry_run": "chạy thử",
     "manual": "thủ công",
     "setup": "thiết lập tự động",
+    "cancel": "huỷ vé",
     "unknown": "không rõ"
   },
   "setup": {
@@ -501,6 +520,8 @@
     "credentials": "Windows chưa lưu được mật khẩu. Hãy thử lại.",
     "phone_taken": "Số này đã có ở một khách.",
     "account_attached": "Đang được một máy dùng để đặt. Bỏ chọn ở màn Đặt sân rồi mới xóa được.",
+    "no_machine": "Tài khoản của vé này không gắn máy nào.",
+    "ticket_cancelled": "Vé này đã huỷ rồi.",
     "engine": "Court Booker gặp lỗi.",
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",

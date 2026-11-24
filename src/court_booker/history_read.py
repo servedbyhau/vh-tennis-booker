@@ -225,7 +225,7 @@ def account_subdivisions(db: sqlite3.Connection) -> list[dict[str, Any]]:
 
 _TICKET_COLUMNS = f"""
     code, device, utility, court, play_date, slot, status, status_text, created_at, seen_at,
-    photo, {_holder_columns("tickets")}
+    photo, account_id, {_holder_columns("tickets")}
 """
 
 
@@ -242,6 +242,12 @@ def list_tickets(
         (since or "", limit),
     )
     return [dict(row) for row in rows]
+
+
+def get_ticket(db: sqlite3.Connection, code: str) -> dict[str, Any] | None:
+    """Return ticket ``code`` as :func:`list_tickets` lists it, ``None`` if not recorded."""
+    row = db.execute(f"SELECT {_TICKET_COLUMNS} FROM tickets WHERE code = ?", (code,)).fetchone()
+    return None if row is None else dict(row)
 
 
 def ticket_photo(db: sqlite3.Connection, code: str) -> str | None:

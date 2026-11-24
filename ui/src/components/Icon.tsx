@@ -2,6 +2,7 @@ import {
   AlarmClock,
   ArrowRight,
   Bell,
+  CalendarX,
   Check,
   ChevronsUpDown,
   ChevronLeft,
@@ -59,6 +60,8 @@ const DRAWINGS = {
   add: Plus,
   edit: Pencil,
   remove: Trash2,
+  /** A ticket to cancel. */
+  cancel: CalendarX,
   /** Agree, keep what was typed. */
   check: Check,
   /** Close what is open, give it up. */
