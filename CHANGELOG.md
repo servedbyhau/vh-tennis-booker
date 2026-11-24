@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A quota section shows every account's quota left of each sport in one table, for the month
+  booked for or another month read, little left marked, with a read again on each account on a
+  machine; the overview's alert of an account short of quota leads there.
 - The tickets show as a list or a week (a column a day, a row a slot), of one sport or every one,
   and every ticket or those not sent yet. A ticket is marked sent to its customer from its
   picture (`PUT /api/tickets/{code}/sent`), and the overview counts those of today and tomorrow

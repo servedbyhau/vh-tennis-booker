@@ -216,6 +216,9 @@ On the second:
   comes back. Not around the 06:00 booking, nor while a run uses that machine. They are read from the Vinhomes app at 06:03,
   once every machine has booked, and stay on this PC, the pictures in
   `%LOCALAPPDATA%\CourtBooker\tickets`, until the day of play is over.
+- **Hạn mức / Quota**: every account in a row and every sport in a column, what is left of each
+  in the month booked for (or another month read), little left marked, and a button that reads
+  an account on a machine again.
 - **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every
   slot booked or not and when it started (real bookings, dry runs on request); a press shows the
   reasons, the steps and the technical log beside the list. A booking that stopped on a failure the

@@ -176,6 +176,18 @@
       "slot": "Khung giờ",
       "noneKept": "Không có vé nào khớp lựa chọn."
     },
+    "quota": {
+      "title": "Hạn mức",
+      "month": "Tháng {{month}}",
+      "months": "Tháng",
+      "hint": "Mỗi môn 8 lượt một tháng, 2 lượt một ngày. Vé đã huỷ được hoàn lượt.",
+      "account": "Tài khoản",
+      "onMachine": "Máy",
+      "machine": "MuMu {{index}}",
+      "left": "còn {{left}}/{{limit}}",
+      "readAt": "Đọc lúc {{time}} {{day}}",
+      "empty": "Chưa có tài khoản nào được đọc hạn mức. Hạn mức được đọc ở mỗi lượt 06:00, hoặc khi bấm Đọc lại."
+    },
     "management": {
       "sections": "Các mục quản lý"
     },

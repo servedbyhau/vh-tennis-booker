@@ -384,7 +384,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   the problems; the header counts the ticks left) and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose sections each have an
   address: `OverviewTab` (the index: this month's figures, the machines in a table, the tickets of
-  the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), both from
+  the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), `QuotaTab` (a row an account, a column a sport, from the
+  customers' readings of the month chosen), the first two from
   `machineFacts.ts` (the settings, the customers and the newest scheduled run of each MuMu
   instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList`, and `CustomerDetail` beside it, the one in the address,
   `?customer=`, else the first: who they are and their accounts; one form is open at a time, under what it changes,
