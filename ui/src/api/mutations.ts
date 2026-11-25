@@ -24,6 +24,7 @@ import {
   startDryRun,
   switchInstance,
   switchSchedule,
+  importCustomers,
 } from "./endpoints";
 import { queryKeys } from "./queries";
 
@@ -174,6 +175,11 @@ function useCustomerChange<Variables, Result>(
     mutationFn,
     onSettled: () => cache.invalidateQueries({ queryKey: queryKeys.customers }),
   });
+}
+
+/** Read a customers' file, or apply it; the customers are read again after it. */
+export function useImportCustomers() {
+  return useCustomerChange(importCustomers);
 }
 
 /** Add a customer without accounts. */

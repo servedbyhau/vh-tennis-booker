@@ -20,6 +20,12 @@
   border-bottom: var(--border-hairline) solid var(--color-hairline);
 }
 
+.buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
 .title {
   font-size: var(--text-heading-sm);
   font-weight: var(--weight-heavy);

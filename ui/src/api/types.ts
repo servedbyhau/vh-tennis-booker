@@ -53,6 +53,7 @@ export type SetupStatus = Schemas["Status"];
 
 export type DryRunStarted = Schemas["DryRunStarted"];
 export type Prices = Schemas["Prices"];
+export type ImportResult = Schemas["ImportResult"];
 export type Charge = Schemas["Charge"];
 export type Charges = Schemas["Charges"];
 export type ChargeChange = Schemas["ChargeChange"];

@@ -179,6 +179,10 @@ Details live in the docstrings; this page says where things are and what must st
   (`notify.format_quota_warning`, when notifications are on), naming whose account it is: the
   user has the day to choose another. A run never changes the account by itself (logging in to
   another one at 05:46 could cost the booking, and may log the customer's phone out).
+- `customer_file.py`: the customers as an Excel file (openpyxl, imported by the backend only),
+  an account a row; `plan_import` tells what a file read back changes (a customer by name, an
+  account by phone number, a 9-digit number given back its 0, each row left out with a code),
+  `apply_import` makes it.
 - `customers.py` (`CustomerBook`): the customers and the Vinhomes accounts each one gave. The
   database holds names and notes only; an account's login is in the vault under its id.
   Attaching an account to a machine saves its login as that instance's, the one a run reads,
@@ -365,7 +369,8 @@ values 422 `invalid_request`.
 | `POST /api/machines/{mumu_index}/quota`, `GET /api/machines/quota` | Start `court-booker quota` on the machine (refused for one without a chosen account, 409 `no_machine`), and how the one started last goes. Both are tasks (`api/tasks.py`): each in its own process like the dry run, one at a time, refused in the quiet time and while a run, a dry run or another task goes on (409 `lock_held`); `/api/status` shows one running (its kind as the trigger), and no dry run starts meanwhile |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers whole, never a password; logs and events still mask them), each with the last quota read of every utility and month from this one on (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`; the app shows the month of the next booking); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
 | `POST /api/customers/{id}/accounts`, `PUT`, `DELETE /api/customer-accounts/{id}` | A customer's accounts; one phone number, one account (409 `phone_taken`); a new phone number or password is its machine's too, refused while a run goes on (409 `lock_held`) |
-| `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). The only route that answers a password |
+| `GET /api/customer-accounts/{id}/login` | The saved phone number and password, whole, for the account's form; `no-store`, and only this PC reaches it (`local_only.py`). With the file below, the only routes that answer a password |
+| `GET /api/customers/file`, `GET /api/customers/file/template`, `POST /api/customers/file` | The customers as an .xlsx file (`customer_file.py`), the passwords with `passwords` (`no-store`); the columns alone; a file read back: what it changes (`apply` makes it), 400 for a file that is not a workbook of the columns, 409 `lock_held` to apply while a run goes on |
 | `PUT`, `DELETE /api/machines/{mumu_index}/account` | Attach an account to a machine (it moves from another one), or none; refused while a run goes on (409 `lock_held`) |
 | `GET /api/accounts` | The subdivision each MuMu instance's account told last (`history_read.account_subdivisions`); one the catalog no longer lists is left out |
 | `WS /api/live` | Pushes each new step |
@@ -404,7 +409,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   from `money.ts`, the price list), `StatsTab` (the scheduled runs of the last 30 days summed by
   `stats.ts`: by machine, by slot, the reasons of the slots lost), the first two from
   `machineFacts.ts` (the settings, the customers and the newest scheduled run of each MuMu
-  instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList` with its search, `customerSearch.ts`: by name and facts without
+  instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList` with its search and a button that opens `CustomerFile` beside
+  it, the export and the import with what a file changes shown before it is applied; `customerSearch.ts`: by name and facts without
   Vietnamese marks, an account by its name or, for digits, its phone number; and `CustomerDetail`
   beside it, the one in the address, `?customer=`, else the first found: who they are and their
   accounts, each phone number whole with a copy button, those found marked; one form is open at a time, under what it changes,

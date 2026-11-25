@@ -405,3 +405,56 @@ describe("An account's phone number", () => {
     expect(row.queryByRole("button", { name: "Đọc lại hạn mức" })).not.toBeInTheDocument();
   });
 });
+
+describe("The customers' file", () => {
+  const PLAN = {
+    new_customers: ["Anh Cường"],
+    changed_customers: [],
+    new_accounts: ["0900000055"],
+    changed_accounts: ["0900000011"],
+    problems: [{ line: 5, code: "taken", phone: "0900000022", owner: "Anh An" }],
+    applied: false,
+  };
+
+  it("downloads the customers, with the passwords once ticked", async () => {
+    await openPage();
+    press("Xuất / nhập file");
+
+    const download = screen.getByRole("link", { name: /Tải file$/ });
+    expect(download).toHaveAttribute("href", "/api/customers/file");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Kèm mật khẩu" }));
+
+    expect(download).toHaveAttribute("href", "/api/customers/file?passwords=true");
+    expect(screen.getByText(/^File có mật khẩu/)).toBeVisible();
+    expect(screen.getByRole("link", { name: /Tải file mẫu/ })).toHaveAttribute(
+      "href",
+      "/api/customers/file/template",
+    );
+  });
+
+  it("shows what a file changes, then imports it once asked", async () => {
+    const { fetch } = await openPage([AN], { "POST /api/customers/file": reply(PLAN) });
+    press("Xuất / nhập file");
+    const file = new File(["x"], "khach.xlsx");
+
+    fireEvent.change(screen.getByLabelText("Chọn file…"), { target: { files: [file] } });
+
+    const plan = await screen.findByRole("status");
+    expect(plan).toHaveTextContent("Thêm 1 khách: Anh Cường");
+    expect(plan).toHaveTextContent("Cập nhật 1 tài khoản: 0900000011");
+    expect(plan).toHaveTextContent("Dòng 5: số 0900000022 đang là tài khoản của Anh An");
+    const first = fetch.mock.calls
+      .map(([request]) => request)
+      .find((request) => request.method === "POST");
+    expect(first?.url).toMatch(/\/api\/customers\/file\?apply=false$/);
+
+    press("Nhập");
+
+    await waitFor(() => expect(requestsTo(fetch, "POST /api/customers/file")).toBe(2));
+    const second = fetch.mock.calls
+      .map(([request]) => request)
+      .filter((request) => request.method === "POST")
+      .at(-1);
+    expect(second?.url).toMatch(/apply=true$/);
+  });
+});

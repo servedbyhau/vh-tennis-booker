@@ -317,7 +317,38 @@
       "noMatch": "Không có khách nào khớp.",
       "copyPhone": "Copy số điện thoại",
       "copied": "Đã copy",
-      "copyFailed": "Không copy được"
+      "copyFailed": "Không copy được",
+      "file": {
+        "title": "Xuất / nhập file",
+        "close": "Đóng",
+        "exportTitle": "Xuất file Excel",
+        "exportHint": "Mỗi tài khoản một dòng, mở được bằng Excel hoặc Google Sheets. Dùng để sao lưu, hoặc chuyển khách sang máy khác.",
+        "withPasswords": "Kèm mật khẩu",
+        "passwordsWarning": "File có mật khẩu của các tài khoản: giữ kỹ, đừng gửi cho người khác.",
+        "download": "Tải file",
+        "importTitle": "Nhập từ file",
+        "importHint": "Dùng file xuất ra hoặc file mẫu. Khách tìm theo tên, tài khoản theo số điện thoại: số đã có thì cập nhật tên và mật khẩu, không tạo trùng. Ô để trống giữ nguyên. Tài khoản mới cần mật khẩu.",
+        "template": "Tải file mẫu",
+        "choose": "Chọn file…",
+        "reading": "Đang đọc file…",
+        "nothing": "File không có gì mới.",
+        "newCustomers": "Thêm {{count}} khách:",
+        "changedCustomers": "Cập nhật {{count}} khách:",
+        "newAccounts": "Thêm {{count}} tài khoản:",
+        "changedAccounts": "Cập nhật {{count}} tài khoản:",
+        "left": "Bỏ qua {{count}} dòng:",
+        "line": "Dòng {{line}}:",
+        "problems": {
+          "no_name": "thiếu tên khách",
+          "bad_phone": "số điện thoại {{phone}} không đúng (10 số, bắt đầu bằng 0)",
+          "twice": "số {{phone}} bị lặp trong file",
+          "taken": "số {{phone}} đang là tài khoản của {{owner}}",
+          "no_password": "tài khoản mới {{phone}} chưa có mật khẩu"
+        },
+        "apply": "Nhập",
+        "cancel": "Thôi",
+        "applied": "Đã nhập xong."
+      }
     },
     "guide": {
       "title": "Hướng dẫn",

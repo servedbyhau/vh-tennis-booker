@@ -8,6 +8,7 @@ import { QueryView } from "../../components/QueryView";
 import { EmptyState } from "../../components/States";
 import styles from "./CustomersTab.module.css";
 import { CustomerDetail } from "./CustomerDetail";
+import { CustomerFile } from "./CustomerFile";
 import { CustomerForm } from "./CustomerForms";
 import { CustomerList } from "./CustomerList";
 import { customerFound } from "./customerSearch";
@@ -21,13 +22,15 @@ interface ColumnsProps {
 
 function Columns({ customers, chosen, onChoose }: ColumnsProps) {
   const { t } = useTranslation();
-  const [adding, setAdding] = useState(false);
+  /** What the right column shows in place of the customer: a new one's form, or the file. */
+  const [panel, setPanel] = useState<"add" | "file" | null>(null);
+  const adding = panel === "add";
   const [query, setQuery] = useState("");
   const found = customers.filter((customer) => customerFound(customer, query));
   const shown = found.find((customer) => customer.id === chosen) ?? found[0];
 
   function choose(id: string) {
-    setAdding(false);
+    setPanel(null);
     onChoose(id);
   }
 
@@ -35,19 +38,22 @@ function Columns({ customers, chosen, onChoose }: ColumnsProps) {
     <div className={styles.columns}>
       <CustomerList
         customers={found}
-        shown={adding ? null : (shown?.id ?? null)}
+        shown={panel === null ? (shown?.id ?? null) : null}
         onChoose={choose}
-        onAdd={() => setAdding(true)}
+        onAdd={() => setPanel("add")}
+        onFile={() => setPanel("file")}
         query={query}
         onQuery={setQuery}
       />
       <div className={styles.detail}>
-        {adding ? (
+        {panel === "file" ? (
+          <CustomerFile onClose={() => setPanel(null)} />
+        ) : adding ? (
           <div className={styles.form}>
             <h2 className={styles.title}>{t("pages.customers.add")}</h2>
             <CustomerForm
               customer={null}
-              onClose={() => setAdding(false)}
+              onClose={() => setPanel(null)}
               onSaved={(customer) => choose(customer.id)}
             />
           </div>

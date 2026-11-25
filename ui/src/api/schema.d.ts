@@ -382,6 +382,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customers/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Customers
+         * @description The customers and their accounts as an Excel file, a row an account.
+         *
+         *     With ``passwords`` each account's saved password is written too, to move the logins to
+         *     another PC: only this PC reaches the backend (``local_only.py``), and no cache keeps it.
+         */
+        get: operations["export_customers_api_customers_file_get"];
+        put?: never;
+        /**
+         * Import Customers
+         * @description Read a customers' file and tell what it changes; with ``apply``, make the changes.
+         *
+         *     A customer is found by name, an account by phone number: a known number gets the file's
+         *     name and password, none is added twice. A row that cannot be used is told and left out.
+         *     A file that is not a workbook of the columns answers 400 ``bad_request``. A new password of
+         *     an account on a machine is the one the machine logs in with, so applying is refused (409
+         *     ``lock_held``) while a run goes on.
+         */
+        post: operations["import_customers_api_customers_file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customers/file/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Customers Template
+         * @description An empty customers' file: the columns alone, to fill and read back.
+         */
+        get: operations["customers_template_api_customers_file_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/customer-accounts/{account_id}/login": {
         parameters: {
             query?: never;
@@ -975,6 +1028,38 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /**
+         * ImportProblem
+         * @description A row of the file left out, with why.
+         */
+        ImportProblem: {
+            /** Line */
+            line: number;
+            /** Code */
+            code: string;
+            /** Phone */
+            phone: string;
+            /** Owner */
+            owner: string;
+        };
+        /**
+         * ImportResult
+         * @description What a customers' file changes, or changed once applied.
+         */
+        ImportResult: {
+            /** New Customers */
+            new_customers: string[];
+            /** Changed Customers */
+            changed_customers: string[];
+            /** New Accounts */
+            new_accounts: string[];
+            /** Changed Accounts */
+            changed_accounts: string[];
+            /** Problems */
+            problems: components["schemas"]["ImportProblem"][];
+            /** Applied */
+            applied: boolean;
         };
         /**
          * InstanceSettings
@@ -2321,6 +2406,130 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerRecord"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_customers_api_customers_file_get: {
+        parameters: {
+            query?: {
+                /** @description Whether the saved passwords are written */
+                passwords?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description An Excel workbook */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    import_customers_api_customers_file_post: {
+        parameters: {
+            query?: {
+                /** @description Make the changes, not only tell them */
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    customers_template_api_customers_file_template_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description An Excel workbook */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
                 };
             };
             /** @description Invalid request values, one line per value */

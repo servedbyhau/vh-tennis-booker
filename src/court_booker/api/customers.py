@@ -1,7 +1,8 @@
 """Customer routes: the customers, their Vinhomes accounts, and the machine of each account.
 
-They answer a phone number with its middle hidden and no password, but for the one route the
-form of an account is filled from. Nothing of them is recorded in the history.
+They answer the whole phone number and no password, but for the one route the form of an
+account is filled from and the customers' file asked with its passwords. Nothing of them is
+recorded in the history.
 """
 
 # No `from __future__ import annotations`: FastAPI and Pydantic read the annotations at run
@@ -11,14 +12,14 @@ from collections.abc import Iterator, Mapping
 from datetime import date
 from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, Depends, Path, Query, Response
+from fastapi import APIRouter, Body, Depends, Path, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints
 
-from court_booker import credentials
+from court_booker import credentials, customer_file
 from court_booker.api.context import Context
 from court_booker.credentials import Login
 from court_booker.customers import Account, Customer, CustomerBook
-from court_booker.errors import LockHeldError
+from court_booker.errors import LockHeldError, RequestError
 from court_booker.history import connect
 from court_booker.history_read import quota_readings
 from court_booker.lock import RunLock
@@ -37,6 +38,10 @@ Password = Annotated[SecretStr, Field(min_length=1, max_length=credentials.MAX_P
 Detach = Annotated[
     bool, Query(description="Whether an account attached to a machine is taken from it")
 ]
+
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+MAX_FILE_BYTES = 2_000_000
+"""A customers' file is a few kB; a bigger one is not one."""
 
 _changing = threading.Lock()
 """One change at a time: each one checks the others' phone numbers and machines first."""
@@ -118,6 +123,33 @@ class AccountChange(BaseModel):
     label: Label
     phone: Optional[str] = Field(default=None, pattern=PHONE_PATTERN)
     password: Optional[Password] = None
+
+
+class ImportProblem(BaseModel):
+    """A row of the file left out, with why."""
+
+    line: int
+    """Its row number in Excel."""
+    code: str
+    """``no_name``, ``bad_phone`` (not 10 digits from 0), ``twice`` (the number twice in the
+    file), ``taken`` (another customer's number) or ``no_password`` (a new account without)."""
+    phone: str
+    owner: str
+    """The customer whose number it is, for ``taken``."""
+
+
+class ImportResult(BaseModel):
+    """What a customers' file changes, or changed once applied."""
+
+    new_customers: list[str]
+    changed_customers: list[str]
+    """Known customers given a fact of the file."""
+    new_accounts: list[str]
+    """The phone numbers added."""
+    changed_accounts: list[str]
+    """Known phone numbers given the file's name or password."""
+    problems: list[ImportProblem]
+    applied: bool
 
 
 class AttachedAccount(BaseModel):
@@ -225,6 +257,81 @@ def add_account(book: Book, customer_id: RecordId, account: NewAccount) -> Custo
     with _changing:
         book.add_account(customer_id, login, account.label)
         return shown(book.customer(customer_id), readings(book))
+
+
+def xlsx(data: bytes, name: str) -> Response:
+    """Answer an .xlsx file to save under ``name``, kept by no cache."""
+    return Response(
+        data,
+        media_type=XLSX,
+        headers={
+            "Content-Disposition": f'attachment; filename="{name}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+FILE_ANSWER = {200: {"content": {XLSX: {}}, "description": "An Excel workbook"}}
+
+
+@router.get("/customers/file", response_class=Response, responses=FILE_ANSWER)
+def export_customers(
+    book: Book,
+    passwords: Annotated[
+        bool, Query(description="Whether the saved passwords are written")
+    ] = False,
+) -> Response:
+    """The customers and their accounts as an Excel file, a row an account.
+
+    With ``passwords`` each account's saved password is written too, to move the logins to
+    another PC: only this PC reaches the backend (``local_only.py``), and no cache keeps it.
+    """
+
+    def password_of(account_id: str) -> Optional[str]:
+        login = book.store.read(account_id)
+        return None if login is None else login.password
+
+    data = customer_file.write_customers(book.customers(), password_of if passwords else None)
+    return xlsx(data, f"court-booker-customers-{date.today().isoformat()}.xlsx")
+
+
+@router.get("/customers/file/template", response_class=Response, responses=FILE_ANSWER)
+def customers_template() -> Response:
+    """An empty customers' file: the columns alone, to fill and read back."""
+    return xlsx(customer_file.template(), "court-booker-customers.xlsx")
+
+
+@router.post("/customers/file", response_model=ImportResult)
+def import_customers(
+    context: Context,
+    book: Book,
+    data: Annotated[bytes, Body(media_type=XLSX, description="The .xlsx file")],
+    apply: Annotated[bool, Query(description="Make the changes, not only tell them")] = False,
+) -> ImportResult:
+    """Read a customers' file and tell what it changes; with ``apply``, make the changes.
+
+    A customer is found by name, an account by phone number: a known number gets the file's
+    name and password, none is added twice. A row that cannot be used is told and left out.
+    A file that is not a workbook of the columns answers 400 ``bad_request``. A new password of
+    an account on a machine is the one the machine logs in with, so applying is refused (409
+    ``lock_held``) while a run goes on.
+    """
+    if len(data) > MAX_FILE_BYTES:
+        raise RequestError("The file is too big for a customers' file")
+    rows = customer_file.read_rows(data)
+    with _changing:
+        plan = customer_file.plan_import(book, rows)
+        if apply:
+            check_no_run(context)
+            customer_file.apply_import(book, plan)
+    return ImportResult(
+        new_customers=plan.new_customers,
+        changed_customers=plan.changed_customers,
+        new_accounts=plan.new_accounts,
+        changed_accounts=plan.changed_accounts,
+        problems=[ImportProblem(**vars(problem)) for problem in plan.problems],
+        applied=apply,
+    )
 
 
 @router.get("/customer-accounts/{account_id}/login", response_model=AccountLogin)
