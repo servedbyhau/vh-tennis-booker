@@ -406,9 +406,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
 - `steps.ts` words each event kind (a new kind fails the type check); `reasons.ts` turns the
   engine's English reasons into a few words (`notify.REASONS` holds the same words; a test
   compares them).
-- Three pages, a press apart in the middle of the header: the booking, the guide
-  (`pages/GuidePage.tsx`: three steps to start, the user's ticks for each machine, the mornings and
-  the problems; the header counts the ticks left) and the management
+- Two pages, a press apart in the middle of the header: the booking and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose sections each have an
   address: `OverviewTab` (the index: the alerts of `board.ts`, one look for all, while there are
   some, and the machines in a table: the account each books with, what it books, its last 06:00

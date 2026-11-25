@@ -21,6 +21,8 @@ uses [Semantic Versioning](https://semver.org/).
   machine's `days` stay a setting of the config file.
 - The machines section: what it showed is on the booking page, the quota section and the
   overview.
+- The Guide page, its steps to tick and the count of them in the header and the status line;
+  its old address leads to the booking page.
 
 ### Changed
 - The overview shows only what to look at, while there is something, and the machines: the

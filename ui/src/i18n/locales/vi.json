@@ -24,15 +24,12 @@
   "nav": {
     "label": "Trang",
     "booking": "Đặt sân",
-    "management": "Quản lý",
-    "guide": "Hướng dẫn",
-    "left": ", còn {{count}} việc"
+    "management": "Quản lý"
   },
   "pages": {
     "overview": {
       "title": "Tổng quan",
       "status": {
-        "setupLeft": "Còn {{count}} việc chuẩn bị, xem Hướng dẫn",
         "scheduleOff": "Tự đặt đang tắt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
         "noAccount": "Máy {{machines}} chưa chọn tài khoản",
@@ -62,7 +59,6 @@
       "instance": "Máy",
       "instanceName": "Máy {{number}}",
       "mumuName": "MuMu {{index}}",
-      "instanceLeft": "còn việc chuẩn bị",
       "instanceClash": "trùng sân và giờ với máy khác",
       "instanceNoAccount": "chưa chọn tài khoản",
       "instanceQuota": "tài khoản không đủ hạn mức",
@@ -343,64 +339,6 @@
         "apply": "Nhập",
         "cancel": "Thôi",
         "applied": "Đã nhập xong."
-      }
-    },
-    "guide": {
-      "title": "Hướng dẫn",
-      "start": {
-        "title": "Court Booker đặt sân thay bạn lúc {{start}} mỗi sáng, kể cả khi bạn ngủ",
-        "steps": {
-          "1": "Làm các việc chuẩn bị bên dưới, một lần.",
-          "2": "Ở trang Đặt sân, chọn tài khoản, môn, sân và khung giờ cho từng máy.",
-          "3": "Bấm \"{{dryRun}}\", đạt thì bật \"{{daily}}\"."
-        }
-      },
-      "prepare": {
-        "title": "Chuẩn bị",
-        "note": "Bạn tự làm, một lần. Tích khi xong.",
-        "step": "Việc",
-        "off": "đang tắt",
-        "box": "{{title}}, {{machine}}",
-        "mumu": {
-          "title": "Đã cài MuMu Player",
-          "hint": "Tải ở mumuplayer.com, cài như phần mềm thường."
-        },
-        "app": {
-          "title": "Đã cài app Vinhomes Resident trong MuMu",
-          "hint": "Mở CH Play trong MuMu, tìm Vinhomes Resident."
-        },
-        "login": {
-          "title": "Đã đăng nhập app Vinhomes",
-          "hint": "Tài khoản cư dân. Chọn tài khoản ở trang Đặt sân để app tự đăng nhập."
-        }
-      },
-      "morning": {
-        "title": "Mỗi sáng",
-        "wake": "Máy tự thức dậy, mở MuMu và app Vinhomes. Tài khoản đang đăng nhập khác tài khoản đã chọn thì tự đổi.",
-        "start": "Đặt các khung đã chọn, thường xong trong 15 giây.",
-        "afterTime": "Xong",
-        "after": "Ảnh vé nằm ở Quản lý, mục Vé.",
-        "needs": "Máy cần:",
-        "needsText": "Sleep chứ đừng Shut down, vẫn đăng nhập Windows, laptop thì cắm sạc."
-      },
-      "trouble": {
-        "title": "Khi có sự cố",
-        "notRunning": {
-          "question": "Sáng nay app không chạy",
-          "answer": "Máy đã Shut down thay vì Sleep, hoặc đã đăng xuất Windows."
-        },
-        "slotFull": {
-          "question": "Báo \"{{slotFull}}\"",
-          "answer": "Khung đó có người đặt trước. Chọn khung khác ở trang Đặt sân."
-        },
-        "quota": {
-          "question": "Căn hộ hết hạn mức",
-          "answer": "Tối đa 8 khung mỗi tháng. Hủy lượt không cần ở mục Vé (nút Huỷ vé), hạn mức được hoàn ngay."
-        },
-        "loggedOut": {
-          "question": "App bị đăng xuất",
-          "answer": "Chọn tài khoản cho máy ở trang Đặt sân để lượt đặt tự đăng nhập. Nếu app báo sai mật khẩu, sửa ở trang Quản lý: app khóa tài khoản sau 5 lần sai."
-        }
       }
     },
     "panel": {

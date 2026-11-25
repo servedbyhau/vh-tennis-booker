@@ -81,7 +81,7 @@ class Status(str, Enum):
     FIXABLE = "fixable"
     """Not right; auto setup can fix it."""
     USER = "user"
-    """Only the user can fix it (install, log in); the app shows a guide."""
+    """Only the user can fix it (install, log in)."""
     UNKNOWN = "unknown"
     """Cannot be told now, e.g. while MuMu is not running."""
 

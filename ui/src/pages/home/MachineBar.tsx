@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Machine } from "../../machines";
-import { useManualTicks } from "../../manualSteps";
 import { useReadiness } from "../../readiness";
-import { machineLeft } from "../../setupState";
 import styles from "./MachineBar.module.css";
 
 interface MachineBarProps {
@@ -15,13 +13,12 @@ interface MachineBarProps {
 /**
  * The machines on top of the ticket, as index cards like the panel's tabs: the one pressed
  * shows its choices on the ticket and its setup beside it. A red mark tells a
- * machine that books with something to look at first (its setup, its account, a court and slot
+ * machine that books with something to look at first (its account, a court and slot
  * another one books too), in words on hover; a machine switched off is
  * pale. Nothing shows with one machine.
  */
 export function MachineBar({ machines, machine, onMachine }: MachineBarProps) {
   const { t } = useTranslation();
-  const ticks = useManualTicks();
   const { accountless, clashing, short } = useReadiness();
   if (machines.length < 2) {
     return null;
@@ -31,7 +28,6 @@ export function MachineBar({ machines, machine, onMachine }: MachineBarProps) {
   /** What to look at on a machine, in a few words each. */
   function problems(item: Machine): string[] {
     return [
-      ...(machineLeft(ticks, item) ? [t("pages.ticket.instanceLeft")] : []),
       ...(clashing.some(({ places }) => places.includes(item.place))
         ? [t("pages.ticket.instanceClash")]
         : []),

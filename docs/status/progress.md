@@ -64,7 +64,7 @@ Last updated: 2026-11-25.
 
 These are not written elsewhere (CLAUDE.md, the roadmap or the specs):
 
-- UI: for end users, ready-made choices only; three pages, the booking, the management and the guide; light theme, desktop
+- UI: for end users, ready-made choices only; two pages, the booking and the management; light theme, desktop
   width and Vietnamese by default. It sends no request per step while a run is going, and does
   not check MuMu while the run lock is held.
 - The installed app is the daily run; a release reaches it through the installer built from

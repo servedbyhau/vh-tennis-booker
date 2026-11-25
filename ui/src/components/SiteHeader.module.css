@@ -62,22 +62,6 @@
   font-weight: var(--weight-bold);
 }
 
-/* The setup tasks left, a red count. */
-.badge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 20px;
-  height: 20px;
-  margin-left: var(--space-2);
-  padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--color-failed);
-  color: var(--color-on-ink);
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
-  font-weight: var(--weight-semibold);
-}
-
 /* The status line, the update button and the languages, at the right edge. */
 .end {
   min-width: 0;
