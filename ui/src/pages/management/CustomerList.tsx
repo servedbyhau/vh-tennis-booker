@@ -12,6 +12,8 @@ interface CustomerListProps {
   onChoose: (id: string) => void;
   /** Add a customer; no button without it. */
   onAdd?: () => void;
+  /** Open the customers' file; no button without it. */
+  onFile?: () => void;
   query: string;
   onQuery: (query: string) => void;
   /** Whether a customer is marked as running out of quota; none is without it. */
@@ -40,6 +42,7 @@ export function CustomerList({
   shown,
   onChoose,
   onAdd,
+  onFile,
   query,
   onQuery,
   marked,
@@ -51,9 +54,19 @@ export function CustomerList({
         <h2 id="customers-title" className={styles.title}>
           {t("pages.customers.title")}
         </h2>
-        {onAdd !== undefined && (
-          <IconButton icon="add" variant="solid" label={t("pages.customers.add")} onClick={onAdd} />
-        )}
+        <span className={styles.buttons}>
+          {onFile !== undefined && (
+            <IconButton icon="save" label={t("pages.customers.file.title")} onClick={onFile} />
+          )}
+          {onAdd !== undefined && (
+            <IconButton
+              icon="add"
+              variant="solid"
+              label={t("pages.customers.add")}
+              onClick={onAdd}
+            />
+          )}
+        </span>
       </div>
       <label className={styles.search}>
         <Icon name="search" />

@@ -317,7 +317,38 @@
       "noMatch": "No customer matches.",
       "copyPhone": "Copy the phone number",
       "copied": "Copied",
-      "copyFailed": "Could not copy"
+      "copyFailed": "Could not copy",
+      "file": {
+        "title": "Export / import a file",
+        "close": "Close",
+        "exportTitle": "Export to Excel",
+        "exportHint": "An account a row; it opens in Excel or Google Sheets. To keep a copy, or to move the customers to another PC.",
+        "withPasswords": "With the passwords",
+        "passwordsWarning": "The file holds the accounts' passwords: keep it safe and send it to nobody.",
+        "download": "Download",
+        "importTitle": "Import a file",
+        "importHint": "Use an exported file or the template. A customer is found by name, an account by phone number: a known number gets the file's name and password, none is added twice. An empty cell keeps what is there. A new account needs its password.",
+        "template": "Download the template",
+        "choose": "Choose a file…",
+        "reading": "Reading the file…",
+        "nothing": "Nothing new in the file.",
+        "newCustomers": "{{count}} customers added:",
+        "changedCustomers": "{{count}} customers changed:",
+        "newAccounts": "{{count}} accounts added:",
+        "changedAccounts": "{{count}} accounts changed:",
+        "left": "{{count}} rows left out:",
+        "line": "Row {{line}}:",
+        "problems": {
+          "no_name": "no customer name",
+          "bad_phone": "phone number {{phone}} is not 10 digits from 0",
+          "twice": "{{phone}} is twice in the file",
+          "taken": "{{phone}} is {{owner}}'s account",
+          "no_password": "the new account {{phone}} has no password"
+        },
+        "apply": "Import",
+        "cancel": "Cancel",
+        "applied": "Imported."
+      }
     },
     "guide": {
       "title": "Guide",

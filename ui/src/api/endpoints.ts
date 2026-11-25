@@ -13,6 +13,7 @@ import type {
   NewAccount,
   NotificationSettings,
   Overview,
+  ImportResult,
   Prices,
   RunDetail,
   RunSummary,
@@ -52,6 +53,27 @@ export function getRun(runId: number): Promise<RunDetail> {
 /** List every machine's tickets, the latest day of play first. */
 export function listTickets(): Promise<Ticket[]> {
   return call(client.GET("/api/tickets"));
+}
+
+/** Read a customers' .xlsx file and tell what it changes; with `apply`, make the changes. */
+export function importCustomers({
+  file,
+  apply,
+}: {
+  file: Blob;
+  apply: boolean;
+}): Promise<ImportResult> {
+  return call(
+    client.POST("/api/customers/file", {
+      params: { query: { apply } },
+      // The workbook goes as it is: the schema calls its bytes a string.
+      body: "",
+      bodySerializer: () => file,
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    }),
+  );
 }
 
 /** Read the price list. */

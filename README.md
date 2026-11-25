@@ -203,7 +203,11 @@ On the second:
   the Vinhomes accounts they gave, each with its whole phone number and a button that copies it. A
   search over the list finds a customer by name or contact, or an account by its name or phone
   number (marked once found). The quotas are in the quota section. The passwords are kept by
-  Windows (Credential Manager) for your Windows account; an account's form shows its own.
+  Windows (Credential Manager) for your Windows account; an account's form shows its own. The
+  customers export to an Excel file (an account a row, the passwords only when ticked: to keep a
+  copy or move them to another PC), and a file in the same columns, such as the template, imports
+  many at once: what it adds, changes and leaves out (with why) shows first. A customer is found
+  by name, an account by phone number; a known number gets the file's name and password.
 - **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
   by day of play or as a week (a column a day, a row a slot), of one sport or every one, every
   ticket or those not sent to their customer yet. Each day says how many are not sent yet. A

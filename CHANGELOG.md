@@ -6,6 +6,11 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The customers export to an Excel file, with the passwords when ticked, and a file in the same
+  columns (the template, or an export from another PC) imports many at once, what it changes
+  shown first (`/api/customers/file`).
+
 ### Removed
 - The requests section and its routes (`/api/requests`); its table is dropped (schema 10). A
   machine's `days` stay a setting of the config file.

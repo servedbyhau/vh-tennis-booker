@@ -1198,6 +1198,163 @@
         }
       }
     },
+    "/api/customers/file": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Export Customers",
+        "description": "The customers and their accounts as an Excel file, a row an account.\n\nWith ``passwords`` each account's saved password is written too, to move the logins to\nanother PC: only this PC reaches the backend (``local_only.py``), and no cache keeps it.",
+        "operationId": "export_customers_api_customers_file_get",
+        "parameters": [
+          {
+            "name": "passwords",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether the saved passwords are written",
+              "default": false,
+              "title": "Passwords"
+            },
+            "description": "Whether the saved passwords are written"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An Excel workbook",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Import Customers",
+        "description": "Read a customers' file and tell what it changes; with ``apply``, make the changes.\n\nA customer is found by name, an account by phone number: a known number gets the file's\nname and password, none is added twice. A row that cannot be used is told and left out.\nA file that is not a workbook of the columns answers 400 ``bad_request``. A new password of\nan account on a machine is the one the machine logs in with, so applying is refused (409\n``lock_held``) while a run goes on.",
+        "operationId": "import_customers_api_customers_file_post",
+        "parameters": [
+          {
+            "name": "apply",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Make the changes, not only tell them",
+              "default": false,
+              "title": "Apply"
+            },
+            "description": "Make the changes, not only tell them"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "application/octet-stream",
+                "description": "The .xlsx file",
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/file/template": {
+      "get": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Customers Template",
+        "description": "An empty customers' file: the columns alone, to fill and read back.",
+        "operationId": "customers_template_api_customers_file_template_get",
+        "responses": {
+          "200": {
+            "description": "An Excel workbook",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/customer-accounts/{account_id}/login": {
       "get": {
         "tags": [
@@ -2846,6 +3003,89 @@
         ],
         "title": "Health",
         "description": "The backend answers and runs this version."
+      },
+      "ImportProblem": {
+        "properties": {
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "owner": {
+            "type": "string",
+            "title": "Owner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line",
+          "code",
+          "phone",
+          "owner"
+        ],
+        "title": "ImportProblem",
+        "description": "A row of the file left out, with why."
+      },
+      "ImportResult": {
+        "properties": {
+          "new_customers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "New Customers"
+          },
+          "changed_customers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Changed Customers"
+          },
+          "new_accounts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "New Accounts"
+          },
+          "changed_accounts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Changed Accounts"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/ImportProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          },
+          "applied": {
+            "type": "boolean",
+            "title": "Applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_customers",
+          "changed_customers",
+          "new_accounts",
+          "changed_accounts",
+          "problems",
+          "applied"
+        ],
+        "title": "ImportResult",
+        "description": "What a customers' file changes, or changed once applied."
       },
       "InstanceSettings": {
         "properties": {
