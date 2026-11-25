@@ -81,22 +81,19 @@ afterEach(() => {
 });
 
 describe("Management overview", () => {
-  it("opens first, with this month's figures, the machines and the tickets of the next days", async () => {
+  it("opens first with the machines, each with its account, what it books and its last run", async () => {
     await open(paths.management);
 
-    expect(screen.getByText("2/2")).toBeInTheDocument();
-    expect(screen.getByText("giờ đặt được lúc 06:00 tháng này (100%)")).toBeInTheDocument();
-    expect(screen.getByText("2/3")).toBeInTheDocument(); // two machines of three booking
     const machines = within(screen.getByRole("region", { name: "Các máy" }));
+    expect(machines.getByText("Lượt 06:00 gần nhất: T5 15/10")).toBeInTheDocument();
     const rows = machines.getAllByRole("row").map((row) => row.textContent);
+    expect(rows[0]).toContain("Tài khoản");
     expect(rows[1]).toContain("Máy 1");
-    expect(rows[1]).toContain("Anh An");
+    expect(rows[1]).toContain("Căn A0900000012");
     expect(rows[3]).toContain("Đang tắt");
-    const upcoming = within(screen.getByRole("region", { name: "Vé mấy ngày tới" }));
-    expect(upcoming.getByText("Thứ Năm 15/10 · 1 vé")).toBeInTheDocument();
-    // The cancelled ticket is not to play.
-    expect(upcoming.getByText("Thứ Sáu 16/10 · 1 vé")).toBeInTheDocument();
-    expect(screen.getByText("Mọi thứ đã sẵn sàng cho lượt 06:00 tới.")).toBeInTheDocument();
+    // Nothing to look at: no such part, and no figures or tickets.
+    expect(screen.queryByRole("region", { name: "Cần xử lý" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/vé sắp chơi|Vé mấy ngày tới/)).not.toBeInTheDocument();
   });
 
   it("lists what to look at, the worst first, each leading where it is set right", async () => {

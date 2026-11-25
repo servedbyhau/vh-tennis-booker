@@ -257,16 +257,9 @@
     },
     "board": {
       "title": "Tổng quan",
-      "booked": "giờ đặt được lúc 06:00 tháng này ({{rate}}%)",
-      "toPlay": "vé sắp chơi",
-      "machinesOn": "máy đang đặt",
       "alertsTitle": "Cần xử lý",
-      "allWell": "Mọi thứ đã sẵn sàng cho lượt 06:00 tới.",
       "machinesTitle": "Các máy",
-      "upcomingTitle": "Vé mấy ngày tới",
-      "seeAll": "Xem hết",
       "machine": "Máy",
-      "customer": "Khách",
       "books": "Đặt",
       "last": "Lượt 06:00 gần nhất",
       "alerts": {
@@ -277,7 +270,8 @@
         "failed": "{{machine}}: lượt đặt gần nhất bị lỗi. Xem trong Lịch sử.",
         "unsent": "{{count}} vé hôm nay và ngày mai chưa gửi cho khách."
       },
-      "toCollect": "còn phải thu tháng này"
+      "account": "Tài khoản",
+      "latestRun": "Lượt 06:00 gần nhất: {{day}}"
     },
     "machines": {
       "off": "Đang tắt",
