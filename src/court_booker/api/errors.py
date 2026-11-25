@@ -24,10 +24,6 @@ class NotFoundError(CourtBookerError):
     """The record asked for does not exist."""
 
 
-class DryRunRequiredError(CourtBookerError):
-    """The schedule cannot be switched on before a dry run has passed."""
-
-
 class NotificationError(CourtBookerError):
     """Windows did not show the notification (PowerShell failed, or not on Windows)."""
 
@@ -63,7 +59,6 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (NotFoundError, 404, "not_found"),
     (UnknownRecordError, 404, "not_found"),
     (LockHeldError, 409, "lock_held"),
-    (DryRunRequiredError, 409, "dry_run_required"),
     (PhoneTakenError, 409, "phone_taken"),
     (AccountAttachedError, 409, "account_attached"),
     (NoMachineError, 409, "no_machine"),

@@ -53,7 +53,7 @@ describe("mutation hooks", () => {
   it("refresh nothing when the backend refuses", async () => {
     const fetch = stubBackend({
       "GET /api/status": reply(overview),
-      "PUT /api/schedule": reply({ error: "dry_run_required", detail: "No dry run passed" }, 409),
+      "PUT /api/schedule": reply({ error: "bad_request", detail: "wake_at after start_at" }, 400),
     });
     const { overviewHook, mutationHook } = renderWithOverview(() => useSwitchSchedule());
     await waitFor(() => expect(overviewHook.result.current.isSuccess).toBe(true));
@@ -63,7 +63,7 @@ describe("mutation hooks", () => {
     });
 
     await waitFor(() => expect(mutationHook.result.current.isError).toBe(true));
-    expect((mutationHook.result.current.error as ApiError).code).toBe("dry_run_required");
+    expect((mutationHook.result.current.error as ApiError).code).toBe("bad_request");
     expect(requestsTo(fetch, "GET /api/status")).toBe(1);
   });
 

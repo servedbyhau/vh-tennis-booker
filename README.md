@@ -148,11 +148,11 @@ Then:
    (install MuMu and the Vinhomes app, log in); tick each step once it is done.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
-5. In the **Setup** beside it, press **Dry run** between 06:00 and 21:00, while the Vinhomes
-   app takes bookings. It walks the whole booking and stops before the final confirmation, so
-   nothing is booked.
-6. Once it has passed, turn **Auto-book** on. Every morning the PC wakes at the wake time and
-   books at 06:00; the window does not need to be open.
+5. In the **Setup** beside it, turn **Auto-book** on. Every morning the PC wakes at the wake
+   time and books at 06:00; the window does not need to be open.
+6. To check the setup first, press **Dry run** between 06:00 and 21:00, while the Vinhomes app
+   takes bookings (optional). It walks the whole booking and stops before the final
+   confirmation, so nothing is booked.
 
 The app is in Vietnamese by default, English is one click away.
 
@@ -182,8 +182,8 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
   court and up to two slots to choose, saved on each press. During a run it shows the steps as
   they happen; those of the 06:00 race (from a minute before to the last slot) show once it is
   over, so writing them takes nothing from the booking.
-- **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task,
-  once a dry run passed), the Windows notification, the account the machine books with (its phone
+- **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task;
+  a dry run is not needed first), the Windows notification, the account the machine books with (its phone
   number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
   window brought to the front), and a dry run. Before booking, a run reads the phone number logged in on the
   machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password

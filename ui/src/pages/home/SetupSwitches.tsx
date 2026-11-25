@@ -20,31 +20,23 @@ interface DailyProps {
   running: boolean;
 }
 
-/**
- * The booking of every morning. It stays locked until a dry run has passed; once one has, a
- * switch still off is set off.
- */
+/** The booking of every morning; a switch still off is set off. A dry run is not needed. */
 export function DailyRow({ schedule, running }: DailyProps) {
   const { t } = useTranslation();
   const toggle = useSwitchSchedule();
-  const locked = !schedule.enabled && !schedule.dry_run_passed;
   const title = t("pages.setup.daily.title");
   return (
     <SetupRow
       icon="alarm"
       title={title}
-      hint={
-        locked
-          ? t("pages.setup.daily.locked")
-          : t("pages.setup.daily.times", { start: schedule.start_at, wake: schedule.wake_at })
-      }
+      hint={t("pages.setup.daily.times", { start: schedule.start_at, wake: schedule.wake_at })}
       problem={toggle.isError ? errorMessage(t, toggle.error) : null}
-      remind={!schedule.enabled && schedule.dry_run_passed}
+      remind={!schedule.enabled}
     >
       <Switch
         label={title}
         checked={schedule.enabled}
-        disabled={locked || running || toggle.isPending}
+        disabled={running || toggle.isPending}
         onChange={(enabled) => toggle.mutate(enabled)}
       />
     </SetupRow>
