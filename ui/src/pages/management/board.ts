@@ -1,13 +1,13 @@
-/** What the management's first board puts together: this month's figures and what to look at. */
+/** What the management's first board puts together: what to look at. */
 import { useTranslation } from "react-i18next";
 import { useOverview } from "../../api/queries";
-import type { RunSummary, Ticket } from "../../api/types";
+import type { Ticket } from "../../api/types";
 import { localToday } from "../../format";
 import { paths } from "../../paths";
 import { useReadiness } from "../../readiness";
 import type { MachineFacts } from "./machineFacts";
 
-/** One thing to look at, and how much it matters. */
+/** One thing to look at; `bad` keeps a machine from booking, and comes first. */
 export interface Alert {
   level: "bad" | "warn";
   text: string;
@@ -20,17 +20,6 @@ export function addDays(day: string, days: number): string {
   const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
   const moved = new Date(year, month - 1, date + days);
   return localToday(moved);
-}
-
-/** Sum what the 06:00 bookings of `runs` booked and tried, as "slots booked / slots tried". */
-export function bookedOf(runs: readonly RunSummary[]): { booked: number; tried: number } {
-  const real = runs.filter(
-    (run) => !run.dry_run && run.trigger === "scheduled" && run.status !== "running",
-  );
-  return {
-    booked: real.reduce((sum, run) => sum + run.booked, 0),
-    tried: real.reduce((sum, run) => sum + run.total, 0),
-  };
 }
 
 /** Return the tickets of today and tomorrow not yet sent to their customer. */

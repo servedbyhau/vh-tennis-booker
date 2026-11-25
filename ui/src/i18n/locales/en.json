@@ -257,16 +257,9 @@
     },
     "board": {
       "title": "Overview",
-      "booked": "slots booked at 06:00 this month ({{rate}}%)",
-      "toPlay": "tickets to play",
-      "machinesOn": "machines booking",
       "alertsTitle": "To look at",
-      "allWell": "All is ready for the next 06:00 run.",
       "machinesTitle": "Machines",
-      "upcomingTitle": "Tickets of the next days",
-      "seeAll": "See all",
       "machine": "Machine",
-      "customer": "Customer",
       "books": "Books",
       "last": "Last 06:00 run",
       "alerts": {
@@ -277,7 +270,8 @@
         "failed": "{{machine}}: its last booking failed. See the History.",
         "unsent": "{{count}} tickets of today and tomorrow not sent to their customer yet."
       },
-      "toCollect": "left to collect this month"
+      "account": "Account",
+      "latestRun": "Last 06:00 run: {{day}}"
     },
     "machines": {
       "off": "Off",

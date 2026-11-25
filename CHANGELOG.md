@@ -18,6 +18,9 @@ uses [Semantic Versioning](https://semver.org/).
   overview.
 
 ### Changed
+- The overview shows only what to look at, while there is something, and the machines: the
+  account each books with, what it books and its last 06:00 run. The month's figures and the
+  next days' tickets are gone.
 - The tickets' cards are lighter: two lines, the slot and court then the account, the status only
   when it is not the usual one, a button beside each that marks it sent or not, and each day
   saying how many are not sent yet.

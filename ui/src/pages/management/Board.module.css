@@ -186,7 +186,7 @@
   font-size: var(--text-small);
 }
 
-/* What to look at: one line each, marked by how much it matters. */
+/* What to look at: one line each, all alike. */
 .alerts {
   display: flex;
   flex-direction: column;
@@ -209,14 +209,6 @@
 .alert svg {
   flex: none;
   margin-top: 2px;
-}
-
-.alertBad {
-  background: color-mix(in srgb, var(--color-failed) 10%, transparent);
-}
-
-.alertWarn {
-  background: var(--color-highlight-soft);
 }
 
 .table {
