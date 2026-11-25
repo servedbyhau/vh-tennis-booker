@@ -294,14 +294,17 @@ Details live in the docstrings; this page says where things are and what must st
 - `paths.data_folder()`: `%LOCALAPPDATA%\CourtBooker` (`COURT_BOOKER_HOME` overrides) with
   `booker.db`, `run.lock`, `logs/` and the app's `config.toml`. The CLI's config comes from
   `--config`; a relative `log_dir` resolves beside it.
-- `device_setup.py`: checks (MuMu installed, MuMu screen settings, wake timers, app installed)
+- `device_setup.py`: checks (MuMu installed, MuMu screen settings, MuMu cores and RAM, wake
+  timers, app installed)
   and `auto_setup` for the fixable ones (`court-booker setup [--auto]`; `GET /api/setup` only
-  checks). The screen and the app are checked on every instance (`[[instances]]` too) as one
+  checks). The screen, the cores and RAM, and the app are checked on every instance (`[[instances]]` too) as one
   item: the worst status, each instance's detail ("MuMu 1: …"); auto setup sets each wrong
-  screen. Without a button: `ready.Supervisor` finds MuMuManager.exe when the configured
+  screen, and gives each instance 2 cores and 2 GB at least (`MIN_CPU`, `MIN_MEMORY_GB`, read
+  as `vm_cpu` and `vm_mem`; more is kept). Without a button: `ready.Supervisor` finds MuMuManager.exe when the configured
   path is wrong (`find_manager`, the config is not rewritten) and calls `prepare_screen`
-  before starting each instance (a stopped MuMu gets 540x1600 at 220 DPI; a running one with
-  another screen is only logged, never restarted before the start); `schedule install` and
+  and `prepare_performance` before starting each instance (a stopped MuMu gets 540x1600 at 220
+  DPI and 2 cores and 2 GB at least; a running one is only logged, never restarted before the
+  start); `schedule install` and
   `PUT /api/schedule` call `ensure_wake_timers` (`powercfg`).
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the
   engine of whatever installed it: the runner folder's Python, or the packaged app.

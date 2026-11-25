@@ -58,14 +58,18 @@ class FakeMuMu:
 
     def __init__(self, settings=None, started=True, packages=("com.vinhomes.resident",), index=0):
         self.index = index
-        self.values = dict(
-            settings
-            or {
-                "resolution_width": "540.000000",
-                "resolution_height": "1600.000000",
-                "resolution_dpi": "220.000000",
-            }
-        )
+        self.values = {
+            "vm_cpu": "2",
+            "vm_mem": "2.000000",
+            **(
+                settings
+                or {
+                    "resolution_width": "540.000000",
+                    "resolution_height": "1600.000000",
+                    "resolution_dpi": "220.000000",
+                }
+            ),
+        }
         self.started = started
         self.packages = packages
         self.changed = []
@@ -225,6 +229,7 @@ def test_checks_cover_every_item(tmp_path):
     assert statuses(results) == {
         device_setup.MUMU_INSTALLED: Status.OK,
         device_setup.MUMU_SCREEN: Status.OK,
+        device_setup.MUMU_PERFORMANCE: Status.OK,
         device_setup.WAKE_TIMERS: Status.OK,
         device_setup.APP_INSTALLED: Status.OK,
     }
@@ -307,7 +312,7 @@ def test_every_instance_is_checked(tmp_path):
 
     results = device_setup.run_checks(config_for(tools), tools, FakePowercfg().run)
 
-    screen_check, app_check = results[1], results[3]
+    screen_check, app_check = results[1], results[4]
     assert screen_check.status is Status.FIXABLE
     assert screen_check.detail == (
         "MuMu 0: Screen 540x1600 at 220 DPI; "
@@ -356,7 +361,7 @@ def test_wake_timers_refused_by_windows_need_the_user(tmp_path):
 
     results = device_setup.auto_setup(config_for(tools), tmp_path / "c.toml", tools, run=run)
 
-    wake = results[2]
+    wake = results[3]
     assert wake.status is Status.USER
     assert "Access denied." in wake.detail
 
@@ -381,12 +386,12 @@ def test_run_auto_setup_holds_the_lock_and_reports_each_item(tmp_path):
         run=run,
     )
 
-    assert len(results) == 4
+    assert len(results) == 5
     assert all(seen)  # powercfg ran while the lock was held
     assert not lock_path.exists()
     assert sink.kinds == [
         EventKind.SETUP_STARTED,
-        *[EventKind.SETUP_ITEM] * 4,
+        *[EventKind.SETUP_ITEM] * 5,
         EventKind.SETUP_FINISHED,
     ]
     assert sink.events[-1].data == {"left": [], "error": None}
@@ -436,3 +441,33 @@ def test_wake_timers_are_allowed_unless_allowed_already():
     blocked = FakePowercfg(ac=0, dc=0)
     assert device_setup.ensure_wake_timers(blocked.run).status is Status.FIXED
     assert (blocked.ac, blocked.dc) == (1, 1)
+
+
+def test_performance_of_2_cores_and_2_gb_or_more_is_kept():
+    assert device_setup.check_performance(FakeMuMu()).status is Status.OK
+    bigger = FakeMuMu({"vm_cpu": "4", "vm_mem": "3.000000"}, started=False)
+
+    assert device_setup.prepare_performance(bigger).status is Status.OK
+    assert bigger.changed == []
+
+
+def test_too_little_performance_is_raised_to_the_minimum_before_a_run_starts_mumu():
+    mumu = FakeMuMu({"vm_cpu": "1", "vm_mem": "3.000000"}, started=False)
+
+    check = device_setup.prepare_performance(mumu)
+
+    assert check.status is Status.FIXED
+    assert mumu.changed == [
+        {
+            "performance_mode": "custom",
+            "performance_cpu.custom": "2",
+            "performance_mem.custom": "3",  # its higher RAM kept
+        }
+    ]
+
+
+def test_a_running_mumu_with_too_little_is_only_told():
+    mumu = FakeMuMu({"vm_cpu": "2", "vm_mem": "1.500000"}, started=True)
+
+    assert device_setup.prepare_performance(mumu).status is Status.FIXABLE
+    assert mumu.changed == []

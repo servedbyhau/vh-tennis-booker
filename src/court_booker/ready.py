@@ -27,7 +27,7 @@ from typing import Any, Callable
 from court_booker.adb import Adb, find_adb, resolve_device
 from court_booker.clock import format_time
 from court_booker.config import Config
-from court_booker.device_setup import find_mumu_manager, prepare_screen
+from court_booker.device_setup import find_mumu_manager, prepare_performance, prepare_screen
 from court_booker.driver import PACKAGE as DRIVER_PACKAGE
 from court_booker.driver import connect_driver
 from court_booker.emulator import CALL_ATTEMPTS, MuMu
@@ -420,6 +420,7 @@ class Supervisor:
             manager = find_manager(self.config.mumu_manager)
             self.mumu = MuMu(manager, self.config.mumu_index, attempts=CALL_ATTEMPTS)
             prepare_screen(self.mumu)
+            prepare_performance(self.mumu)
         if Layer.MUMU in self._pending:
             self._restart_mumu()
             self._pending.discard(Layer.MUMU)

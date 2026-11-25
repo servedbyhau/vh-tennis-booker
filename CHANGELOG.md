@@ -7,6 +7,8 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Each machine's MuMu instance gets 2 cores and 2 GB at least before a run starts it (more is
+  kept), and the setup checks it (`mumu_performance`).
 - A machine without its MuMu instance has a button in the Setup that makes it: a copy of the first
   machine's, with the Vinhomes app, set up to book, the PC's RAM and disk checked first
   (`court-booker new-machine`, `/api/machines/new`).
