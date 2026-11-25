@@ -203,8 +203,6 @@ On the second:
   what it books and how its last 06:00 run went; the tickets of the next three days; and what to
   look at (the daily booking off, a machine without an account, two machines on one court and
   slot, an account short of quota, a last run that failed), each leading where it is set right.
-- **Máy / Machines**: a card per machine with its account, what it books, its quota, its last
-  06:00 run, and buttons that open its MuMu and read its quota again.
 - **Khách hàng / Customers**: the people or groups you book for, each with who speaks for them and
   the Vinhomes accounts they gave, each with its whole phone number and a button that copies it. A
   search over the list finds a customer by name or contact, or an account by its name or phone
