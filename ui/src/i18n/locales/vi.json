@@ -47,7 +47,8 @@
           "setup": "Đang thiết lập tự động",
           "cancel": "Đang huỷ vé trong app Vinhomes",
           "quota": "Đang đọc hạn mức trong app Vinhomes",
-          "other": "Đang có một lần chạy"
+          "other": "Đang có một lần chạy",
+          "machine": "Đang tạo máy ảo MuMu"
         },
         "locked": "Chạy thử tạm khóa cho tới khi xong"
       }
@@ -433,6 +434,22 @@
         "failed": "không qua: {{reason}}",
         "stopped": "dừng giữa chừng",
         "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
+      },
+      "machine": {
+        "missing": "Chưa có máy ảo MuMu",
+        "create": "Tạo máy ảo",
+        "ask": "Nhân bản máy ảo của Máy 1, có sẵn app Vinhomes, khoảng 2 phút. Máy ảo của Máy 1 tạm tắt trong lúc chép.",
+        "yes": "Tạo",
+        "no": "Thôi",
+        "running": "Đang tạo máy ảo, khoảng 2 phút…",
+        "done": "Đã tạo máy ảo. Bật máy này rồi chọn tài khoản cho nó.",
+        "failed": {
+          "1": "Không tạo được máy ảo. Xem nhật ký trong thư mục logs.",
+          "2": "Không tạo lúc này: đang gần giờ đặt sân, hoặc máy tính không đủ chỗ.",
+          "3": "MuMu không tạo được máy ảo. Đóng hẳn MuMu Player rồi thử lại.",
+          "5": "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
+          "other": "Không tạo được máy ảo."
+        }
       }
     },
     "notFound": {
@@ -484,7 +501,8 @@
     "setup": "thiết lập tự động",
     "cancel": "huỷ vé",
     "quota": "đọc hạn mức",
-    "unknown": "không rõ"
+    "unknown": "không rõ",
+    "machine": "tạo máy ảo"
   },
   "setup": {
     "items": {
@@ -694,7 +712,8 @@
     "invalid_settings": "Một số cài đặt chưa hợp lệ.",
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",
     "unreachable": "Không kết nối được phần chạy nền của Court Booker.",
-    "http": "Phần chạy nền trả lời không như mong đợi."
+    "http": "Phần chạy nền trả lời không như mong đợi.",
+    "no_room": "Máy tính không đủ RAM (mỗi máy ảo cần 2 GB, Windows giữ 4 GB) hoặc ổ đĩa (khoảng 9 GB) để thêm một máy ảo."
   },
   "days": {
     "0": "T2",

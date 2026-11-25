@@ -258,3 +258,46 @@ describe("SetupPanel dry run", () => {
     expect(panel.getByRole("button", { name: "Chạy thử" })).toBeDisabled();
   });
 });
+
+describe("SetupPanel new machine", () => {
+  const TASK = { code: null, machine: 0, started_at: "2026-10-15T10:00:00" };
+
+  async function secondMachine(extra: Record<string, Reply>) {
+    const app = await openSetup({
+      extra: { "GET /api/mumu-instances": reply({ indexes: [0] }), ...extra },
+    });
+    const tabs = within(await screen.findByRole("group", { name: "Máy" }));
+    fireEvent.click(tabs.getByRole("button", { name: /^Máy 2/ }));
+    return app;
+  }
+
+  it("makes the MuMu instance of a machine that has none, after a question", async () => {
+    const { panel, fetch } = await secondMachine({
+      "POST /api/machines/new": reply({ ...TASK, running: true, exit_code: null }, 202),
+      "GET /api/machines/new": reply({ ...TASK, running: false, exit_code: 0 }),
+    });
+    expect(await panel.findByText("Chưa có máy ảo MuMu")).toBeVisible();
+    expect(panel.queryByRole("switch", { name: /^Đặt sân bằng máy 2/ })).not.toBeInTheDocument();
+
+    fireEvent.click(panel.getByRole("button", { name: "Tạo máy ảo" }));
+    expect(panel.getByText(/^Nhân bản máy ảo của Máy 1/)).toBeVisible();
+    expect(requestsTo(fetch, "POST /api/machines/new")).toBe(0);
+    fireEvent.click(panel.getByRole("button", { name: "Tạo" }));
+
+    await waitFor(() => expect(requestsTo(fetch, "POST /api/machines/new")).toBe(1));
+    // Once made, MuMu's instances are read again.
+    await waitFor(() => expect(requestsTo(fetch, "GET /api/mumu-instances")).toBe(2), {
+      timeout: 4000,
+    });
+  });
+
+  it("says why it was not made", async () => {
+    const { panel } = await secondMachine({
+      "POST /api/machines/new": reply({ error: "no_room", detail: "8 GB" }, 409),
+    });
+    fireEvent.click(await panel.findByRole("button", { name: "Tạo máy ảo" }));
+    fireEvent.click(panel.getByRole("button", { name: "Tạo" }));
+
+    expect(await panel.findByRole("alert")).toHaveTextContent(/^Máy tính không đủ RAM/);
+  });
+});

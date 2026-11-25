@@ -2413,6 +2413,88 @@
         }
       }
     },
+    "/api/machines/new": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Read New Machine",
+        "description": "Show the machine's MuMu instance made last from the app: going on, or how it ended\n(0 made, 1 not, 2 refused, 3 MuMu failed, 5 a run went on).",
+        "operationId": "read_new_machine_api_machines_new_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Start New Machine",
+        "description": "Make another machine's MuMu instance, a copy of the first machine's set up to book\n(``court-booker new-machine``, a minute or a few).\n\nRefused (409 ``no_room``) when the PC lacks the RAM or the disk for it, (503 ``device``)\nwithout MuMuManager, and as :func:`start` refuses; the first machine is the one it uses.",
+        "operationId": "start_new_machine_api_machines_new_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/status": {
       "get": {
         "tags": [

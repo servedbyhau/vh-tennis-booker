@@ -153,6 +153,16 @@ export function getQuotaTask(): Promise<TaskState> {
   return call(client.GET("/api/machines/quota"));
 }
 
+/** Make another machine's MuMu instance, a copy of the first machine's. */
+export function startNewMachine(): Promise<TaskState> {
+  return call(client.POST("/api/machines/new"));
+}
+
+/** Read how the MuMu instance made last from the app goes, or how it ended. */
+export function getNewMachineTask(): Promise<TaskState> {
+  return call(client.GET("/api/machines/new"));
+}
+
 /** List activity log steps newest first. */
 export function listEvents(query: EventsQuery = {}): Promise<Step[]> {
   return call(client.GET("/api/events", { params: { query } }));

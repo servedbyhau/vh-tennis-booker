@@ -815,6 +815,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/machines/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read New Machine
+         * @description Show the machine's MuMu instance made last from the app: going on, or how it ended
+         *     (0 made, 1 not, 2 refused, 3 MuMu failed, 5 a run went on).
+         */
+        get: operations["read_new_machine_api_machines_new_get"];
+        put?: never;
+        /**
+         * Start New Machine
+         * @description Make another machine's MuMu instance, a copy of the first machine's set up to book
+         *     (``court-booker new-machine``, a minute or a few).
+         *
+         *     Refused (409 ``no_room``) when the PC lacks the RAM or the disk for it, (503 ``device``)
+         *     without MuMuManager, and as :func:`start` refuses; the first machine is the one it uses.
+         */
+        post: operations["start_new_machine_api_machines_new_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -3374,6 +3403,82 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_new_machine_api_machines_new_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_new_machine_api_machines_new_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
             };
             /** @description Invalid request values, one line per value */
             422: {

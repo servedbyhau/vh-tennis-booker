@@ -1,5 +1,6 @@
 """Tasks the app starts on one machine: a ticket's cancel and a quota read, each in its own
-process (``court-booker cancel``, ``court-booker quota``), and opening a machine's MuMu.
+process (``court-booker cancel``, ``court-booker quota``), a new machine's MuMu instance
+(``court-booker new-machine``), and opening a machine's MuMu.
 
 One task at a time, and none while a run or a dry run goes on: each drives a machine's app, and
 the run lock of the machine it uses may not be held yet when it starts.
@@ -26,12 +27,13 @@ from court_booker.emulator import MuMu
 from court_booker.engine import engine_command
 from court_booker.errors import EmulatorError, LockHeldError, MuMuNotFoundError
 from court_booker.lock import RunLock, check_quiet_time
+from court_booker.new_machine import check_room
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["tasks"])
 
-KINDS = ("cancel", "quota")
+KINDS = ("cancel", "quota", "machine")
 """The tasks that run in a process of their own, each kept in ``app.state`` under its kind."""
 
 # Keep a console window from opening for the task.
@@ -201,3 +203,27 @@ def open_machine(context: Context, request: Request, mumu_index: MumuIndex) -> R
             logger.warning("MuMu %d not opened", mumu_index, exc_info=True)
             raise
     return Response(status_code=204)
+
+
+@router.get("/machines/new", response_model=TaskState)
+def read_new_machine(request: Request) -> TaskState:
+    """Show the machine's MuMu instance made last from the app: going on, or how it ended
+    (0 made, 1 not, 2 refused, 3 MuMu failed, 5 a run went on)."""
+    return state_of(last(request, "machine"))
+
+
+@router.post("/machines/new", status_code=202, response_model=TaskState)
+def start_new_machine(context: Context, request: Request) -> TaskState:
+    """Make another machine's MuMu instance, a copy of the first machine's set up to book
+    (``court-booker new-machine``, a minute or a few).
+
+    Refused (409 ``no_room``) when the PC lacks the RAM or the disk for it, (503 ``device``)
+    without MuMuManager, and as :func:`start` refuses; the first machine is the one it uses.
+    """
+    config = context.config()
+    check_quiet_time(datetime.now(), config.wake_at, config.start_at, "new machine")
+    manager = find_mumu_manager(config.mumu_manager)
+    if manager is None:
+        raise MuMuNotFoundError("MuMuManager not found")
+    check_room(manager, config.mumu_index)
+    return start(request, context, "machine", config.mumu_index, ["new-machine"])

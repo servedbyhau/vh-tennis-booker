@@ -47,7 +47,8 @@
           "setup": "Auto setup in progress",
           "cancel": "Cancelling a ticket in the Vinhomes app",
           "quota": "Reading a quota in the Vinhomes app",
-          "other": "A run is in progress"
+          "other": "A run is in progress",
+          "machine": "Making a MuMu instance"
         },
         "locked": "Dry run is locked until it ends"
       }
@@ -433,6 +434,22 @@
         "failed": "did not pass: {{reason}}",
         "stopped": "stopped halfway",
         "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
+      },
+      "machine": {
+        "missing": "No MuMu instance yet",
+        "create": "Make it",
+        "ask": "A copy of Machine 1's MuMu instance, with the Vinhomes app, in about 2 minutes. Machine 1's instance is shut while it is copied.",
+        "yes": "Make",
+        "no": "Cancel",
+        "running": "Making the MuMu instance, about 2 minutes…",
+        "done": "The MuMu instance is made. Switch this machine on, then choose its account.",
+        "failed": {
+          "1": "The MuMu instance was not made. The log folder tells why.",
+          "2": "Not now: the booking is near, or the PC has no room.",
+          "3": "MuMu did not make the instance. Close MuMu Player and try again.",
+          "5": "Another run is in progress. Wait for it to finish and try again.",
+          "other": "The MuMu instance was not made."
+        }
       }
     },
     "notFound": {
@@ -484,7 +501,8 @@
     "setup": "auto setup",
     "cancel": "ticket cancel",
     "quota": "quota read",
-    "unknown": "unknown"
+    "unknown": "unknown",
+    "machine": "new machine"
   },
   "setup": {
     "items": {
@@ -694,7 +712,8 @@
     "invalid_settings": "Some settings are not valid.",
     "invalid_request": "The request has values that are not valid.",
     "unreachable": "Court Booker's background service cannot be reached.",
-    "http": "The background service gave an unexpected answer."
+    "http": "The background service gave an unexpected answer.",
+    "no_room": "This PC lacks the RAM (2 GB a MuMu instance, 4 GB for Windows) or the disk (about 9 GB) for another MuMu instance."
   },
   "days": {
     "0": "Mon",

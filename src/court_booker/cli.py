@@ -502,6 +502,10 @@ def main(argv: list[str] | None = None) -> int:
         from court_booker import quota_command
 
         return quota_command.main(argv[1:])
+    if argv[:1] == ["new-machine"]:
+        from court_booker import new_machine
+
+        return new_machine.main(argv[1:])
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose)
     trigger = run_trigger(args)
