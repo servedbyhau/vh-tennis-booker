@@ -41,7 +41,13 @@ function length(data: Data, key: string): number | undefined {
 }
 
 const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel", "quota"] as const;
-const SETUP_ITEMS = ["mumu_installed", "mumu_screen", "wake_timers", "app_installed"] as const;
+const SETUP_ITEMS = [
+  "mumu_installed",
+  "mumu_screen",
+  "mumu_performance",
+  "wake_timers",
+  "app_installed",
+] as const;
 const SETUP_STATUSES = ["ok", "fixed", "fixable", "user", "unknown"] as const;
 
 /** The names of the subdivisions, the same in every language (catalog.py). */

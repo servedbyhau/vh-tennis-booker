@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 # Item keys are stable: the app uses them as message keys.
 MUMU_INSTALLED = "mumu_installed"
 MUMU_SCREEN = "mumu_screen"
+MUMU_PERFORMANCE = "mumu_performance"
 WAKE_TIMERS = "wake_timers"
 APP_INSTALLED = "app_installed"
 
@@ -46,6 +47,13 @@ SCREEN_SETTINGS = {
     "resolution_dpi.custom": "220",
 }
 """The MuMu settings that give :data:`SCREEN`."""
+MIN_CPU = 2
+"""Cores an instance needs at least: with 1 a screen read took 610 ms instead of 270 (field
+notes); more is kept."""
+MIN_MEMORY_GB = 2
+"""RAM an instance needs at least: Android used 1.1-1.3 GB of it while booking; more is kept."""
+PERFORMANCE = ("vm_cpu", "vm_mem")
+"""The cores and GB the instance runs with, whichever performance mode gives them."""
 
 WAKE_SETTING = ("SCHEME_CURRENT", "SUB_SLEEP", "RTCWAKE")
 """``powercfg`` names of "Allow wake timers" in the active power plan."""
@@ -180,6 +188,27 @@ def wake_timer_indexes(output: str) -> tuple[int, int] | None:
     return int(values[-2], 16), int(values[-1], 16)
 
 
+def check_performance(mumu: MuMu | None) -> Check:
+    """Check that the MuMu instance has :data:`MIN_CPU` cores and :data:`MIN_MEMORY_GB` at
+    least; readable while MuMu is off."""
+    if mumu is None:
+        return Check(MUMU_PERFORMANCE, Status.UNKNOWN, "MuMu not found")
+    try:
+        values = mumu.settings(*PERFORMANCE)
+        cpu, memory = float(values["vm_cpu"]), float(values["vm_mem"])
+    except (EmulatorError, KeyError, ValueError) as exc:
+        detail = f"Could not read the MuMu performance: {exc}"
+        return Check(MUMU_PERFORMANCE, Status.UNKNOWN, detail)
+    shown = f"{cpu:g} cores, {memory:g} GB"
+    if cpu >= MIN_CPU and memory >= MIN_MEMORY_GB:
+        return Check(MUMU_PERFORMANCE, Status.OK, shown)
+    return Check(
+        MUMU_PERFORMANCE,
+        Status.FIXABLE,
+        f"{shown}; booking needs {MIN_CPU} cores and {MIN_MEMORY_GB} GB at least",
+    )
+
+
 def check_wake_timers(run: Run = run_command) -> Check:
     """Check that wake timers may wake the PC, plugged in and on battery."""
     try:
@@ -254,6 +283,7 @@ def run_checks(config: Config, tools: Tools, run: Run = run_command) -> list[Che
     return [
         check_mumu(tools.manager, config.mumu_manager),
         _on_each(tools, check_screen),
+        _on_each(tools, check_performance),
         check_wake_timers(run),
         _on_each(tools, lambda mumu: check_app(mumu, tools.adb, config.package)),
     ]
@@ -296,6 +326,8 @@ def auto_setup(
                 check = _save_mumu_path(config, config_path, tools)
             elif check.item == MUMU_SCREEN:
                 check = _on_each(tools, lambda mumu: _set_screen(mumu, restart_mumu))
+            elif check.item == MUMU_PERFORMANCE:
+                check = _on_each(tools, lambda mumu: _set_performance(mumu, restart_mumu))
             elif check.item == WAKE_TIMERS:
                 check = _allow_wake_timers(run)
         logger.info("Setup %s: %s (%s)", check.item, check.status.value, check.detail)
@@ -375,6 +407,52 @@ def _set_screen(mumu: MuMu | None, restart_mumu: bool) -> Check:
         return Check(MUMU_SCREEN, Status.USER, f"MuMu kept its screen settings: {written}")
     when = "MuMu restarted" if running else "applies when MuMu starts"
     return Check(MUMU_SCREEN, Status.FIXED, f"Screen set to 540x1600 at 220 DPI; {when}")
+
+
+def _set_performance(mumu: MuMu | None, restart_mumu: bool) -> Check:
+    """Give ``mumu`` :data:`MIN_CPU` cores and :data:`MIN_MEMORY_GB` at least, as custom
+    values that keep a higher one; a running MuMu takes them when it starts next."""
+    if mumu is None:
+        return Check(MUMU_PERFORMANCE, Status.UNKNOWN, "MuMu not found")
+    check = check_performance(mumu)
+    if check.status is not Status.FIXABLE:
+        return check
+    try:
+        values = mumu.settings(*PERFORMANCE)
+        wanted = {
+            "performance_mode": "custom",
+            "performance_cpu.custom": str(max(MIN_CPU, round(float(values["vm_cpu"])))),
+            "performance_mem.custom": f"{max(MIN_MEMORY_GB, float(values['vm_mem'])):g}",
+        }
+        running = mumu.is_started()
+        if running and not restart_mumu:
+            return Check(
+                MUMU_PERFORMANCE,
+                Status.FIXABLE,
+                "MuMu is running; allow a restart to give it 2 cores and 2 GB",
+            )
+        mumu.change_settings(wanted)
+        written = mumu.settings(*wanted)
+        if running:
+            mumu.restart()
+    except (EmulatorError, KeyError, ValueError) as exc:
+        return Check(MUMU_PERFORMANCE, Status.USER, f"Could not set the MuMu performance: {exc}")
+    if not all(_same(written.get(key), value) for key, value in wanted.items()):
+        return Check(MUMU_PERFORMANCE, Status.USER, f"MuMu kept its performance: {written}")
+    when = "MuMu restarted" if running else "applies when MuMu starts"
+    shown = f"{wanted['performance_cpu.custom']} cores, {wanted['performance_mem.custom']} GB"
+    return Check(MUMU_PERFORMANCE, Status.FIXED, f"Set to {shown}; {when}")
+
+
+def prepare_performance(mumu: MuMu) -> Check:
+    """Give ``mumu`` the cores and RAM a run needs before the run starts it; a running MuMu is
+    only checked, as for its screen (:func:`prepare_screen`)."""
+    check = _set_performance(mumu, restart_mumu=False)
+    if check.status in (Status.OK, Status.FIXED):
+        logger.info("MuMu %d: %s", mumu.index, check.detail)
+    else:
+        logger.warning("MuMu %d: %s", mumu.index, check.detail)
+    return check
 
 
 def prepare_screen(mumu: MuMu) -> Check:

@@ -185,6 +185,7 @@ class World:
         monkeypatch.setattr(ready, "find_manager", lambda configured: Path(configured))
         screen = self.script.calls.append
         monkeypatch.setattr(ready, "prepare_screen", lambda mumu: screen("screen"))
+        monkeypatch.setattr(ready, "prepare_performance", lambda mumu: None)
         monkeypatch.setattr(ready, "find_adb", lambda path, folders: Path("adb.exe"))
         monkeypatch.setattr(ready, "Adb", lambda path: self.adb)
         monkeypatch.setattr(
