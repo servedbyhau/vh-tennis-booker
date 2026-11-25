@@ -17,6 +17,7 @@ import {
   openMachine,
   removeAccount,
   readQuota,
+  startNewMachine,
   removeCustomer,
   saveNotifications,
   savePrices,
@@ -44,6 +45,18 @@ export function useCancelTicket() {
 }
 
 /** Start reading a machine's quota again; how it goes is read from then on (`useQuotaTask`). */
+export function useStartNewMachine() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: startNewMachine,
+    onSuccess: async (state) => {
+      cache.setQueryData(queryKeys.newMachineTask, state);
+      await cache.invalidateQueries({ queryKey: queryKeys.overview });
+    },
+  });
+}
+
+/** Read a machine's quota again; the overview shows the task running. */
 export function useReadQuota() {
   const cache = useQueryClient();
   return useMutation({

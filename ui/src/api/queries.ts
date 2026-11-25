@@ -8,6 +8,7 @@ import {
   getCancel,
   getMumuInstances,
   getPrices,
+  getNewMachineTask,
   getQuotaTask,
   getOverview,
   getRun,
@@ -38,6 +39,7 @@ export const queryKeys = {
   tickets: ["tickets"] as const,
   cancel: ["cancel"] as const,
   quotaTask: ["quotaTask"] as const,
+  newMachineTask: ["newMachineTask"] as const,
   prices: ["prices"] as const,
   charges: (month: string) => ["charges", month] as const,
   customers: ["customers"] as const,
@@ -83,6 +85,15 @@ export function useCancelState() {
 }
 
 /** Read the quota read started last, again every 2 s while it goes on. */
+export function useNewMachineTask() {
+  return useQuery({
+    queryKey: queryKeys.newMachineTask,
+    queryFn: getNewMachineTask,
+    refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
+  });
+}
+
+/** Read the quota read started last from the app, every 2 s while it runs. */
 export function useQuotaTask() {
   return useQuery({
     queryKey: queryKeys.quotaTask,

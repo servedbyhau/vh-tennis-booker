@@ -436,6 +436,12 @@ slots and the booked date and time read the same.
   Both boot side by side in about 35 s. The clone holds instance 0's app session: its app data
   was cleared (`pm clear com.vinhomes.resident`) before the app ever opened there, then the
   second account logged in, and instance 0 stayed logged in.
+- `court-booker new-machine` (2026-11-25): the same copy of 6.8 GB took 78 s, the command again
+  answering -502 after 13 s; the copy got its own IMEI and phone model (Galaxy S21 Ultra beside
+  instance 0's Galaxy A55), the settings copied, and booted in 29 s with the app. Earlier, with
+  MuMu's main process running for two days, the copy stayed an empty instance (`disk_size_bytes`
+  0) and `delete` answered `not handle cmd`, until `MuMuManager main close` and `main launch`
+  started that process again; the empty instance was then deleted.
 - Two instances side by side (timed dry run, 2026-10-25 04:01, one process each): both booted
   from cold in 23-26 s, connected the driver in 4-5 s and were ready on the home screen in
   6 s, as one alone; both tapped the utility 0.06 s after the start, and both retapped through

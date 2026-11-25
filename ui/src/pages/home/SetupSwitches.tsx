@@ -6,12 +6,13 @@ import {
   useSwitchInstance,
   useSwitchSchedule,
 } from "../../api/mutations";
-import { useNotifications } from "../../api/queries";
+import { useMumuInstances, useNotifications } from "../../api/queries";
 import type { ScheduleState } from "../../api/types";
 import { IconButton } from "../../components/IconButton";
 import { Switch } from "../../components/Switch";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "../../i18n";
 import type { Machine } from "../../machines";
+import { NewMachineRow } from "./NewMachine";
 import { SetupRow } from "./SetupRow";
 
 interface DailyProps {
@@ -72,6 +73,22 @@ export function NotifyRow() {
  * changed); off, they leave its MuMu alone and its choices are hidden.
  */
 export function MachineRow({ machine, running }: { machine: Machine; running: boolean }) {
+  const instances = useMumuInstances().data ?? [];
+  // A machine past the first whose instance MuMu does not list yet; none while MuMu is not read.
+  const missing =
+    machine.place > 0 &&
+    machine.mumuIndex !== null &&
+    instances.length > 0 &&
+    !instances.includes(machine.mumuIndex);
+  return missing ? (
+    <NewMachineRow machine={machine} running={running} />
+  ) : (
+    <MachineSwitch machine={machine} running={running} />
+  );
+}
+
+/** A machine whose MuMu instance is on the PC: its window to open and, past the first, its switch. */
+function MachineSwitch({ machine, running }: { machine: Machine; running: boolean }) {
   const { t } = useTranslation();
   const use = useSwitchInstance();
   const open = useOpenMachine();

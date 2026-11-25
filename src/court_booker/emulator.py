@@ -38,11 +38,12 @@ _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 def run_command(
-    args: Sequence[str], timeout: float = _COMMAND_TIMEOUT
+    args: Sequence[str], timeout: float = _COMMAND_TIMEOUT, cwd: Path | None = None
 ) -> subprocess.CompletedProcess[str]:
-    """Run ``args`` and capture its text output."""
+    """Run ``args`` and capture its text output, in ``cwd`` if given."""
     return subprocess.run(
         list(args),
+        cwd=cwd,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -150,6 +151,19 @@ class MuMu:
     def shutdown(self) -> None:
         """Ask MuMu to shut the instance down."""
         self._call("control", "shutdown")
+
+    def clone(self) -> None:
+        """Ask MuMu to make a new instance, a copy of this one.
+
+        MuMu Player copies it in its own process: the command may answer -502 ("mainnx request
+        failed") after 10 s while the copy goes on (2026-11-25), so the copy is waited for by
+        its size (:func:`court_booker.new_machine.make_machine`).
+        """
+        self._call("clone")
+
+    def delete(self) -> None:
+        """Ask MuMu to delete the instance and its disk."""
+        self._call("delete")
 
     def show_window(self) -> None:
         """Bring the running instance's window to the front."""

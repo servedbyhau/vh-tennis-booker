@@ -18,6 +18,7 @@ from court_booker.errors import (
     RequestError,
     ScheduleError,
 )
+from court_booker.new_machine import NoRoomError
 
 
 class NotFoundError(CourtBookerError):
@@ -63,6 +64,7 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (AccountAttachedError, 409, "account_attached"),
     (NoMachineError, 409, "no_machine"),
     (TicketCancelledError, 409, "ticket_cancelled"),
+    (NoRoomError, 409, "no_room"),
     (RequestError, 400, "bad_request"),
     (DeviceError, 503, "device"),
     (AppNotReadyError, 503, "app_not_ready"),

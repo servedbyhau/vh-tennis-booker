@@ -159,3 +159,51 @@ def test_without_mumumanager_nothing_opens(client, mumu, monkeypatch):
     answer = client.post("/api/machines/0/open")
 
     assert (answer.status_code, answer.json()["error"]) == (503, "device")
+
+
+@pytest.fixture
+def room(monkeypatch, tmp_path):
+    """MuMuManager found, and the room for one more instance as asked."""
+    checked = []
+
+    def check(manager, source):
+        checked.append(source)
+        return 2
+
+    monkeypatch.setattr(tasks, "find_mumu_manager", lambda configured: tmp_path / "MuMu.exe")
+    monkeypatch.setattr(tasks, "check_room", check)
+    return checked
+
+
+def test_a_new_machine_is_made_from_the_first(app, client, launched, room):
+    answer = client.post("/api/machines/new")
+    app.state.machine.process.finish()
+    state = client.get("/api/machines/new").json()
+
+    assert answer.status_code == 202
+    assert launched == [["new-machine"]]
+    assert room == [0]
+    assert (state["machine"], state["running"], state["exit_code"]) == (0, False, 0)
+
+
+def test_no_new_machine_without_room(client, launched, room, monkeypatch):
+    from court_booker.new_machine import NoRoomError
+
+    def full(manager, source):
+        raise NoRoomError("3 MuMu instances need 10 GB of RAM; this PC has 8 GB")
+
+    monkeypatch.setattr(tasks, "check_room", full)
+
+    answer = client.post("/api/machines/new")
+
+    assert (answer.status_code, answer.json()["error"]) == (409, "no_room")
+    assert launched == []
+
+
+def test_no_new_machine_while_a_task_runs(client, launched, room):
+    attach_account(client, 0)
+    assert client.post("/api/machines/0/quota").status_code == 202
+
+    answer = client.post("/api/machines/new")
+
+    assert (answer.status_code, answer.json()["error"]) == (409, "lock_held")

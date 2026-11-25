@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A machine without its MuMu instance has a button in the Setup that makes it: a copy of the first
+  machine's, with the Vinhomes app, set up to book, the PC's RAM and disk checked first
+  (`court-booker new-machine`, `/api/machines/new`).
 - The customers export to an Excel file, with the passwords when ticked, and a file in the same
   columns (the template, or an export from another PC) imports many at once, what it changes
   shown first (`/api/customers/file`).
