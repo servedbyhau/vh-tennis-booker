@@ -148,10 +148,8 @@ Details live in the docstrings; this page says where things are and what must st
   (the ones played before are never charged) and cancels the charge of a ticket read cancelled.
   `list_charges` prices them: the amount set by hand, else the price list's (golden for a slot
   starting in the golden hours), nothing for a cancelled ticket or a customer booked for free.
-- `requests.py`: what each customer asks to book (schema 9: `requests`, the court, slots,
-  `days` and `machine` as JSON and columns). It books nothing itself: the UI applies one to its
-  machine's settings. A machine's `days` (config, `[[instances]]` each its own, `books_on`)
-  keep the daily task from booking for another day of play: `cli.main` returns before the run
+- A machine's `days` (config only, `[[instances]]` each its own, `books_on`; no UI) keep the
+  daily task from booking for another day of play: `cli.main` returns before the run
   for an instance off that day, and the first machine off that day still starts the others and
   waits for them; `launch_after` leaves out the machines off that day.
 - `opening.py`: the log of the opening of a timed run, to learn what the app's 06:00 is checked
@@ -361,7 +359,6 @@ values 422 `invalid_request`.
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `GET`, `PUT /api/money/prices`; `GET /api/money/charges?month=`; `PUT /api/money/charges/{code}`, `/api/money/paid`, `/api/money/customers/{id}/free` | The price list; the charges of a month of play, priced, with the months that have charges and the customers booked for free; a charge marked paid or its amount set by hand (`reset_amount` takes the price list's again); several marked paid at once; a customer booked for free or not (`court_booker.money`) |
-| `GET`, `POST /api/requests`, `PUT`, `DELETE /api/requests/{id}` | Each customer's requests (`court_booker.requests`): 404 for an unknown customer or request, 422 for no slot, more than two, or a day out of 0-6 |
 | `PUT /api/tickets/{code}/sent` | Mark the ticket sent to its customer now (`sent_at`, schema 7), or not; a later run reading it again keeps the mark |
 | `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine` (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`), and how the one started last goes (`running`, its `exit_code`) |
 | `POST /api/machines/{mumu_index}/open` | Launch the machine's MuMu, or show its window if it runs (`MuMu.show_window`); refused as a task is (no process of its own), 503 `device` without MuMuManager |
@@ -405,9 +402,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   was booked of the limit, "Full" at it, from the readings of the month chosen; the overview's
   alert of a machine short of quota opens its customer there), `MoneyTab` (the month's sums, a card per customer
   from `money.ts`, the price list), `StatsTab` (the scheduled runs of the last 30 days summed by
-  `stats.ts`: by machine, by slot, the reasons of the slots lost), `RequestsTab` (a card per
-  customer with their requests, the form, and "apply to the machine": `requests.ts` sets the
-  machine's court, slots and days in the settings, switching it on first), the first two from
+  `stats.ts`: by machine, by slot, the reasons of the slots lost), the first two from
   `machineFacts.ts` (the settings, the customers and the newest scheduled run of each MuMu
   instance, `useRuns` limited to 60) and styled by `Board.module.css`; `CustomersTab` (`CustomerList` with its search, `customerSearch.ts`: by name and facts without
   Vietnamese marks, an account by its name or, for digits, its phone number; and `CustomerDetail`

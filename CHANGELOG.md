@@ -7,6 +7,8 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Removed
+- The requests section and its routes (`/api/requests`); its table is dropped (schema 10). A
+  machine's `days` stay a setting of the config file.
 - The machines section: what it showed is on the booking page, the quota section and the
   overview.
 

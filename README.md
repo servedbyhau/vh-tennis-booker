@@ -194,10 +194,6 @@ The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** 
 
 On the second:
 
-- **Yêu cầu / Requests**: what each customer asks to book (the court, up to two slots, the days
-  of the week, the machine that books it, a note). Applying one sets that machine to book it,
-  days included, from the next 06:00 run; a machine that books with another customer's account
-  is pointed out. A machine with days books only for those days of play.
 - **Tổng quan / Overview**, shown first: the slots the 06:00 runs booked this month, the tickets
   to play and the machines booking; every machine in a line with whose account it books with,
   what it books and how its last 06:00 run went; the tickets of the next three days; and what to

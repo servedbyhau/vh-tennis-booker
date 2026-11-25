@@ -173,6 +173,10 @@ MIGRATIONS = (
     );
     CREATE INDEX requests_by_customer ON requests (customer_id);
     """,
+    # 10: the requests went with their section (1.2.1); none was kept.
+    """
+    DROP TABLE requests;
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 

@@ -319,31 +319,6 @@
       "copied": "Đã copy",
       "copyFailed": "Không copy được"
     },
-    "requests": {
-      "title": "Yêu cầu",
-      "hint": "Khách muốn đặt sân nào, giờ nào, những ngày nào. Áp dụng cho máy thì máy đó đặt đúng như vậy từ lượt 06:00 tới (máy dùng tài khoản đang chọn cho nó).",
-      "add": "Thêm yêu cầu",
-      "edit": "Sửa yêu cầu",
-      "remove": "Xoá yêu cầu",
-      "customer": "Khách",
-      "subdivision": "Phân khu",
-      "sport": "Môn",
-      "court": "Sân",
-      "slots": "Giờ (tối đa 2)",
-      "days": "Ngày chơi",
-      "machine": "Máy đặt",
-      "noMachine": "Chưa chọn máy",
-      "note": "Ghi chú",
-      "active": "Đang áp dụng",
-      "paused": "tạm dừng",
-      "save": "Lưu",
-      "cancel": "Thôi",
-      "apply": "Áp dụng cho máy",
-      "applied": "Đã áp dụng: máy sẽ đặt như vậy từ lượt 06:00 tới.",
-      "otherAccount": "Máy này đang dùng tài khoản của khách khác: chọn tài khoản ở trang Đặt sân.",
-      "none": "Chưa có yêu cầu.",
-      "noCustomer": "Thêm khách ở mục Khách hàng trước."
-    },
     "guide": {
       "title": "Hướng dẫn",
       "start": {

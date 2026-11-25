@@ -319,31 +319,6 @@
       "copied": "Copied",
       "copyFailed": "Could not copy"
     },
-    "requests": {
-      "title": "Requests",
-      "hint": "What each customer wants: the court, the slots, the days. Applied to a machine, it books exactly that from the next 06:00 run (with the account chosen for it).",
-      "add": "Add a request",
-      "edit": "Change the request",
-      "remove": "Remove the request",
-      "customer": "Customer",
-      "subdivision": "Subdivision",
-      "sport": "Sport",
-      "court": "Court",
-      "slots": "Slots (two at most)",
-      "days": "Days of play",
-      "machine": "Machine",
-      "noMachine": "No machine chosen",
-      "note": "Note",
-      "active": "In use",
-      "paused": "paused",
-      "save": "Save",
-      "cancel": "Cancel",
-      "apply": "Apply to the machine",
-      "applied": "Applied: the machine books it from the next 06:00 run.",
-      "otherAccount": "This machine books with another customer's account: choose the account on the Booking page.",
-      "none": "No request yet.",
-      "noCustomer": "Add a customer in Customers first."
-    },
     "guide": {
       "title": "Guide",
       "start": {

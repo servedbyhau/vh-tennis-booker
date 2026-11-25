@@ -8,7 +8,6 @@ import type { ManagementState } from "./management/state";
 const SECTIONS = [
   { to: paths.management, title: "pages.board.title" },
   { to: paths.customers, title: "pages.customers.title" },
-  { to: paths.requests, title: "pages.requests.title" },
   { to: paths.tickets, title: "pages.tickets.title" },
   { to: paths.quota, title: "pages.quota.title" },
   { to: paths.money, title: "pages.money.title" },
