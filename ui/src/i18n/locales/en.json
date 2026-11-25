@@ -173,7 +173,11 @@
       "sent": "Sent to the customer",
       "markSent": "Mark sent to the customer",
       "slot": "Slot",
-      "noneKept": "No ticket matches the choices."
+      "noneKept": "No ticket matches the choices.",
+      "unsentCount": "{{count}} not sent",
+      "sentFor": "Sent to the customer: {{row}}",
+      "sentButton": "Sent",
+      "unsentButton": "Not sent"
     },
     "quota": {
       "title": "Quota",

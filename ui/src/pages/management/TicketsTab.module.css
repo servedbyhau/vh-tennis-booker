@@ -82,81 +82,95 @@
   gap: var(--space-3);
 }
 
+/* A ticket: the part that opens its picture, and its sent button beside it. */
 .item {
+  display: flex;
+  align-items: center;
   border: var(--border-hairline) solid var(--color-line);
   border-radius: var(--radius-button);
   overflow: hidden;
   background: var(--color-field);
 }
 
-.row {
-  width: 100%;
+.open {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-5);
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
   border: 0;
   background: transparent;
   text-align: left;
   cursor: pointer;
 }
 
-.row:hover {
+.open:hover {
   background: var(--color-ground);
 }
 
 .head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2);
+  min-width: 0;
+}
+
+.title,
+.who {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title {
   font-weight: var(--weight-bold);
 }
 
-.line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
-}
-
-/* A long customer's name ends in dots before their account does. */
-.holder {
-  min-width: 0;
-  display: flex;
-  white-space: nowrap;
-}
-
-.customer {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account {
-  flex: none;
-}
-
-.account::before {
-  content: "· ";
-  white-space: pre;
-  margin-left: 1ch;
-}
-
-.line > :last-child {
-  flex: none;
-}
-
 .photo {
+  flex: none;
+  display: grid;
+  color: var(--color-muted);
+}
+
+.who {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+}
+
+/* Not sent yet: set off, as there is something to do; sent: quiet. */
+.sent {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  color: var(--color-stamp);
+  min-height: 32px;
+  margin-right: var(--space-3);
+  padding: 0 var(--space-3);
+  border: var(--border-hairline) solid var(--color-failed);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-failed);
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.isSent {
+  border-color: var(--color-line);
+  color: var(--color-muted);
+}
+
+.sent:hover:not(:disabled) {
+  background: var(--color-ground);
+}
+
+.sent:disabled {
+  cursor: progress;
 }
 
 /* The choices of a view side by side, apart from the others. */
@@ -164,17 +178,6 @@
   display: flex;
   gap: var(--space-1);
   margin-right: var(--space-3);
-}
-
-.sent {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--color-stamp);
-}
-
-.unsent {
-  color: var(--color-failed);
 }
 
 /* The week: a column a day, a row a slot. */

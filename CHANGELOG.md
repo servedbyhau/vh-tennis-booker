@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The tickets' cards are lighter: two lines, the slot and court then the account, the status only
+  when it is not the usual one, a button beside each that marks it sent or not, and each day
+  saying how many are not sent yet.
 - A run behind the app's closed-hours notice, or before a new date shows, taps again for 15 s
   instead of 60 s (`open_retry_seconds`): a dry run started outside 06:00-21:00 ends in about
   half a minute. A config saved with the old default of 60 s takes the new one.

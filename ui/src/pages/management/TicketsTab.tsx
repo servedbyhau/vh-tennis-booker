@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useMarkSent } from "../../api/mutations";
 import { useTickets } from "../../api/queries";
 import { sportName } from "../../quota";
 import type { Ticket } from "../../api/types";
@@ -49,39 +50,61 @@ function CustomerFilter({ customers, customer, onCustomer }: CustomerFilterProps
   );
 }
 
+interface TicketRowProps {
+  ticket: Ticket;
+  /** Whether to name its customer too: several customers' tickets are listed. */
+  withCustomer: boolean;
+  onOpen: () => void;
+}
+
 /**
- * One ticket in two lines: its slot, court and status, then whose it is (the machine, while that is
- * not known) and its picture.
+ * One ticket in two lines, a press opening its picture: its slot and court, a mark while it has
+ * a picture, its status unless it is the usual one; then the account it was booked with (the
+ * machine, while that is not known). Beside them, whether it was sent to its customer, which a
+ * press changes.
  */
-function TicketRow({ ticket, onOpen }: { ticket: Ticket; onOpen: () => void }) {
+function TicketRow({ ticket, withCustomer, onOpen }: TicketRowProps) {
   const { t } = useTranslation();
   const f = useFormat();
   const machines = useMachines();
+  const mark = useMarkSent();
+  const row = t("pages.tickets.row", { slot: f.slot(ticket.slot), court: f.court(ticket.court) });
+  const sent = ticket.sent_at !== null;
+  const who = ticket.account ?? ticket.customer ?? machineName(t, machines, ticket.device);
+  const customer = withCustomer && ticket.account !== null ? ticket.customer : null;
   return (
     <li className={styles.item}>
-      <button type="button" className={styles.row} onClick={onOpen}>
+      <button
+        type="button"
+        className={styles.open}
+        title={holderText(ticket) ?? undefined}
+        onClick={onOpen}
+      >
         <span className={styles.head}>
-          <span className={styles.title}>
-            {t("pages.tickets.row", { slot: f.slot(ticket.slot), court: f.court(ticket.court) })}
-          </span>
-          <TicketStamp ticket={ticket} />
-        </span>
-        <span className={styles.line}>
-          <span className={styles.holder} title={holderText(ticket) ?? undefined}>
-            <span className={styles.customer}>
-              {ticket.customer ?? machineName(t, machines, ticket.device)}
+          <span className={styles.title}>{row}</span>
+          {ticket.has_photo && (
+            <span className={styles.photo}>
+              <Icon name="picture" />
+              <span className="visually-hidden">{t("pages.tickets.open")}</span>
             </span>
-            {ticket.account !== null && <span className={styles.account}>{ticket.account}</span>}
-          </span>
-          <span className={ticket.sent_at === null ? styles.unsent : styles.sent}>
-            {ticket.sent_at !== null && <Icon name="check" />}
-            {t(ticket.sent_at === null ? "pages.tickets.unsent" : "pages.tickets.sentMark")}
-          </span>
-          <span className={ticket.has_photo ? styles.photo : undefined}>
-            {ticket.has_photo && <Icon name="picture" />}
-            {t(ticket.has_photo ? "pages.tickets.open" : "pages.tickets.noPhoto")}
-          </span>
+          )}
+          {ticket.status !== "registered" && <TicketStamp ticket={ticket} />}
         </span>
+        <span className={styles.who}>
+          {who}
+          {customer !== null && ` · ${customer}`}
+        </span>
+      </button>
+      <button
+        type="button"
+        aria-pressed={sent}
+        aria-label={t("pages.tickets.sentFor", { row })}
+        className={sent ? `${styles.sent} ${styles.isSent}` : styles.sent}
+        disabled={mark.isPending}
+        onClick={() => mark.mutate({ code: ticket.code, sent: !sent })}
+      >
+        {sent && <Icon name="check" />}
+        {t(sent ? "pages.tickets.sentButton" : "pages.tickets.unsentButton")}
       </button>
     </li>
   );
@@ -92,6 +115,11 @@ interface TicketListProps {
   tickets: Ticket[];
   customer: string | null;
   onCustomer: (customer: string | null) => void;
+}
+
+/** Return how many of `tickets` were not sent to their customer yet. */
+function unsentOf(tickets: readonly Ticket[]): number {
+  return tickets.filter((ticket) => ticket.sent_at === null).length;
 }
 
 /** The sports of `tickets`, as their utilities name them, each once. */
@@ -203,6 +231,8 @@ function TicketList({ tickets, customer, onCustomer }: TicketListProps) {
                 <span>{f.day(day)}</span>
                 <span className={styles.count}>
                   {t("pages.tickets.count", { count: list.length })}
+                  {unsentOf(list) > 0 &&
+                    ` · ${t("pages.tickets.unsentCount", { count: unsentOf(list) })}`}
                 </span>
               </h3>
               <ul className={styles.list}>
@@ -210,6 +240,7 @@ function TicketList({ tickets, customer, onCustomer }: TicketListProps) {
                   <TicketRow
                     key={ticket.code}
                     ticket={ticket}
+                    withCustomer={customers.length > 1 && chosen === null}
                     onOpen={() => setOpenCode(ticket.code)}
                   />
                 ))}

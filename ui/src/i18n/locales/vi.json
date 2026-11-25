@@ -173,7 +173,11 @@
       "sent": "Đã gửi cho khách",
       "markSent": "Đánh dấu đã gửi cho khách",
       "slot": "Khung giờ",
-      "noneKept": "Không có vé nào khớp lựa chọn."
+      "noneKept": "Không có vé nào khớp lựa chọn.",
+      "unsentCount": "{{count}} chưa gửi",
+      "sentFor": "Đã gửi cho khách: {{row}}",
+      "sentButton": "Đã gửi",
+      "unsentButton": "Chưa gửi"
     },
     "quota": {
       "title": "Hạn mức",
