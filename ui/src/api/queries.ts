@@ -17,7 +17,6 @@ import {
   listRuns,
   listCharges,
   listCustomers,
-  listRequests,
   listTickets,
   type RunsQuery,
 } from "./endpoints";
@@ -40,7 +39,6 @@ export const queryKeys = {
   cancel: ["cancel"] as const,
   quotaTask: ["quotaTask"] as const,
   prices: ["prices"] as const,
-  requests: ["requests"] as const,
   charges: (month: string) => ["charges", month] as const,
   customers: ["customers"] as const,
   accountLogin: (id: string) => ["accountLogin", id] as const,
@@ -91,11 +89,6 @@ export function useQuotaTask() {
     queryFn: getQuotaTask,
     refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
   });
-}
-
-/** Read every customer's requests. */
-export function useRequests() {
-  return useQuery({ queryKey: queryKeys.requests, queryFn: listRequests });
 }
 
 /** Read the price list. */

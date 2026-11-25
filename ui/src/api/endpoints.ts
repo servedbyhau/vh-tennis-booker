@@ -3,7 +3,6 @@ import type {
   AccountChange,
   AccountLogin,
   AccountSubdivision,
-  BookingRequest,
   CancelState,
   ChargeChange,
   Charges,
@@ -15,7 +14,6 @@ import type {
   NotificationSettings,
   Overview,
   Prices,
-  RequestFields,
   RunDetail,
   RunSummary,
   ScheduleState,
@@ -54,33 +52,6 @@ export function getRun(runId: number): Promise<RunDetail> {
 /** List every machine's tickets, the latest day of play first. */
 export function listTickets(): Promise<Ticket[]> {
   return call(client.GET("/api/tickets"));
-}
-
-/** List every customer's requests. */
-export function listRequests(): Promise<BookingRequest[]> {
-  return call(client.GET("/api/requests"));
-}
-
-/** Record a customer's request. */
-export function addRequest(fields: RequestFields): Promise<BookingRequest> {
-  return call(client.POST("/api/requests", { body: fields }));
-}
-
-/** Replace what a request asks. */
-export function changeRequest({ id, fields }: { id: string; fields: RequestFields }) {
-  return call(
-    client.PUT("/api/requests/{request_id}", {
-      params: { path: { request_id: id } },
-      body: fields,
-    }),
-  );
-}
-
-/** Remove a request. */
-export function removeRequest(id: string): Promise<void> {
-  return call(
-    client.DELETE("/api/requests/{request_id}", { params: { path: { request_id: id } } }),
-  ).then(() => undefined);
 }
 
 /** Read the price list. */
