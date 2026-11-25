@@ -416,7 +416,9 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   an account's filled with its saved login, read then and kept nowhere else, a removal is beside each edit and
   asks first over the page (`RemoveQuestion`), naming the accounts lost and the machines left without
   one), `TicketsTab` (the tickets still to use by day of play, of one customer or
-  all, no cancelled ones; those whose holder is not known name the machine, picked in `tickets.ts` without a request; a press opens
+  all, no cancelled ones, each day with how many are not sent; a card a ticket, the stamp only for
+  a status other than registered, the account (and the customer while several show) under the
+  slot, and its sent button beside it (`useMarkSent`); those whose holder is not known name the machine, picked in `tickets.ts` without a request; a press opens
   `TicketDialog` with the picture, which a plain download link saves under `photoFileName`; read
   again after `tickets_saved`. A ticket whose slot is still to come has a cancel button there:
   a question over the picture first (`TicketCancel`; for a ticket on no machine, why it cannot),

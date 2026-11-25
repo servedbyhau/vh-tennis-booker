@@ -212,9 +212,11 @@ On the second:
   Windows (Credential Manager) for your Windows account; an account's form shows its own.
 - **Vé / Tickets**: the tickets booked and still to use, of every customer in one list or one alone,
   by day of play or as a week (a column a day, a row a slot), of one sport or every one, every
-  ticket or those not sent to their customer yet, with their slot, court, status, whose account they
-  are of and whether they were sent; a press opens the ticket's picture, where a button marks it
-  sent
+  ticket or those not sent to their customer yet. Each day says how many are not sent yet. A
+  ticket shows its slot and court, a mark while it has its picture, its status only when it is not
+  the usual "registered", and the account it was booked with (its customer too while several
+  customers' tickets show); a button beside it marks it sent or not. A press on the ticket opens
+  its picture, where a button marks it sent too,
   with its QR code, and buttons save it as a file and copy it, to paste it where it is sent. A
   ticket still to play has a button that cancels it in the Vinhomes app, after a question: the
   machine its account is on opens the ticket and cancels it (about a minute), and the quota

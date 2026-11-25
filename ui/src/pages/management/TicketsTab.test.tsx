@@ -52,7 +52,7 @@ async function days() {
     .map((day) => [
       within(day).getByRole("heading").textContent,
       ...within(day)
-        .getAllByRole("button")
+        .getAllByRole("listitem")
         .map((row) => row.textContent),
     ]);
 }
@@ -77,13 +77,14 @@ describe("Tickets list", () => {
 
     expect(await days()).toEqual([
       [
-        "Thứ Sáu 16/102 vé",
-        "18:00–19:00 · Tennis S6ĐÃ ĐĂNG KÝAnh AnCăn Achưa gửiXem vé",
-        "19:00–20:00 · Tennis S6ĐANG XỬ LÝAnh AnCăn Achưa gửichưa có ảnh",
+        "Thứ Sáu 16/102 vé · 2 chưa gửi",
+        // The usual status left out, the picture marked, the customer named as several are.
+        "18:00–19:00 · Tennis S6Xem véCăn A · Anh AnChưa gửi",
+        "19:00–20:00 · Tennis S6ĐANG XỬ LÝCăn A · Anh AnChưa gửi",
       ],
       [
-        "Thứ Bảy 17/101 vé",
-        "18:00–19:00 · Pickleball S9ĐÃ ĐĂNG KÝChị Bình0900000044chưa gửiXem vé",
+        "Thứ Bảy 17/101 vé · 1 chưa gửi",
+        "18:00–19:00 · Pickleball S9Xem vé0900000044 · Chị BìnhChưa gửi",
       ],
     ]);
   });
@@ -93,7 +94,7 @@ describe("Tickets list", () => {
       ticket("1000006", { play_date: "2026-10-15", slot: "06:00 - 07:00" }),
       ticket("1000005", { play_date: "2026-10-14" }),
     ]);
-    expect((await days()).map(([day]) => day)).toEqual(["Thứ Năm 15/101 vé"]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Năm 15/101 vé · 1 chưa gửi"]);
   });
 
   it("lists a status of the app's own in its words", async () => {
@@ -113,11 +114,11 @@ describe("Tickets list", () => {
     ]);
 
     fireEvent.click(customers.getByRole("button", { name: "Chị Bình" }));
-    expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé · 1 chưa gửi"]);
 
     fireEvent.click(customers.getByRole("button", { name: "Không rõ khách" }));
     expect((await days()).map((day) => day.slice(1))).toEqual([
-      ["06:00–07:00 · Tennis S6ĐÃ ĐĂNG KÝMáy 2chưa gửiXem vé"], // the machine it was read on
+      ["06:00–07:00 · Tennis S6Xem véMáy 2Chưa gửi"], // the machine it was read on
     ]);
   });
 
@@ -140,7 +141,7 @@ describe("Tickets list", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "Vé" }));
 
-    expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé"]);
+    expect((await days()).map(([day]) => day)).toEqual(["Thứ Bảy 17/101 vé · 1 chưa gửi"]);
   });
 
   it("lists every customer's once the one chosen has no ticket left", async () => {
@@ -162,7 +163,7 @@ describe("Tickets list", () => {
     });
 
     await waitFor(async () =>
-      expect((await days()).map(([day]) => day)).toEqual(["Thứ Sáu 16/102 vé"]),
+      expect((await days()).map(([day]) => day)).toEqual(["Thứ Sáu 16/102 vé · 2 chưa gửi"]),
     );
   });
 
@@ -202,8 +203,8 @@ describe("Tickets list", () => {
       "GET /api/tickets": reply(TICKETS),
     });
     expect(
-      await screen.findByRole("button", { name: /^18:00–19:00 · Tennis S6 ?REGISTERED/ }),
-    ).toBeInTheDocument();
+      await screen.findByRole("button", { name: "Sent to the customer: 18:00–19:00 · Tennis S6" }),
+    ).toHaveTextContent("Not sent");
     await i18n.changeLanguage("vi");
   });
 });
@@ -524,6 +525,34 @@ describe("Tickets views", () => {
     fireEvent.click(within(panel()).getByRole("button", { name: "Chưa gửi khách" }));
     fireEvent.click(within(panel()).getByRole("button", { name: "Tennis" }));
     expect((await days()).flat().join(" ")).not.toContain("Pickleball");
+  });
+
+  it("marks a ticket sent, or not, from its card", async () => {
+    const app = await openTab(
+      [ticket("1000002", AN), ticket("1000003", { slot: "19:00 - 20:00", sent_at: "x", ...AN })],
+      {
+        "PUT /api/tickets/1000002/sent": { status: 204, body: null },
+        "PUT /api/tickets/1000003/sent": { status: 204, body: null },
+      },
+    );
+    const first = await within(panel()).findByRole("button", {
+      name: "Đã gửi cho khách: 18:00–19:00 · Tennis S6",
+    });
+    const second = within(panel()).getByRole("button", {
+      name: "Đã gửi cho khách: 19:00–20:00 · Tennis S6",
+    });
+    expect([first, second].map((button) => button.getAttribute("aria-pressed"))).toEqual([
+      "false",
+      "true",
+    ]);
+    expect(second).toHaveTextContent("Đã gửi");
+
+    fireEvent.click(first);
+    fireEvent.click(second);
+
+    await waitFor(() => expect(requestsTo(app.fetch, "PUT /api/tickets/1000002/sent")).toBe(1));
+    await waitFor(() => expect(requestsTo(app.fetch, "PUT /api/tickets/1000003/sent")).toBe(1));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument(); // the picture stays shut
   });
 
   it("marks a ticket sent from its picture", async () => {
