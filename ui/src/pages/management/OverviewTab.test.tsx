@@ -1,9 +1,9 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Customer, Settings } from "../../api/types";
 import { paths } from "../../paths";
 import { renderApp } from "../../test/app";
-import { type Reply, reply, requestsTo } from "../../test/backend";
+import { type Reply, reply } from "../../test/backend";
 import { account, customer } from "../../test/customers";
 import { overview } from "../../test/overview";
 import { runSummary } from "../../test/runs";
@@ -117,45 +117,5 @@ describe("Management overview", () => {
       "href",
       `${paths.history}?run=8`,
     );
-  });
-});
-
-describe("Management machines", () => {
-  it("shows each machine with its account, what it books and its last run", async () => {
-    await open(paths.machines);
-
-    const first = within(screen.getByRole("region", { name: "Máy 1" }));
-    expect(first.getByText("Đang đặt")).toBeInTheDocument();
-    expect(first.getByText("Anh An")).toBeInTheDocument();
-    expect(first.getByText("Tennis S6")).toBeInTheDocument();
-    // The slots it books, then the same booked by its last run.
-    expect(first.getAllByText("15:00–16:00")).toHaveLength(2);
-    const third = within(screen.getByRole("region", { name: "Máy 3" }));
-    expect(third.getByText("Đang tắt")).toBeInTheDocument();
-    expect(third.getByText("Chưa có")).toBeInTheDocument();
-  });
-
-  it("opens a machine's MuMu and reads its quota again", async () => {
-    const app = await open(paths.machines, {
-      "POST /api/machines/1/open": { status: 204, body: null },
-      "POST /api/machines/1/quota": reply(
-        {
-          code: null,
-          machine: 1,
-          started_at: "2026-10-15T09:30:00",
-          running: true,
-          exit_code: null,
-        },
-        202,
-      ),
-      "GET /api/machines/quota": reply({}),
-    });
-    const second = within(screen.getByRole("region", { name: "Máy 2" }));
-
-    fireEvent.click(second.getByRole("button", { name: /Mở MuMu/ }));
-    fireEvent.click(second.getByRole("button", { name: /Đọc lại hạn mức/ }));
-
-    await waitFor(() => expect(requestsTo(app.fetch, "POST /api/machines/1/open")).toBe(1));
-    await waitFor(() => expect(requestsTo(app.fetch, "POST /api/machines/1/quota")).toBe(1));
   });
 });

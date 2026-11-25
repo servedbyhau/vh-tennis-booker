@@ -2,7 +2,6 @@
 export const paths = {
   overview: "/",
   management: "/management",
-  machines: "/management/machines",
   customers: "/management/customers",
   tickets: "/management/tickets",
   quota: "/management/quota",

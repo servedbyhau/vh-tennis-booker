@@ -280,22 +280,9 @@
       "toCollect": "còn phải thu tháng này"
     },
     "machines": {
-      "title": "Máy",
-      "on": "Đang đặt",
       "off": "Đang tắt",
-      "account": "Tài khoản",
-      "noAccount": "Chưa chọn",
-      "books": "Đặt",
-      "booksNothing": "Không đặt (máy đang tắt)",
-      "quota": "Hạn mức",
-      "quotaUnknown": "Chưa đọc",
-      "last": "Lượt 06:00 gần nhất",
-      "never": "Chưa có",
       "noSlots": "Không đặt giờ nào",
-      "runFor": "{{when}} · cho {{day}}",
-      "open": "Mở MuMu",
-      "change": "Đổi sân, giờ, tài khoản ở trang Đặt sân",
-      "days": "Ngày đặt"
+      "runFor": "{{when}} · cho {{day}}"
     },
     "customers": {
       "title": "Khách hàng",

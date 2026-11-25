@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Removed
+- The machines section: what it showed is on the booking page, the quota section and the
+  overview.
+
 ### Changed
 - The tickets' cards are lighter: two lines, the slot and court then the account, the status only
   when it is not the usual one, a button beside each that marks it sent or not, and each day

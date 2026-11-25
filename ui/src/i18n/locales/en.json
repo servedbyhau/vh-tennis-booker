@@ -280,22 +280,9 @@
       "toCollect": "left to collect this month"
     },
     "machines": {
-      "title": "Machines",
-      "on": "Booking",
       "off": "Off",
-      "account": "Account",
-      "noAccount": "None chosen",
-      "books": "Books",
-      "booksNothing": "Nothing (the machine is off)",
-      "quota": "Quota",
-      "quotaUnknown": "Not read yet",
-      "last": "Last 06:00 run",
-      "never": "None yet",
       "noSlots": "No slot",
-      "runFor": "{{when}} · for {{day}}",
-      "open": "Open MuMu",
-      "change": "Change the court, slots or account on the Booking page",
-      "days": "Days"
+      "runFor": "{{when}} · for {{day}}"
     },
     "customers": {
       "title": "Customers",

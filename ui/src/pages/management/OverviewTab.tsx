@@ -95,9 +95,6 @@ function Machines({ facts }: { facts: MachineFacts[] }) {
         <h2 id="board-machines" className={`${styles.sectionTitle} ${styles.value}`}>
           {t("pages.board.machinesTitle")}
         </h2>
-        <Link to={paths.machines} className={styles.muted}>
-          {t("pages.board.seeAll")}
-        </Link>
       </div>
       <table className={styles.table}>
         <thead>

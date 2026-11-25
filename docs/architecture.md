@@ -399,7 +399,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   the problems; the header counts the ticks left) and the management
   (`pages/ManagementPage.tsx`, parts in `pages/management/`), whose sections each have an
   address: `OverviewTab` (the index: this month's figures, the machines in a table, the tickets of
-  the next days and the alerts of `board.ts`), `MachinesTab` (a card per machine), `QuotaTab` (`CustomerList` with its search, a customer marked
+  the next days and the alerts of `board.ts`), `QuotaTab` (`CustomerList` with its search, a customer marked
   when an account has one booking or none left of a sport; beside it the one in the address,
   `?customer=`, else the first found: a row an account, a column a sport it was read for, what
   was booked of the limit, "Full" at it, from the readings of the month chosen; the overview's
