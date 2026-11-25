@@ -53,8 +53,12 @@ INSTANCE_KEYS = (
 books with its own account; ``mumu_index`` is required, the others default to the file's."""
 _IGNORED_KEYS = ("days_ahead",)
 """Keys of older files, read and dropped: the play day was a setting until 0.13.1."""
+_OLD_OPEN_RETRY_SECONDS = 60.0
+"""The default of ``open_retry_seconds`` until 1.2.0, which every save wrote out: read as the
+new default, so the files of the PCs already set up take it too."""
 _WRITTEN_WHEN_CHANGED = (
     "days",
+    "open_retry_seconds",
     "windows_notification",
     "notification_language",
     "instances",
@@ -175,8 +179,10 @@ class Config:
     """When the scheduled task wakes the PC and starts preparing; before ``start_at``."""
     ntp_server: str = "time.google.com"
     """Time server for the run's clock; does not set Windows time. Empty uses the PC clock."""
-    open_retry_seconds: float = 60.0
-    """How long to keep reloading the calendar while the date or slot is not open yet."""
+    open_retry_seconds: float = 15.0
+    """How long to keep reloading the calendar while the date or slot is not open yet, and
+    tapping the utility again behind the closed-hours notice. The calendar has opened within
+    0.4 s of the start in the logged runs; past 15 s the slots are gone anyway."""
     warm_up_seconds: float = 60.0
     """How long before ``start_at`` a timed run leaves the home screen for the utilities list."""
     log_dir: str = "logs"
@@ -219,6 +225,8 @@ def config_from_dict(data: dict[str, Any]) -> Config:
             _apply_labels(config.labels, value)
         elif key == "instances":
             config.instances = _instance_tables(value)
+        elif key == "open_retry_seconds" and value == _OLD_OPEN_RETRY_SECONDS:
+            continue  # the old default, saved by every version until 1.2.0
         elif key in known_keys:
             setattr(config, key, tuple(value) if key.endswith("_xy") else value)
         elif key not in _IGNORED_KEYS:

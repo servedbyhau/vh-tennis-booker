@@ -112,6 +112,20 @@ def test_notification_keys_are_saved_only_when_changed(tmp_path):
     assert load_config(path) == Config(windows_notification=False, notification_language="en")
 
 
+def test_the_opening_retry_is_15_s_and_the_old_default_of_60_s_reads_as_it(tmp_path):
+    path = tmp_path / "config.toml"
+
+    save_config(Config(), path)
+    assert "open_retry_seconds" not in path.read_text(encoding="utf-8")
+    assert load_config(path).open_retry_seconds == 15
+
+    path.write_text("open_retry_seconds = 60.0\n", encoding="utf-8")  # saved by 1.2.0
+    assert load_config(path).open_retry_seconds == 15
+
+    path.write_text("open_retry_seconds = 30\n", encoding="utf-8")  # set by hand
+    assert load_config(path).open_retry_seconds == 30
+
+
 SPORT_CODES = "tennis, multi, volleyball, table-tennis, basketball, football, pickleball, badminton"
 INSTANCE = {"mumu_index": 1, "slots": ["20:00 - 21:00"], "court": "S9 - Sân tennis"}
 

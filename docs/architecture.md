@@ -212,7 +212,8 @@ Details live in the docstrings; this page says where things are and what must st
   while `target` still shows (a swallowed tap), never while the app loads (target gone).
   Closed loop everywhere: act on what the read shows, never on a fixed delay alone.
 - Round: `open_slot` (utility → calendar; a notice in its place, such as the closed-hours one,
-  is closed and the utility tapped again until `open_retry_seconds`; a date or slot not listed
+  is closed and the utility tapped again until `open_retry_seconds`, 15 s, whose old default
+  of 60 s, written into every saved config until 1.2.0, reads as 15; a date or slot not listed
   yet reloads the calendar) → `select_date` (the day tapped once clickable, again every
   0.5 s while the calendar's prompt stays) → `select_slot` (tapped once "Tiếp tục" shows
   enabled) → "Tiếp tục" → `_after_calendar` (court list, the venue page, the booking details
