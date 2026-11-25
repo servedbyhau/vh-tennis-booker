@@ -69,14 +69,14 @@ describe("HomePage status line", () => {
     );
   });
 
-  it("asks for a dry run before the daily switch", async () => {
+  it("does not ask for a dry run", async () => {
     const status = overview();
     renderOverview({
       ...status,
       schedule: { ...status.schedule, enabled: true, dry_run_passed: false },
     });
 
-    expect(await statusLine()).toHaveTextContent("Chưa chạy thử đạt · bấm Chạy thử");
+    expect(await statusLine()).not.toHaveTextContent(/chạy thử/i);
   });
 
   it("names the machines that book without an account, once there are some to choose", async () => {
@@ -164,7 +164,7 @@ describe("HomePage status line", () => {
     const status = overview();
     renderOverview({ ...status, schedule: { ...status.schedule, enabled: false } });
 
-    expect(await statusLine()).toHaveTextContent("Chạy thử đạt · bật Tự đặt");
+    expect(await statusLine()).toHaveTextContent("Tự đặt đang tắt · bật Tự đặt");
   });
 });
 

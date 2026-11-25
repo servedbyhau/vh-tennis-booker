@@ -78,12 +78,11 @@ def schedule_steps(context):
     return [(step["kind"], step["data"]) for step in reversed(steps)]
 
 
-def test_the_schedule_needs_a_passed_dry_run(client, context, task):
+def test_the_schedule_switches_on_without_a_dry_run(client, task, wake_timers):
     response = client.put("/api/schedule", json={"enabled": True})
 
-    assert response.status_code == 409
-    assert response.json()["error"] == "dry_run_required"
-    assert task["calls"] == []
+    assert response.status_code == 200
+    assert (response.json()["enabled"], response.json()["dry_run_passed"]) == (True, False)
 
 
 def test_switching_on_installs_the_task_and_records_it(

@@ -267,7 +267,7 @@ def ticket_photo(db: sqlite3.Connection, code: str) -> str | None:
 
 
 def dry_run_passed(db: sqlite3.Connection) -> bool:
-    """Return whether any dry run went through every slot; scheduling requires one."""
+    """Return whether any dry run went through every slot."""
     row = db.execute("SELECT 1 FROM runs WHERE trigger = 'dry_run' AND status = 'ok' LIMIT 1")
     return row.fetchone() is not None
 

@@ -10,7 +10,6 @@ from pydantic import BaseModel
 from court_booker import device_setup, history_read, schedule
 from court_booker.api.activity import record
 from court_booker.api.context import AppContext, Context
-from court_booker.api.errors import DryRunRequiredError
 from court_booker.clock import parse_time
 from court_booker.config import DAYS_AHEAD
 from court_booker.errors import RequestError
@@ -68,17 +67,16 @@ class ScheduleSwitch(BaseModel):
 def switch_schedule(context: Context, switch: ScheduleSwitch) -> ScheduleState:
     """Switch the daily booking on or off.
 
-    Switching on needs a passed dry run (409 ``dry_run_required``) and a wake time before
-    the start time (400 ``bad_request``). It installs the task again each time, so a new
-    wake time applies, and allows wake timers; ``wake_blocked`` in the Overview tells when
-    Windows still keeps them off. The task runs the engine of this backend; in development, the
-    runner folder keeps its task through ``tools/setup_runner.py`` instead.
+    Switching on needs a wake time before the start time (400 ``bad_request``); a dry run
+    is not required (``dry_run_passed`` only tells whether one passed). It installs the task
+    again each time, so a new wake time applies, and allows wake timers; ``wake_blocked`` in
+    the Overview tells when Windows still keeps them off. The task runs the engine of this
+    backend; in development, the runner folder keeps its task through ``tools/setup_runner.py``
+    instead.
     """
     state = schedule_state(context)
     config = context.config()
     if switch.enabled:
-        if not state.dry_run_passed:
-            raise DryRunRequiredError("Pass a dry run before switching the schedule on")
         if parse_time(config.wake_at, "wake_at") >= parse_time(config.start_at, "start_at"):
             raise RequestError(f"wake_at {config.wake_at} must be before {config.start_at}")
         schedule.install(context.config_path.resolve(), config.wake_at)

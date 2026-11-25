@@ -60,8 +60,6 @@ export function StatusLine({ overview }: { overview: Overview }) {
   let ready = false;
   if (left > 0) {
     words = t("pages.overview.status.setupLeft", { count: left });
-  } else if (!schedule.dry_run_passed) {
-    words = t("pages.overview.status.noDryRun");
   } else if (!schedule.enabled) {
     words = t("pages.overview.status.scheduleOff");
   } else if (overview.wake_blocked) {

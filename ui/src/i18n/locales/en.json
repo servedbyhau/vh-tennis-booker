@@ -33,8 +33,7 @@
       "title": "Overview",
       "status": {
         "setupLeft": "Setup: {{count}} left, see the Guide",
-        "noDryRun": "No dry run passed yet · press Dry run",
-        "scheduleOff": "Dry run passed · turn on Auto-book",
+        "scheduleOff": "Auto-book is off · turn it on",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
         "noAccount": "Machine {{machines}}: no account chosen",
         "clash": "Machine {{machines}}: same {{court}} at {{start}}",
@@ -418,8 +417,7 @@
     "setup": {
       "daily": {
         "title": "Auto-book",
-        "times": "Daily at {{start}}, PC wakes {{wake}}",
-        "locked": "It turns on once a dry run has passed"
+        "times": "Daily at {{start}}, PC wakes {{wake}}"
       },
       "notify": "Result notifications",
       "useLabel": "Book with machine {{number}} (MuMu {{index}})",
@@ -691,7 +689,6 @@
   "errors": {
     "not_found": "This record does not exist.",
     "lock_held": "Another run is in progress. Try again when it has finished.",
-    "dry_run_required": "A dry run must pass once before the schedule can be switched on.",
     "bad_request": "This cannot be done right now.",
     "device": "MuMu cannot be reached.",
     "app_not_ready": "The Vinhomes app is not ready. It may have been logged out.",

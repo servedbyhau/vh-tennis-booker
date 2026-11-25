@@ -10,6 +10,8 @@ uses [Semantic Versioning](https://semver.org/).
 - A run behind the app's closed-hours notice, or before a new date shows, taps again for 15 s
   instead of 60 s (`open_retry_seconds`): a dry run started outside 06:00-21:00 ends in about
   half a minute. A config saved with the old default of 60 s takes the new one.
+- Auto-book can be switched on without a dry run first: the dry run is a check to use when
+  wanted, and the status line no longer asks for one.
 
 ## [1.2.0] - 2026-11-25
 

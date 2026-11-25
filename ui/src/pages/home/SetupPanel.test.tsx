@@ -132,15 +132,15 @@ describe("SetupPanel switches", () => {
     );
   });
 
-  it("keeps the daily booking locked until a dry run has passed", async () => {
+  it("lets the daily booking be switched on before any dry run", async () => {
     const { panel } = await openSetup({
       status: schedule({ enabled: false, dry_run_passed: false }),
     });
-    expect(panel.getByRole("switch", { name: "Tự đặt" })).toBeDisabled();
-    expect(panel.getByText("Chạy thử đạt một lần thì mới bật được")).toBeVisible();
+    expect(panel.getByRole("switch", { name: "Tự đặt" })).toBeEnabled();
+    expect(panel.getByText("06:00 mỗi sáng, máy thức 05:50")).toBeVisible();
   });
 
-  it("does not turn itself on after a dry run passed, but asks for it", async () => {
+  it("does not turn itself on, but asks for it", async () => {
     const { panel, fetch, replies } = await openSetup({ status: schedule({ enabled: false }) });
     const toggle = panel.getByRole("switch", { name: "Tự đặt" });
     expect(toggle).not.toBeChecked();

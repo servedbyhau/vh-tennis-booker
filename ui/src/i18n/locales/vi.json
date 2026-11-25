@@ -33,8 +33,7 @@
       "title": "Tổng quan",
       "status": {
         "setupLeft": "Còn {{count}} việc chuẩn bị, xem Hướng dẫn",
-        "noDryRun": "Chưa chạy thử đạt · bấm Chạy thử",
-        "scheduleOff": "Chạy thử đạt · bật Tự đặt",
+        "scheduleOff": "Tự đặt đang tắt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
         "noAccount": "Máy {{machines}} chưa chọn tài khoản",
         "clash": "Máy {{machines}} trùng {{court}} lúc {{start}}",
@@ -418,8 +417,7 @@
     "setup": {
       "daily": {
         "title": "Tự đặt",
-        "times": "{{start}} mỗi sáng, máy thức {{wake}}",
-        "locked": "Chạy thử đạt một lần thì mới bật được"
+        "times": "{{start}} mỗi sáng, máy thức {{wake}}"
       },
       "notify": "Thông báo kết quả",
       "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
@@ -691,7 +689,6 @@
   "errors": {
     "not_found": "Không tìm thấy dữ liệu này.",
     "lock_held": "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
-    "dry_run_required": "Cần chạy thử thành công một lần trước khi bật hẹn giờ.",
     "bad_request": "Chưa làm được việc này lúc này.",
     "device": "Không kết nối được MuMu.",
     "app_not_ready": "App Vinhomes chưa sẵn sàng. Có thể app đã bị đăng xuất.",

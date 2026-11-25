@@ -8,7 +8,6 @@ import { ApiError } from "./client";
 export const ERROR_CODES = [
   "not_found",
   "lock_held",
-  "dry_run_required",
   "bad_request",
   "device",
   "app_not_ready",
