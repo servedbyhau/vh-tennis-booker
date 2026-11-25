@@ -24,15 +24,12 @@
   "nav": {
     "label": "Pages",
     "booking": "Booking",
-    "management": "Management",
-    "guide": "Guide",
-    "left": ", {{count}} left"
+    "management": "Management"
   },
   "pages": {
     "overview": {
       "title": "Overview",
       "status": {
-        "setupLeft": "Setup: {{count}} left, see the Guide",
         "scheduleOff": "Auto-book is off · turn it on",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
         "noAccount": "Machine {{machines}}: no account chosen",
@@ -62,7 +59,6 @@
       "instance": "Instance",
       "instanceName": "Machine {{number}}",
       "mumuName": "MuMu {{index}}",
-      "instanceLeft": "setup left",
       "instanceClash": "same court and slot as another machine",
       "instanceNoAccount": "no account chosen",
       "instanceQuota": "account short of quota",
@@ -343,64 +339,6 @@
         "apply": "Import",
         "cancel": "Cancel",
         "applied": "Imported."
-      }
-    },
-    "guide": {
-      "title": "Guide",
-      "start": {
-        "title": "Court Booker books for you at {{start}} every morning, even while you sleep",
-        "steps": {
-          "1": "Do the setup tasks below, once.",
-          "2": "On the Booking page, choose the account, sport, court and slots of each machine.",
-          "3": "Press \"{{dryRun}}\"; once it passes, turn on \"{{daily}}\"."
-        }
-      },
-      "prepare": {
-        "title": "Getting ready",
-        "note": "Yours to do, once. Tick when done.",
-        "step": "Task",
-        "off": "off",
-        "box": "{{title}}, {{machine}}",
-        "mumu": {
-          "title": "MuMu Player is installed",
-          "hint": "Download it from mumuplayer.com and install it like any program."
-        },
-        "app": {
-          "title": "Vinhomes Resident is installed in MuMu",
-          "hint": "Open the Play Store in MuMu and look for Vinhomes Resident."
-        },
-        "login": {
-          "title": "The Vinhomes app is logged in",
-          "hint": "A resident account. Choose one on the Booking page so the app logs in by itself."
-        }
-      },
-      "morning": {
-        "title": "Every morning",
-        "wake": "The PC wakes and opens MuMu and the Vinhomes app. An account logged in that is not the chosen one is changed.",
-        "start": "The slots chosen are booked, usually within 15 seconds.",
-        "afterTime": "Then",
-        "after": "The tickets' pictures are in Management, under Tickets.",
-        "needs": "The PC needs to",
-        "needsText": "sleep rather than shut down, stay signed in to Windows, and be plugged in if it is a laptop."
-      },
-      "trouble": {
-        "title": "When something goes wrong",
-        "notRunning": {
-          "question": "Nothing ran this morning",
-          "answer": "The PC was shut down instead of asleep, or signed out of Windows."
-        },
-        "slotFull": {
-          "question": "It says \"{{slotFull}}\"",
-          "answer": "Someone booked that slot first. Choose another on the Booking page."
-        },
-        "quota": {
-          "question": "The flat used up its bookings",
-          "answer": "8 slots a month at most. Cancel the ones not needed in the Tickets (Cancel ticket): the quota comes back at once."
-        },
-        "loggedOut": {
-          "question": "The app was logged out",
-          "answer": "Choose the machine's account on the Booking page so a run logs in by itself. If the app says the password is wrong, change it on the Management page: the app locks an account after 5 wrong ones."
-        }
       }
     },
     "panel": {

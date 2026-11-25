@@ -32,7 +32,8 @@ describe("routes", () => {
     ["/settings/booking", paths.overview],
     ["/settings/device", paths.overview],
     ["/settings/notifications", paths.overview],
-    ["/welcome?step=2", `${paths.guide}?step=2`],
+    ["/welcome?step=2", `${paths.overview}?step=2`],
+    ["/guide", paths.overview],
   ])("sends the old address %s on to %s", async (path, to) => {
     const router = renderAt(path);
 

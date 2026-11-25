@@ -6,15 +6,14 @@ import { paths } from "./paths";
 
 /**
  * Lay out every screen: the header, then the current screen in the main area. The
- * three pages of the header fill the window; the not-found and error pages make one centred
+ * two pages of the header fill the window; the not-found and error pages make one centred
  * column.
  */
 export function App() {
   const { t } = useTranslation();
   const booking = useMatch(paths.overview) !== null;
   const management = useMatch(`${paths.management}/*`) !== null;
-  const guide = useMatch(paths.guide) !== null;
-  const fill = booking || management || guide;
+  const fill = booking || management;
   return (
     <div className={fill ? `${styles.page} ${styles.fill}` : styles.page}>
       <a className={styles.skipLink} href="#main">

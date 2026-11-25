@@ -1,10 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Overview, Running } from "../api/types";
 import { localToday } from "../format";
-import { useMachines } from "../machines";
-import { useManualTicks } from "../manualSteps";
 import { type Clash, useReadiness } from "../readiness";
-import { setupLeft } from "../setupState";
 import { useFormat } from "../useFormat";
 import styles from "./StatusLine.module.css";
 
@@ -32,7 +29,7 @@ function machineNumbers(places: readonly number[]): string {
 
 /**
  * One line in the header on whether the next booking can happen, in this order: the run
- * going on; the setup tasks left (the Guide lists them); no dry run passed yet; the
+ * going on; the
  * daily switch off; Windows keeping the PC from waking; machines that would book the same;
  * machines without an account; else ready for the next start. The booking page holds what fixes
  * them (switching the schedule on allows waking).
@@ -40,8 +37,6 @@ function machineNumbers(places: readonly number[]): string {
 export function StatusLine({ overview }: { overview: Overview }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const ticks = useManualTicks();
-  const machines = useMachines();
   const { accountless, clashing } = useReadiness();
   const { running, schedule } = overview;
   if (running !== null) {
@@ -55,12 +50,9 @@ export function StatusLine({ overview }: { overview: Overview }) {
     });
   }
 
-  const left = setupLeft(ticks, machines);
   let words: string;
   let ready = false;
-  if (left > 0) {
-    words = t("pages.overview.status.setupLeft", { count: left });
-  } else if (!schedule.enabled) {
+  if (!schedule.enabled) {
     words = t("pages.overview.status.scheduleOff");
   } else if (overview.wake_blocked) {
     words = t("pages.overview.status.wakeBlocked", { wake: schedule.wake_at });

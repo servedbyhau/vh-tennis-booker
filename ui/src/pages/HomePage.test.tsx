@@ -9,7 +9,6 @@ import { step } from "../test/liveSocket";
 import { overview } from "../test/overview";
 import { runSummary } from "../test/runs";
 import { settings } from "../test/settings";
-import { STORAGE_KEY } from "../manualSteps";
 
 function renderOverview(status: Overview) {
   return renderApp(paths.overview, {
@@ -25,13 +24,7 @@ async function statusLine() {
   return dot.closest("p") as HTMLElement;
 }
 
-/** Tick the setup steps only the user can do. */
-function tickSteps(done = { mumu: true, app: true, login: true }) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(done));
-}
-
 beforeEach(() => {
-  tickSteps();
   // "Tomorrow" is 16/10: the page reads today from the clock.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 9, 15, 0, 30));
@@ -48,17 +41,6 @@ describe("HomePage status line", () => {
     const line = await statusLine();
     expect(line).toHaveTextContent("Sẵn sàng cho 06:00 sáng mai");
     expect(within(line).queryByRole("link")).not.toBeInTheDocument();
-  });
-
-  it("counts the steps not ticked, before anything else", async () => {
-    tickSteps({ mumu: true, app: false, login: false });
-    const status = overview({ wake_blocked: true });
-    renderOverview({
-      ...status,
-      schedule: { ...status.schedule, enabled: false, dry_run_passed: false },
-    });
-
-    expect(await statusLine()).toHaveTextContent("Còn 2 việc chuẩn bị, xem Hướng dẫn");
   });
 
   it("says when Windows keeps the PC from waking", async () => {
@@ -128,16 +110,6 @@ describe("HomePage status line", () => {
       venue_keyword: "Origami",
       days: [],
     };
-    tickSteps({ mumu: true, app: true, login: true });
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        mumu: true,
-        app: true,
-        login: true,
-        machines: { "1": { app: true, login: true } },
-      }),
-    );
     renderApp(paths.overview, {
       "GET /api/status": reply(overview()),
       "GET /api/settings": reply(settings({ instances: [same] })),

@@ -353,7 +353,7 @@ describe("BookingTicket choices", () => {
     expect(await bodies(fetch, "PUT /api/settings")).toEqual([{ ...saved, instances: [moved] }]);
   });
 
-  it("marks the machines with something left to prepare", async () => {
+  it("pales the machines switched off", async () => {
     const other = {
       mumu_index: 1,
       slots: ["20:00 - 21:00"],
@@ -365,10 +365,7 @@ describe("BookingTicket choices", () => {
     };
     renderTicket({ saved: settings({ instances: [other] }) });
     const instances = await screen.findByRole("group", { name: "Máy" });
-    expect(
-      within(instances).getByRole("button", { name: /^Máy 2.*còn việc chuẩn bị$/ }),
-    ).toBeVisible();
-    // Off: not one of those that book.
+    expect(within(instances).getByRole("button", { name: /^Máy 2/ })).toBeVisible();
     expect(within(instances).getByRole("button", { name: "Máy 3, đang tắt" })).toBeVisible();
   });
 

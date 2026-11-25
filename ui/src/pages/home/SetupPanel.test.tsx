@@ -98,10 +98,9 @@ describe("SetupPanel", () => {
     expect(panel.queryByText("Máy 3")).not.toBeInTheDocument();
   });
 
-  it("has no tasks and no guide: they have a page of their own", async () => {
+  it("has no tasks to tick: the app checks what it needs", async () => {
     const { panel } = await openSetup();
     expect(panel.queryByRole("checkbox")).not.toBeInTheDocument();
-    expect(panel.queryByText("Hướng dẫn")).not.toBeInTheDocument();
   });
 
   it("is worded in English too", async () => {

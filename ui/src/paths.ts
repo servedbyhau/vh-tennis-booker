@@ -8,7 +8,6 @@ export const paths = {
   money: "/management/money",
   history: "/management/history",
   stats: "/management/stats",
-  guide: "/guide",
 } as const;
 
 /**
@@ -20,5 +19,6 @@ export const OLD_PATHS = [
   ["/history/*", paths.history],
   ["/activity", paths.history],
   ["/settings/*", paths.overview],
-  ["/welcome", paths.guide],
+  ["/welcome", paths.overview],
+  ["/guide", paths.overview],
 ] as const;

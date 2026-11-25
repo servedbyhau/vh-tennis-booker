@@ -144,8 +144,7 @@ Then:
 2. Run it. The installer is not code-signed, so Windows SmartScreen may say it protected your
    PC: choose **More info**, then **Run anyway**. It installs for you alone, without
    administrator rights.
-3. Open **Court Booker** from the Start menu. The **Guide** page lists what only you can do
-   (install MuMu and the Vinhomes app, log in); tick each step once it is done.
+3. Open **Court Booker** from the Start menu.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
 5. In the **Setup** beside it, turn **Auto-book** on. Every morning the PC wakes at the wake
@@ -171,11 +170,10 @@ remove them too.
 
 ## Using the app
 
-The app has three pages, **Đặt sân / Booking**, **Quản lý / Management** and
-**Hướng dẫn / Guide**. On the first:
+The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**. On the first:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first:
-  the last steps of the setup, the daily switch, a machine that books with no account chosen, or
+  the daily switch, a machine that books with no account chosen, or
   two machines that would book the same court and slot.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
   on top what is set, the play day, court and slots; below, the subdivision, the sport, the
@@ -241,11 +239,6 @@ On the second:
   slot booked or not and when it started (real bookings, dry runs on request); a press shows the
   reasons, the steps and the technical log beside the list. A booking that stopped on a failure the
   app did not explain also saved a screenshot of MuMu in `%LOCALAPPDATA%\CourtBooker\logs\screens`.
-
-The third, **Guide**, says how to use the app, what happens every morning and what to do when
-something goes wrong. It also holds the steps only you can do (install MuMu and the Vinhomes app,
-log in), ticked by you for each machine and counted in red while any is left; MuMu's place and
-screen and waking the PC need no step (the runs and the daily switch see to them).
 
 <p>
   <img src="docs/img/home.png" width="49%" alt="Ready for 06:00: the ticket with the daily
