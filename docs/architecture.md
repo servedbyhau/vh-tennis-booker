@@ -466,9 +466,7 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   slots (`shortOfQuota`), which only their tabs and the account picker show (set off as for
   no account), not the status line. `machines.ts` lists the machines from the
   settings and from the MuMu instances on the PC (`GET /api/mumu-instances`, read once): every
-  instance shows, three at least, those the settings lack switched off. `manualSteps.ts` keeps the user's ticks in `localStorage` (memory when storage
-  fails): MuMu's once, the app's and the login's for each machine; `setupState.ts` counts the
-  setup tasks left over the machines that book. `booking.ts` holds the slots and the two-slot limit, and reads
+  instance shows, three at least, those the settings lack switched off. `booking.ts` holds the slots and the two-slot limit, and reads
   the subdivisions, sports and courts from `catalog.json`, written from `catalog.py`.
   `useFormat`'s `courtLabel` tells a court from the others of its sport ("BE7 · tập ném 01",
   in English "BE7 · shooting 01": the app keeps court names in Vietnamese in both languages,
