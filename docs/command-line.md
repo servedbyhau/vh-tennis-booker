@@ -60,7 +60,7 @@ court-booker setup --auto --restart-mumu   # also restart a running MuMu to appl
 Nothing here is needed before a run: each run finds MuMu when `mumu_manager` points
 elsewhere (without rewriting `config.toml`) and sets the screen of a stopped MuMu to
 540x1600 at 220 DPI before starting it (the whole slot list then fits without scrolling), with
-2 cores and 2 GB at least (more is kept; a running MuMu with another screen or less is only
+2 cores and 2 GB, no more and no less (a running MuMu with another screen or other ones is only
 logged). Switching the schedule on allows wake
 timers on mains and battery. `setup --auto` also saves the MuMu folder to `config.toml`.
 

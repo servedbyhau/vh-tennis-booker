@@ -452,7 +452,7 @@
     "items": {
       "mumu_installed": "MuMu Player",
       "mumu_screen": "MuMu screen 540x1600",
-      "mumu_performance": "MuMu at least 2 cores, 2 GB",
+      "mumu_performance": "MuMu with 2 cores, 2 GB",
       "wake_timers": "Wake timers",
       "app_installed": "Vinhomes app in MuMu"
     },

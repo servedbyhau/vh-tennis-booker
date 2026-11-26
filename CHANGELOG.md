@@ -10,8 +10,8 @@ uses [Semantic Versioning](https://semver.org/).
 - A "Keep the PC on" switch in the Setup: plugged in, the PC neither sleeps nor hibernates,
   closing the lid does nothing and the screen turns off after 5 minutes (it stays on with Modern
   Standby); Wi-Fi and USB keep full power. Off gives back the PC's own values (`/api/keep-on`).
-- Each machine's MuMu instance gets 2 cores and 2 GB at least before a run starts it (more is
-  kept), and the setup checks it (`mumu_performance`).
+- Each machine's MuMu instance gets 2 cores and 2 GB, no more and no less, before a run starts
+  it, and the setup checks it (`mumu_performance`).
 - A machine without its MuMu instance has a button in the Setup that makes it: a copy of the first
   machine's, with the Vinhomes app, set up to book, the PC's RAM and disk checked first
   (`court-booker new-machine`, `/api/machines/new`).
