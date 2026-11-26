@@ -359,8 +359,7 @@
       },
       "app": {
         "title": "App Vinhomes",
-        "hint": "Chọn file APK hoặc XAPK đã tải: app kiểm tra chữ ký rồi cài vào mọi máy ảo",
-        "choose": "Cài từ file",
+        "choose": "Cài app Vinhomes từ file APK hoặc XAPK",
         "file": "File APK hoặc XAPK của app Vinhomes",
         "running": "Đang cài vào các máy ảo, khoảng 1 phút mỗi máy…",
         "done": "Đã cài app Vinhomes vào mọi máy ảo.",
