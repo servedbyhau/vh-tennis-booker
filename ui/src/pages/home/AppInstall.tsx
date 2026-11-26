@@ -4,17 +4,16 @@ import { useTranslation } from "react-i18next";
 import { errorMessage } from "../../api/errors";
 import { useStartAppInstall } from "../../api/mutations";
 import { queryKeys, useAppInstallTask } from "../../api/queries";
-import { Button } from "../../components/Button";
+import { IconButton } from "../../components/IconButton";
 import { SetupRow } from "./SetupRow";
-import styles from "./SetupRow.module.css";
 
 /** The exit codes of `court-booker install-app` that have words of their own. */
 const FAILURES = ["1", "2", "3", "5"] as const;
 
 /**
  * The Vinhomes app installed from a file the user downloaded (an APK or XAPK): the backend checks
- * that the app's own key signed it, then installs it on every MuMu instance; how it goes, read
- * every 2 s, and how it ended.
+ * that the app's own key signed it, then installs it on every MuMu instance. The row is its title
+ * and a button; how it goes, read every 2 s, and how it ended show under the title.
  */
 export function AppInstallRow({ running }: { running: boolean }) {
   const { t } = useTranslation();
@@ -31,7 +30,7 @@ export function AppInstallRow({ running }: { running: boolean }) {
     }
   }, [ended, cache]);
 
-  let text = t("pages.setup.app.hint");
+  let text: string | undefined;
   let failed = false;
   if (start.isError) {
     text = errorMessage(t, start.error);
@@ -51,7 +50,7 @@ export function AppInstallRow({ running }: { running: boolean }) {
       icon="install"
       title={title}
       hint={failed ? undefined : text}
-      problem={failed ? text : null}
+      problem={failed ? (text ?? null) : null}
     >
       <input
         ref={picker}
@@ -68,13 +67,12 @@ export function AppInstallRow({ running }: { running: boolean }) {
           }
         }}
       />
-      <Button
-        className={styles.small}
+      <IconButton
+        icon="upload"
+        label={t("pages.setup.app.choose")}
         disabled={running || busy}
         onClick={() => picker.current?.click()}
-      >
-        {t("pages.setup.app.choose")}
-      </Button>
+      />
     </SetupRow>
   );
 }

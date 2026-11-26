@@ -27,6 +27,7 @@ import {
   Plus,
   StickyNote,
   Trash2,
+  Upload,
   UserRound,
   UserRoundX,
   X,
@@ -58,6 +59,8 @@ const DRAWINGS = {
   bell: Bell,
   /** The Vinhomes app installed from a file. */
   install: HardDriveDownload,
+  /** A file to choose and send. */
+  upload: Upload,
   /** The PC kept on while plugged in. */
   power: Plug,
   /** A MuMu instance. */

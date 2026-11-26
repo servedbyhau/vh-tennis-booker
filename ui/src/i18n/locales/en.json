@@ -359,8 +359,7 @@
       },
       "app": {
         "title": "Vinhomes app",
-        "hint": "Choose the APK or XAPK file you downloaded: its signature is checked, then it is installed on every MuMu instance",
-        "choose": "Install from a file",
+        "choose": "Install the Vinhomes app from an APK or XAPK file",
         "file": "The Vinhomes app's APK or XAPK file",
         "running": "Installing on the MuMu instances, about a minute each…",
         "done": "The Vinhomes app is installed on every MuMu instance.",

@@ -135,7 +135,7 @@ What you need:
 - A Windows 10 or 11 PC that stays on or asleep at night, never shut down (a PC that is off
   cannot be woken), plugged in and signed in to Windows (a locked screen is fine).
 - [MuMu Player](https://www.mumuplayer.com/), with the Vinhomes Resident app installed in it
-  (from Google Play, or from an APK or XAPK file with **Install from a file** in the app's
+  (from Google Play, or from an APK or XAPK file with the **Vinhomes app** button in the app's
   Setup) and logged in to your resident account.
 
 Then:
@@ -184,8 +184,8 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
 - **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task;
   a dry run is not needed first), the Windows notification, **Giữ máy luôn chạy / Keep the PC
   on** (plugged in: no sleep, no hibernation, closing the lid does nothing, the screen off after
-  5 minutes; off gives back the PC's own power settings), **Cài từ file / Install from a
-  file** for the Vinhomes app (an APK or XAPK you downloaded: installed on every MuMu instance once
+  5 minutes; off gives back the PC's own power settings), the **App Vinhomes / Vinhomes app** button
+  that installs the app from a file (an APK or XAPK you downloaded: installed on every MuMu instance once
   its signature is the app's own), the account the machine books with (its phone
   number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
   window brought to the front), and a dry run. A machine whose MuMu instance is not on the PC
