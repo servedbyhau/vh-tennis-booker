@@ -5,7 +5,16 @@ import { type Clash, useReadiness } from "../readiness";
 import { useFormat } from "../useFormat";
 import styles from "./StatusLine.module.css";
 
-const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel", "quota"] as const;
+const TRIGGERS = [
+  "scheduled",
+  "dry_run",
+  "manual",
+  "setup",
+  "cancel",
+  "quota",
+  "new_machine",
+  "install_app",
+] as const;
 
 /**
  * The ink pill while a run holds the emulator: what runs. Screen readers hear it once,

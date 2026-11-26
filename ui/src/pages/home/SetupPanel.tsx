@@ -4,6 +4,7 @@ import { machineAt, useMachines } from "../../machines";
 import { AccountPicker } from "./AccountPicker";
 import { DryRun } from "./DryRun";
 import styles from "./SetupPanel.module.css";
+import { AppInstallRow } from "./AppInstall";
 import { DailyRow, KeepOnRow, MachineRow, NotifyRow } from "./SetupSwitches";
 
 /**
@@ -28,6 +29,7 @@ export function SetupPanel({ machine }: { machine: number }) {
             <DailyRow schedule={overview.data.schedule} running={running} />
             <NotifyRow />
             <KeepOnRow />
+            <AppInstallRow running={running} />
           </div>
         )}
         {shown.mumuIndex !== null && (

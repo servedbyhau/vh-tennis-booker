@@ -45,7 +45,8 @@
           "cancel": "Cancelling a ticket in the Vinhomes app",
           "quota": "Reading a quota in the Vinhomes app",
           "other": "A run is in progress",
-          "machine": "Making a MuMu instance"
+          "new_machine": "Making a MuMu instance",
+          "install_app": "Installing the Vinhomes app"
         },
         "locked": "Dry run is locked until it ends"
       }
@@ -356,6 +357,21 @@
         "standby": "Plugged in: no sleep, closing the lid does nothing; the screen stays on, as this PC sleeps when it turns off (close the lid to darken it)",
         "off": "The PC may sleep; the app wakes it every morning"
       },
+      "app": {
+        "title": "Vinhomes app",
+        "hint": "Choose the APK or XAPK file you downloaded: its signature is checked, then it is installed on every MuMu instance",
+        "choose": "Install from a file",
+        "file": "The Vinhomes app's APK or XAPK file",
+        "running": "Installing on the MuMu instances, about a minute each…",
+        "done": "The Vinhomes app is installed on every MuMu instance.",
+        "failed": {
+          "1": "Some MuMu instance did not get it. The log folder tells why.",
+          "2": "This file is not the Vinhomes app's own, or the booking is near.",
+          "3": "MuMu could not start an instance. Close MuMu Player and try again.",
+          "5": "Another run is in progress. Wait for it to finish and try again.",
+          "other": "The Vinhomes app was not installed."
+        }
+      },
       "useLabel": "Book with machine {{number}} (MuMu {{index}})",
       "open": "Open MuMu {{index}} to see its screen",
       "account": {
@@ -445,8 +461,9 @@
     "setup": "auto setup",
     "cancel": "ticket cancel",
     "quota": "quota read",
-    "unknown": "unknown",
-    "machine": "new machine"
+    "new_machine": "new machine",
+    "install_app": "app install",
+    "unknown": "unknown"
   },
   "setup": {
     "items": {

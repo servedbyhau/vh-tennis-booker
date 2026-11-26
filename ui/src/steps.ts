@@ -40,7 +40,16 @@ function length(data: Data, key: string): number | undefined {
   return Array.isArray(value) ? value.length : undefined;
 }
 
-const TRIGGERS = ["scheduled", "dry_run", "manual", "setup", "cancel", "quota"] as const;
+const TRIGGERS = [
+  "scheduled",
+  "dry_run",
+  "manual",
+  "setup",
+  "cancel",
+  "quota",
+  "new_machine",
+  "install_app",
+] as const;
 const SETUP_ITEMS = [
   "mumu_installed",
   "mumu_screen",

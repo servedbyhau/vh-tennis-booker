@@ -18,6 +18,7 @@ import {
   removeAccount,
   readQuota,
   startNewMachine,
+  startAppInstall,
   removeCustomer,
   saveNotifications,
   savePrices,
@@ -45,7 +46,19 @@ export function useCancelTicket() {
   });
 }
 
-/** Start reading a machine's quota again; how it goes is read from then on (`useQuotaTask`). */
+/** Install the Vinhomes app from a file; how it goes is read from then on (`useAppInstallTask`). */
+export function useStartAppInstall() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: startAppInstall,
+    onSuccess: async (state) => {
+      cache.setQueryData(queryKeys.appInstallTask, state);
+      await cache.invalidateQueries({ queryKey: queryKeys.overview });
+    },
+  });
+}
+
+/** Make another machine's MuMu instance; how it goes is read from then on (`useNewMachineTask`). */
 export function useStartNewMachine() {
   const cache = useQueryClient();
   return useMutation({

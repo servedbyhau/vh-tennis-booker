@@ -207,3 +207,28 @@ def test_no_new_machine_while_a_task_runs(client, launched, room):
     answer = client.post("/api/machines/new")
 
     assert (answer.status_code, answer.json()["error"]) == (409, "lock_held")
+
+
+def test_the_app_file_is_kept_and_installed_everywhere(app, client, context, launched):
+    answer = client.post(
+        "/api/app/install",
+        content=b"PK\x03\x04 an app",
+        headers={"Content-Type": "application/octet-stream"},
+    )
+    app.state.app.process.finish(2)
+    state = client.get("/api/app/install").json()
+
+    upload = context.data.root / tasks.UPLOAD_NAME
+    assert answer.status_code == 202
+    assert launched == [["install-app", str(upload), "--remove-file"]]
+    assert upload.read_bytes() == b"PK\x03\x04 an app"
+    assert (state["running"], state["exit_code"]) == (False, 2)
+
+
+def test_an_empty_app_file_is_refused(client, launched):
+    answer = client.post(
+        "/api/app/install", content=b"", headers={"Content-Type": "application/octet-stream"}
+    )
+
+    assert (answer.status_code, answer.json()["error"]) == (400, "bad_request")
+    assert launched == []

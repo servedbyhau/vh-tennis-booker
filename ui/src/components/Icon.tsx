@@ -11,6 +11,7 @@ import {
   Clock,
   Copy,
   Download,
+  HardDriveDownload,
   Image,
   KeyRound,
   LifeBuoy,
@@ -55,6 +56,8 @@ const DRAWINGS = {
   alarm: AlarmClock,
   /** The Windows notification. */
   bell: Bell,
+  /** The Vinhomes app installed from a file. */
+  install: HardDriveDownload,
   /** The PC kept on while plugged in. */
   power: Plug,
   /** A MuMu instance. */

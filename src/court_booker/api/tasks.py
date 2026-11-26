@@ -1,6 +1,7 @@
 """Tasks the app starts on one machine: a ticket's cancel and a quota read, each in its own
 process (``court-booker cancel``, ``court-booker quota``), a new machine's MuMu instance
-(``court-booker new-machine``), and opening a machine's MuMu.
+(``court-booker new-machine``), the Vinhomes app installed from a file on every instance
+(``court-booker install-app``), and opening a machine's MuMu.
 
 One task at a time, and none while a run or a dry run goes on: each drives a machine's app, and
 the run lock of the machine it uses may not be held yet when it starts.
@@ -22,10 +23,11 @@ from pydantic import BaseModel
 from court_booker.api.context import AppContext, Context
 from court_booker.api.customers import Book, MumuIndex
 from court_booker.api.errors import NoMachineError
+from court_booker.app_install import MAX_FILE_BYTES
 from court_booker.device_setup import find_mumu_manager
 from court_booker.emulator import MuMu
 from court_booker.engine import engine_command
-from court_booker.errors import EmulatorError, LockHeldError, MuMuNotFoundError
+from court_booker.errors import EmulatorError, LockHeldError, MuMuNotFoundError, RequestError
 from court_booker.lock import RunLock, check_quiet_time
 from court_booker.new_machine import check_room
 
@@ -33,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["tasks"])
 
-KINDS = ("cancel", "quota", "machine")
+KINDS = ("cancel", "quota", "machine", "app")
 """The tasks that run in a process of their own, each kept in ``app.state`` under its kind."""
 
 # Keep a console window from opening for the task.
@@ -227,3 +229,52 @@ def start_new_machine(context: Context, request: Request) -> TaskState:
         raise MuMuNotFoundError("MuMuManager not found")
     check_room(manager, config.mumu_index)
     return start(request, context, "machine", config.mumu_index, ["new-machine"])
+
+
+UPLOAD_NAME = "app-upload"
+"""Where the app's file waits in the data folder; the install deletes it once done."""
+APP_FILE = {
+    "required": True,
+    "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}},
+}
+
+
+@router.get("/app/install", response_model=TaskState)
+def read_app_install(request: Request) -> TaskState:
+    """Show the Vinhomes app install started last from the app: going on, or how it ended
+    (0 installed everywhere, 1 not on some instance, 2 not the Vinhomes app or refused,
+    3 MuMu or adb failed, 5 a run went on)."""
+    return state_of(last(request, "app"))
+
+
+@router.post(
+    "/app/install",
+    status_code=202,
+    response_model=TaskState,
+    openapi_extra={"requestBody": APP_FILE},
+)
+async def start_app_install(context: Context, request: Request) -> TaskState:
+    """Install the Vinhomes app from the file sent (an .apk, .xapk or .apks, as it is) on every
+    MuMu instance, once its signature is the app's (``court-booker install-app``, a minute a
+    machine or so).
+
+    Refused (400 ``bad_request``) for an empty file or one past 1 GB, and as :func:`start`
+    refuses, before the file is read; a file not signed by the app ends the task with 2.
+    """
+    config = context.config()
+    check_quiet_time(datetime.now(), config.wake_at, config.start_at, "app install")
+    check_free(request, context, config.mumu_index)
+    upload = context.data.root / UPLOAD_NAME
+    upload.parent.mkdir(parents=True, exist_ok=True)
+    size = 0
+    with upload.open("wb") as file:
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > MAX_FILE_BYTES:
+                break
+            file.write(chunk)
+    if not 0 < size <= MAX_FILE_BYTES:
+        upload.unlink(missing_ok=True)
+        raise RequestError(f"The app's file is empty or past 1 GB ({size} bytes)")
+    argv = ["install-app", str(upload), "--remove-file"]
+    return start(request, context, "app", config.mumu_index, argv)

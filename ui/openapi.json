@@ -2587,6 +2587,99 @@
         }
       }
     },
+    "/api/app/install": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Read App Install",
+        "description": "Show the Vinhomes app install started last from the app: going on, or how it ended\n(0 installed everywhere, 1 not on some instance, 2 not the Vinhomes app or refused,\n3 MuMu or adb failed, 5 a run went on).",
+        "operationId": "read_app_install_api_app_install_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Start App Install",
+        "description": "Install the Vinhomes app from the file sent (an .apk, .xapk or .apks, as it is) on every\nMuMu instance, once its signature is the app's (``court-booker install-app``, a minute a\nmachine or so).\n\nRefused (400 ``bad_request``) for an empty file or one past 1 GB, and as :func:`start`\nrefuses, before the file is read; a file not signed by the app ends the task with 2.",
+        "operationId": "start_app_install_api_app_install_post",
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/status": {
       "get": {
         "tags": [

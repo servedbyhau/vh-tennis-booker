@@ -154,6 +154,23 @@ export function getQuotaTask(): Promise<TaskState> {
   return call(client.GET("/api/machines/quota"));
 }
 
+/** Install the Vinhomes app from `file` (an APK or XAPK, sent as it is) on every MuMu instance. */
+export function startAppInstall(file: Blob): Promise<TaskState> {
+  return call(
+    client.POST("/api/app/install", {
+      // The file goes as it is: the schema calls its bytes a string.
+      body: "",
+      bodySerializer: () => file,
+      headers: { "Content-Type": "application/octet-stream" },
+    }),
+  );
+}
+
+/** Read how the app install started last from the app goes, or how it ended. */
+export function getAppInstallTask(): Promise<TaskState> {
+  return call(client.GET("/api/app/install"));
+}
+
 /** Make another machine's MuMu instance, a copy of the first machine's. */
 export function startNewMachine(): Promise<TaskState> {
   return call(client.POST("/api/machines/new"));

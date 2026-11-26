@@ -393,6 +393,12 @@ slots and the booked date and time read the same.
 
 ## Emulator (MuMu)
 
+- The app as Google Play installs it (1.6.0, 2026-11-26) is four APKs: `base.apk` and the
+  splits `config.en`, `config.tvdpi` and `config.x86_64`, about 175 MB in all, signed with v2 and
+  v3 only by Google Play's app signing key for it (one certificate, valid 2023-2053; its SHA-256
+  is `app_install.VINHOMES_CERTIFICATE`). `adb install-multiple -r` of the four over the app took
+  16 s and kept its login. APKPure's download links answer 403 to a program (2026-11-26).
+
 - Screen: custom resolution **540x1600**, 220 DPI. In tablet mode `window_size()` reports the
   landscape size, so the screen size is read from the dump; no stored coordinates.
   `MuMuManager setting` reads and writes it while the instance is off; a running instance

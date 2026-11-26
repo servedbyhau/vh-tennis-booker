@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The Vinhomes app installs from a file in the Setup: an APK or XAPK downloaded by hand goes on
+  every MuMu instance, once each APK in it is signed by the app's own key
+  (`court-booker install-app`, `/api/app/install`).
 - A "Keep the PC on" switch in the Setup: plugged in, the PC neither sleeps nor hibernates,
   closing the lid does nothing and the screen turns off after 5 minutes (it stays on with Modern
   Standby); Wi-Fi and USB keep full power. Off gives back the PC's own values (`/api/keep-on`).
@@ -39,6 +42,9 @@ uses [Semantic Versioning](https://semver.org/).
   half a minute. A config saved with the old default of 60 s takes the new one.
 - Auto-book can be switched on without a dry run first: the dry run is a check to use when
   wanted, and the status line no longer asks for one.
+
+### Fixed
+- While a MuMu instance is made, the status line says so instead of "a run is in progress".
 
 ## [1.2.0] - 2026-11-25
 

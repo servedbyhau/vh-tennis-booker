@@ -502,6 +502,10 @@ def main(argv: list[str] | None = None) -> int:
         from court_booker import quota_command
 
         return quota_command.main(argv[1:])
+    if argv[:1] == ["install-app"]:
+        from court_booker import app_install
+
+        return app_install.main(argv[1:])
     if argv[:1] == ["new-machine"]:
         from court_booker import new_machine
 
