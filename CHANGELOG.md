@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The Vinhomes app installs from a file in the Setup: an APK or XAPK downloaded by hand goes on
+  every MuMu instance, once each APK in it is signed by the app's own key
+  (`court-booker install-app`, `/api/app/install`).
 - A "Keep the PC on" switch in the Setup: plugged in, the PC neither sleeps nor hibernates,
   closing the lid does nothing and the screen turns off after 5 minutes (it stays on with Modern
   Standby); Wi-Fi and USB keep full power. Off gives back the PC's own values (`/api/keep-on`).
@@ -26,6 +29,9 @@ uses [Semantic Versioning](https://semver.org/).
   overview.
 - The Guide page, its steps to tick and the count of them in the header and the status line;
   its old address leads to the booking page.
+
+### Fixed
+- While a MuMu instance is made, the status line says so instead of "a run is in progress".
 
 ### Changed
 - The overview shows only what to look at, while there is something, and the machines: the

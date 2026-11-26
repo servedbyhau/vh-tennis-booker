@@ -45,7 +45,8 @@
           "cancel": "Đang huỷ vé trong app Vinhomes",
           "quota": "Đang đọc hạn mức trong app Vinhomes",
           "other": "Đang có một lần chạy",
-          "machine": "Đang tạo máy ảo MuMu"
+          "new_machine": "Đang tạo máy ảo MuMu",
+          "install_app": "Đang cài app Vinhomes"
         },
         "locked": "Chạy thử tạm khóa cho tới khi xong"
       }
@@ -356,6 +357,21 @@
         "standby": "Khi cắm sạc: không ngủ, gập máy vẫn chạy; màn hình luôn bật vì máy này ngủ khi tắt màn hình (gập máy để tắt màn)",
         "off": "Máy có thể ngủ; app hẹn giờ đánh thức máy mỗi sáng"
       },
+      "app": {
+        "title": "App Vinhomes",
+        "hint": "Chọn file APK hoặc XAPK đã tải: app kiểm tra chữ ký rồi cài vào mọi máy ảo",
+        "choose": "Cài từ file",
+        "file": "File APK hoặc XAPK của app Vinhomes",
+        "running": "Đang cài vào các máy ảo, khoảng 1 phút mỗi máy…",
+        "done": "Đã cài app Vinhomes vào mọi máy ảo.",
+        "failed": {
+          "1": "Có máy ảo chưa cài được. Xem nhật ký trong thư mục logs.",
+          "2": "File này không phải app Vinhomes chính chủ, hoặc đang gần giờ đặt sân.",
+          "3": "MuMu không mở được máy ảo. Đóng hẳn MuMu Player rồi thử lại.",
+          "5": "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
+          "other": "Không cài được app Vinhomes."
+        }
+      },
       "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
       "open": "Mở MuMu {{index}} để xem màn hình",
       "account": {
@@ -445,8 +461,9 @@
     "setup": "thiết lập tự động",
     "cancel": "huỷ vé",
     "quota": "đọc hạn mức",
-    "unknown": "không rõ",
-    "machine": "tạo máy ảo"
+    "new_machine": "tạo máy ảo",
+    "install_app": "cài app Vinhomes",
+    "unknown": "không rõ"
   },
   "setup": {
     "items": {

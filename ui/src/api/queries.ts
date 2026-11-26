@@ -5,6 +5,7 @@ import {
   type EventsQuery,
   getAccountLogin,
   getAccounts,
+  getAppInstallTask,
   getCancel,
   getKeepOn,
   getMumuInstances,
@@ -42,6 +43,7 @@ export const queryKeys = {
   cancel: ["cancel"] as const,
   quotaTask: ["quotaTask"] as const,
   newMachineTask: ["newMachineTask"] as const,
+  appInstallTask: ["appInstallTask"] as const,
   prices: ["prices"] as const,
   charges: (month: string) => ["charges", month] as const,
   customers: ["customers"] as const,
@@ -86,7 +88,16 @@ export function useCancelState() {
   });
 }
 
-/** Read the quota read started last, again every 2 s while it goes on. */
+/** Read the app install started last from the app, every 2 s while it goes on. */
+export function useAppInstallTask() {
+  return useQuery({
+    queryKey: queryKeys.appInstallTask,
+    queryFn: getAppInstallTask,
+    refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
+  });
+}
+
+/** Read the new machine made last from the app, every 2 s while it is made. */
 export function useNewMachineTask() {
   return useQuery({
     queryKey: queryKeys.newMachineTask,

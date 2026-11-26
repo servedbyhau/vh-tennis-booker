@@ -872,6 +872,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/app/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read App Install
+         * @description Show the Vinhomes app install started last from the app: going on, or how it ended
+         *     (0 installed everywhere, 1 not on some instance, 2 not the Vinhomes app or refused,
+         *     3 MuMu or adb failed, 5 a run went on).
+         */
+        get: operations["read_app_install_api_app_install_get"];
+        put?: never;
+        /**
+         * Start App Install
+         * @description Install the Vinhomes app from the file sent (an .apk, .xapk or .apks, as it is) on every
+         *     MuMu instance, once its signature is the app's (``court-booker install-app``, a minute a
+         *     machine or so).
+         *
+         *     Refused (400 ``bad_request``) for an empty file or one past 1 GB, and as :func:`start`
+         *     refuses, before the file is read; a file not signed by the app ends the task with 2.
+         */
+        post: operations["start_app_install_api_app_install_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -3597,6 +3628,86 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_app_install_api_app_install_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_app_install_api_app_install_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
         responses: {
             /** @description Successful Response */
             202: {

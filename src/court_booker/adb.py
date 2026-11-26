@@ -45,6 +45,8 @@ PING_TIMEOUT = 10.0
 """Seconds the ping may take: it answered in 50-220 ms on a working instance (2026-11-19)."""
 CLOCK_TIMEOUT = 5.0
 """Seconds a read of Android's clock may take; it is only logged."""
+INSTALL_TIMEOUT = 300.0
+"""Seconds an app install may take: the Vinhomes app's 175 MB took 16 s (2026-11-26)."""
 PING_COMMAND = ("am", "get-current-user")
 """What the ping asks Android: a call to its system server, which answers with the user id.
 An ``echo`` is not enough: on 2026-11-19 a hung Android answered ``echo`` in 0.5 s while
@@ -223,6 +225,17 @@ class Adb:
             result = self._run([str(self.path), "-s", serial, "install", "-r", str(apk)])
         except (OSError, subprocess.SubprocessError) as exc:
             raise DeviceConnectionError(f"adb install failed: {exc}") from exc
+        return result.stdout + result.stderr
+
+    def install_all(self, serial: str, apks: Sequence[Path]) -> str:
+        """Install or update an app from its APKs (the base and its splits, or one APK), keeping
+        its data, and return what adb printed, errors included."""
+        command = "install-multiple" if len(apks) > 1 else "install"
+        argv = [str(self.path), "-s", serial, command, "-r", *map(str, apks)]
+        try:
+            result = self._timed_run(argv, INSTALL_TIMEOUT)
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise DeviceConnectionError(f"adb {command} failed: {exc}") from exc
         return result.stdout + result.stderr
 
     def discover(self, ports: Sequence[int] = EMULATOR_PORTS) -> list[str]:

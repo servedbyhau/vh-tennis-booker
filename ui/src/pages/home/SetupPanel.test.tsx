@@ -321,3 +321,43 @@ describe("SetupPanel new machine", () => {
     expect(await panel.findByRole("alert")).toHaveTextContent(/^Máy tính không đủ RAM/);
   });
 });
+
+describe("SetupPanel app install", () => {
+  const APP_TASK = { code: null, machine: 0, started_at: "2026-10-15T09:12:00" };
+
+  it("sends the file chosen and says when every machine has the app", async () => {
+    const { panel, fetch } = await openSetup({
+      extra: {
+        "POST /api/app/install": reply({ ...APP_TASK, running: true, exit_code: null }, 202),
+        "GET /api/app/install": reply({ ...APP_TASK, running: false, exit_code: 0 }),
+      },
+    });
+    const file = new File(["PK"], "vinhomes.xapk", { type: "application/octet-stream" });
+
+    fireEvent.change(panel.getByLabelText("File APK hoặc XAPK của app Vinhomes"), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => expect(requestsTo(fetch, "POST /api/app/install")).toBe(1));
+    expect(
+      await panel.findByText("Đã cài app Vinhomes vào mọi máy ảo.", {}, { timeout: 4000 }),
+    ).toBeVisible();
+  });
+
+  it("says a file not signed by the app was refused", async () => {
+    const { panel } = await openSetup({
+      extra: {
+        "POST /api/app/install": reply({ ...APP_TASK, running: true, exit_code: null }, 202),
+        "GET /api/app/install": reply({ ...APP_TASK, running: false, exit_code: 2 }),
+      },
+    });
+
+    fireEvent.change(panel.getByLabelText("File APK hoặc XAPK của app Vinhomes"), {
+      target: { files: [new File(["x"], "other.apk")] },
+    });
+
+    expect(await panel.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent(
+      /^File này không phải app Vinhomes chính chủ/,
+    );
+  });
+});

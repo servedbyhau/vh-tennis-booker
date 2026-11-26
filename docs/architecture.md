@@ -143,6 +143,14 @@ Details live in the docstrings; this page says where things are and what must st
   copy waited for by its disk size (MuMu answers -502 while it goes on copying; an empty copy
   is deleted), then `MACHINE_SETTINGS` written and read back. A task of the app's
   (`POST /api/machines/new`), under the first machine's run lock.
+- `app_install.py`: `court-booker install-app FILE` installs the Vinhomes app from an APK or a
+  bundle of them (`.xapk`, `.apks`: a zip of the base and its splits, `unpack`) on every MuMu
+  instance on the PC, in turn: started if off and shut after, then `Adb.install_all`
+  (`install-multiple -r`, the app's data kept); a newer version there counts as installed. Every
+  APK must carry `VINHOMES_CERTIFICATE` in its v2 or v3 signature (`certificates` reads the APK
+  Signing Block; the app has no v1): a copy signed otherwise could keep the password a run types
+  in. A task of the app's (`POST /api/app/install`), under the first machine's run lock; the
+  upload waits in the data folder (`app-upload`) and is deleted once done.
 - `quota_command.py`: `court-booker quota [--instance N]` reads the quota of the account on the
   machine when asked: the history page once, back to the month of today + 2, and a `quota_read`
   (`moment` `asked`, with the account's id) for the machine's own utility and each other one
@@ -384,6 +392,7 @@ values 422 `invalid_request`.
 | `PUT /api/tickets/{code}/sent` | Mark the ticket sent to its customer now (`sent_at`, schema 7), or not; a later run reading it again keeps the mark |
 | `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine` (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`), and how the one started last goes (`running`, its `exit_code`) |
 | `POST /api/machines/{mumu_index}/open` | Launch the machine's MuMu, or show its window if it runs (`MuMu.show_window`); refused as a task is (no process of its own), 503 `device` without MuMuManager |
+| `POST /api/app/install`, `GET /api/app/install` | Start `court-booker install-app` with the file sent as it is (`application/octet-stream`, 400 for an empty one or one past 1 GB), and how the one started last goes (2: not the app's own file); a task as below |
 | `POST /api/machines/new`, `GET /api/machines/new` | Start `court-booker new-machine` (409 `no_room` without the RAM or disk, 503 `device` without MuMuManager), and how the one started last goes; a task as below |
 | `POST /api/machines/{mumu_index}/quota`, `GET /api/machines/quota` | Start `court-booker quota` on the machine (refused for one without a chosen account, 409 `no_machine`), and how the one started last goes. Both are tasks (`api/tasks.py`): each in its own process like the dry run, one at a time, refused in the quiet time and while a run, a dry run or another task goes on (409 `lock_held`); `/api/status` shows one running (its kind as the trigger), and no dry run starts meanwhile |
 | `GET`, `POST /api/customers`, `PUT`, `DELETE /api/customers/{id}` | The customers with their accounts (phone numbers whole, never a password; logs and events still mask them), each with the last quota read of every utility and month from this one on (`quota`, from the `quota_read` events of the runs that knew the account, `history_read.quota_readings`; the app shows the month of the next booking); one with an attached account is not removed (409 `account_attached`) unless `detach` is asked for |
@@ -459,7 +468,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
   `SetupSwitches.tsx` (the daily booking, the result notification, the PC kept on (shown once
-  Windows is read) and, for a machine beside the
+  Windows is read), `AppInstall.tsx` (a file chosen is sent at once, then how the install goes)
+  and, for a machine beside the
   first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
   (`DryRun`). `AccountPicker` shows the account in use under its title and, once pressed, the
