@@ -299,11 +299,11 @@ Details live in the docstrings; this page says where things are and what must st
   and `auto_setup` for the fixable ones (`court-booker setup [--auto]`; `GET /api/setup` only
   checks). The screen, the cores and RAM, and the app are checked on every instance (`[[instances]]` too) as one
   item: the worst status, each instance's detail ("MuMu 1: …"); auto setup sets each wrong
-  screen, and gives each instance 2 cores and 2 GB at least (`MIN_CPU`, `MIN_MEMORY_GB`, read
-  as `vm_cpu` and `vm_mem`; more is kept). Without a button: `ready.Supervisor` finds MuMuManager.exe when the configured
+  screen, and gives each instance 2 cores and 2 GB, exactly (`CPU_CORES`, `MEMORY_GB`, read
+  as `vm_cpu` and `vm_mem`). Without a button: `ready.Supervisor` finds MuMuManager.exe when the configured
   path is wrong (`find_manager`, the config is not rewritten) and calls `prepare_screen`
   and `prepare_performance` before starting each instance (a stopped MuMu gets 540x1600 at 220
-  DPI and 2 cores and 2 GB at least; a running one is only logged, never restarted before the
+  DPI and 2 cores and 2 GB exactly; a running one is only logged, never restarted before the
   start); `schedule install` and
   `PUT /api/schedule` call `ensure_wake_timers` (`powercfg`).
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the

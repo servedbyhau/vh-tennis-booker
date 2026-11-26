@@ -443,16 +443,19 @@ def test_wake_timers_are_allowed_unless_allowed_already():
     assert (blocked.ac, blocked.dc) == (1, 1)
 
 
-def test_performance_of_2_cores_and_2_gb_or_more_is_kept():
-    assert device_setup.check_performance(FakeMuMu()).status is Status.OK
-    bigger = FakeMuMu({"vm_cpu": "4", "vm_mem": "3.000000"}, started=False)
+def test_performance_of_2_cores_and_2_gb_is_left_alone():
+    mumu = FakeMuMu(started=False)
 
-    assert device_setup.prepare_performance(bigger).status is Status.OK
-    assert bigger.changed == []
+    assert device_setup.prepare_performance(mumu).status is Status.OK
+    assert mumu.changed == []
 
 
-def test_too_little_performance_is_raised_to_the_minimum_before_a_run_starts_mumu():
-    mumu = FakeMuMu({"vm_cpu": "1", "vm_mem": "3.000000"}, started=False)
+@pytest.mark.parametrize(
+    ("cpu", "memory"),
+    [("1", "3.000000"), ("4", "2.000000"), ("2", "4.000000")],
+)
+def test_other_performance_is_set_to_2_cores_and_2_gb_before_a_run_starts_mumu(cpu, memory):
+    mumu = FakeMuMu({"vm_cpu": cpu, "vm_mem": memory}, started=False)
 
     check = device_setup.prepare_performance(mumu)
 
@@ -461,7 +464,7 @@ def test_too_little_performance_is_raised_to_the_minimum_before_a_run_starts_mum
         {
             "performance_mode": "custom",
             "performance_cpu.custom": "2",
-            "performance_mem.custom": "3",  # its higher RAM kept
+            "performance_mem.custom": "2",
         }
     ]
 

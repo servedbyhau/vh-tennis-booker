@@ -47,11 +47,12 @@ SCREEN_SETTINGS = {
     "resolution_dpi.custom": "220",
 }
 """The MuMu settings that give :data:`SCREEN`."""
-MIN_CPU = 2
-"""Cores an instance needs at least: with 1 a screen read took 610 ms instead of 270 (field
-notes); more is kept."""
-MIN_MEMORY_GB = 2
-"""RAM an instance needs at least: Android used 1.1-1.3 GB of it while booking; more is kept."""
+CPU_CORES = 2
+"""The cores of every instance, no more and no fewer: with 1 a screen read took 610 ms instead
+of 270 (field notes), and each machine books alike."""
+MEMORY_GB = 2
+"""The RAM of every instance, no more and no less: Android used 1.1-1.3 GB of it while booking,
+and three instances fit an 8 GB PC beside Windows."""
 PERFORMANCE = ("vm_cpu", "vm_mem")
 """The cores and GB the instance runs with, whichever performance mode gives them."""
 
@@ -189,8 +190,8 @@ def wake_timer_indexes(output: str) -> tuple[int, int] | None:
 
 
 def check_performance(mumu: MuMu | None) -> Check:
-    """Check that the MuMu instance has :data:`MIN_CPU` cores and :data:`MIN_MEMORY_GB` at
-    least; readable while MuMu is off."""
+    """Check that the MuMu instance has :data:`CPU_CORES` cores and :data:`MEMORY_GB`, exactly;
+    readable while MuMu is off."""
     if mumu is None:
         return Check(MUMU_PERFORMANCE, Status.UNKNOWN, "MuMu not found")
     try:
@@ -200,12 +201,12 @@ def check_performance(mumu: MuMu | None) -> Check:
         detail = f"Could not read the MuMu performance: {exc}"
         return Check(MUMU_PERFORMANCE, Status.UNKNOWN, detail)
     shown = f"{cpu:g} cores, {memory:g} GB"
-    if cpu >= MIN_CPU and memory >= MIN_MEMORY_GB:
+    if cpu == CPU_CORES and memory == MEMORY_GB:
         return Check(MUMU_PERFORMANCE, Status.OK, shown)
     return Check(
         MUMU_PERFORMANCE,
         Status.FIXABLE,
-        f"{shown}; booking needs {MIN_CPU} cores and {MIN_MEMORY_GB} GB at least",
+        f"{shown}; booking uses {CPU_CORES} cores and {MEMORY_GB} GB",
     )
 
 
@@ -410,26 +411,25 @@ def _set_screen(mumu: MuMu | None, restart_mumu: bool) -> Check:
 
 
 def _set_performance(mumu: MuMu | None, restart_mumu: bool) -> Check:
-    """Give ``mumu`` :data:`MIN_CPU` cores and :data:`MIN_MEMORY_GB` at least, as custom
-    values that keep a higher one; a running MuMu takes them when it starts next."""
+    """Give ``mumu`` :data:`CPU_CORES` cores and :data:`MEMORY_GB`, as custom values, whatever
+    it had; a running MuMu takes them when it starts next."""
     if mumu is None:
         return Check(MUMU_PERFORMANCE, Status.UNKNOWN, "MuMu not found")
     check = check_performance(mumu)
     if check.status is not Status.FIXABLE:
         return check
     try:
-        values = mumu.settings(*PERFORMANCE)
         wanted = {
             "performance_mode": "custom",
-            "performance_cpu.custom": str(max(MIN_CPU, round(float(values["vm_cpu"])))),
-            "performance_mem.custom": f"{max(MIN_MEMORY_GB, float(values['vm_mem'])):g}",
+            "performance_cpu.custom": str(CPU_CORES),
+            "performance_mem.custom": str(MEMORY_GB),
         }
         running = mumu.is_started()
         if running and not restart_mumu:
             return Check(
                 MUMU_PERFORMANCE,
                 Status.FIXABLE,
-                "MuMu is running; allow a restart to give it 2 cores and 2 GB",
+                f"MuMu is running; allow a restart to give it {CPU_CORES} cores and {MEMORY_GB} GB",
             )
         mumu.change_settings(wanted)
         written = mumu.settings(*wanted)
