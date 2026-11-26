@@ -30,9 +30,6 @@ uses [Semantic Versioning](https://semver.org/).
 - The Guide page, its steps to tick and the count of them in the header and the status line;
   its old address leads to the booking page.
 
-### Fixed
-- While a MuMu instance is made, the status line says so instead of "a run is in progress".
-
 ### Changed
 - The overview shows only what to look at, while there is something, and the machines: the
   account each books with, what it books and its last 06:00 run. The month's figures and the
@@ -45,6 +42,9 @@ uses [Semantic Versioning](https://semver.org/).
   half a minute. A config saved with the old default of 60 s takes the new one.
 - Auto-book can be switched on without a dry run first: the dry run is a check to use when
   wanted, and the status line no longer asks for one.
+
+### Fixed
+- While a MuMu instance is made, the status line says so instead of "a run is in progress".
 
 ## [1.2.0] - 2026-11-25
 
