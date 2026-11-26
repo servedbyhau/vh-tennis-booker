@@ -131,6 +131,27 @@ describe("SetupPanel switches", () => {
     );
   });
 
+  it("keeps the PC on while plugged in, and gives the values back when off", async () => {
+    const { panel, fetch, replies } = await openSetup({
+      extra: { "GET /api/keep-on": reply({ on: false, modern_standby: false }) },
+    });
+    const toggle = await panel.findByRole("switch", { name: "Giữ máy luôn chạy" });
+    expect(toggle).not.toBeChecked();
+    expect(panel.getByText("Máy có thể ngủ; app hẹn giờ đánh thức máy mỗi sáng")).toBeVisible();
+    replies["PUT /api/keep-on"] = reply({ on: true, modern_standby: false });
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(toggle).toBeChecked());
+    expect(await bodies(fetch, "PUT /api/keep-on")).toEqual([{ on: true }]);
+    expect(panel.getByText(/màn hình tắt sau 5 phút$/)).toBeVisible();
+  });
+
+  it("has no keep-on switch when Windows could not be read", async () => {
+    const { panel } = await openSetup();
+    expect(panel.queryByRole("switch", { name: "Giữ máy luôn chạy" })).not.toBeInTheDocument();
+  });
+
   it("lets the daily booking be switched on before any dry run", async () => {
     const { panel } = await openSetup({
       status: schedule({ enabled: false, dry_run_passed: false }),

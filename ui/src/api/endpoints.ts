@@ -11,6 +11,7 @@ import type {
   DryRunStarted,
   Health,
   NewAccount,
+  KeepOnState,
   NotificationSettings,
   Overview,
   ImportResult,
@@ -285,6 +286,16 @@ export async function detachAccount(mumuIndex: number): Promise<void> {
       params: { path: { mumu_index: mumuIndex } },
     }),
   );
+}
+
+/** Read whether the PC is kept on while plugged in. */
+export function getKeepOn(): Promise<KeepOnState> {
+  return call(client.GET("/api/keep-on"));
+}
+
+/** Keep the PC on while plugged in, or give back the power values it had. */
+export function switchKeepOn(on: boolean): Promise<KeepOnState> {
+  return call(client.PUT("/api/keep-on", { body: { on } }));
 }
 
 /** Read whether every run ends with a Windows notification, and its language. */

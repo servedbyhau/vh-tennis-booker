@@ -24,6 +24,7 @@ import {
   saveSettings,
   startDryRun,
   switchInstance,
+  switchKeepOn,
   switchSchedule,
   importCustomers,
 } from "./endpoints";
@@ -141,6 +142,18 @@ export function useSwitchInstance() {
       switchInstance(mumuIndex, enabled),
     onSuccess: async (settings) => {
       cache.setQueryData(queryKeys.settings, settings);
+      await cache.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
+
+/** Keep the PC on while plugged in, or not; the activity log shows the change. */
+export function useSwitchKeepOn() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: switchKeepOn,
+    onSuccess: async (state) => {
+      cache.setQueryData(queryKeys.keepOn, state);
       await cache.invalidateQueries({ queryKey: ["events"] });
     },
   });

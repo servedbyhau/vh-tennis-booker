@@ -2130,6 +2130,98 @@
         }
       }
     },
+    "/api/keep-on": {
+      "get": {
+        "tags": [
+          "setup"
+        ],
+        "summary": "Read Keep On",
+        "description": "Read the power plan; ``on`` only while every plugged-in value keeps the PC on, so a\nvalue changed by hand shows it off. 503 ``power`` when ``powercfg`` cannot run.",
+        "operationId": "read_keep_on_api_keep_on_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeepOnState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "setup"
+        ],
+        "summary": "Switch Keep On",
+        "description": "Keep the PC on while plugged in (no sleep, no hibernation, nothing on closing the lid,\nthe screen off after 5 minutes, Wi-Fi and USB at full power, wake timers allowed), or give\nback the values it had before; the values on battery stay. Records ``settings_saved``.\n503 ``power`` when ``powercfg`` fails.",
+        "operationId": "switch_keep_on_api_keep_on_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeepOnSwitch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeepOnState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/schedule": {
       "get": {
         "tags": [
@@ -3233,6 +3325,40 @@
         ],
         "title": "InstanceSwitch",
         "description": "Book with a MuMu instance, or not."
+      },
+      "KeepOnState": {
+        "properties": {
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          },
+          "modern_standby": {
+            "type": "boolean",
+            "title": "Modern Standby"
+          }
+        },
+        "type": "object",
+        "required": [
+          "on",
+          "modern_standby"
+        ],
+        "title": "KeepOnState",
+        "description": "Whether the PC is kept on while plugged in, and whether it has Modern Standby (its\nscreen then stays on too)."
+      },
+      "KeepOnSwitch": {
+        "properties": {
+          "on": {
+            "type": "boolean",
+            "title": "On"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "on"
+        ],
+        "title": "KeepOnSwitch",
+        "description": "Keep the PC on while plugged in, or give back the values it had."
       },
       "LabelSettings": {
         "properties": {

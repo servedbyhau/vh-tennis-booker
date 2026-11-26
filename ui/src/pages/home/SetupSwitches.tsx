@@ -4,9 +4,10 @@ import {
   useOpenMachine,
   useSaveNotifications,
   useSwitchInstance,
+  useSwitchKeepOn,
   useSwitchSchedule,
 } from "../../api/mutations";
-import { useMumuInstances, useNotifications } from "../../api/queries";
+import { useKeepOn, useMumuInstances, useNotifications } from "../../api/queries";
 import type { ScheduleState } from "../../api/types";
 import { IconButton } from "../../components/IconButton";
 import { Switch } from "../../components/Switch";
@@ -62,6 +63,40 @@ export function NotifyRow() {
         checked={notifications.data.enabled}
         disabled={save.isPending}
         onChange={(enabled) => save.mutate({ enabled, language })}
+      />
+    </SetupRow>
+  );
+}
+
+/**
+ * The PC kept on while plugged in (no sleep, no hibernation, nothing on closing the lid), read
+ * from Windows; off gives back the values it had. It shows once Windows is read, not when
+ * Windows could not be.
+ */
+export function KeepOnRow() {
+  const { t } = useTranslation();
+  const keepOn = useKeepOn();
+  const toggle = useSwitchKeepOn();
+  const state = keepOn.data;
+  if (state === undefined) {
+    return null;
+  }
+  const title = t("pages.setup.keepOn.title");
+  const hint = state.on
+    ? t(state.modern_standby ? "pages.setup.keepOn.standby" : "pages.setup.keepOn.on")
+    : t("pages.setup.keepOn.off");
+  return (
+    <SetupRow
+      icon="power"
+      title={title}
+      hint={hint}
+      problem={toggle.isError ? errorMessage(t, toggle.error) : null}
+    >
+      <Switch
+        label={title}
+        checked={state.on}
+        disabled={toggle.isPending}
+        onChange={(on) => toggle.mutate(on)}
       />
     </SetupRow>
   );

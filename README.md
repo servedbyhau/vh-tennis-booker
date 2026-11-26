@@ -181,7 +181,9 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
   they happen; those of the 06:00 race (from a minute before to the last slot) show once it is
   over, so writing them takes nothing from the booking.
 - **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task;
-  a dry run is not needed first), the Windows notification, the account the machine books with (its phone
+  a dry run is not needed first), the Windows notification, **Giữ máy luôn chạy / Keep the PC
+  on** (plugged in: no sleep, no hibernation, closing the lid does nothing, the screen off after
+  5 minutes; off gives back the PC's own power settings), the account the machine books with (its phone
   number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
   window brought to the front), and a dry run. A machine whose MuMu instance is not on the PC
   yet has a button that makes it, a copy of the first machine's with the Vinhomes app, set up to

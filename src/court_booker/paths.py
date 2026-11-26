@@ -40,6 +40,11 @@ class DataFolder:
         return self.root / "run.lock"
 
     @property
+    def power_plan(self) -> Path:
+        """Return the plugged-in power values the PC had before it was kept on."""
+        return self.root / "power-plan.json"
+
+    @property
     def tickets(self) -> Path:
         """Return the folder of the ticket pictures, which hold personal data."""
         return self.root / "tickets"

@@ -38,6 +38,7 @@ export type Settings = Schemas["Settings"];
 export type LabelSettings = Schemas["LabelSettings"];
 /** Whether every run ends with a Windows notification, and its language. */
 export type NotificationSettings = Schemas["NotificationSettings"];
+export type KeepOnState = Schemas["KeepOnState"];
 /** A customer with the Vinhomes accounts they gave; phone numbers masked, never a password. */
 export type Customer = Schemas["CustomerRecord"];
 export type CustomerAccount = Schemas["CustomerAccount"];

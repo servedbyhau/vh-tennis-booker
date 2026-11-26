@@ -18,6 +18,7 @@ from court_booker.errors import (
     RequestError,
     ScheduleError,
 )
+from court_booker.keep_on import PowerPlanError
 from court_booker.new_machine import NoRoomError
 
 
@@ -70,6 +71,7 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (AppNotReadyError, 503, "app_not_ready"),
     (ScheduleError, 503, "schedule"),
     (NotificationError, 503, "notification"),
+    (PowerPlanError, 503, "power"),
     (CredentialError, 503, "credentials"),
 )
 """First match wins: HTTP status and code per error class."""

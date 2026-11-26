@@ -18,6 +18,7 @@ export const ERROR_CODES = [
   "account_attached",
   "no_machine",
   "no_room",
+  "power",
   "ticket_cancelled",
   "engine",
   "invalid_settings",
