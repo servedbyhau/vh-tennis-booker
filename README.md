@@ -231,13 +231,6 @@ On the second:
   customer's accounts in rows and their sports in columns, what each booked in the month booked
   for (or another month read), "3/8", or "Full" at the limit, and a button that reads an account
   on a machine again.
-- **Thu tiền / Money**: what the customers owe, a month of play at a time. Each ticket a
-  customer's account booked becomes a charge, priced by the price list (a normal and a golden
-  price a sport, the golden hours 17:00-21:00 unless changed), or by an amount set by hand; a
-  cancelled ticket owes nothing, nor a customer booked for free (your own account). Each
-  customer's tickets show with their price and whether paid, with a button that marks them all
-  paid and one that copies the statement to paste in a chat. The overview shows what is left to
-  collect this month.
 - **Thống kê / Statistics**: what the 06:00 runs of the last 30 days tell: the share of slots
   booked by machine and by slot, how long a slot booked took on average, and why slots were lost.
 - **Lịch sử / History**: each run in two lines, its play day, court and count ("2/2"), then every

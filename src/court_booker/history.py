@@ -177,6 +177,13 @@ MIGRATIONS = (
     """
     DROP TABLE requests;
     """,
+    # 11: the money went with its section (1.2.1): the charges, the prices and its settings; a
+    # customer's ``free`` stays, read by nothing (SQLite 3.31 of Python 3.9 cannot drop a column).
+    """
+    DROP TABLE charges;
+    DROP TABLE prices;
+    DROP TABLE money_settings;
+    """,
 )
 """Schema changes in order; ``PRAGMA user_version`` counts the ones applied."""
 
@@ -391,10 +398,6 @@ class History:
         A ticket recorded before takes its new status; one without a new picture in
         ``photos`` (booking code to file name) keeps the one it has, and its account's holder
         while this run knows of none.
-
-        A ticket of a chosen account still to play becomes a charge of its customer
-        (:mod:`court_booker.money`), kept once the ticket is gone; a charge's ticket read
-        cancelled since is cancelled with it.
         """
         holder = self.holder
         names = (
@@ -436,33 +439,6 @@ class History:
                 rows,
             )
         )
-        today = seen_at.date().isoformat()
-        stamp = _stamp(seen_at)
-        charges = [
-            (
-                ticket.code,
-                *names,
-                ticket.utility,
-                ticket.court,
-                ticket.play_date,
-                ticket.slot,
-                stamp,
-            )
-            for ticket in tickets
-            if holder is not None and ticket.status != "cancelled" and ticket.play_date >= today
-        ]
-        cancelled = [(ticket.code,) for ticket in tickets if ticket.status == "cancelled"]
-
-        def write_charges(db: sqlite3.Connection) -> None:
-            db.executemany(
-                "INSERT INTO charges (code, account_id, customer, account, utility, court,"
-                " play_date, slot, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                " ON CONFLICT (code) DO NOTHING",
-                charges,
-            )
-            db.executemany("UPDATE charges SET cancelled = 1 WHERE code = ?", cancelled)
-
-        self._write(write_charges)
 
     def hold(self) -> None:
         """Keep every write in memory until :meth:`release`.

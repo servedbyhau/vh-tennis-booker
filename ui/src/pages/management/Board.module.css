@@ -50,15 +50,6 @@
   min-height: var(--touch-target);
 }
 
-.cardTitle {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin: 0;
-  font-size: var(--text-heading-sm);
-  font-weight: var(--weight-heavy);
-  letter-spacing: var(--tracking-heading);
-}
-
 .sectionTitle {
   margin: 0;
   font-size: var(--text-control);
@@ -83,15 +74,6 @@
   gap: var(--space-3);
   min-width: 0;
   font-size: var(--text-data);
-}
-
-/* A switch with its words beside it: the switch itself shows none. */
-.toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-small);
-  cursor: pointer;
 }
 
 .label {

@@ -43,6 +43,13 @@ describe("routes", () => {
     expect(router.state.historyAction).toBe("REPLACE");
   });
 
+  it("sends the old money section on to the management", async () => {
+    const router = renderAt("/management/money");
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(paths.management));
+    expect(router.state.historyAction).toBe("REPLACE");
+  });
+
   it("shows the not-found page for an unknown address", async () => {
     renderAt("/no-such-screen");
 

@@ -72,7 +72,6 @@ def tables(connection):
 
 
 TABLES = {"runs", "run_slots", "events", "log_lines", "tickets", "customers", "accounts"}
-TABLES |= {"charges", "prices", "money_settings"}
 
 
 def test_connect_creates_the_tables(tmp_path):
