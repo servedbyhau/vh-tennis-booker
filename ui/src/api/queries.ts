@@ -9,7 +9,6 @@ import {
   getCancel,
   getKeepOn,
   getMumuInstances,
-  getPrices,
   getNewMachineTask,
   getQuotaTask,
   getOverview,
@@ -18,7 +17,6 @@ import {
   getSettings,
   listEvents,
   listRuns,
-  listCharges,
   listCustomers,
   listTickets,
   type RunsQuery,
@@ -44,8 +42,6 @@ export const queryKeys = {
   quotaTask: ["quotaTask"] as const,
   newMachineTask: ["newMachineTask"] as const,
   appInstallTask: ["appInstallTask"] as const,
-  prices: ["prices"] as const,
-  charges: (month: string) => ["charges", month] as const,
   customers: ["customers"] as const,
   accountLogin: (id: string) => ["accountLogin", id] as const,
 };
@@ -113,16 +109,6 @@ export function useQuotaTask() {
     queryFn: getQuotaTask,
     refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
   });
-}
-
-/** Read the price list. */
-export function usePrices() {
-  return useQuery({ queryKey: queryKeys.prices, queryFn: getPrices });
-}
-
-/** Read the charges of a month of play, priced. */
-export function useCharges(month: string) {
-  return useQuery({ queryKey: queryKeys.charges(month), queryFn: () => listCharges(month) });
 }
 
 /** Read everything the Overview shows. */

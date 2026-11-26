@@ -29,6 +29,8 @@ uses [Semantic Versioning](https://semver.org/).
   overview.
 - The Guide page, its steps to tick and the count of them in the header and the status line;
   its old address leads to the booking page.
+- The money section and its routes (`/api/money`); its charges, prices and settings are dropped
+  (schema 11), and its old address leads to the management.
 
 ### Changed
 - The overview shows only what to look at, while there is something, and the machines: the
