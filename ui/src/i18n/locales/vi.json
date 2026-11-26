@@ -350,6 +350,12 @@
         "times": "{{start}} mỗi sáng, máy thức {{wake}}"
       },
       "notify": "Thông báo kết quả",
+      "keepOn": {
+        "title": "Giữ máy luôn chạy",
+        "on": "Khi cắm sạc: không ngủ, không ngủ đông, gập máy vẫn chạy; màn hình tắt sau 5 phút",
+        "standby": "Khi cắm sạc: không ngủ, gập máy vẫn chạy; màn hình luôn bật vì máy này ngủ khi tắt màn hình (gập máy để tắt màn)",
+        "off": "Máy có thể ngủ; app hẹn giờ đánh thức máy mỗi sáng"
+      },
       "useLabel": "Đặt sân bằng máy {{number}} (MuMu {{index}})",
       "open": "Mở MuMu {{index}} để xem màn hình",
       "account": {
@@ -652,7 +658,8 @@
     "invalid_request": "Dữ liệu gửi đi chưa hợp lệ.",
     "unreachable": "Không kết nối được phần chạy nền của Court Booker.",
     "http": "Phần chạy nền trả lời không như mong đợi.",
-    "no_room": "Máy tính không đủ RAM (mỗi máy ảo cần 2 GB, Windows giữ 4 GB) hoặc ổ đĩa (khoảng 9 GB) để thêm một máy ảo."
+    "no_room": "Máy tính không đủ RAM (mỗi máy ảo cần 2 GB, Windows giữ 4 GB) hoặc ổ đĩa (khoảng 9 GB) để thêm một máy ảo.",
+    "power": "Không đổi được cài đặt nguồn điện của Windows. Xem nhật ký trong thư mục logs."
   },
   "days": {
     "0": "T2",

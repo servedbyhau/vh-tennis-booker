@@ -308,6 +308,14 @@ Details live in the docstrings; this page says where things are and what must st
   `PUT /api/schedule` call `ensure_wake_timers` (`powercfg`).
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the
   engine of whatever installed it: the runner folder's Python, or the packaged app.
+- `keep_on.py`: the PC kept on while plugged in, in the active power plan's plugged-in values
+  (`powercfg /qh`, which shows the hidden ones too; a setting the PC lacks is left out): no
+  sleep, no hibernation, nothing on closing the lid, the screen off after 5 minutes (never with
+  Modern Standby, `GetPwrCapabilities`' `AoAc`, where a dark screen is standby), Wi-Fi power
+  saving and USB selective suspend off, and wake timers allowed. The values found first are
+  saved in the data folder (`power-plan.json`) and given back when switched off, else the
+  Balanced plan's; the values on battery stay. It is on only while every value is the one
+  wanted, so a value changed by hand shows it off.
 
 ## Desktop window (`desktop/`)
 
@@ -367,6 +375,7 @@ values 422 `invalid_request`.
 | `GET /api/mumu-instances` | The MuMu instances MuMuManager knows, lowest first (`emulator.instance_indexes`); empty when it is not found or fails |
 | `PUT /api/instances/{mumu_index}` | A machine beside the first on or off: adds its `[[instances]]` table (taking every setting from the top) or removes it; no `enabled` key, which an older runner would refuse |
 | `GET`/`PUT /api/notifications`, `POST .../test` | The Windows notification's switch and language; a sample notification |
+| `GET`/`PUT /api/keep-on` | Whether the PC is kept on while plugged in (`keep_on.py`), and whether it has Modern Standby; `PUT` switches it, 503 `power` when `powercfg` fails |
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
 | `GET`/`PUT /api/schedule` | The task: state, times, whether a dry run ever passed; switching on needs none and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
@@ -449,7 +458,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   its subdivision, sport, court and up to two slots, saved on each press;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
-  `SetupSwitches.tsx` (the daily booking, the result notification and, for a machine beside the
+  `SetupSwitches.tsx` (the daily booking, the result notification, the PC kept on (shown once
+  Windows is read) and, for a machine beside the
   first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
   (`DryRun`). `AccountPicker` shows the account in use under its title and, once pressed, the

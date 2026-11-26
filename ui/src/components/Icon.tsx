@@ -22,6 +22,7 @@ import {
   Pencil,
   Phone,
   Play,
+  Plug,
   Plus,
   StickyNote,
   Trash2,
@@ -54,6 +55,8 @@ const DRAWINGS = {
   alarm: AlarmClock,
   /** The Windows notification. */
   bell: Bell,
+  /** The PC kept on while plugged in. */
+  power: Plug,
   /** A MuMu instance. */
   machine: MonitorSmartphone,
   /** Start something now. */

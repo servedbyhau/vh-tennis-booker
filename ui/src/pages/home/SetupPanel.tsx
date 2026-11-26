@@ -4,7 +4,7 @@ import { machineAt, useMachines } from "../../machines";
 import { AccountPicker } from "./AccountPicker";
 import { DryRun } from "./DryRun";
 import styles from "./SetupPanel.module.css";
-import { DailyRow, MachineRow, NotifyRow } from "./SetupSwitches";
+import { DailyRow, KeepOnRow, MachineRow, NotifyRow } from "./SetupSwitches";
 
 /**
  * The panel beside the ticket: what holds for every machine (the daily booking and the result
@@ -27,6 +27,7 @@ export function SetupPanel({ machine }: { machine: number }) {
           <div className={styles.card}>
             <DailyRow schedule={overview.data.schedule} running={running} />
             <NotifyRow />
+            <KeepOnRow />
           </div>
         )}
         {shown.mumuIndex !== null && (

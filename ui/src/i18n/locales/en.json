@@ -350,6 +350,12 @@
         "times": "Daily at {{start}}, PC wakes {{wake}}"
       },
       "notify": "Result notifications",
+      "keepOn": {
+        "title": "Keep the PC on",
+        "on": "Plugged in: no sleep, no hibernation, closing the lid does nothing; the screen turns off after 5 minutes",
+        "standby": "Plugged in: no sleep, closing the lid does nothing; the screen stays on, as this PC sleeps when it turns off (close the lid to darken it)",
+        "off": "The PC may sleep; the app wakes it every morning"
+      },
       "useLabel": "Book with machine {{number}} (MuMu {{index}})",
       "open": "Open MuMu {{index}} to see its screen",
       "account": {
@@ -652,7 +658,8 @@
     "invalid_request": "The request has values that are not valid.",
     "unreachable": "Court Booker's background service cannot be reached.",
     "http": "The background service gave an unexpected answer.",
-    "no_room": "This PC lacks the RAM (2 GB a MuMu instance, 4 GB for Windows) or the disk (about 9 GB) for another MuMu instance."
+    "no_room": "This PC lacks the RAM (2 GB a MuMu instance, 4 GB for Windows) or the disk (about 9 GB) for another MuMu instance.",
+    "power": "The Windows power settings could not be changed. The log folder tells why."
   },
   "days": {
     "0": "Mon",

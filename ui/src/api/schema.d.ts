@@ -693,6 +693,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/keep-on": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Keep On
+         * @description Read the power plan; ``on`` only while every plugged-in value keeps the PC on, so a
+         *     value changed by hand shows it off. 503 ``power`` when ``powercfg`` cannot run.
+         */
+        get: operations["read_keep_on_api_keep_on_get"];
+        /**
+         * Switch Keep On
+         * @description Keep the PC on while plugged in (no sleep, no hibernation, nothing on closing the lid,
+         *     the screen off after 5 minutes, Wi-Fi and USB at full power, wake timers allowed), or give
+         *     back the values it had before; the values on battery stay. Records ``settings_saved``.
+         *     503 ``power`` when ``powercfg`` fails.
+         */
+        put: operations["switch_keep_on_api_keep_on_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/schedule": {
         parameters: {
             query?: never;
@@ -1120,6 +1148,25 @@ export interface components {
         InstanceSwitch: {
             /** Enabled */
             enabled: boolean;
+        };
+        /**
+         * KeepOnState
+         * @description Whether the PC is kept on while plugged in, and whether it has Modern Standby (its
+         *     screen then stays on too).
+         */
+        KeepOnState: {
+            /** On */
+            on: boolean;
+            /** Modern Standby */
+            modern_standby: boolean;
+        };
+        /**
+         * KeepOnSwitch
+         * @description Keep the PC on while plugged in, or give back the values it had.
+         */
+        KeepOnSwitch: {
+            /** On */
+            on: boolean;
         };
         /**
          * LabelSettings
@@ -3166,6 +3213,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupItem"][];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_keep_on_api_keep_on_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepOnState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    switch_keep_on_api_keep_on_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepOnSwitch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepOnState"];
                 };
             };
             /** @description Invalid request values, one line per value */

@@ -6,6 +6,7 @@ import {
   getAccountLogin,
   getAccounts,
   getCancel,
+  getKeepOn,
   getMumuInstances,
   getPrices,
   getNewMachineTask,
@@ -35,6 +36,7 @@ export const queryKeys = {
   settings: ["settings"] as const,
   mumuInstances: ["mumuInstances"] as const,
   notifications: ["notifications"] as const,
+  keepOn: ["keepOn"] as const,
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
   cancel: ["cancel"] as const,
@@ -179,6 +181,11 @@ export function useMumuInstances() {
     queryFn: getMumuInstances,
     staleTime: Infinity,
   });
+}
+
+/** Read whether the PC is kept on while plugged in; Windows is read again on each mount. */
+export function useKeepOn() {
+  return useQuery({ queryKey: queryKeys.keepOn, queryFn: getKeepOn });
 }
 
 /** Read the notification settings. */
