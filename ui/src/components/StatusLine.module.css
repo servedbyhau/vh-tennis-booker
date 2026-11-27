@@ -40,3 +40,9 @@
   border-radius: 50%;
   background: var(--color-highlight);
 }
+
+/* What the Setup page lacks: the words lead to its step. */
+a.todo {
+  color: var(--color-ink);
+  text-underline-offset: 3px;
+}

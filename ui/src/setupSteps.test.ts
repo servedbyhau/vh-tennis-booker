@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { SetupReport } from "./api/types";
 import { machinesOf } from "./machines";
-import { appMissing, firstOpen, missingMachines, type SetupFacts, stepsDone } from "./setupSteps";
+import {
+  appMissing,
+  firstOpen,
+  missingMachines,
+  type SetupFacts,
+  setupProblem,
+  stepsDone,
+} from "./setupSteps";
 import { account, customer } from "./test/customers";
 import { settings } from "./test/settings";
 
@@ -68,5 +75,24 @@ describe("firstOpen", () => {
   it("is the first step not done, else the first", () => {
     expect(firstOpen(stepsDone(facts({ daily: false })))).toBe("daily");
     expect(firstOpen(stepsDone(facts()))).toBe("power");
+  });
+});
+
+describe("setupProblem", () => {
+  it("is what keeps a booking machine from booking, worst first", () => {
+    expect(setupProblem(facts())).toBeNull(); // machine 2's app not known, and it does not book
+    expect(setupProblem(facts({ report: { ...READY, mumu: "user" } }))).toEqual({ kind: "mumu" });
+    const one = { ...READY, machines: READY.machines.slice(0, 1) };
+    expect(setupProblem(facts({ report: one }, true))).toEqual({ kind: "machines", indexes: [1] });
+    const noApp = {
+      ...READY,
+      machines: READY.machines.map((item) => ({ ...item, app: "user" as const })),
+    };
+    expect(setupProblem(facts({ report: noApp }, true))).toEqual({ kind: "app", indexes: [0, 1] });
+  });
+
+  it("says nothing of an app not known yet, or before the checks are read", () => {
+    expect(setupProblem(facts({}, true))).toBeNull();
+    expect(setupProblem(facts({ report: undefined }))).toBeNull();
   });
 });

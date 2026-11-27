@@ -180,8 +180,10 @@ The app has three pages, **Đặt sân / Booking**, **Thiết lập / Setup** an
 Management**. On the first:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first:
-  the daily switch, a machine that books with no account chosen, or
-  two machines that would book the same court and slot.
+  the daily switch, what the Setup page lacks for a machine that books (MuMu Player, its MuMu
+  instance or the Vinhomes app; the words lead to that step), a machine that books with no
+  account chosen, or two machines that would book the same court and slot. **Thiết lập / Setup**
+  in the header shows in red how many of its steps are left.
 - **The ticket** on the left, a card drawn like a ticket, is the next booking in two parts:
   on top what is set, the play day, court and slots; below, the subdivision, the sport, the
   court and up to two slots to choose, saved on each press. During a run it shows the steps as

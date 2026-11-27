@@ -2,13 +2,12 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router";
 import { errorMessage } from "../api/errors";
-import { useCustomers, useKeepOn, useOverview, useSetupReport } from "../api/queries";
 import { Button } from "../components/Button";
 import { Icon } from "../components/Icon";
 import { PageTitle } from "../components/PageTitle";
-import { useMachines } from "../machines";
 import { paths } from "../paths";
-import { firstOpen, type SetupFacts, STEPS, type StepId, stepsDone } from "../setupSteps";
+import { firstOpen, STEPS, type StepId } from "../setupSteps";
+import { useSetupSteps } from "../useSetupSteps";
 import styles from "./SetupPage.module.css";
 import { StepBody } from "./setup/StepBody";
 
@@ -24,20 +23,7 @@ function isStep(value: string | null): value is StepId {
 export function SetupPage() {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
-  const report = useSetupReport();
-  const keepOn = useKeepOn();
-  const customers = useCustomers();
-  const overview = useOverview();
-  const machines = useMachines();
-  const facts: SetupFacts = {
-    keepOn: keepOn.data?.on,
-    report: report.data,
-    machines,
-    customers: customers.data,
-    daily: overview.data?.schedule.enabled,
-  };
-  const done = stepsDone(facts);
-  const read = report.isFetched && keepOn.isFetched && customers.isFetched && overview.isFetched;
+  const { report, overview, facts, done, read } = useSetupSteps();
   const asked = params.get("step");
   const shown: StepId = isStep(asked) ? asked : firstOpen(done);
 

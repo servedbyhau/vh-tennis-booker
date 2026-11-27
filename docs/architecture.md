@@ -482,8 +482,12 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   On the machines' cards, `components/QuotaLine.tsx` shows what is left
   of each utility's quota in the month the next booking is for (`quota.ts`, from the schedule's
   `next_play_date`), as the last run read it ("Tennis còn 1/8", the sport in the interface's language, the app's words for a read without it), none left marked, when it was
-  read in the tooltip. The header's status line (`components/StatusLine.tsx`)
-  shows the run going on, else the one thing to do; `readiness.ts` finds the machines that book
+  read in the tooltip. The header (`components/SiteHeader.tsx`) shows the Setup's steps left
+  in red (`useSetupSteps(true)`: the checks read when the app opens and every 15 minutes, never
+  on focus, as they ask MuMu). Its status line (`components/StatusLine.tsx`)
+  shows the run going on, else the one thing to do, a link to the Setup's step when a machine
+  that books lacks MuMu Player, its MuMu instance or the Vinhomes app (`setupProblem`; an app
+  not known yet is none); `readiness.ts` finds the machines that book
   without an account (while a customer has one to choose), the courts and slots that two would
   book, and the machines whose account has fewer left in that month for their sport than their
   slots (`shortOfQuota`), which only their tabs and the account picker show (set off as for

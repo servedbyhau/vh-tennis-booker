@@ -25,6 +25,7 @@
     "label": "Trang",
     "booking": "Đặt sân",
     "setup": "Thiết lập",
+    "setupLeft": ", còn {{count}} bước",
     "management": "Quản lý"
   },
   "pages": {
@@ -33,6 +34,9 @@
       "status": {
         "scheduleOff": "Tự đặt đang tắt · bật Tự đặt",
         "wakeBlocked": "Windows chưa cho máy tự thức dậy lúc {{wake}} · tắt rồi bật lại Tự đặt",
+        "noMumu": "Chưa có MuMu Player",
+        "noMachine": "Máy {{machines}} chưa có máy ảo",
+        "noApp": "Máy {{machines}} chưa có app Vinhomes",
         "noAccount": "Máy {{machines}} chưa chọn tài khoản",
         "clash": "Máy {{machines}} trùng {{court}} lúc {{start}}",
         "ready": "Sẵn sàng cho {{time}} {{when}}"
