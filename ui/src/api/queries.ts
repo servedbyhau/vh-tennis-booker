@@ -189,12 +189,25 @@ export function useMumuInstances() {
   });
 }
 
+/** How often the header checks the PC and its MuMu instances again. */
+export const SETUP_POLL_MS = 15 * 60_000;
+
 /**
- * Check the PC and its MuMu instances, again on each mount and focus (the checks ask MuMu, and the
- * backend refuses them while a run uses it), never retried: a refusal shows at once.
+ * Check the PC and its MuMu instances, never retried: the checks ask MuMu, and the backend
+ * refuses them while a run uses it. The Setup page reads them again on each mount and focus;
+ * the header (`background`) when the app opens and every 15 minutes.
  */
-export function useSetupReport() {
-  return useQuery({ queryKey: queryKeys.setup, queryFn: getSetup, retry: false });
+export function useSetupReport(background = false) {
+  return useQuery({
+    queryKey: queryKeys.setup,
+    queryFn: getSetup,
+    retry: false,
+    ...(background && {
+      staleTime: SETUP_POLL_MS,
+      refetchOnWindowFocus: false,
+      refetchInterval: SETUP_POLL_MS,
+    }),
+  });
 }
 
 /** Read whether the PC is kept on while plugged in; Windows is read again on each mount. */

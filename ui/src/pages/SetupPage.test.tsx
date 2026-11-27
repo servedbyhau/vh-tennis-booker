@@ -222,3 +222,28 @@ describe("SetupPage steps", () => {
     expect(daily.queryByRole("button", { name: "Đặt ngay" })).not.toBeInTheDocument();
   });
 });
+
+describe("SetupPage in the header", () => {
+  it("counts the steps left, and the status line leads to the step a booking lacks", async () => {
+    const { router } = await openPage("/", {
+      setup: reply(report({ machines: [machine(0, { app: "user" }), machine(1)] })),
+      keepOn: false,
+    });
+
+    const link = await screen.findByRole("link", { name: "Thiết lập, còn 2 bước" });
+    expect(link).toHaveTextContent("2");
+    fireEvent.click(await screen.findByRole("link", { name: /^Máy 1 chưa có app Vinhomes/ }));
+
+    await waitFor(() => expect(router.state.location.search).toBe("?step=app"));
+  });
+
+  it("checks no more on each focus outside the Setup page", async () => {
+    const { fetch } = await openPage("/");
+    await waitFor(() => expect(requestsTo(fetch, "GET /api/setup")).toBe(1));
+
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    expect(requestsTo(fetch, "GET /api/setup")).toBe(1);
+  });
+});

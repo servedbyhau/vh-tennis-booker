@@ -25,6 +25,7 @@
     "label": "Pages",
     "booking": "Booking",
     "setup": "Setup",
+    "setupLeft": ", {{count}} steps left",
     "management": "Management"
   },
   "pages": {
@@ -33,6 +34,9 @@
       "status": {
         "scheduleOff": "Auto-book is off · turn it on",
         "wakeBlocked": "Windows does not let the PC wake at {{wake}} · turn Auto-book off and on",
+        "noMumu": "MuMu Player is not installed",
+        "noMachine": "Machine {{machines}}: no MuMu instance",
+        "noApp": "Machine {{machines}}: no Vinhomes app",
         "noAccount": "Machine {{machines}}: no account chosen",
         "clash": "Machine {{machines}}: same {{court}} at {{start}}",
         "ready": "Ready for {{time}} {{when}}"

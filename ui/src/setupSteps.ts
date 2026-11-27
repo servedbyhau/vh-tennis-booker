@@ -70,6 +70,34 @@ export function stepsDone(facts: SetupFacts): Record<StepId, boolean> {
   };
 }
 
+/** What keeps the next booking from a machine, as the status line says it. */
+export type SetupProblem =
+  { kind: "mumu" } | { kind: "machines"; indexes: number[] } | { kind: "app"; indexes: number[] };
+
+/**
+ * Return what keeps a machine the runs book with from booking, worst first: no MuMu Player, a
+ * MuMu instance not made, the Vinhomes app not there (one not known yet is no problem); else
+ * `null`. The other steps have words of their own (the daily switch, the accounts) or keep
+ * nothing from booking (the PC kept on).
+ */
+export function setupProblem(facts: SetupFacts): SetupProblem | null {
+  const report = facts.report;
+  if (report === undefined) {
+    return null;
+  }
+  if (report.mumu === "user") {
+    return { kind: "mumu" };
+  }
+  const missing = missingMachines(facts);
+  if (missing.length > 0) {
+    return { kind: "machines", indexes: missing };
+  }
+  const noApp = present(facts)
+    .filter((item) => item.app === "user")
+    .map((item) => item.mumu_index);
+  return noApp.length > 0 ? { kind: "app", indexes: noApp } : null;
+}
+
 /** Return the first step not done, else the first. */
 export function firstOpen(done: Record<StepId, boolean>): StepId {
   return STEPS.find((step) => !done[step]) ?? STEPS[0];

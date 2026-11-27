@@ -10,6 +10,8 @@ uses [Semantic Versioning](https://semver.org/).
 - A Setup page (`/setup`) takes a new PC through six steps, each checked by the app: the PC kept
   on, MuMu Player, the machines, the Vinhomes app on each, the accounts, then a dry run and
   Auto-book. It opens on the first step not done and counts those done.
+- The header counts the Setup's steps left in red, and the status line says when a machine that
+  books lacks MuMu Player, its MuMu instance or the Vinhomes app, its words leading to that step.
 - A machine without its MuMu instance says in the Setup when the PC lacks the RAM or the disk
   for one, and its "Make it" button waits (`/api/machines/room`).
 - "Book now" beside "Dry run" in the Setup books for real after a question, from the wake time
