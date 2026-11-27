@@ -660,9 +660,11 @@ export interface paths {
          * Start Dry Run
          * @description Start a dry run of the saved settings; it stops before "Xác nhận".
          *
-         *     Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time and
-         *     (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine
-         *     started last is still running (they may not hold the lock yet, or hold another machine's).
+         *     Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time, and
+         *     before the start time or from 21:00, when the app is closed (a dry run would only find it
+         *     so); and (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on
+         *     a machine started last is still running (they may not hold the lock yet, or hold another
+         *     machine's).
          *     The dry run checks again itself.
          */
         post: operations["start_dry_run_api_runs_dry_run_post"];

@@ -384,7 +384,7 @@ values 422 `invalid_request`.
 | `GET`/`PUT /api/keep-on` | Whether the PC is kept on while plugged in (`keep_on.py`), and whether it has Modern Standby; `PUT` switches it, 503 `power` when `powercfg` fails |
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
 | `GET`/`PUT /api/schedule` | The task: state, times, whether a dry run ever passed; switching on needs none and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
-| `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
+| `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time, before the start time and from 21:00 when the app is closed, or while a run holds the lock) |
 | `POST /api/runs/now` | Books for real in its own process, as by hand (`manual`): with `--at` the start time before it, at once from it; refused before the wake time and from 21:00 (`lock.check_booking_hours`), and as a dry run while something runs |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `PUT /api/tickets/{code}/sent` | Mark the ticket sent to its customer now (`sent_at`, schema 7), or not; a later run reading it again keeps the mark |

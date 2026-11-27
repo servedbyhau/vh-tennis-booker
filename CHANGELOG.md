@@ -36,6 +36,8 @@ uses [Semantic Versioning](https://semver.org/).
   (schema 11), and its old address leads to the management.
 
 ### Changed
+- "Dry run" waits outside 06:05-21:00, when the app takes no booking, and says so in its
+  tooltip, instead of starting a run that could only find the app closed.
 - A morning start the PC missed runs as soon as the PC is on, still booking before the start
   time; the installed app installs the daily task again when it opens, so this applies without
   switching Auto-book off and on.

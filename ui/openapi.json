@@ -2008,7 +2008,7 @@
           "runs"
         ],
         "summary": "Start Dry Run",
-        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time and\n(409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine\nstarted last is still running (they may not hold the lock yet, or hold another machine's).\nThe dry run checks again itself.",
+        "description": "Start a dry run of the saved settings; it stops before \"Xác nhận\".\n\nRefused (400 ``bad_request``) from the wake time to 5 minutes after the start time, and\nbefore the start time or from 21:00, when the app is closed (a dry run would only find it\nso); and (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on\na machine started last is still running (they may not hold the lock yet, or hold another\nmachine's).\nThe dry run checks again itself.",
         "operationId": "start_dry_run_api_runs_dry_run_post",
         "responses": {
           "202": {

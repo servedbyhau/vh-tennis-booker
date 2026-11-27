@@ -6,9 +6,10 @@ import type { RunSummary, ScheduleState } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Icon } from "../../components/Icon";
 import { localToday } from "../../format";
-import { quietEnd } from "../../quiet";
+import { BOOKING_CLOSES, inBookingHours, quietEnd } from "../../quiet";
 import { failureReason } from "../../reasons";
 import { useFormat } from "../../useFormat";
+import { useNow } from "../../useNow";
 import { BookNow } from "./BookNow";
 import styles from "./DryRun.module.css";
 
@@ -42,12 +43,15 @@ function LastDryRun({ run }: { run: RunSummary | undefined }) {
 
 /**
  * A dry run and how the last one went, and a booking now beside it. The dry run walks the whole
- * booking and stops before "Xác nhận"; the backend refuses one in the quiet time, which the
- * tooltip tells, and none starts while another run holds the emulator.
+ * booking and stops before "Xác nhận". It may start from 5 minutes after the start time (the
+ * scheduled run keeps the emulator until then) until the app closes, which the tooltip tells
+ * when it may not, and none starts while another run holds the emulator.
  */
 export function DryRun({ schedule, running }: { schedule: ScheduleState; running: boolean }) {
   const { t } = useTranslation();
   const dryRun = useStartDryRun();
+  const from = quietEnd(schedule.start_at);
+  const open = inBookingHours(useNow(), from);
   const last = useRuns({ dry_run: true, limit: 1 });
   let line = last.data !== undefined && <LastDryRun run={last.data[0]} />;
   if (running) {
@@ -65,11 +69,8 @@ export function DryRun({ schedule, running }: { schedule: ScheduleState; running
       <div className={styles.buttons}>
         <Button
           className={styles.button}
-          title={t("pages.setup.dryRun.quiet", {
-            from: schedule.wake_at,
-            to: quietEnd(schedule.start_at),
-          })}
-          disabled={running || dryRun.isPending}
+          title={open ? undefined : t("pages.setup.dryRun.hours", { from, to: BOOKING_CLOSES })}
+          disabled={running || dryRun.isPending || !open}
           onClick={() => dryRun.mutate()}
         >
           <Icon name="play" />

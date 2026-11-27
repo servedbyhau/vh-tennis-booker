@@ -59,14 +59,17 @@ class DryRunStarted(BaseModel):
 def start_dry_run(context: Context, request: Request) -> DryRunStarted:
     """Start a dry run of the saved settings; it stops before "Xác nhận".
 
-    Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time and
-    (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on a machine
-    started last is still running (they may not hold the lock yet, or hold another machine's).
+    Refused (400 ``bad_request``) from the wake time to 5 minutes after the start time, and
+    before the start time or from 21:00, when the app is closed (a dry run would only find it
+    so); and (409 ``lock_held``) while a run holds the lock, or while the dry run or a task on
+    a machine started last is still running (they may not hold the lock yet, or hold another
+    machine's).
     The dry run checks again itself.
     """
     config = context.config()
     now = datetime.now()
     check_quiet_time(now, config.wake_at, config.start_at, "dry run")
+    check_booking_hours(now, config.start_at, "dry run")
     return start(context, request, "dry_run", ["--dry-run"], now)
 
 

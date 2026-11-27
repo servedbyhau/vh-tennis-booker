@@ -180,3 +180,14 @@ def test_a_booking_now_shows_as_a_run_by_hand_and_blocks_a_dry_run(app, client, 
     assert shown is not None and shown.trigger == "manual"
     assert dry_run.status_code == 409
     assert dry_run.json()["detail"].endswith("booking (pid 4321)")
+
+
+@pytest.mark.parametrize("moment", [datetime(2026, 10, 14, 3, 0), datetime(2026, 10, 14, 21, 0)])
+def test_no_dry_run_while_the_app_is_closed(client, launched, monkeypatch, moment):
+    monkeypatch.setattr(At, "moment", moment)
+
+    response = client.post("/api/runs/dry-run")
+
+    assert response.status_code == 400
+    assert "the app is closed" in response.json()["detail"]
+    assert launched == []

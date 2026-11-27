@@ -150,8 +150,8 @@ Then:
    order you want them.
 5. In the **Setup** beside it, turn **Auto-book** on. Every morning the PC wakes at the wake
    time and books at 06:00; the window does not need to be open.
-6. To check the setup first, press **Dry run** between 06:00 and 21:00, while the Vinhomes app
-   takes bookings (optional). It walks the whole booking and stops before the final
+6. To check the setup first, press **Dry run** between 06:05 and 21:00, while the Vinhomes app
+   takes bookings (optional; the button waits outside those hours). It walks the whole booking and stops before the final
    confirmation, so nothing is booked.
 
 If the PC did not wake one morning, the daily task runs as soon as the PC is on: before 06:00 it
