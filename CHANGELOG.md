@@ -49,6 +49,8 @@ uses [Semantic Versioning](https://semver.org/).
 - The panel beside the ticket is "Settings" ("Cài đặt"), with what is used day to day; keeping
   the PC on, installing the app and making a machine moved to the Setup page, where switching
   on a machine without its MuMu instance leads.
+- The header lists Setup first, then Booking and Management. The button that opens a machine's
+  MuMu, now a power button, moved from Settings to each machine in the Setup.
 - `GET /api/setup` tells each MuMu instance apart (screen, cores and RAM, the Vinhomes app), the
   app as last seen while the instance is off, and waits around the scheduled run and while a run
   or a task uses MuMu.

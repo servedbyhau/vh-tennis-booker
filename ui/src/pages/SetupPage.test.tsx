@@ -145,6 +145,32 @@ describe("SetupPage steps", () => {
     expect(machines.getByRole("button", { name: "Tạo máy ảo" })).toBeEnabled();
   });
 
+  it("opens each machine, and says why one did not", async () => {
+    const { fetch } = await openPage("/setup?step=machines", {
+      extra: {
+        "POST /api/machines/0/open": { status: 204, body: null },
+        "POST /api/machines/1/open": reply({ error: "lock_held", detail: "busy" }, 409),
+      },
+    });
+    const machines = await stepNamed("Máy ảo");
+
+    fireEvent.click(machines.getByRole("button", { name: "Mở MuMu 0 để xem màn hình" }));
+    await waitFor(() => expect(requestsTo(fetch, "POST /api/machines/0/open")).toBe(1));
+    fireEvent.click(machines.getByRole("button", { name: "Mở MuMu 1 để xem màn hình" }));
+
+    expect(await machines.findByText(BUSY)).toBeVisible();
+  });
+
+  it("opens no machine while a run uses them", async () => {
+    const running = { trigger: "scheduled", pid: 1, since: "2026-10-15T05:45:00", runs: [] };
+    await openPage("/setup?step=machines", {
+      extra: { "GET /api/status": reply({ ...overview(), running }) },
+    });
+    const machines = await stepNamed("Máy ảo");
+
+    expect(machines.getByRole("button", { name: "Mở MuMu 0 để xem màn hình" })).toBeDisabled();
+  });
+
   it("makes the MuMu instance of a machine that has none, after a question", async () => {
     const TASK = { code: null, machine: 0, started_at: "2026-10-15T10:00:00" };
     const { fetch } = await openPage("/setup?step=machines", {

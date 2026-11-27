@@ -34,9 +34,6 @@ export function SiteHeader() {
         )}
       </span>
       <nav aria-label={t("nav.label")} className={styles.nav}>
-        <NavLink to={paths.overview} end className={styles.link}>
-          {t("nav.booking")}
-        </NavLink>
         <NavLink to={paths.setup} className={styles.link}>
           {t("nav.setup")}
           {left > 0 && (
@@ -47,6 +44,9 @@ export function SiteHeader() {
               <span className="visually-hidden">{t("nav.setupLeft", { count: left })}</span>
             </>
           )}
+        </NavLink>
+        <NavLink to={paths.overview} end className={styles.link}>
+          {t("nav.booking")}
         </NavLink>
         <NavLink to={paths.management} className={styles.link}>
           {t("nav.management")}

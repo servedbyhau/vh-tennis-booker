@@ -1,6 +1,5 @@
 import {
   AlarmClock,
-  AppWindow,
   ArrowRight,
   Bell,
   CalendarX,
@@ -27,6 +26,7 @@ import {
   Play,
   Plug,
   Plus,
+  Power,
   StickyNote,
   Trash2,
   Upload,
@@ -82,8 +82,8 @@ const DRAWINGS = {
   cancel: CalendarX,
   /** Read again in the app. */
   refresh: RotateCw,
-  /** A machine's MuMu window. */
-  window: AppWindow,
+  /** Start a machine's MuMu, or bring its window to the front. */
+  start: Power,
   /** Agree, keep what was typed. */
   check: Check,
   /** Close what is open, give it up. */

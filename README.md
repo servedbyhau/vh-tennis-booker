@@ -176,8 +176,8 @@ remove them too.
 
 ## Using the app
 
-The app has three pages, **Đặt sân / Booking**, **Thiết lập / Setup** and **Quản lý /
-Management**. On the first:
+The app has three pages, **Thiết lập / Setup**, **Đặt sân / Booking** and **Quản lý /
+Management**. On the booking page:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first:
   the daily switch, what the Setup page lacks for a machine that books (MuMu Player, its MuMu
@@ -193,9 +193,7 @@ Management**. On the first:
   or removes the Windows task; a dry run is not needed first), the Windows notification,
   whether the machine shown books (switching on one whose MuMu instance is not on the PC yet
   leads to the Setup page, where it is made), the account it books with (its phone number and
-  name), picked by customer first, then by phone number, a button that opens the machine's
-  MuMu to see its screen (launched, or its window brought to the front), a dry run and **Book
-  now**. Before booking, a run reads the phone number logged in on the machine's Vinhomes app,
+  name), picked by customer first, then by phone number, a dry run and **Book now**. Before booking, a run reads the phone number logged in on the machine's Vinhomes app,
   and logs out and in if it is not the chosen account's, trying the password once; a machine
   that cannot be sure books nothing.
 - **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at
@@ -210,7 +208,8 @@ opens on the first step not done:
    screen off after 5 minutes; off gives back the PC's own power settings.
 2. **MuMu Player**: installed, or where to get it.
 3. **Machines**: each MuMu instance (the app gives each 2 cores, 2 GB and a 540x1600 screen
-   when it runs); one not made yet has a button that makes it, a copy of the first machine's
+   when it runs), with a button that opens it to see its screen (launched, or its window
+   brought to the front); one not made yet has a button that makes it, a copy of the first machine's
    with the Vinhomes app, set up to book (about two minutes), or says the PC lacks the RAM or
    the disk for it.
 4. **Vinhomes app**: a button that installs it from a file (an APK or XAPK you downloaded:
@@ -220,7 +219,7 @@ opens on the first step not done:
 5. **Accounts**: the machines that book without an account chosen.
 6. **Dry run and Auto-book**: the daily switch and a dry run.
 
-On the third:
+On the **Management** page:
 
 - **Tổng quan / Overview**, shown first: what to look at, only while there is something (the
   daily booking off, a machine without an account, two machines on one court and slot, an

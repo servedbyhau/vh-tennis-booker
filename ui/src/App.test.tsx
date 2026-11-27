@@ -48,7 +48,7 @@ describe("App", () => {
       within(pages)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Đặt sân", "Thiết lập", "Quản lý"]);
+    ).toEqual(["Thiết lập", "Đặt sân", "Quản lý"]);
   });
 
   it("starts with a link that skips to the main area", () => {
