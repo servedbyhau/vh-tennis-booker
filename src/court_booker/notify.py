@@ -1,4 +1,4 @@
-"""Report the outcome of a run: a Windows notification, and a Telegram summary if set up."""
+"""Report the outcome of a run: a Windows notification."""
 
 from __future__ import annotations
 
@@ -7,8 +7,6 @@ import logging
 import re
 import subprocess
 import sys
-import urllib.parse
-import urllib.request
 from collections.abc import Sequence
 from datetime import date
 from typing import Callable
@@ -22,11 +20,8 @@ from court_booker.runner import RoundResult
 
 logger = logging.getLogger(__name__)
 
-Post = Callable[[str, bytes], None]
 Run = Callable[..., "subprocess.CompletedProcess[bytes]"]
 
-_API_URL = "https://api.telegram.org/bot{token}/sendMessage"
-_TIMEOUT = 10.0
 
 APP_ID = "CourtBooker"
 """AppUserModelID the notifications come from; Windows shows its ``DisplayName``."""
@@ -161,45 +156,6 @@ _PATTERNS = [
 """The engine's reasons as it writes them, as in ``ui/src/reasons.ts``."""
 
 _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-
-
-def format_summary(
-    results: Sequence[RoundResult],
-    error: str | None = None,
-    dry_run: bool = False,
-    instance: int | None = None,
-) -> str:
-    """Return a short plain-text summary of the run; ``instance`` names its MuMu instance."""
-    booked = sum(result.ok for result in results)
-    name = "court-booker" if instance is None else f"court-booker (MuMu {instance})"
-    title = f"{name}: {booked}/{len(results)} ok"
-    if dry_run:
-        title += " (dry run)"
-    lines = [title]
-    for result in results:
-        lines.append(f"{'OK' if result.ok else 'FAIL'} {result.slot}: {result.detail}")
-    if error:
-        lines.append(f"Error: {error}")
-    return "\n".join(lines)
-
-
-def http_post(url: str, data: bytes) -> None:
-    """POST form data to ``url``."""
-    with urllib.request.urlopen(url, data=data, timeout=_TIMEOUT) as response:
-        response.read()
-
-
-def send_telegram(token: str, chat_id: str, text: str, post: Post = http_post) -> bool:
-    """Send ``text`` to ``chat_id``; log and return ``False`` on failure, never raise."""
-    data = urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode()
-    try:
-        post(_API_URL.format(token=token), data)
-    except (OSError, ValueError) as exc:  # URLError and HTTPError are OSErrors
-        # The URL holds the bot token, so only the error itself is logged.
-        logger.warning("Telegram message not sent: %s", exc)
-        return False
-    logger.info("Telegram summary sent")
-    return True
 
 
 def court_name(court: str) -> str:

@@ -194,6 +194,19 @@ def test_the_old_play_day_key_is_dropped(tmp_path):
     assert "days_ahead" not in config_to_dict(config)
 
 
+def test_the_old_telegram_keys_are_dropped(tmp_path):
+    # Every save until 1.2.0 wrote them out, empty unless set up by hand.
+    path = tmp_path / "config.toml"
+    path.write_text(
+        'telegram_token = ""\ntelegram_chat_id = ""\nwake_at = "05:50"\n', encoding="utf-8"
+    )
+
+    config = load_config(path)
+
+    assert config == Config(wake_at="05:50")
+    assert "telegram_token" not in config_to_dict(config)
+
+
 @pytest.mark.parametrize(
     ("text", "error"),
     [

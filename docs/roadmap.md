@@ -62,13 +62,12 @@ done), open a machine's MuMu (its button in the Setup, done). Adding or deleting
 | Device | ADB or the driver lost | While getting ready: connected or started again (`ready.py`); during the rounds: not handled |
 | Device | Wrong MuMu resolution | Set by the run while MuMu is off; a running MuMu is logged (WARNING) and scrolls |
 | Device | PC woke late, clock drift | Runs at once if under 10 min late; NTP time on a counter Windows does not set |
-| Reporting | Every failure reported | Log file, history database, a Windows notification after every run; Telegram optional. A real run that stopped on a failure the app did not explain also saves the screen (`logs\screens`) |
+| Reporting | Every failure reported | Log file, history database, a Windows notification after every run. A real run that stopped on a failure the app did not explain also saves the screen (`logs\screens`) |
 
 ## Ruled out
 
 - Opening the calendar before 06:00, two slots in one booking, pre-recorded coordinates.
 - Fallback slots and courts (other users book within seconds).
-- Setting up Telegram (the optional code stays).
 - An on-device accessibility agent: the app refuses to book while one is enabled.
 - Counting the month's bookings in the app's history before the run: the user tracks the quota.
 - MuMu tuning for speed (resolution, CPU and memory, frame rate, renderer) and tapping by the
