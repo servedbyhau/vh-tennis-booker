@@ -6,11 +6,14 @@ to 540x1600 at 220 DPI (:func:`prepare_screen`), and switching the schedule on a
 timers (:func:`ensure_wake_timers`). ``court-booker setup`` checks every item, and
 ``--auto`` fixes them by hand (also saving the MuMu path). Whether the app is logged in shows
 in the dry run (exit code 4), which the schedule requires anyway, so it is not checked here.
+The Setup page checks each instance apart (:func:`check_machine`); the app can be read only
+while the instance runs, so it is otherwise as last seen (``apps-seen.json``).
 """
 
 from __future__ import annotations
 
 import itertools
+import json
 import logging
 import re
 import subprocess
@@ -243,6 +246,48 @@ def check_app(mumu: MuMu | None, adb: Adb | None, package: str) -> Check:
     if "package:" in output:
         return Check(APP_INSTALLED, Status.OK, f"{package} installed")
     return Check(APP_INSTALLED, Status.USER, f"{package} is not installed in MuMu")
+
+
+def read_apps_seen(path: Path) -> dict[int, bool]:
+    """Return whether the checks last saw the app on each MuMu instance, by its index."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return {int(index): bool(installed) for index, installed in data.items()}
+    except (OSError, ValueError, AttributeError):  # none yet, or not readable
+        return {}
+
+
+def save_app_seen(path: Path, index: int, installed: bool) -> None:
+    """Remember whether instance ``index`` has the app; a failed write is only logged."""
+    seen = read_apps_seen(path)
+    seen[index] = installed
+    try:
+        path.write_text(json.dumps({str(i): seen[i] for i in sorted(seen)}), encoding="utf-8")
+    except OSError:
+        logger.warning("Could not save whether MuMu %d has the app", index, exc_info=True)
+
+
+@dataclass(frozen=True)
+class MachineChecks:
+    """The setup items of one MuMu instance."""
+
+    index: int
+    screen: Status
+    performance: Status
+    app: Status
+
+
+def check_machine(mumu: MuMu, adb: Adb | None, package: str, seen: Path) -> MachineChecks:
+    """Check one instance. Its app can be read only while it runs: otherwise the app is as last
+    seen (``seen``, also written by the app install), so a machine that is off still tells."""
+    app = check_app(mumu, adb, package).status
+    if app is Status.UNKNOWN:
+        last = read_apps_seen(seen).get(mumu.index)
+        if last is not None:
+            app = Status.OK if last else Status.USER
+    else:
+        save_app_seen(seen, mumu.index, app is Status.OK)
+    return MachineChecks(mumu.index, check_screen(mumu).status, check_performance(mumu).status, app)
 
 
 @dataclass(frozen=True)

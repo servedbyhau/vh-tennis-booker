@@ -26,6 +26,7 @@ from datetime import datetime
 from pathlib import Path
 
 from court_booker.adb import Adb
+from court_booker.device_setup import save_app_seen
 from court_booker.emulator import CALL_ATTEMPTS, MuMu, instance_indexes
 from court_booker.errors import CourtBookerError, RequestError
 
@@ -193,13 +194,18 @@ def install_everywhere(
     boot_timeout: float,
     indexes: Callable[[Path], list[int]] = instance_indexes,
     make: Callable[[Path, int], MuMu] | None = None,
+    seen: Path | None = None,
 ) -> list[Installed]:
-    """Install ``apks`` on every MuMu instance on the PC, one after the other."""
+    """Install ``apks`` on every MuMu instance on the PC, one after the other; each that got
+    it is noted in ``seen``, so the Setup shows the app there while the machine is off."""
     results = []
     for index in indexes(manager):
         mumu = make(manager, index) if make else MuMu(manager, index, attempts=CALL_ATTEMPTS)
         try:
-            results.append(install_on(mumu, adb, apks, boot_timeout))
+            result = install_on(mumu, adb, apks, boot_timeout)
+            if result.ok and seen is not None:
+                save_app_seen(seen, index, True)
+            results.append(result)
         except CourtBookerError as exc:  # the next instance still gets it
             logger.error("MuMu %d: %s", index, exc)
             results.append(Installed(index, False, str(exc)))
@@ -245,7 +251,9 @@ def main(argv: list[str]) -> int:
         lock = RunLock(data_folder().lock)
         lock.acquire("install_app")
         adb.ensure_server()
-        results = install_everywhere(manager, adb, apks, config.boot_timeout)
+        results = install_everywhere(
+            manager, adb, apks, config.boot_timeout, seen=data_folder().apps_seen
+        )
         if not results:
             logger.error("MuMu lists no instance")
             return cli.EXIT_DEVICE

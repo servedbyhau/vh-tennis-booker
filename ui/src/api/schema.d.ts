@@ -577,7 +577,10 @@ export interface paths {
         };
         /**
          * Check Setup
-         * @description Check every setup item; nothing is changed.
+         * @description Check the PC and every MuMu instance on it; nothing is changed.
+         *
+         *     The checks ask MuMu, so they are refused (409 ``lock_held``) around the scheduled run and
+         *     while a run or a task uses MuMu.
          */
         get: operations["check_setup_api_setup_get"];
         put?: never;
@@ -1157,6 +1160,17 @@ export interface components {
             message: string;
         };
         /**
+         * MachineSetup
+         * @description The setup items of one MuMu instance on the PC; each status is a message key.
+         */
+        MachineSetup: {
+            /** Mumu Index */
+            mumu_index: number;
+            screen: components["schemas"]["Status"];
+            performance: components["schemas"]["Status"];
+            app: components["schemas"]["Status"];
+        };
+        /**
          * MonthSummary
          * @description One month with real bookings: how many runs, how many slots they booked.
          */
@@ -1457,15 +1471,14 @@ export interface components {
             labels: components["schemas"]["LabelSettings"];
         };
         /**
-         * SetupItem
-         * @description One setup item; ``item`` and ``status`` are message keys of the UI.
+         * SetupReport
+         * @description What the PC has of what the booking needs.
          */
-        SetupItem: {
-            /** Item */
-            item: string;
-            status: components["schemas"]["Status"];
-            /** Detail */
-            detail: string;
+        SetupReport: {
+            mumu: components["schemas"]["Status"];
+            wake_timers: components["schemas"]["Status"];
+            /** Machines */
+            machines: components["schemas"]["MachineSetup"][];
         };
         /**
          * SlotResult
@@ -2860,7 +2873,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SetupItem"][];
+                    "application/json": components["schemas"]["SetupReport"];
                 };
             };
             /** @description Invalid request values, one line per value */

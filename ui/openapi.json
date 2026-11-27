@@ -1778,7 +1778,7 @@
           "setup"
         ],
         "summary": "Check Setup",
-        "description": "Check every setup item; nothing is changed.",
+        "description": "Check the PC and every MuMu instance on it; nothing is changed.\n\nThe checks ask MuMu, so they are refused (409 ``lock_held``) around the scheduled run and\nwhile a run or a task uses MuMu.",
         "operationId": "check_setup_api_setup_get",
         "responses": {
           "200": {
@@ -1786,11 +1786,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/SetupItem"
-                  },
-                  "type": "array",
-                  "title": "Response Check Setup Api Setup Get"
+                  "$ref": "#/components/schemas/SetupReport"
                 }
               }
             }
@@ -3188,6 +3184,32 @@
         "title": "LogLine",
         "description": "One technical log line."
       },
+      "MachineSetup": {
+        "properties": {
+          "mumu_index": {
+            "type": "integer",
+            "title": "Mumu Index"
+          },
+          "screen": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "performance": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "app": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mumu_index",
+          "screen",
+          "performance",
+          "app"
+        ],
+        "title": "MachineSetup",
+        "description": "The setup items of one MuMu instance on the PC; each status is a message key."
+      },
       "MonthSummary": {
         "properties": {
           "month": {
@@ -3995,28 +4017,30 @@
         "title": "Settings",
         "description": "Every booking setting; the UI changes the slots, subdivision, sport and court, and sends\nthe rest back."
       },
-      "SetupItem": {
+      "SetupReport": {
         "properties": {
-          "item": {
-            "type": "string",
-            "title": "Item"
-          },
-          "status": {
+          "mumu": {
             "$ref": "#/components/schemas/Status"
           },
-          "detail": {
-            "type": "string",
-            "title": "Detail"
+          "wake_timers": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "machines": {
+            "items": {
+              "$ref": "#/components/schemas/MachineSetup"
+            },
+            "type": "array",
+            "title": "Machines"
           }
         },
         "type": "object",
         "required": [
-          "item",
-          "status",
-          "detail"
+          "mumu",
+          "wake_timers",
+          "machines"
         ],
-        "title": "SetupItem",
-        "description": "One setup item; ``item`` and ``status`` are message keys of the UI."
+        "title": "SetupReport",
+        "description": "What the PC has of what the booking needs."
       },
       "SlotResult": {
         "properties": {

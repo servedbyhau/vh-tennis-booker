@@ -49,7 +49,8 @@ export type NewAccount = Schemas["NewAccount"];
 export type AccountChange = Schemas["AccountChange"];
 export type AccountLogin = Schemas["AccountLogin"];
 
-export type SetupItem = Schemas["SetupItem"];
+export type SetupReport = Schemas["SetupReport"];
+export type MachineSetup = Schemas["MachineSetup"];
 /** The state of one device setup item (the backend's `Status` enum). */
 export type SetupStatus = Schemas["Status"];
 
