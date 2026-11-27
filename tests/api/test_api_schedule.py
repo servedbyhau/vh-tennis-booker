@@ -46,17 +46,7 @@ def test_the_schedule_shows_the_next_booking(client, task):
         "start_at": "06:00",
         "next_start": "2026-10-14T06:00",
         "next_play_date": "2026-10-16",
-        "dry_run_passed": False,
     }
-
-
-def test_the_schedule_knows_a_passed_dry_run(client, context, task, record_run):
-    record_run(context.data.database, trigger="dry_run", status="ok")
-    task["installed"] = True
-
-    state = client.get("/api/schedule").json()
-
-    assert (state["enabled"], state["dry_run_passed"]) == (True, True)
 
 
 def test_task_scheduler_errors_are_answered(client, monkeypatch, task):
@@ -82,7 +72,7 @@ def test_the_schedule_switches_on_without_a_dry_run(client, task, wake_timers):
     response = client.put("/api/schedule", json={"enabled": True})
 
     assert response.status_code == 200
-    assert (response.json()["enabled"], response.json()["dry_run_passed"]) == (True, False)
+    assert response.json()["enabled"] is True
 
 
 def test_switching_on_installs_the_task_and_records_it(

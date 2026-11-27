@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from court_booker import device_setup, history_read, schedule
+from court_booker import device_setup, schedule
 from court_booker.api.activity import record
 from court_booker.api.context import AppContext, Context
 from court_booker.clock import parse_time
@@ -28,26 +28,18 @@ class ScheduleState(BaseModel):
     """When the next booking starts, ``YYYY-MM-DDTHH:MM``."""
     next_play_date: str
     """The day that booking is for."""
-    dry_run_passed: bool
-    """The schedule may be switched on only once a dry run has passed."""
 
 
 def schedule_state(context: AppContext) -> ScheduleState:
     """Return the schedule as the app shows it."""
     config = context.config()
     start = schedule.next_start(datetime.now(), config.start_at)
-    connection = history_read.open_read_only(context.data.database)
-    try:
-        passed = history_read.dry_run_passed(connection)
-    finally:
-        connection.close()
     return ScheduleState(
         enabled=schedule.installed(),
         wake_at=config.wake_at,
         start_at=config.start_at,
         next_start=start.isoformat(timespec="minutes"),
         next_play_date=(start.date() + timedelta(days=DAYS_AHEAD)).isoformat(),
-        dry_run_passed=passed,
     )
 
 
@@ -68,7 +60,7 @@ def switch_schedule(context: Context, switch: ScheduleSwitch) -> ScheduleState:
     """Switch the daily booking on or off.
 
     Switching on needs a wake time before the start time (400 ``bad_request``); a dry run
-    is not required (``dry_run_passed`` only tells whether one passed). It installs the task
+    is not required. It installs the task
     again each time, so a new wake time applies, and allows wake timers; ``wake_blocked`` in
     the Overview tells when Windows still keeps them off. The task runs the engine of this
     backend; in development, the runner folder keeps its task through ``tools/setup_runner.py``

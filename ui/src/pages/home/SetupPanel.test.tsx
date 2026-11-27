@@ -154,7 +154,7 @@ describe("SetupPanel switches", () => {
 
   it("lets the daily booking be switched on before any dry run", async () => {
     const { panel } = await openSetup({
-      status: schedule({ enabled: false, dry_run_passed: false }),
+      status: schedule({ enabled: false }),
     });
     expect(panel.getByRole("switch", { name: "Tự đặt" })).toBeEnabled();
     expect(panel.getByText("06:00 mỗi sáng, máy thức 05:50")).toBeVisible();

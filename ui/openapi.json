@@ -1956,7 +1956,7 @@
           "schedule"
         ],
         "summary": "Switch Schedule",
-        "description": "Switch the daily booking on or off.\n\nSwitching on needs a wake time before the start time (400 ``bad_request``); a dry run\nis not required (``dry_run_passed`` only tells whether one passed). It installs the task\nagain each time, so a new wake time applies, and allows wake timers; ``wake_blocked`` in\nthe Overview tells when Windows still keeps them off. The task runs the engine of this\nbackend; in development, the runner folder keeps its task through ``tools/setup_runner.py``\ninstead.",
+        "description": "Switch the daily booking on or off.\n\nSwitching on needs a wake time before the start time (400 ``bad_request``); a dry run\nis not required. It installs the task\nagain each time, so a new wake time applies, and allows wake timers; ``wake_blocked`` in\nthe Overview tells when Windows still keeps them off. The task runs the engine of this\nbackend; in development, the runner folder keeps its task through ``tools/setup_runner.py``\ninstead.",
         "operationId": "switch_schedule_api_schedule_put",
         "requestBody": {
           "content": {
@@ -3791,10 +3791,6 @@
           "next_play_date": {
             "type": "string",
             "title": "Next Play Date"
-          },
-          "dry_run_passed": {
-            "type": "boolean",
-            "title": "Dry Run Passed"
           }
         },
         "type": "object",
@@ -3803,8 +3799,7 @@
           "wake_at",
           "start_at",
           "next_start",
-          "next_play_date",
-          "dry_run_passed"
+          "next_play_date"
         ],
         "title": "ScheduleState",
         "description": "The schedule and the next booking it makes."

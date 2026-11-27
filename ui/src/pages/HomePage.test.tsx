@@ -55,7 +55,7 @@ describe("HomePage status line", () => {
     const status = overview();
     renderOverview({
       ...status,
-      schedule: { ...status.schedule, enabled: true, dry_run_passed: false },
+      schedule: { ...status.schedule, enabled: true },
     });
 
     expect(await statusLine()).not.toHaveTextContent(/chạy thử/i);

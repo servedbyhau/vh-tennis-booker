@@ -633,7 +633,7 @@ export interface paths {
          * @description Switch the daily booking on or off.
          *
          *     Switching on needs a wake time before the start time (400 ``bad_request``); a dry run
-         *     is not required (``dry_run_passed`` only tells whether one passed). It installs the task
+         *     is not required. It installs the task
          *     again each time, so a new wake time applies, and allows wake timers; ``wake_blocked`` in
          *     the Overview tells when Windows still keeps them off. The task runs the engine of this
          *     backend; in development, the runner folder keeps its task through ``tools/setup_runner.py``
@@ -1374,8 +1374,6 @@ export interface components {
             next_start: string;
             /** Next Play Date */
             next_play_date: string;
-            /** Dry Run Passed */
-            dry_run_passed: boolean;
         };
         /**
          * ScheduleSwitch
