@@ -359,6 +359,10 @@
       },
       "machine": {
         "missing": "Chưa có máy ảo MuMu",
+        "noRoom": {
+          "ram": "Máy tính không đủ RAM cho máy ảo này: mỗi máy ảo cần 2 GB, Windows giữ 4 GB",
+          "disk": "Ổ đĩa không đủ chỗ cho máy ảo này: cần khoảng 9 GB trống"
+        },
         "create": "Tạo máy ảo",
         "ask": "Nhân bản máy ảo của Máy 1, có sẵn app Vinhomes, khoảng 2 phút. Máy ảo của Máy 1 tạm tắt trong lúc chép.",
         "yes": "Tạo",

@@ -359,6 +359,10 @@
       },
       "machine": {
         "missing": "No MuMu instance yet",
+        "noRoom": {
+          "ram": "This PC lacks the RAM for this machine: 2 GB a MuMu instance, 4 GB for Windows",
+          "disk": "The disk lacks room for this machine: about 9 GB free are needed"
+        },
         "create": "Make it",
         "ask": "A copy of Machine 1's MuMu instance, with the Vinhomes app, in about 2 minutes. Machine 1's instance is shut while it is copied.",
         "yes": "Make",

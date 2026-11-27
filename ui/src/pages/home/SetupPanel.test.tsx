@@ -320,6 +320,15 @@ describe("SetupPanel new machine", () => {
     });
   });
 
+  it("says the PC lacks the RAM for it, and does not offer it", async () => {
+    const { panel } = await secondMachine({
+      "GET /api/machines/room": reply({ room: false, reason: "ram" }),
+    });
+
+    expect(await panel.findByText(/^Máy tính không đủ RAM cho máy ảo này/)).toBeVisible();
+    expect(panel.getByRole("button", { name: "Tạo máy ảo" })).toBeDisabled();
+  });
+
   it("says why it was not made", async () => {
     const { panel } = await secondMachine({
       "POST /api/machines/new": reply({ error: "no_room", detail: "8 GB" }, 409),

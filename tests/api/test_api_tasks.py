@@ -232,3 +232,18 @@ def test_an_empty_app_file_is_refused(client, launched):
 
     assert (answer.status_code, answer.json()["error"]) == (400, "bad_request")
     assert launched == []
+
+
+def test_the_room_for_a_new_machine_is_told(client, room):
+    assert client.get("/api/machines/room").json() == {"room": True, "reason": None}
+
+
+def test_a_pc_without_room_says_why(client, room, monkeypatch):
+    from court_booker.new_machine import NoRoomError
+
+    def full(manager, source):
+        raise NoRoomError("needs 40 GB of disk", reason="disk")
+
+    monkeypatch.setattr(tasks, "check_room", full)
+
+    assert client.get("/api/machines/room").json() == {"room": False, "reason": "disk"}

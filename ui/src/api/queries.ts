@@ -11,6 +11,7 @@ import {
   getMumuInstances,
   getNewMachineTask,
   getQuotaTask,
+  getRoom,
   getOverview,
   getRun,
   getNotifications,
@@ -41,6 +42,7 @@ export const queryKeys = {
   cancel: ["cancel"] as const,
   quotaTask: ["quotaTask"] as const,
   newMachineTask: ["newMachineTask"] as const,
+  room: ["room"] as const,
   appInstallTask: ["appInstallTask"] as const,
   customers: ["customers"] as const,
   accountLogin: (id: string) => ["accountLogin", id] as const,
@@ -82,6 +84,11 @@ export function useCancelState() {
     queryFn: getCancel,
     refetchInterval: (query) => (query.state.data?.running === true ? CANCEL_POLL_MS : false),
   });
+}
+
+/** Read whether this PC has room for one more MuMu instance. */
+export function useRoom(enabled: boolean) {
+  return useQuery({ queryKey: queryKeys.room, queryFn: getRoom, enabled });
 }
 
 /** Read the app install started last from the app, every 2 s while it goes on. */

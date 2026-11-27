@@ -2235,6 +2235,48 @@
         }
       }
     },
+    "/api/machines/room": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Read Room",
+        "description": "Tell whether a new machine's MuMu instance would fit, as making one checks first\n(2 GB of RAM an instance besides 4 GB for Windows, the disk of a copy); room is assumed\nwhere MuMu cannot be asked, as making one would tell then.",
+        "operationId": "read_room_api_machines_room_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Room"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/machines/new": {
       "get": {
         "tags": [
@@ -3365,6 +3407,31 @@
         ],
         "title": "QuotaReading",
         "description": "What an account used of a utility's quota in a month, as a run last read it."
+      },
+      "Room": {
+        "properties": {
+          "room": {
+            "type": "boolean",
+            "title": "Room"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "room"
+        ],
+        "title": "Room",
+        "description": "Whether this PC has the RAM and the disk for one more MuMu instance."
       },
       "RunDetail": {
         "properties": {

@@ -194,7 +194,7 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
   number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
   window brought to the front), a dry run and **Book now**. A machine whose MuMu instance is not on the PC
   yet has a button that makes it, a copy of the first machine's with the Vinhomes app, set up to
-  book (about two minutes; refused without the RAM or disk for it). Before booking, a run reads the phone number logged in on the
+  book (about two minutes); a PC without the RAM or the disk for it says so there instead. Before booking, a run reads the phone number logged in on the
   machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
   once; a machine that cannot be sure books nothing.
 - **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at
