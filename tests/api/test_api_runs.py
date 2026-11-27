@@ -169,12 +169,14 @@ def test_no_booking_now_while_the_app_is_closed(client, launched, monkeypatch, m
     assert launched == []
 
 
-def test_a_booking_now_shows_as_a_run_by_hand_and_blocks_a_dry_run(app, client, launched):
+def test_a_booking_now_shows_as_a_run_by_hand_and_blocks_a_dry_run(app, client, context, launched):
+    from court_booker.api import status
+
     client.post("/api/runs/now")
 
-    status = client.get("/api/status").json()
+    shown = status.running(context, booking=app.state.booking)
     dry_run = client.post("/api/runs/dry-run")
 
-    assert status["running"]["trigger"] == "manual"
+    assert shown is not None and shown.trigger == "manual"
     assert dry_run.status_code == 409
     assert dry_run.json()["detail"].endswith("booking (pid 4321)")
