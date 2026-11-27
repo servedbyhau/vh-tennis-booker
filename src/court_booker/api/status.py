@@ -40,11 +40,13 @@ def running(
     dry_run: Any = None,
     recent: Sequence[dict[str, Any]] = (),
     task: Any = None,
+    booking: Any = None,
 ) -> Optional[Running]:
     """Return the run going on now, from the lock or from the dry run or task started last.
 
     ``dry_run`` is the process the backend started last; for its first moments it does not
     hold the lock yet. ``recent`` holds the newest runs, newest first, where its runs are.
+    ``booking`` is the booking started last from the app (``manual``), as ``dry_run``.
     ``task`` is the task on a machine still running (:mod:`court_booker.api.tasks`), which
     holds the lock of another machine than the first one, or none yet; its kind is the trigger.
     """
@@ -58,6 +60,8 @@ def running(
         )
     if dry_run is not None and dry_run.poll() is None:
         return Running(trigger="dry_run", pid=dry_run.pid, since=None)
+    if booking is not None and booking.poll() is None:
+        return Running(trigger="manual", pid=booking.pid, since=None)
     if task is not None and task.process.poll() is None:
         return Running(trigger=task.kind, pid=task.process.pid, since=None)
     return None
@@ -115,7 +119,11 @@ def read_status(context: Context, request: Request) -> Overview:
         connection.close()
     last = recent[:1]
     now = running(
-        context, getattr(request.app.state, "dry_run", None), recent, running_task(request)
+        context,
+        getattr(request.app.state, "dry_run", None),
+        recent,
+        running_task(request),
+        getattr(request.app.state, "booking", None),
     )
     state = schedule_state(context)
     return Overview(

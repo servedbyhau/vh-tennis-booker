@@ -39,6 +39,7 @@ def test_task_runs_daily_at_wake_time_and_wakes_the_pc():
     assert text(root, "t:Triggers/t:CalendarTrigger/t:StartBoundary") == "2026-10-08T05:45:00"
     assert text(root, ".//t:DaysInterval") == "1"
     assert text(root, "t:Settings/t:WakeToRun") == "true"
+    assert text(root, "t:Settings/t:StartWhenAvailable") == "true"  # a missed start runs late
     assert text(root, "t:Settings/t:DisallowStartIfOnBatteries") == "false"
     assert text(root, ".//t:LogonType") == "InteractiveToken"
     assert text(root, ".//t:UserId") == r"PC\Hau"

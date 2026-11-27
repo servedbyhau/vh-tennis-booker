@@ -19,6 +19,7 @@ import {
   removeCustomer,
   saveNotifications,
   saveSettings,
+  startBooking,
   startDryRun,
   switchInstance,
   switchKeepOn,
@@ -240,6 +241,15 @@ export function useSwitchSchedule() {
         cache.invalidateQueries({ queryKey: ["events"] }),
       ]);
     },
+  });
+}
+
+/** Book for real now; the overview shows it running, the live feed brings its steps. */
+export function useStartBooking() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: startBooking,
+    onSuccess: () => cache.invalidateQueries({ queryKey: queryKeys.overview }),
   });
 }
 

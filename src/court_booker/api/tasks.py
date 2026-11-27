@@ -102,9 +102,10 @@ def check_free(request: Request, context: AppContext, machine: int) -> None:
     task = running_task(request)
     if task is not None:
         raise LockHeldError(f"Another task is in progress: {task.kind} on MuMu {task.machine}")
-    dry_run = getattr(request.app.state, "dry_run", None)
-    if dry_run is not None and dry_run.poll() is None:
-        raise LockHeldError(f"Another run is in progress: dry run (pid {dry_run.pid})")
+    for kind in ("dry_run", "booking"):  # the runs the app starts (api/runs.py)
+        process = getattr(request.app.state, kind, None)
+        if process is not None and process.poll() is None:
+            raise LockHeldError(f"Another run is in progress: {kind} (pid {process.pid})")
     for path in (context.data.lock, context.data.instance_lock(machine)):
         holder = RunLock(path).running_holder()
         if holder is not None:

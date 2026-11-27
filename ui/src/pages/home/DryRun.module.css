@@ -27,3 +27,48 @@
   color: var(--color-failed);
   font-weight: var(--weight-semibold);
 }
+
+/* The dry run and the booking now, side by side. */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.buttons .button {
+  flex: 1 1 0;
+  width: auto;
+}
+
+/* The question before a booking now, in the place of its button. */
+.ask {
+  flex: 2 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-small);
+  text-align: center;
+}
+
+.ask p {
+  margin: 0;
+}
+
+.answers {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.answers > * {
+  flex: 1 1 0;
+}
+
+/* Why the booking now did not start, over the buttons. */
+.refused {
+  flex: 1 1 100%;
+  order: -1;
+  margin: 0;
+  color: var(--color-failed);
+  font-size: var(--text-small);
+  text-align: center;
+}

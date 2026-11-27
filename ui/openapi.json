@@ -2044,6 +2044,48 @@
         }
       }
     },
+    "/api/runs/now": {
+      "post": {
+        "tags": [
+          "runs"
+        ],
+        "summary": "Start Booking",
+        "description": "Book for real now, as by hand (``manual``): before the start time the run gets ready\nand books at it (``--at``), as the scheduled run would; from it, at once.\n\nFor a morning the scheduled run missed (the PC did not wake) or one booked by hand. Refused\n(400 ``bad_request``) before the wake time and from 21:00, when the app is closed, and (409\n``lock_held``) while a run holds the lock, or while a run or a task started last from the\napp is still running. Every machine books, whatever its days.",
+        "operationId": "start_booking_api_runs_now_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DryRunStarted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/machines/quota": {
       "get": {
         "tags": [
@@ -2681,7 +2723,7 @@
           "started_at"
         ],
         "title": "DryRunStarted",
-        "description": "A dry run has started; its steps show in the history as it goes."
+        "description": "A run has started (a dry run, or a booking now); its steps show in the history as it\ngoes."
       },
       "EventKind": {
         "type": "string",

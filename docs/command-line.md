@@ -82,7 +82,9 @@ court-booker schedule install   # daily task at wake_at; it books for real at st
 court-booker schedule status    # the task, its last and next run
 ```
 
-The ticket's "Auto-book" switch does the same, once a dry run has passed.
+The ticket's "Auto-book" switch does the same. A start the PC missed runs as soon as it is on
+(after the start time it ends at once), and the installed app installs the task again when it
+opens, so a new version's task settings apply.
 `court-booker schedule remove` deletes the task. The task runs the engine of whatever
 installed it: on a PC that books with the installed app, do not install it from a clone. A
 real run closes MuMu once its rounds are done; the next run starts it again. A dry run leaves

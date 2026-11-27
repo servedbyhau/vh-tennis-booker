@@ -290,6 +290,11 @@ export function switchSchedule(enabled: boolean): Promise<ScheduleState> {
   return call(client.PUT("/api/schedule", { body: { enabled } }));
 }
 
+/** Book for real now: before the start time it gets ready and books at it. */
+export function startBooking(): Promise<DryRunStarted> {
+  return call(client.POST("/api/runs/now"));
+}
+
 /** Start a dry run in its own process; its steps arrive through the live feed. */
 export function startDryRun(): Promise<DryRunStarted> {
   return call(client.POST("/api/runs/dry-run"));

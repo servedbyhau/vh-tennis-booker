@@ -350,6 +350,13 @@
         "stopped": "stopped halfway",
         "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
       },
+      "bookNow": {
+        "button": "Book now",
+        "ask": "Book for real now? Before {{start}} it gets ready and books at {{start}}.",
+        "yes": "Book",
+        "no": "Cancel",
+        "hours": "Book now works from {{from}} to {{to}}, while the Vinhomes app takes bookings."
+      },
       "machine": {
         "missing": "No MuMu instance yet",
         "create": "Make it",

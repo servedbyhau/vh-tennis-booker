@@ -78,6 +78,19 @@ def schedule_window(day: date, wake_at: str, start_at: str) -> tuple[datetime, d
     return begin, end
 
 
+BOOKING_CLOSES = "21:00"
+"""The Vinhomes app takes bookings from the start time to this time (field notes)."""
+
+
+def check_booking_hours(now: datetime, opens: str, task: str) -> None:
+    """Refuse ``task`` (a booking or a dry run started from the app) before ``opens`` or from
+    :data:`BOOKING_CLOSES`, while the app would only say it is closed."""
+    begin = datetime.combine(now.date(), parse_time(opens, "start time"))
+    end = datetime.combine(now.date(), parse_time(BOOKING_CLOSES, "closing time"))
+    if not begin <= now < end:
+        raise RequestError(f"No {task} before {begin:%H:%M} or from {end:%H:%M}: the app is closed")
+
+
 def check_quiet_time(now: datetime, wake_at: str, start_at: str, task: str) -> None:
     """Refuse ``task`` (a dry run, auto setup) while the scheduled run owns the emulator."""
     begin, end = schedule_window(now.date(), wake_at, start_at)
