@@ -41,6 +41,9 @@ uses [Semantic Versioning](https://semver.org/).
   loads, and a save drops them.
 
 ### Changed
+- `GET /api/setup` tells each MuMu instance apart (screen, cores and RAM, the Vinhomes app), the
+  app as last seen while the instance is off, and waits around the scheduled run and while a run
+  or a task uses MuMu.
 - "Dry run" waits outside 06:05-21:00, when the app takes no booking, and says so in its
   tooltip, instead of starting a run that could only find the app closed.
 - A morning start the PC missed runs as soon as the PC is on, still booking before the start

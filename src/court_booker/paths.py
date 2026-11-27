@@ -45,6 +45,11 @@ class DataFolder:
         return self.root / "power-plan.json"
 
     @property
+    def apps_seen(self) -> Path:
+        """Return whether the setup checks last saw the Vinhomes app on each MuMu instance."""
+        return self.root / "apps-seen.json"
+
+    @property
     def tickets(self) -> Path:
         """Return the folder of the ticket pictures, which hold personal data."""
         return self.root / "tickets"

@@ -295,12 +295,16 @@ Details live in the docstrings; this page says where things are and what must st
   refuses keys it does not know.
   New fields go into the dataclass and `config.example.toml`.
 - `paths.data_folder()`: `%LOCALAPPDATA%\CourtBooker` (`COURT_BOOKER_HOME` overrides) with
-  `booker.db`, `run.lock`, `logs/` and the app's `config.toml`. The CLI's config comes from
+  `booker.db`, `run.lock`, `logs/`, the app's `config.toml`, `power-plan.json` (the PC's own
+  power values while it is kept on) and `apps-seen.json` (whether the setup checks last saw the
+  Vinhomes app on each MuMu instance). The CLI's config comes from
   `--config`; a relative `log_dir` resolves beside it.
 - `device_setup.py`: checks (MuMu installed, MuMu screen settings, MuMu cores and RAM, wake
   timers, app installed)
-  and `auto_setup` for the fixable ones (`court-booker setup [--auto]`; `GET /api/setup` only
-  checks). The screen, the cores and RAM, and the app are checked on every instance (`[[instances]]` too) as one
+  and `auto_setup` for the fixable ones (`court-booker setup [--auto]`). `GET /api/setup`
+  only checks, each instance apart (`check_machine`): the app is read while the instance runs
+  and remembered in `apps-seen.json`, which the app install also writes, so an instance that
+  is off tells its app as last seen. The screen, the cores and RAM, and the app are checked on every instance (`[[instances]]` too) as one
   item: the worst status, each instance's detail ("MuMu 1: …"); auto setup sets each wrong
   screen, and gives each instance 2 cores and 2 GB, exactly (`CPU_CORES`, `MEMORY_GB`, read
   as `vm_cpu` and `vm_mem`). Without a button: `ready.Supervisor` finds MuMuManager.exe when the configured
@@ -383,8 +387,8 @@ values 422 `invalid_request`.
 | `PUT /api/instances/{mumu_index}` | A machine beside the first on or off: adds its `[[instances]]` table (taking every setting from the top) or removes it; no `enabled` key, which an older runner would refuse |
 | `GET`/`PUT /api/notifications`, `POST .../test` | The Windows notification's switch and language; a sample notification |
 | `GET`/`PUT /api/keep-on` | Whether the PC is kept on while plugged in (`keep_on.py`), and whether it has Modern Standby; `PUT` switches it, 503 `power` when `powercfg` fails |
-| `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
-| `GET`/`PUT /api/schedule` | The task: state, times, whether a dry run ever passed; switching on needs none and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
+| `GET /api/setup` | What the PC has: MuMu Player, wake timers, and each MuMu instance's screen, cores and RAM, and app; nothing is changed (auto setup is the command line's). 409 `lock_held` around the scheduled run and while a run or a task uses MuMu |
+| `GET`/`PUT /api/schedule` | The task: state and times; switching on needs none and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time, before the start time and from 21:00 when the app is closed, or while a run holds the lock) |
 | `POST /api/runs/now` | Books for real in its own process, as by hand (`manual`): with `--at` the start time before it, at once from it; refused before the wake time and from 21:00 (`lock.check_booking_hours`), and as a dry run while something runs |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |

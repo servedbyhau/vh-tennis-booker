@@ -16,6 +16,7 @@ from court_booker.app_install import (
     outcome,
     unpack,
 )
+from court_booker.device_setup import read_apps_seen
 from court_booker.errors import EmulatorError
 
 CERT = b"a certificate's DER bytes"
@@ -154,9 +155,11 @@ def test_every_instance_gets_it_and_those_started_are_shut_again(tmp_path):
         180,
         indexes=lambda manager: [0, 1, 2],
         make=lambda manager, index: mumus[index],
+        seen=tmp_path / "apps-seen.json",
     )
 
     assert [(r.index, r.ok) for r in results] == [(0, True), (1, True), (2, False)]
+    assert read_apps_seen(tmp_path / "apps-seen.json") == {0: True, 1: True}
     assert log == [
         ("install", "127.0.0.1:16384"),
         ("start", 1),

@@ -474,3 +474,34 @@ def test_a_running_mumu_with_too_little_is_only_told():
 
     assert device_setup.prepare_performance(mumu).status is Status.FIXABLE
     assert mumu.changed == []
+
+
+def test_a_running_machine_is_checked_and_remembered(tmp_path):
+    seen = tmp_path / "apps-seen.json"
+
+    checks = device_setup.check_machine(FakeMuMu(index=2), FakeAdb(), "com.vinhomes.resident", seen)
+
+    assert checks == device_setup.MachineChecks(2, Status.OK, Status.OK, Status.OK)
+    assert device_setup.read_apps_seen(seen) == {2: True}
+
+
+def test_a_machine_that_is_off_tells_its_app_as_last_seen(tmp_path):
+    seen = tmp_path / "apps-seen.json"
+    package = "com.vinhomes.resident"
+    off = FakeMuMu(started=False, index=1)
+
+    assert device_setup.check_machine(off, FakeAdb(), package, seen).app is Status.UNKNOWN
+
+    device_setup.check_machine(FakeMuMu(index=1), FakeAdb(()), package, seen)
+    assert device_setup.check_machine(off, FakeAdb(), package, seen).app is Status.USER
+
+    device_setup.save_app_seen(seen, 1, True)  # as the app install does
+    assert device_setup.check_machine(off, FakeAdb(), package, seen).app is Status.OK
+
+
+def test_an_unreadable_memory_of_apps_is_none(tmp_path):
+    seen = tmp_path / "apps-seen.json"
+    seen.write_text("[1, 2]", encoding="utf-8")
+
+    assert device_setup.read_apps_seen(seen) == {}
+    assert device_setup.read_apps_seen(tmp_path / "missing.json") == {}
