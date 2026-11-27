@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["settings"])
 
-HIDDEN = ("telegram_token", "telegram_chat_id", "windows_notification", "notification_language")
-"""Config keys these routes neither show nor change: the Telegram summary is set up by hand,
-and the Windows notification is not a booking setting."""
+HIDDEN = ("windows_notification", "notification_language")
+"""Config keys these routes neither show nor change: the Windows notification is not a booking
+setting (its own routes have it)."""
 
 
 class LabelSettings(BaseModel):

@@ -37,6 +37,8 @@ uses [Semantic Versioning](https://semver.org/).
 - The money section and its routes (`/api/money`); its charges, prices and settings are dropped
   (schema 11), and its old address leads to the management.
 - `dry_run_passed` of `/api/schedule`: nothing waits for a dry run any more.
+- The Telegram summary (`telegram_token`, `telegram_chat_id`): a config that still has them
+  loads, and a save drops them.
 
 ### Changed
 - "Dry run" waits outside 06:05-21:00, when the app takes no booking, and says so in its

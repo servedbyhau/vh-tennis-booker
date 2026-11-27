@@ -37,8 +37,6 @@ from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_
 from court_booker.notify import (
     format_notification,
     format_quota_warning,
-    format_summary,
-    send_telegram,
     send_windows,
 )
 from court_booker.paths import data_folder
@@ -666,9 +664,6 @@ def main(argv: list[str] | None = None) -> int:
     instance = shown.mumu_index if args.instance is not None or instances else None
     if off_day:
         pass  # nothing was booked or tried: nothing to tell
-    elif config is not None and config.telegram_token and config.telegram_chat_id:
-        text = format_summary(results, error, dry_run=args.dry_run, instance=instance)
-        send_telegram(config.telegram_token, config.telegram_chat_id, text)
     if not off_day:
         notify_windows(
             shown,

@@ -14,7 +14,7 @@ Details live in the docstrings; this page says where things are and what must st
   `Config`, adds the log file, measures the clock, and inside `power.keep_awake()` takes the run
   lock, connects the device and runs the rounds. Errors map to exit codes (`RequestError` 2,
   `DeviceError` 3, `AppNotReadyError` 4, `LockHeldError` 5, Ctrl+C 130; a failed round 1). On
-  every path it logs the summary, records the run, sends the optional Telegram summary and the
+  every path it logs the summary, records the run, sends the
   Windows notification (`notify.py`; a failure only logs a warning). After a real run with at
   least one round, `close_emulator` shuts MuMu down.
 - Other MuMu instances (`[[instances]]` in the config, each with its own account and its own
@@ -378,7 +378,7 @@ values 422 `invalid_request`.
 | `GET /api/status` | The Overview in one call: running run (with `runs`: the lock holder's run, then those of the instances it started), schedule, last run, `wake_blocked` (the schedule on but wake timers off: `powercfg`, asked only with no run going on); never calls MuMu |
 | `GET /api/runs`, `/api/runs/{id}`, `/api/runs/months` | Runs newest first (filters, paging by id or by days) with whose account each booked with, one run with steps and log lines, months of real bookings |
 | `GET /api/events` | Activity steps newest first |
-| `GET`/`PUT /api/settings` | Booking settings without the hidden keys (`HIDDEN`: Telegram, the notification), with each `[[instances]]` entry in full; `PUT` validates, refuses added or removed instances, saves only on a change |
+| `GET`/`PUT /api/settings` | Booking settings without the hidden keys (`HIDDEN`: the notification), with each `[[instances]]` entry in full; `PUT` validates, refuses added or removed instances, saves only on a change |
 | `GET /api/mumu-instances` | The MuMu instances MuMuManager knows, lowest first (`emulator.instance_indexes`); empty when it is not found or fails |
 | `PUT /api/instances/{mumu_index}` | A machine beside the first on or off: adds its `[[instances]]` table (taking every setting from the top) or removes it; no `enabled` key, which an older runner would refuse |
 | `GET`/`PUT /api/notifications`, `POST .../test` | The Windows notification's switch and language; a sample notification |

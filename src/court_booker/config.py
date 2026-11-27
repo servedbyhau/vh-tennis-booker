@@ -51,8 +51,9 @@ INSTANCE_KEYS = (
 )
 """Keys of an ``[[instances]]`` table: the booking settings of another MuMu instance, which
 books with its own account; ``mumu_index`` is required, the others default to the file's."""
-_IGNORED_KEYS = ("days_ahead",)
-"""Keys of older files, read and dropped: the play day was a setting until 0.13.1."""
+_IGNORED_KEYS = ("days_ahead", "telegram_token", "telegram_chat_id")
+"""Keys of older files, read and dropped: the play day was a setting until 0.13.1, the
+Telegram summary until 1.2.0."""
 _OLD_OPEN_RETRY_SECONDS = 60.0
 """The default of ``open_retry_seconds`` until 1.2.0, which every save wrote out: read as the
 new default, so the files of the PCs already set up take it too."""
@@ -187,9 +188,6 @@ class Config:
     """How long before ``start_at`` a timed run leaves the home screen for the utilities list."""
     log_dir: str = "logs"
     """Folder for daily log files, relative to the config file; empty disables them."""
-    telegram_token: str = ""
-    """Bot token from @BotFather; with ``telegram_chat_id`` the summary is sent there."""
-    telegram_chat_id: str = ""
     windows_notification: bool = True
     """Show the outcome of every run, dry runs too, as a Windows notification."""
     notification_language: str = "vi"

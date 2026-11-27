@@ -8,13 +8,12 @@ from court_booker.config import Config, load_config, save_config
 
 @pytest.fixture
 def saved(context):
-    """Write a config with a Telegram summary and two evening slots, as a user might."""
+    """Write a config with the notification in English and two evening slots, as a user might."""
     config = Config(
         slots=["18:00 - 19:00", "19:00 - 20:00"],
         court="S6 - Sân tennis",
         wake_at="05:50",
-        telegram_token="secret-token",
-        telegram_chat_id="42",
+        windows_notification=False,
         notification_language="en",
         instances=[{"mumu_index": 1, "slots": ["20:00 - 21:00"]}],
     )
@@ -31,11 +30,11 @@ def test_settings_show_the_config(client, saved):
     assert settings["next_month_xy"] == [0.930, 0.122]
 
 
-def test_settings_never_show_the_telegram_token(client, saved):
+def test_settings_never_show_the_notification(client, saved):
     settings = client.get("/api/settings").json()
 
-    assert "telegram_token" not in settings
-    assert "secret-token" not in str(settings)
+    assert "windows_notification" not in settings
+    assert "notification_language" not in settings
 
 
 def test_settings_leave_out_the_notification(client, saved):
@@ -189,7 +188,7 @@ def test_saved_settings_reach_the_file_and_the_activity_log(client, context, sav
     assert response.json()["slots"] == ["20:00 - 21:00"]
     written = load_config(context.config_path)
     assert (written.slots, written.court) == (["20:00 - 21:00"], "S9 - Sân tennis")
-    assert written.telegram_token == "secret-token"
+    assert written.windows_notification is False
     assert written.notification_language == "en"
     assert written.instances == [OTHER_IN_FILE]  # now with all its settings
     (step,) = steps(context)
@@ -223,7 +222,7 @@ def test_invalid_settings_are_refused_with_each_problem(client, context, saved):
 
 def test_unknown_settings_are_refused(client, saved):
     settings = client.get("/api/settings").json()
-    settings["telegram_token"] = "other"
+    settings["windows_notification"] = True
 
     response = client.put("/api/settings", json=settings)
 
