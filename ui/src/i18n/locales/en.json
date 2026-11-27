@@ -24,6 +24,7 @@
   "nav": {
     "label": "Pages",
     "booking": "Booking",
+    "setup": "Setup",
     "management": "Management"
   },
   "pages": {
@@ -299,7 +300,7 @@
       }
     },
     "panel": {
-      "setup": "Setup"
+      "setup": "Settings"
     },
     "setup": {
       "daily": {
@@ -376,6 +377,55 @@
           "5": "Another run is in progress. Wait for it to finish and try again.",
           "other": "The MuMu instance was not made."
         }
+      }
+    },
+    "setupPage": {
+      "title": "Setup",
+      "progress": "{{done}}/{{total}} steps done",
+      "check": "Check again",
+      "checking": "Checking…",
+      "steps": "Steps",
+      "stepOf": "Step {{number}} of {{total}}",
+      "done": "Done",
+      "todo": "To do",
+      "previous": "Back",
+      "next": "Next step",
+      "finish": "Done, to Booking",
+      "power": {
+        "title": "Keep the PC on",
+        "why": "At 05:45 the PC wakes and runs until the booking is done."
+      },
+      "mumu": {
+        "title": "MuMu Player",
+        "why": "You install MuMu Player; the app does the rest.",
+        "found": "MuMu Player is installed",
+        "missing": "MuMu Player is not installed",
+        "how": "Download it from mumuplayer.com, install it as it comes, then press Check again."
+      },
+      "machines": {
+        "title": "Machines",
+        "why": "Each machine books with an account of its own.",
+        "ready": "2 cores · 2 GB · 540×1600",
+        "later": "Set to 2 cores, 2 GB, 540×1600 when it runs",
+        "off": "switched off",
+        "first": "MuMu has no instance yet"
+      },
+      "app": {
+        "title": "Vinhomes app",
+        "why": "Choose the APK or XAPK file; its signature is checked, then it goes on every machine.",
+        "ok": "Has the app",
+        "missing": "No app",
+        "unknown": "Not known · open the machine to check"
+      },
+      "accounts": {
+        "title": "Accounts",
+        "why": "Log in to the app in the machine once, then choose its account.",
+        "none": "No account chosen",
+        "choose": "Choose on Booking"
+      },
+      "daily": {
+        "title": "Dry run and Auto-book",
+        "why": "A dry run books nothing; then switch Auto-book on."
       }
     },
     "notFound": {

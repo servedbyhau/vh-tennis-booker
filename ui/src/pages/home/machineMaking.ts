@@ -24,6 +24,7 @@ export function useNewMachine() {
     if (ended) {
       void cache.invalidateQueries({ queryKey: queryKeys.mumuInstances });
       void cache.invalidateQueries({ queryKey: queryKeys.overview });
+      void cache.invalidateQueries({ queryKey: queryKeys.setup });
     }
   }, [ended, cache]);
 

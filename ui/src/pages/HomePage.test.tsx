@@ -367,7 +367,7 @@ describe("HomePage live run", () => {
 
     expect(await screen.findByText("Đang thiết lập tự động")).toBeInTheDocument();
     expect(await screen.findByRole("region", { name: "Lần đặt tiếp theo" })).toBeInTheDocument();
-    const setup = screen.getByRole("region", { name: "Thiết lập" });
+    const setup = screen.getByRole("region", { name: "Cài đặt" });
     expect(within(setup).getByText("Chạy thử tạm khóa cho tới khi xong")).toBeInTheDocument();
     expect(within(setup).getByRole("button", { name: "Chạy thử" })).toBeDisabled();
   });
@@ -377,7 +377,7 @@ describe("HomePage panel", () => {
   it("is the Setup alone, with no tabs", async () => {
     renderOverview(overview());
     await statusLine();
-    expect(screen.getByRole("region", { name: "Thiết lập" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Cài đặt" })).toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
   });
 });

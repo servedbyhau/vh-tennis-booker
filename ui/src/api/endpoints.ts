@@ -18,6 +18,7 @@ import type {
   RunSummary,
   ScheduleState,
   Settings,
+  SetupReport,
   Step,
   TaskState,
   Ticket,
@@ -269,6 +270,11 @@ export async function detachAccount(mumuIndex: number): Promise<void> {
       params: { path: { mumu_index: mumuIndex } },
     }),
   );
+}
+
+/** Check what the PC has of what the booking needs, each MuMu instance apart. */
+export function getSetup(): Promise<SetupReport> {
+  return call(client.GET("/api/setup"));
 }
 
 /** Read whether the PC is kept on while plugged in. */

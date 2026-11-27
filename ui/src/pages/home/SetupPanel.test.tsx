@@ -28,7 +28,7 @@ interface Backend {
   extra?: Record<string, Reply>;
 }
 
-/** The Setup beside the ticket, once it is drawn. */
+/** The Settings beside the ticket, once they are drawn. */
 // Only stand-in backends here: a real PUT /api/schedule rewrites the Windows task.
 async function openSetup({ status = overview(), runs = [], extra = {} }: Backend = {}) {
   const replies: Record<string, Reply> = {
@@ -41,7 +41,7 @@ async function openSetup({ status = overview(), runs = [], extra = {} }: Backend
     ...extra,
   };
   const app = renderApp(paths.overview, replies);
-  const panel = within(screen.getByRole("region", { name: "Thiết lập" }));
+  const panel = within(screen.getByRole("region", { name: "Cài đặt" }));
   await panel.findByRole("button", { name: /^Chạy thử|^Dry run/ });
   return { replies, panel, ...app };
 }
@@ -110,7 +110,7 @@ describe("SetupPanel", () => {
       "GET /api/settings": reply(settings()),
       "GET /api/customers": reply([]),
     });
-    const panel = within(screen.getByRole("region", { name: "Setup" }));
+    const panel = within(screen.getByRole("region", { name: "Settings" }));
     expect(await panel.findByRole("switch", { name: "Auto-book" })).toBeChecked();
     expect(panel.getByRole("button", { name: "Dry run" })).toBeVisible();
     await i18n.changeLanguage("vi");
@@ -129,27 +129,6 @@ describe("SetupPanel switches", () => {
         { enabled: false, language: "vi" },
       ]),
     );
-  });
-
-  it("keeps the PC on while plugged in, and gives the values back when off", async () => {
-    const { panel, fetch, replies } = await openSetup({
-      extra: { "GET /api/keep-on": reply({ on: false, modern_standby: false }) },
-    });
-    const toggle = await panel.findByRole("switch", { name: "Giữ máy luôn chạy" });
-    expect(toggle).not.toBeChecked();
-    expect(panel.getByText("Máy có thể ngủ; app hẹn giờ đánh thức máy mỗi sáng")).toBeVisible();
-    replies["PUT /api/keep-on"] = reply({ on: true, modern_standby: false });
-
-    fireEvent.click(toggle);
-
-    await waitFor(() => expect(toggle).toBeChecked());
-    expect(await bodies(fetch, "PUT /api/keep-on")).toEqual([{ on: true }]);
-    expect(panel.getByText(/màn hình tắt sau 5 phút$/)).toBeVisible();
-  });
-
-  it("has no keep-on switch when Windows could not be read", async () => {
-    const { panel } = await openSetup();
-    expect(panel.queryByRole("switch", { name: "Giữ máy luôn chạy" })).not.toBeInTheDocument();
   });
 
   it("lets the daily booking be switched on before any dry run", async () => {
@@ -288,95 +267,29 @@ describe("SetupPanel dry run", () => {
   });
 });
 
-describe("SetupPanel new machine", () => {
-  const TASK = { code: null, machine: 0, started_at: "2026-10-15T10:00:00" };
-
-  async function secondMachine(extra: Record<string, Reply>) {
-    const app = await openSetup({
-      extra: { "GET /api/mumu-instances": reply({ indexes: [0] }), ...extra },
+describe("SetupPanel machine without its MuMu instance", () => {
+  it("says so, and switching it on leads to the Setup page's machines", async () => {
+    const { panel, router, fetch } = await openSetup({
+      extra: { "GET /api/mumu-instances": reply({ indexes: [0] }) },
     });
     const tabs = within(await screen.findByRole("group", { name: "Máy" }));
     fireEvent.click(tabs.getByRole("button", { name: /^Máy 2/ }));
-    return app;
-  }
-
-  it("makes the MuMu instance of a machine that has none, after a question", async () => {
-    const { panel, fetch } = await secondMachine({
-      "POST /api/machines/new": reply({ ...TASK, running: true, exit_code: null }, 202),
-      "GET /api/machines/new": reply({ ...TASK, running: false, exit_code: 0 }),
-    });
     expect(await panel.findByText("Chưa có máy ảo MuMu")).toBeVisible();
-    expect(panel.queryByRole("switch", { name: /^Đặt sân bằng máy 2/ })).not.toBeInTheDocument();
+    expect(panel.queryByRole("button", { name: /^Mở MuMu 1/ })).not.toBeInTheDocument();
 
-    fireEvent.click(panel.getByRole("button", { name: "Tạo máy ảo" }));
-    expect(panel.getByText(/^Nhân bản máy ảo của Máy 1/)).toBeVisible();
-    expect(requestsTo(fetch, "POST /api/machines/new")).toBe(0);
-    fireEvent.click(panel.getByRole("button", { name: "Tạo" }));
+    fireEvent.click(panel.getByRole("switch", { name: /^Đặt sân bằng máy 2/ }));
 
-    await waitFor(() => expect(requestsTo(fetch, "POST /api/machines/new")).toBe(1));
-    // Once made, MuMu's instances are read again.
-    await waitFor(() => expect(requestsTo(fetch, "GET /api/mumu-instances")).toBe(2), {
-      timeout: 4000,
-    });
+    await waitFor(() => expect(router.state.location.pathname).toBe("/setup"));
+    expect(router.state.location.search).toBe("?step=machines");
+    expect(requestsTo(fetch, "PUT /api/instances/1")).toBe(0);
   });
 
-  it("says the PC lacks the RAM for it, and does not offer it", async () => {
-    const { panel } = await secondMachine({
-      "GET /api/machines/room": reply({ room: false, reason: "ram" }),
-    });
-
-    expect(await panel.findByText(/^Máy tính không đủ RAM cho máy ảo này/)).toBeVisible();
-    expect(panel.getByRole("button", { name: "Tạo máy ảo" })).toBeDisabled();
-  });
-
-  it("says why it was not made", async () => {
-    const { panel } = await secondMachine({
-      "POST /api/machines/new": reply({ error: "no_room", detail: "8 GB" }, 409),
-    });
-    fireEvent.click(await panel.findByRole("button", { name: "Tạo máy ảo" }));
-    fireEvent.click(panel.getByRole("button", { name: "Tạo" }));
-
-    expect(await panel.findByRole("alert")).toHaveTextContent(/^Máy tính không đủ RAM/);
-  });
-});
-
-describe("SetupPanel app install", () => {
-  const APP_TASK = { code: null, machine: 0, started_at: "2026-10-15T09:12:00" };
-
-  it("sends the file chosen and says when every machine has the app", async () => {
-    const { panel, fetch } = await openSetup({
-      extra: {
-        "POST /api/app/install": reply({ ...APP_TASK, running: true, exit_code: null }, 202),
-        "GET /api/app/install": reply({ ...APP_TASK, running: false, exit_code: 0 }),
-      },
-    });
-    const file = new File(["PK"], "vinhomes.xapk", { type: "application/octet-stream" });
-
-    fireEvent.change(panel.getByLabelText("File APK hoặc XAPK của app Vinhomes"), {
-      target: { files: [file] },
-    });
-
-    await waitFor(() => expect(requestsTo(fetch, "POST /api/app/install")).toBe(1));
-    expect(
-      await panel.findByText("Đã cài app Vinhomes vào mọi máy ảo.", {}, { timeout: 4000 }),
-    ).toBeVisible();
-  });
-
-  it("says a file not signed by the app was refused", async () => {
+  it("keeps no setup of the PC: the Setup page has it", async () => {
     const { panel } = await openSetup({
-      extra: {
-        "POST /api/app/install": reply({ ...APP_TASK, running: true, exit_code: null }, 202),
-        "GET /api/app/install": reply({ ...APP_TASK, running: false, exit_code: 2 }),
-      },
+      extra: { "GET /api/keep-on": reply({ on: false, modern_standby: false }) },
     });
-
-    fireEvent.change(panel.getByLabelText("File APK hoặc XAPK của app Vinhomes"), {
-      target: { files: [new File(["x"], "other.apk")] },
-    });
-
-    expect(await panel.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent(
-      /^File này không phải app Vinhomes chính chủ/,
-    );
+    expect(panel.queryByRole("switch", { name: "Giữ máy luôn chạy" })).not.toBeInTheDocument();
+    expect(panel.queryByLabelText("File APK hoặc XAPK của app Vinhomes")).not.toBeInTheDocument();
   });
 });
 

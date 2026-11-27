@@ -134,9 +134,9 @@ What you need:
 
 - A Windows 10 or 11 PC that stays on or asleep at night, never shut down (a PC that is off
   cannot be woken), plugged in and signed in to Windows (a locked screen is fine).
-- [MuMu Player](https://www.mumuplayer.com/), with the Vinhomes Resident app installed in it
-  (from Google Play, or from an APK or XAPK file with the **Vinhomes app** button in the app's
-  Setup) and logged in to your resident account.
+- [MuMu Player](https://www.mumuplayer.com/). The app's **Setup** page installs the Vinhomes
+  Resident app in it from an APK or XAPK file you downloaded (or install it from Google Play),
+  and you log in to your resident account in it once.
 
 Then:
 
@@ -145,10 +145,11 @@ Then:
 2. Run it. The installer is not code-signed, so Windows SmartScreen may say it protected your
    PC: choose **More info**, then **Run anyway**. It installs for you alone, without
    administrator rights.
-3. Open **Court Booker** from the Start menu.
+3. Open **Court Booker** from the Start menu, and go through the **Thiết lập / Setup** page
+   from top to bottom: it checks each step and says what is left.
 4. On the ticket, choose the subdivision, the sport, the court and up to two slots, in the
    order you want them.
-5. In the **Setup** beside it, turn **Auto-book** on. Every morning the PC wakes at the wake
+5. In the **Settings** beside it, turn **Auto-book** on. Every morning the PC wakes at the wake
    time and books at 06:00; the window does not need to be open.
 6. To check the setup first, press **Dry run** between 06:05 and 21:00, while the Vinhomes app
    takes bookings (optional; the button waits outside those hours). It walks the whole booking and stops before the final
@@ -175,7 +176,8 @@ remove them too.
 
 ## Using the app
 
-The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**. On the first:
+The app has three pages, **Đặt sân / Booking**, **Thiết lập / Setup** and **Quản lý /
+Management**. On the first:
 
 - **The line at the top** says whether the next start is ready, or the one thing to do first:
   the daily switch, a machine that books with no account chosen, or
@@ -185,23 +187,38 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
   court and up to two slots to choose, saved on each press. During a run it shows the steps as
   they happen; those of the 06:00 race (from a minute before to the last slot) show once it is
   over, so writing them takes nothing from the booking.
-- **Thiết lập / Setup** on the right: the daily switch (it creates or removes the Windows task;
-  a dry run is not needed first), the Windows notification, **Giữ máy luôn chạy / Keep the PC
-  on** (plugged in: no sleep, no hibernation, closing the lid does nothing, the screen off after
-  5 minutes; off gives back the PC's own power settings), the **App Vinhomes / Vinhomes app** button
-  that installs the app from a file (an APK or XAPK you downloaded: installed on every MuMu instance once
-  its signature is the app's own), the account the machine books with (its phone
-  number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
-  window brought to the front), a dry run and **Book now**. A machine whose MuMu instance is not on the PC
-  yet has a button that makes it, a copy of the first machine's with the Vinhomes app, set up to
-  book (about two minutes); a PC without the RAM or the disk for it says so there instead. Before booking, a run reads the phone number logged in on the
-  machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password
-  once; a machine that cannot be sure books nothing.
+- **Cài đặt / Settings** on the right, what is used day to day: the daily switch (it creates
+  or removes the Windows task; a dry run is not needed first), the Windows notification,
+  whether the machine shown books (switching on one whose MuMu instance is not on the PC yet
+  leads to the Setup page, where it is made), the account it books with (its phone number and
+  name), picked by customer first, then by phone number, a button that opens the machine's
+  MuMu to see its screen (launched, or its window brought to the front), a dry run and **Book
+  now**. Before booking, a run reads the phone number logged in on the machine's Vinhomes app,
+  and logs out and in if it is not the chosen account's, trying the password once; a machine
+  that cannot be sure books nothing.
 - **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at
   least: the others (each logged in to another account) book alongside the first once their
   switch in the Setup is on.
 
-On the second:
+The **Setup** page holds what a new PC needs once, in six steps from top to bottom, each
+checked by the app (a tick once done, and how many are; **Check again** reads them anew). It
+opens on the first step not done:
+
+1. **Keep the PC on**: plugged in, no sleep, no hibernation, closing the lid does nothing, the
+   screen off after 5 minutes; off gives back the PC's own power settings.
+2. **MuMu Player**: installed, or where to get it.
+3. **Machines**: each MuMu instance (the app gives each 2 cores, 2 GB and a 540x1600 screen
+   when it runs); one not made yet has a button that makes it, a copy of the first machine's
+   with the Vinhomes app, set up to book (about two minutes), or says the PC lacks the RAM or
+   the disk for it.
+4. **Vinhomes app**: a button that installs it from a file (an APK or XAPK you downloaded:
+   installed on every MuMu instance once its signature is the app's own), then whether each
+   machine has it. A machine that has been off since it was last checked is not known: its
+   button opens it.
+5. **Accounts**: the machines that book without an account chosen.
+6. **Dry run and Auto-book**: the daily switch and a dry run.
+
+On the third:
 
 - **Tổng quan / Overview**, shown first: what to look at, only while there is something (the
   daily booking off, a machine without an account, two machines on one court and slot, an

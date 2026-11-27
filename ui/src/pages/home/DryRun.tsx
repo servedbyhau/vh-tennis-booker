@@ -47,7 +47,16 @@ function LastDryRun({ run }: { run: RunSummary | undefined }) {
  * scheduled run keeps the emulator until then) until the app closes, which the tooltip tells
  * when it may not, and none starts while another run holds the emulator.
  */
-export function DryRun({ schedule, running }: { schedule: ScheduleState; running: boolean }) {
+export function DryRun({
+  schedule,
+  running,
+  bookNow = true,
+}: {
+  schedule: ScheduleState;
+  running: boolean;
+  /** "Book now" beside it, as on the booking page; the Setup page has the dry run alone. */
+  bookNow?: boolean;
+}) {
   const { t } = useTranslation();
   const dryRun = useStartDryRun();
   const from = quietEnd(schedule.start_at);
@@ -64,7 +73,7 @@ export function DryRun({ schedule, running }: { schedule: ScheduleState; running
     );
   }
   return (
-    <div className={styles.dryRun}>
+    <div className={bookNow ? styles.dryRun : `${styles.dryRun} ${styles.alone}`}>
       <div className={styles.line}>{line}</div>
       <div className={styles.buttons}>
         <Button
@@ -76,7 +85,7 @@ export function DryRun({ schedule, running }: { schedule: ScheduleState; running
           <Icon name="play" />
           {t(dryRun.isPending ? "pages.setup.dryRun.starting" : "pages.setup.dryRun.button")}
         </Button>
-        <BookNow schedule={schedule} running={running} />
+        {bookNow && <BookNow schedule={schedule} running={running} />}
       </div>
     </div>
   );

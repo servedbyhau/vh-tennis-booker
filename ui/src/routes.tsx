@@ -11,6 +11,7 @@ import { StatsTab } from "./pages/management/StatsTab";
 import { TicketsTab } from "./pages/management/TicketsTab";
 import { ManagementPage } from "./pages/ManagementPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { SetupPage } from "./pages/SetupPage";
 import { OLD_PATHS, paths } from "./paths";
 
 /** Every screen under the app's layout; shared by the browser router and the tests. */
@@ -21,6 +22,7 @@ export const routes: RouteObject[] = [
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: paths.setup, element: <SetupPage /> },
       {
         path: paths.management,
         element: <ManagementPage />,

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import { errorMessage } from "../../api/errors";
 import {
   useOpenMachine,
@@ -13,7 +14,7 @@ import { IconButton } from "../../components/IconButton";
 import { Switch } from "../../components/Switch";
 import { DEFAULT_LANGUAGE, LANGUAGES } from "../../i18n";
 import type { Machine } from "../../machines";
-import { NewMachineRow } from "./NewMachine";
+import { paths } from "../../paths";
 import { SetupRow } from "./SetupRow";
 
 interface DailyProps {
@@ -103,39 +104,34 @@ export function KeepOnRow() {
 }
 
 /**
- * The machine shown and, beside the first, which always books, its switch: on, the runs book
- * with it too (it gets its `[[instances]]` table, taking the first machine's choices until
- * changed); off, they leave its MuMu alone and its choices are hidden.
+ * The machine shown: its window to open and, beside the first, which always books, its switch:
+ * on, the runs book with it too (it gets its `[[instances]]` table, taking the first machine's
+ * choices until changed); off, they leave its MuMu alone and its choices are hidden. A machine
+ * whose MuMu instance is not on the PC yet says so, and switching it on leads to the Setup
+ * page's machines, where it is made.
  */
 export function MachineRow({ machine, running }: { machine: Machine; running: boolean }) {
-  const instances = useMumuInstances().data ?? [];
-  // A machine past the first whose instance MuMu does not list yet; none while MuMu is not read.
-  const missing =
-    machine.place > 0 &&
-    machine.mumuIndex !== null &&
-    instances.length > 0 &&
-    !instances.includes(machine.mumuIndex);
-  return missing ? (
-    <NewMachineRow machine={machine} running={running} />
-  ) : (
-    <MachineSwitch machine={machine} running={running} />
-  );
-}
-
-/** A machine whose MuMu instance is on the PC: its window to open and, past the first, its switch. */
-function MachineSwitch({ machine, running }: { machine: Machine; running: boolean }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const instances = useMumuInstances().data ?? [];
   const use = useSwitchInstance();
   const open = useOpenMachine();
   const { mumuIndex } = machine;
+  // A machine past the first whose instance MuMu does not list yet; none while MuMu is not read.
+  const missing =
+    machine.place > 0 &&
+    mumuIndex !== null &&
+    instances.length > 0 &&
+    !instances.includes(mumuIndex);
   const failed = use.isError ? use.error : open.isError ? open.error : null;
   return (
     <SetupRow
       icon="machine"
       title={t("pages.ticket.instanceName", { number: machine.place + 1 })}
+      hint={missing ? t("pages.setup.machine.missing") : undefined}
       problem={failed === null ? null : errorMessage(t, failed)}
     >
-      {mumuIndex !== null && (
+      {mumuIndex !== null && !missing && (
         <IconButton
           icon="window"
           label={t("pages.setup.open", { index: mumuIndex })}
@@ -149,7 +145,9 @@ function MachineSwitch({ machine, running }: { machine: Machine; running: boolea
           checked={machine.enabled}
           disabled={mumuIndex === null || running || use.isPending}
           onChange={(enabled) => {
-            if (mumuIndex !== null) {
+            if (enabled && missing) {
+              void navigate(`${paths.setup}?step=machines`);
+            } else if (mumuIndex !== null) {
               use.mutate({ mumuIndex, enabled });
             }
           }}

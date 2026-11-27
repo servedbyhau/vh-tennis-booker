@@ -1,0 +1,17 @@
+/* Lines that belong together, parted by hairlines that start under their words. */
+.card {
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-field);
+}
+
+.card > * + * {
+  background: linear-gradient(var(--color-hairline), var(--color-hairline)) no-repeat right top /
+    calc(100% - 60px) var(--border-hairline);
+}
+
+.link {
+  flex: none;
+  font-size: var(--text-small);
+  font-weight: var(--weight-semibold);
+}

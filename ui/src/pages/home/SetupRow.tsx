@@ -11,14 +11,17 @@ interface SetupRowProps {
   problem?: string | null;
   /** Set off: the one thing to do next. */
   remind?: boolean;
+  /** The icon in a colour: right (`ok`), or something to do (`bad`). */
+  tone?: "ok" | "bad";
   /** Its switch, named after the title, if it has one. */
   children?: ReactNode;
 }
 
 /** A line of a card of the Setup: its icon, its name and its switch. */
-export function SetupRow({ icon, title, hint, problem, remind, children }: SetupRowProps) {
+export function SetupRow({ icon, title, hint, problem, remind, tone, children }: SetupRowProps) {
+  const classes = [styles.row, remind && styles.remind, tone && styles[tone]].filter(Boolean);
   return (
-    <div className={remind ? `${styles.row} ${styles.remind}` : styles.row}>
+    <div className={classes.join(" ")}>
       <span className={styles.icon}>
         <Icon name={icon} />
       </span>

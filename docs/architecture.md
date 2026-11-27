@@ -469,12 +469,11 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   following each press as its save goes out; under the perforation, while that machine books,
   its subdivision, sport, court and up to two slots, saved on each press;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
-  named "MuMu N" when several instances book side by side) and `SetupPanel` beside it:
-  `SetupSwitches.tsx` (the daily booking, the result notification, the PC kept on (shown once
-  Windows is read), `AppInstall.tsx` (a file chosen is sent at once, then how the install goes)
-  and, for a machine beside the
-  first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
-  goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
+  named "MuMu N" when several instances book side by side) and `SetupPanel` ("Cài đặt",
+  Settings) beside it: `SetupSwitches.tsx` (the daily booking, the result notification and, for
+  a machine beside the first, its own, `PUT /api/instances/{mumu_index}`; switched on while its
+  MuMu instance is not on the PC, it leads to `/setup?step=machines` instead; the first and the
+  last locked while a run goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
   (`DryRun`) with the booking now beside it (`BookNow`: after a question, from the wake time to
   21:00 by `useNow`'s clock). `AccountPicker` shows the account in use under its title and, once pressed, the
   customers who have accounts; a customer pressed, their accounts (back to the customers above
@@ -498,8 +497,17 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   ("Tennis S6"). The ticket's subdivision is the one the settings
   name, else the one the account told last (`GET /api/accounts`, refreshed when a run ends,
   "Theo tài khoản"), else Origami; pressing one saves it, keeps the sport if the subdivision
-  has it (else its first sport) and takes the first court. The UI never calls `GET /api/setup` or
-  `POST /api/notifications/test` (the routes stay for the command line and tools).
+  has it (else its first sport) and takes the first court. The UI never calls
+  `POST /api/notifications/test` (the route stays for the command line and tools).
+- `pages/SetupPage.tsx` (`/setup`): the steps of a new PC (`setupSteps.ts`: the PC kept on,
+  MuMu Player, the machines, the Vinhomes app, the accounts, the dry run and the daily
+  booking), each done once every machine the runs book with has what it needs, from
+  `GET /api/setup` (read on each visit and focus, never retried, as the backend refuses it
+  while MuMu is in use), the keep-on state, the customers and the schedule. The list on the
+  left ticks the steps done; the step shown (`?step=`, else the first not done, then kept in the
+  address so it stays put as its switch is pressed) holds its rows (`setup/StepBody.tsx`):
+  `KeepOnRow`, `NewMachineRow`, `AppInstallRow`, `DailyRow` and `DryRun` without "Book now".
+  An install or a new machine that ends reads the checks again.
 
 ## Driver (`android/`)
 

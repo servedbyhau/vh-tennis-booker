@@ -4,7 +4,7 @@ The current state of the project. Overwrite entries when the state changes; hist
 in `CHANGELOG.md` and git. The next task is in [next.md](next.md), open bugs in
 [known-issues.md](known-issues.md).
 
-Last updated: 2026-11-25.
+Last updated: 2026-11-27.
 
 ## Release and daily run
 
@@ -34,7 +34,11 @@ Last updated: 2026-11-25.
   `D:\VH-Booker\runner\.venv\Scripts\python.exe -m court_booker schedule install --config
   %LOCALAPPDATA%\CourtBooker\config.toml`.
 - On 2026-11-03 MuMu instance 0 read a BS account, with the app in English.
-- Merged since 1.2.0, not released: nothing.
+- Merged since 1.2.0, not released (#330-#341): the Guide page and the money section removed,
+  Keep the PC on, MuMu instances at exactly 2 cores and 2 GB, the Vinhomes app installed from
+  a file (signature pinned), Book now and a missed start run late, the dry run only from
+  06:05 to 21:00, the RAM warning for a new machine (installed RAM read), `dry_run_passed` and
+  Telegram removed. The installed app is at #336. Open: the Setup page (#342 and on).
 - Tried on real machines: the ticket reading on three accounts, the account check and a forced change
   of account on one. Not yet: either after a real 06:00 booking, a change between two different
   accounts, a changed phone number, whose account a run is of.
