@@ -348,7 +348,7 @@
         "passed": "passed",
         "failed": "did not pass: {{reason}}",
         "stopped": "stopped halfway",
-        "quiet": "No dry run from {{from}} to {{to}}, so the booking is not disturbed."
+        "hours": "A dry run works from {{from}} to {{to}}, while the Vinhomes app takes bookings."
       },
       "bookNow": {
         "button": "Book now",

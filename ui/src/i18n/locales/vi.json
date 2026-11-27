@@ -348,7 +348,7 @@
         "passed": "thành công",
         "failed": "không qua: {{reason}}",
         "stopped": "dừng giữa chừng",
-        "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
+        "hours": "Chạy thử được từ {{from}} đến {{to}}, khi app Vinhomes nhận đặt sân."
       },
       "bookNow": {
         "button": "Đặt ngay",

@@ -227,14 +227,23 @@ describe("SetupPanel machine opening", () => {
 });
 
 describe("SetupPanel dry run", () => {
-  it("offers a first dry run, with the quiet time in its tooltip", async () => {
+  it("offers a first dry run while the app takes bookings", async () => {
     const { panel } = await openSetup();
     expect(await panel.findByText("Mất khoảng một phút, không đặt thật")).toBeVisible();
     const button = panel.getByRole("button", { name: "Chạy thử" });
     expect(button).toBeEnabled();
+    expect(button).not.toHaveAttribute("title");
+  });
+
+  it("offers none while the app is closed, and says when it may", async () => {
+    vi.setSystemTime(new Date(2026, 9, 15, 21, 30));
+    const { panel } = await openSetup();
+
+    const button = panel.getByRole("button", { name: "Chạy thử" });
+    expect(button).toBeDisabled();
     expect(button).toHaveAttribute(
       "title",
-      "Không chạy thử từ 05:50 đến 06:05, để không làm gián đoạn lần đặt sân.",
+      "Chạy thử được từ 06:05 đến 21:00, khi app Vinhomes nhận đặt sân.",
     );
   });
 
