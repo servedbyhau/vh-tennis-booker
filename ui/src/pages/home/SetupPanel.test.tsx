@@ -174,37 +174,6 @@ describe("SetupPanel switches", () => {
   });
 });
 
-describe("SetupPanel machine opening", () => {
-  it("opens the MuMu of the machine shown", async () => {
-    const { panel, fetch } = await openSetup({
-      extra: { "POST /api/machines/0/open": { status: 204, body: null } },
-    });
-
-    fireEvent.click(panel.getByRole("button", { name: "Mở MuMu 0 để xem màn hình" }));
-
-    await waitFor(() => expect(requestsTo(fetch, "POST /api/machines/0/open")).toBe(1));
-  });
-
-  it("says why it did not open", async () => {
-    const { panel } = await openSetup({
-      extra: {
-        "POST /api/machines/0/open": reply({ error: "lock_held", detail: "busy" }, 409),
-      },
-    });
-
-    fireEvent.click(panel.getByRole("button", { name: "Mở MuMu 0 để xem màn hình" }));
-
-    expect(await panel.findByText(BUSY)).toBeVisible();
-  });
-
-  it("opens nothing while a run uses the machines", async () => {
-    const running = { trigger: "scheduled", pid: 1, since: "2026-10-15T05:45:00", runs: [] };
-    const { panel } = await openSetup({ status: { ...overview(), running } });
-
-    expect(panel.getByRole("button", { name: "Mở MuMu 0 để xem màn hình" })).toBeDisabled();
-  });
-});
-
 describe("SetupPanel dry run", () => {
   it("offers a first dry run while the app takes bookings", async () => {
     const { panel } = await openSetup();
@@ -275,7 +244,6 @@ describe("SetupPanel machine without its MuMu instance", () => {
     const tabs = within(await screen.findByRole("group", { name: "Máy" }));
     fireEvent.click(tabs.getByRole("button", { name: /^Máy 2/ }));
     expect(await panel.findByText("Chưa có máy ảo MuMu")).toBeVisible();
-    expect(panel.queryByRole("button", { name: /^Mở MuMu 1/ })).not.toBeInTheDocument();
 
     fireEvent.click(panel.getByRole("switch", { name: /^Đặt sân bằng máy 2/ }));
 

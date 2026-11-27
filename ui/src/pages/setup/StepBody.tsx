@@ -60,9 +60,28 @@ function MumuBody({ facts }: BodyProps) {
   );
 }
 
-/** Each machine: its MuMu instance as checked, or a button that makes it. */
+/** A button that opens the machine of MuMu instance `index`, and why it did not. */
+function useOpenButton(running: boolean) {
+  const { t } = useTranslation();
+  const open = useOpenMachine();
+  return {
+    problem: (index: number) =>
+      open.isError && open.variables === index ? errorMessage(t, open.error) : null,
+    button: (index: number) => (
+      <IconButton
+        icon="start"
+        label={t("pages.setup.open", { index })}
+        disabled={running || open.isPending}
+        onClick={() => open.mutate(index)}
+      />
+    ),
+  };
+}
+
+/** Each machine: its MuMu instance as checked, with a button that opens it, or one that makes it. */
 function MachinesBody({ facts, running }: BodyProps) {
   const { t } = useTranslation();
+  const open = useOpenButton(running);
   if (facts.report === undefined) {
     return null;
   }
@@ -95,7 +114,10 @@ function MachinesBody({ facts, running }: BodyProps) {
             tone="ok"
             title={machineTitle(t, machine)}
             hint={hint}
-          />
+            problem={open.problem(checks.mumu_index)}
+          >
+            {open.button(checks.mumu_index)}
+          </SetupRow>
         );
       })}
     </div>
@@ -105,7 +127,7 @@ function MachinesBody({ facts, running }: BodyProps) {
 /** The app installed from a file, then whether each machine has it. */
 function AppBody({ facts, running }: BodyProps) {
   const { t } = useTranslation();
-  const open = useOpenMachine();
+  const open = useOpenButton(running);
   const made = facts.machines.flatMap((machine) => {
     const checks = checksOf(facts, machine);
     return checks === undefined ? [] : [{ machine, checks }];
@@ -129,20 +151,9 @@ function AppBody({ facts, running }: BodyProps) {
                   ? "pages.setupPage.app.missing"
                   : "pages.setupPage.app.unknown",
             )}
-            problem={
-              open.isError && open.variables === checks.mumu_index
-                ? errorMessage(t, open.error)
-                : null
-            }
+            problem={open.problem(checks.mumu_index)}
           >
-            {!known && (
-              <IconButton
-                icon="window"
-                label={t("pages.setup.open", { index: checks.mumu_index })}
-                disabled={running || open.isPending}
-                onClick={() => open.mutate(checks.mumu_index)}
-              />
-            )}
+            {!known && open.button(checks.mumu_index)}
           </SetupRow>
         );
       })}
