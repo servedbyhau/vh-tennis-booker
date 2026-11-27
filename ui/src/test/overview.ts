@@ -11,7 +11,6 @@ export function overview(fields: Partial<Overview> = {}): Overview {
       start_at: "06:00",
       next_start: "2026-10-16T06:00",
       next_play_date: "2026-10-18",
-      dry_run_passed: true,
     },
     last_run: null,
     wake_blocked: false,

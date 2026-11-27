@@ -266,12 +266,6 @@ def ticket_photo(db: sqlite3.Connection, code: str) -> str | None:
     return None if row is None else row["photo"]
 
 
-def dry_run_passed(db: sqlite3.Connection) -> bool:
-    """Return whether any dry run went through every slot."""
-    row = db.execute("SELECT 1 FROM runs WHERE trigger = 'dry_run' AND status = 'ok' LIMIT 1")
-    return row.fetchone() is not None
-
-
 def quota_readings(db: sqlite3.Connection, since: str) -> dict[str, list[dict[str, Any]]]:
     """Return the newest quota read of each account, utility and month from ``since`` on.
 

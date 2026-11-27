@@ -283,7 +283,7 @@ Details live in the docstrings; this page says where things are and what must st
   database error turns history off for the process.
   Schema changes only add columns, so an older runner still writes to a newer database.
 - `history_read.py`: read-only queries for the backend (runs, one run, events, the live feed's
-  `events_after`, `dry_run_passed`, `account_subdivisions`: the subdivision each
+  `events_after`, `account_subdivisions`: the subdivision each
   MuMu instance last told); it migrates an older database first.
 
 ## Configuration and data folder

@@ -198,15 +198,6 @@ def test_activity_pages_back(path, read, record_run):
     assert older[0]["id"] == newest[0]["id"] - 1
 
 
-def test_a_passed_dry_run_is_found(path, read, record_run):
-    record_run(path, trigger="dry_run", status="failed")
-    record_run(path, trigger="scheduled", status="ok")
-    assert not history_read.dry_run_passed(read())
-
-    record_run(path, trigger="dry_run", status="ok")
-    assert history_read.dry_run_passed(read())
-
-
 def test_steps_after_a_step_come_oldest_first(path, read, record_run):
     assert history_read.last_event_id(read()) == 0
     record_run(path)

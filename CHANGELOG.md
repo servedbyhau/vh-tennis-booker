@@ -36,6 +36,7 @@ uses [Semantic Versioning](https://semver.org/).
   its old address leads to the booking page.
 - The money section and its routes (`/api/money`); its charges, prices and settings are dropped
   (schema 11), and its old address leads to the management.
+- `dry_run_passed` of `/api/schedule`: nothing waits for a dry run any more.
 
 ### Changed
 - "Dry run" waits outside 06:05-21:00, when the app takes no booking, and says so in its
