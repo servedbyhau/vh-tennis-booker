@@ -10,6 +10,7 @@ import type {
   Health,
   NewAccount,
   KeepOnState,
+  Room,
   NotificationSettings,
   Overview,
   ImportResult,
@@ -129,6 +130,11 @@ export function startAppInstall(file: Blob): Promise<TaskState> {
 /** Read how the app install started last from the app goes, or how it ended. */
 export function getAppInstallTask(): Promise<TaskState> {
   return call(client.GET("/api/app/install"));
+}
+
+/** Read whether this PC has the RAM and the disk for one more MuMu instance. */
+export function getRoom(): Promise<Room> {
+  return call(client.GET("/api/machines/room"));
 }
 
 /** Make another machine's MuMu instance, a copy of the first machine's. */

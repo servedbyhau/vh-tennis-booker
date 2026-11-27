@@ -7,6 +7,8 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A machine without its MuMu instance says in the Setup when the PC lacks the RAM or the disk
+  for one, and its "Make it" button waits (`/api/machines/room`).
 - "Book now" beside "Dry run" in the Setup books for real after a question, from the wake time
   to 21:00: before the start time it gets ready and books at it, after it at once
   (`/api/runs/now`).
@@ -54,6 +56,8 @@ uses [Semantic Versioning](https://semver.org/).
   wanted, and the status line no longer asks for one.
 
 ### Fixed
+- The RAM a new machine needs is checked against the RAM installed, not the less Windows may
+  use: a PC of 8 GB was refused a second machine.
 - While a MuMu instance is made, the status line says so instead of "a run is in progress".
 
 ## [1.2.0] - 2026-11-25

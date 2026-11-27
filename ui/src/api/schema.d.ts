@@ -766,6 +766,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/machines/room": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Room
+         * @description Tell whether a new machine's MuMu instance would fit, as making one checks first
+         *     (2 GB of RAM an instance besides 4 GB for Windows, the disk of a copy); room is assumed
+         *     where MuMu cannot be asked, as making one would tell then.
+         */
+        get: operations["read_room_api_machines_room_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/machines/new": {
         parameters: {
             query?: never;
@@ -1229,6 +1251,16 @@ export interface components {
             month_limit: number;
             /** Read At */
             read_at: string;
+        };
+        /**
+         * Room
+         * @description Whether this PC has the RAM and the disk for one more MuMu instance.
+         */
+        Room: {
+            /** Room */
+            room: boolean;
+            /** Reason */
+            reason?: string | null;
         };
         /**
          * RunDetail
@@ -3186,6 +3218,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_room_api_machines_room_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Room"];
+                };
             };
             /** @description Invalid request values, one line per value */
             422: {

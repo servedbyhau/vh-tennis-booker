@@ -65,13 +65,25 @@ def run_in_mumu(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
 
 
 class NoRoomError(RequestError):
-    """The PC has not the RAM or the disk for another instance."""
+    """The PC has not the RAM or the disk for another instance; ``reason`` says which."""
+
+    def __init__(self, message: str, reason: str = "ram") -> None:
+        super().__init__(message)
+        self.reason = reason
 
 
 def total_ram_gb() -> float:
-    """Return the PC's RAM in GB; 0 where it cannot be read (not Windows)."""
+    """Return the RAM installed in the PC in GB; 0 where it cannot be read (not Windows).
+
+    What Windows may use is less (15.85 of 16 GB on 2026-11-27: the firmware and the graphics
+    keep some), and would refuse a second machine on a PC of 8 GB; the installed RAM is read,
+    else the usable one.
+    """
     if sys.platform != "win32":
         return 0.0
+    installed = ctypes.c_ulonglong(0)
+    if ctypes.windll.kernel32.GetPhysicallyInstalledSystemMemory(ctypes.byref(installed)):  # type: ignore[attr-defined]
+        return installed.value / 1024**2  # kilobytes
 
     class MemoryStatus(ctypes.Structure):
         _fields_ = [
@@ -122,7 +134,8 @@ def check_room(
     if free < size + DISK_SPARE_BYTES:
         raise NoRoomError(
             f"A copy of MuMu instance {source} needs {(size + DISK_SPARE_BYTES) / 1024**3:.0f} GB"
-            f" of disk; {free / 1024**3:.0f} GB are free"
+            f" of disk; {free / 1024**3:.0f} GB are free",
+            reason="disk",
         )
     return count
 

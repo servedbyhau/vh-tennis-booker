@@ -29,7 +29,7 @@ from court_booker.emulator import MuMu
 from court_booker.engine import engine_command
 from court_booker.errors import EmulatorError, LockHeldError, MuMuNotFoundError, RequestError
 from court_booker.lock import RunLock, check_quiet_time
-from court_booker.new_machine import check_room
+from court_booker.new_machine import NoRoomError, check_room
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +206,32 @@ def open_machine(context: Context, request: Request, mumu_index: MumuIndex) -> R
             logger.warning("MuMu %d not opened", mumu_index, exc_info=True)
             raise
     return Response(status_code=204)
+
+
+class Room(BaseModel):
+    """Whether this PC has the RAM and the disk for one more MuMu instance."""
+
+    room: bool
+    reason: Optional[str] = None
+    """Why not: ``ram`` or ``disk``."""
+
+
+@router.get("/machines/room", response_model=Room)
+def read_room(context: Context) -> Room:
+    """Tell whether a new machine's MuMu instance would fit, as making one checks first
+    (2 GB of RAM an instance besides 4 GB for Windows, the disk of a copy); room is assumed
+    where MuMu cannot be asked, as making one would tell then."""
+    config = context.config()
+    manager = find_mumu_manager(config.mumu_manager)
+    if manager is None:
+        return Room(room=True)
+    try:
+        check_room(manager, config.mumu_index)
+    except NoRoomError as exc:
+        return Room(room=False, reason=exc.reason)
+    except EmulatorError:
+        return Room(room=True)
+    return Room(room=True)
 
 
 @router.get("/machines/new", response_model=TaskState)

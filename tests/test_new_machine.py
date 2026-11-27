@@ -117,8 +117,10 @@ def test_no_room_is_told_before_any_copy(manager, ram, free, why):
     fake = FakeMuMu()
     fake.instances[1] = {"size": 7 * GB, "running": False, "settings": {}}  # 3 with the new one
 
-    with pytest.raises(NoRoomError, match=why):
+    with pytest.raises(NoRoomError, match=why) as refused:
         check_room(manager, 0, ram_gb=lambda: ram, free_disk=lambda path: free, run=fake.run)
+
+    assert refused.value.reason == why.lower()
 
     assert not any(call[0] == "clone" for call in fake.calls)
 
