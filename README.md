@@ -154,6 +154,10 @@ Then:
    takes bookings (optional). It walks the whole booking and stops before the final
    confirmation, so nothing is booked.
 
+If the PC did not wake one morning, the daily task runs as soon as the PC is on: before 06:00 it
+still books. **Book now** beside **Dry run** books by hand, from the wake time to 21:00: before
+06:00 it gets ready and books at 06:00, after it at once.
+
 The app is in Vietnamese by default, English is one click away.
 
 ### Update
@@ -188,7 +192,7 @@ The app has two pages, **Đặt sân / Booking** and **Quản lý / Management**
   that installs the app from a file (an APK or XAPK you downloaded: installed on every MuMu instance once
   its signature is the app's own), the account the machine books with (its phone
   number and name), picked by customer first, then by phone number, a button that opens the machine's MuMu to see its screen (launched, or its
-  window brought to the front), and a dry run. A machine whose MuMu instance is not on the PC
+  window brought to the front), a dry run and **Book now**. A machine whose MuMu instance is not on the PC
   yet has a button that makes it, a copy of the first machine's with the Vinhomes app, set up to
   book (about two minutes; refused without the RAM or disk for it). Before booking, a run reads the phone number logged in on the
   machine's Vinhomes app, and logs out and in if it is not the chosen account's, trying the password

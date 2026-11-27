@@ -1,4 +1,4 @@
-"""Tests for starting a dry run, with the process launch replaced."""
+"""Tests for starting a dry run or a booking now, with the process launch replaced."""
 
 import json
 import subprocess
@@ -35,14 +35,21 @@ class FakeProcess:
         self.code = 0
 
 
+launched_argv = []
+"""The arguments of each run launched, beside ``launched``'s config paths."""
+
+
 @pytest.fixture
 def launched(monkeypatch):
     """Record dry run launches instead of starting processes; the time is 14:00."""
     calls = []
 
-    def launch(path):
+    def launch(path, argv):
         calls.append(path)
+        launched_argv.append(argv)
         return FakeProcess()
+
+    launched_argv.clear()
 
     monkeypatch.setattr(runs, "launch", launch)
     monkeypatch.setattr(runs, "datetime", At)
@@ -65,7 +72,7 @@ def test_a_second_dry_run_waits_for_the_first_to_end(app, client, launched):
     after = client.post("/api/runs/dry-run")
 
     assert while_running.status_code == 409
-    assert while_running.json()["detail"].endswith("dry run (pid 4321)")
+    assert while_running.json()["detail"].endswith("dry_run (pid 4321)")
     assert after.status_code == 202
     assert len(launched) == 2
 
@@ -115,7 +122,7 @@ def test_launch_starts_the_dry_run_command(monkeypatch, tmp_path):
 
     monkeypatch.setattr(subprocess, "Popen", popen)
 
-    runs.launch(tmp_path / "config.toml")
+    runs.launch(tmp_path / "config.toml", ["--dry-run"])
 
     ((argv, options),) = started
     assert argv == [
@@ -126,3 +133,48 @@ def test_launch_starts_the_dry_run_command(monkeypatch, tmp_path):
     ]
     assert options["cwd"] == tmp_path
     assert options["stdout"] is subprocess.DEVNULL
+
+
+def test_a_dry_run_is_launched_as_one(client, launched):
+    client.post("/api/runs/dry-run")
+
+    assert launched_argv == [["--dry-run"]]
+
+
+@pytest.mark.parametrize(
+    ("moment", "argv"),
+    [
+        (datetime(2026, 10, 14, 5, 52), ["--at", "06:00"]),  # the scheduled run did not start
+        (datetime(2026, 10, 14, 14, 0), []),
+    ],
+)
+def test_a_booking_now_waits_for_the_start_time_or_books_at_once(
+    client, launched, monkeypatch, moment, argv
+):
+    monkeypatch.setattr(At, "moment", moment)
+
+    response = client.post("/api/runs/now")
+
+    assert response.status_code == 202
+    assert launched_argv == [argv]
+
+
+@pytest.mark.parametrize("moment", [datetime(2026, 10, 14, 5, 30), datetime(2026, 10, 14, 21, 0)])
+def test_no_booking_now_while_the_app_is_closed(client, launched, monkeypatch, moment):
+    monkeypatch.setattr(At, "moment", moment)
+
+    response = client.post("/api/runs/now")
+
+    assert response.status_code == 400
+    assert launched == []
+
+
+def test_a_booking_now_shows_as_a_run_by_hand_and_blocks_a_dry_run(app, client, launched):
+    client.post("/api/runs/now")
+
+    status = client.get("/api/status").json()
+    dry_run = client.post("/api/runs/dry-run")
+
+    assert status["running"]["trigger"] == "manual"
+    assert dry_run.status_code == 409
+    assert dry_run.json()["detail"].endswith("booking (pid 4321)")

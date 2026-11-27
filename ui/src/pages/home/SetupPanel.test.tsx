@@ -361,3 +361,34 @@ describe("SetupPanel app install", () => {
     );
   });
 });
+
+describe("SetupPanel book now", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("books for real after a question, while the app takes bookings", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 15, 14, 0));
+    const { panel, fetch } = await openSetup({
+      extra: { "POST /api/runs/now": reply({ pid: 1, started_at: "2026-10-15T14:00:00" }, 202) },
+    });
+
+    fireEvent.click(panel.getByRole("button", { name: "Đặt ngay" }));
+    expect(panel.getByText(/^Đặt sân thật ngay bây giờ\?/)).toBeVisible();
+    expect(requestsTo(fetch, "POST /api/runs/now")).toBe(0);
+    fireEvent.click(panel.getByRole("button", { name: "Đặt" }));
+
+    await waitFor(() => expect(requestsTo(fetch, "POST /api/runs/now")).toBe(1));
+  });
+
+  it("cannot book now while the app is closed", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 15, 22, 0));
+    const { panel } = await openSetup();
+
+    const button = panel.getByRole("button", { name: "Đặt ngay" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("title", expect.stringMatching(/đến 21:00/));
+  });
+});

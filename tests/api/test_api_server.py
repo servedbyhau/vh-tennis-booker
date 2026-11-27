@@ -90,3 +90,54 @@ def test_the_data_folder_config_is_created_when_none_is_given(served, data_home)
     assert app.state.context.config_path == data_home / "config.toml"
     assert load_config(data_home / "config.toml") == Config()
     assert app.state.context.data.root == data_home
+
+
+class FakeTask:
+    """The daily task: whether it is there, and each install."""
+
+    def __init__(self, there=True):
+        self.there = there
+        self.installs = []
+
+    def installed(self):
+        return self.there
+
+    def install(self, config_path, wake_at):
+        self.installs.append((config_path, wake_at))
+
+
+@pytest.fixture
+def task(monkeypatch):
+    fake = FakeTask()
+    monkeypatch.setattr(server.schedule, "installed", fake.installed)
+    monkeypatch.setattr(server.schedule, "install", fake.install)
+    return fake
+
+
+class Noon(server.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 10, 14, 12, 0)
+
+
+def test_the_installed_app_installs_its_daily_task_again(task, tmp_path, monkeypatch, data_home):
+    from court_booker.paths import DataFolder
+
+    monkeypatch.setattr(server, "datetime", Noon)
+    config = Config(wake_at="05:45")
+
+    server.refresh_daily_task(tmp_path / "config.toml", config, DataFolder(data_home), True)
+    server.refresh_daily_task(tmp_path / "config.toml", config, DataFolder(data_home), False)
+
+    assert task.installs == [(tmp_path / "config.toml", "05:45")]  # never from the sources
+
+
+def test_no_daily_task_is_made_when_it_is_off(task, tmp_path, monkeypatch, data_home):
+    from court_booker.paths import DataFolder
+
+    monkeypatch.setattr(server, "datetime", Noon)
+    task.there = False
+
+    server.refresh_daily_task(tmp_path / "config.toml", Config(), DataFolder(data_home), True)
+
+    assert task.installs == []

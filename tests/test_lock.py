@@ -288,3 +288,13 @@ def test_an_unreadable_lock_is_cleared(tmp_path, machine):
     lock.acquire("dry_run")
 
     assert lock.holder().pid == 200
+
+
+def test_the_app_takes_bookings_from_its_opening_to_21_00():
+    from court_booker.lock import check_booking_hours
+
+    check_booking_hours(datetime(2026, 10, 14, 6, 0), "06:00", "booking")
+    check_booking_hours(datetime(2026, 10, 14, 20, 59), "06:00", "booking")
+    for moment in (datetime(2026, 10, 14, 5, 59), datetime(2026, 10, 14, 21, 0)):
+        with pytest.raises(RequestError, match="the app is closed"):
+            check_booking_hours(moment, "06:00", "booking")

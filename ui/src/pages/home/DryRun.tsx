@@ -9,6 +9,7 @@ import { localToday } from "../../format";
 import { quietEnd } from "../../quiet";
 import { failureReason } from "../../reasons";
 import { useFormat } from "../../useFormat";
+import { BookNow } from "./BookNow";
 import styles from "./DryRun.module.css";
 
 /** The newest dry run in a line: when, and whether it passed or why not. */
@@ -40,9 +41,9 @@ function LastDryRun({ run }: { run: RunSummary | undefined }) {
 }
 
 /**
- * A dry run and how the last one went. It walks the whole booking and stops before "Xác nhận";
- * the backend refuses one in the quiet time, which the tooltip tells, and none starts while
- * another run holds the emulator.
+ * A dry run and how the last one went, and a booking now beside it. The dry run walks the whole
+ * booking and stops before "Xác nhận"; the backend refuses one in the quiet time, which the
+ * tooltip tells, and none starts while another run holds the emulator.
  */
 export function DryRun({ schedule, running }: { schedule: ScheduleState; running: boolean }) {
   const { t } = useTranslation();
@@ -61,18 +62,21 @@ export function DryRun({ schedule, running }: { schedule: ScheduleState; running
   return (
     <div className={styles.dryRun}>
       <div className={styles.line}>{line}</div>
-      <Button
-        className={styles.button}
-        title={t("pages.setup.dryRun.quiet", {
-          from: schedule.wake_at,
-          to: quietEnd(schedule.start_at),
-        })}
-        disabled={running || dryRun.isPending}
-        onClick={() => dryRun.mutate()}
-      >
-        <Icon name="play" />
-        {t(dryRun.isPending ? "pages.setup.dryRun.starting" : "pages.setup.dryRun.button")}
-      </Button>
+      <div className={styles.buttons}>
+        <Button
+          className={styles.button}
+          title={t("pages.setup.dryRun.quiet", {
+            from: schedule.wake_at,
+            to: quietEnd(schedule.start_at),
+          })}
+          disabled={running || dryRun.isPending}
+          onClick={() => dryRun.mutate()}
+        >
+          <Icon name="play" />
+          {t(dryRun.isPending ? "pages.setup.dryRun.starting" : "pages.setup.dryRun.button")}
+        </Button>
+        <BookNow schedule={schedule} running={running} />
+      </div>
     </div>
   );
 }

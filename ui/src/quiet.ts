@@ -13,6 +13,15 @@ function clock(now: Date): string {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
+/** The Vinhomes app takes bookings until this time (lock.py BOOKING_CLOSES). */
+export const BOOKING_CLOSES = "21:00";
+
+/** Tell whether a run may start at `now` from the app: from `opens` until the app closes. */
+export function inBookingHours(now: Date, opens: string): boolean {
+  const time = clock(now);
+  return opens <= time && time < BOOKING_CLOSES;
+}
+
 /** Tell whether `now` falls in the quiet time, from the wake time to the start + 5 minutes. */
 export function inQuietTime(now: Date, wake: string, start: string): boolean {
   const time = clock(now);

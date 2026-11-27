@@ -672,6 +672,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Booking
+         * @description Book for real now, as by hand (``manual``): before the start time the run gets ready
+         *     and books at it (``--at``), as the scheduled run would; from it, at once.
+         *
+         *     For a morning the scheduled run missed (the PC did not wake) or one booked by hand. Refused
+         *     (400 ``bad_request``) before the wake time and from 21:00, when the app is closed, and (409
+         *     ``lock_held``) while a run holds the lock, or while a run or a task started last from the
+         *     app is still running. Every machine books, whatever its days.
+         */
+        post: operations["start_booking_api_runs_now_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/machines/quota": {
         parameters: {
             query?: never;
@@ -923,7 +949,8 @@ export interface components {
         };
         /**
          * DryRunStarted
-         * @description A dry run has started; its steps show in the history as it goes.
+         * @description A run has started (a dry run, or a booking now); its steps show in the history as it
+         *     goes.
          */
         DryRunStarted: {
             /** Pid */
@@ -2985,6 +3012,44 @@ export interface operations {
         };
     };
     start_dry_run_api_runs_dry_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunStarted"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    start_booking_api_runs_now_post: {
         parameters: {
             query?: never;
             header?: never;

@@ -309,7 +309,11 @@ Details live in the docstrings; this page says where things are and what must st
   start); `schedule install` and
   `PUT /api/schedule` call `ensure_wake_timers` (`powercfg`).
 - `schedule.py`: the Windows task (`schtasks`) that wakes the PC at `wake_at` and runs the
-  engine of whatever installed it: the runner folder's Python, or the packaged app.
+  engine of whatever installed it: the runner folder's Python, or the packaged app. A start
+  missed (the PC did not wake) runs as soon as it can (`StartWhenAvailable`): before the start
+  time it still books, after it the run ends at once. The installed app's backend installs the
+  task again when it starts (`server.refresh_daily_task`: only while it is on, never from the
+  sources, around the scheduled run or while a run goes on), so an update's task settings apply.
 - `keep_on.py`: the PC kept on while plugged in, in the active power plan's plugged-in values
   (`powercfg /qh`, which shows the hidden ones too; a setting the PC lacks is left out): no
   sleep, no hibernation, nothing on closing the lid, the screen off after 5 minutes (never with
@@ -381,6 +385,7 @@ values 422 `invalid_request`.
 | `GET /api/setup` | Device checks; nothing is changed (auto setup is the command line's) |
 | `GET`/`PUT /api/schedule` | The task: state, times, whether a dry run ever passed; switching on needs none and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
 | `POST /api/runs/dry-run` | Starts a dry run in its own process (refused in the quiet time or while a run holds the lock) |
+| `POST /api/runs/now` | Books for real in its own process, as by hand (`manual`): with `--at` the start time before it, at once from it; refused before the wake time and from 21:00 (`lock.check_booking_hours`), and as a dry run while something runs |
 | `GET /api/tickets`, `/api/tickets/{code}/photo` | Every machine's tickets as the runs last read them (`history_read.list_tickets`), with whose account each is of and the machine that can cancel it now (`machine`: the one its account is attached to, the one that read it when no chosen account did, empty when its account is on no machine), and a ticket's picture from the data folder's `tickets`, by its code alone |
 | `PUT /api/tickets/{code}/sent` | Mark the ticket sent to its customer now (`sent_at`, schema 7), or not; a later run reading it again keeps the mark |
 | `POST /api/tickets/{code}/cancel`, `GET /api/tickets/cancel` | Start `court-booker cancel` for the ticket on its `machine` (refused for a ticket cancelled already, 409 `ticket_cancelled`, or on no machine, 409 `no_machine`), and how the one started last goes (`running`, its `exit_code`) |
@@ -464,7 +469,8 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   and, for a machine beside the
   first, its own, `PUT /api/instances/{mumu_index}`; the first and the last locked while a run
   goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run
-  (`DryRun`). `AccountPicker` shows the account in use under its title and, once pressed, the
+  (`DryRun`) with the booking now beside it (`BookNow`: after a question, from the wake time to
+  21:00 by `useNow`'s clock). `AccountPicker` shows the account in use under its title and, once pressed, the
   customers who have accounts; a customer pressed, their accounts (back to the customers above
   them, each opening starts from the customers); a press saves one, and one that another machine
   books with moves only after a question.

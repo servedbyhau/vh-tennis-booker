@@ -49,7 +49,7 @@ _TASK_XML = """<?xml version="1.0" encoding="UTF-16"?>
     <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
     <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
     <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <StartWhenAvailable>false</StartWhenAvailable>
+    <StartWhenAvailable>true</StartWhenAvailable>
     <WakeToRun>true</WakeToRun>
     <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
     <Enabled>true</Enabled>
@@ -89,7 +89,9 @@ def build_task_xml(
     """Return Task Scheduler XML running ``--scheduled`` daily at ``wake_at``.
 
     The task wakes the PC from sleep and runs only while ``user`` is signed in,
-    because the emulator needs the interactive desktop.
+    because the emulator needs the interactive desktop. A start missed (the PC did not wake)
+    runs as soon as it can: before the start time it still books, after it the run ends at
+    once (the start time has passed).
     """
     wake = parse_time(wake_at, "wake_at")
     arguments = " ".join([*engine[1:], f'--config "{config_path}" --scheduled'])

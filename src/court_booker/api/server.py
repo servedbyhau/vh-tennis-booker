@@ -5,18 +5,20 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-from court_booker import credentials
+from court_booker import credentials, schedule
 from court_booker.api.app import create_app
 from court_booker.api.context import AppContext
-from court_booker.config import ensure_config, load_config
+from court_booker.config import Config, ensure_config, load_config
 from court_booker.customers import adopt_saved_logins
+from court_booker.errors import CourtBookerError
+from court_booker.lock import RunLock, check_quiet_time
 from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_logging
 from court_booker.notify import DEFAULT_LANGUAGE
-from court_booker.paths import data_folder
+from court_booker.paths import DataFolder, data_folder
 from court_booker.tickets import forget_expired
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -49,6 +51,26 @@ def built_ui(folder: Path) -> Path | None:
     return folder if (folder / "index.html").is_file() else None
 
 
+def refresh_daily_task(
+    config_path: Path, config: Config, data: DataFolder, packaged: bool | None = None
+) -> None:
+    """Install the daily task again in the installed app, so the task an older version made
+    takes this one's settings; never from the sources (the task would run them), never while
+    a run goes on or around the scheduled run, and only while the task is on."""
+    if not (getattr(sys, "frozen", False) if packaged is None else packaged):
+        return
+    try:
+        if not schedule.installed():
+            return
+        check_quiet_time(datetime.now(), config.wake_at, config.start_at, "task refresh")
+        if RunLock(data.lock).running_holder() is not None:
+            return
+        schedule.install(config_path, config.wake_at)
+        logger.info("Daily task installed again at %s", config.wake_at)
+    except CourtBookerError as exc:
+        logger.warning("Daily task not installed again: %s", exc)
+
+
 def main(argv: list[str]) -> int:
     """Serve the backend on 127.0.0.1 until stopped."""
     import uvicorn  # imported here so the tests can replace uvicorn.run
@@ -68,6 +90,7 @@ def main(argv: list[str]) -> int:
     # Logins saved before there were customers, which the app then shows as one's account.
     name = CUSTOMER_NAMES.get(config.notification_language, CUSTOMER_NAMES[DEFAULT_LANGUAGE])
     adopt_saved_logins(data.database, credentials.default_store(), name.format)
+    refresh_daily_task(config_path, config, data)
     log_config: dict[str, Any] | None = uvicorn.config.LOGGING_CONFIG
     if sys.stdout is None:
         # The packaged app has no console: uvicorn's formatter would fail on it, and only the

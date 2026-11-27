@@ -350,6 +350,13 @@
         "stopped": "dừng giữa chừng",
         "quiet": "Không chạy thử từ {{from}} đến {{to}}, để không làm gián đoạn lần đặt sân."
       },
+      "bookNow": {
+        "button": "Đặt ngay",
+        "ask": "Đặt sân thật ngay bây giờ? Trước {{start}} thì chuẩn bị rồi đặt đúng {{start}}.",
+        "yes": "Đặt",
+        "no": "Thôi",
+        "hours": "Đặt ngay được từ {{from}} đến {{to}}, khi app Vinhomes nhận đặt sân."
+      },
       "machine": {
         "missing": "Chưa có máy ảo MuMu",
         "create": "Tạo máy ảo",

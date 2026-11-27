@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- "Book now" beside "Dry run" in the Setup books for real after a question, from the wake time
+  to 21:00: before the start time it gets ready and books at it, after it at once
+  (`/api/runs/now`).
 - The Vinhomes app installs from a file in the Setup: an APK or XAPK downloaded by hand goes on
   every MuMu instance, once each APK in it is signed by the app's own key
   (`court-booker install-app`, `/api/app/install`).
@@ -33,6 +36,9 @@ uses [Semantic Versioning](https://semver.org/).
   (schema 11), and its old address leads to the management.
 
 ### Changed
+- A morning start the PC missed runs as soon as the PC is on, still booking before the start
+  time; the installed app installs the daily task again when it opens, so this applies without
+  switching Auto-book off and on.
 - The overview shows only what to look at, while there is something, and the machines: the
   account each books with, what it books and its last 06:00 run. The month's figures and the
   next days' tickets are gone.
