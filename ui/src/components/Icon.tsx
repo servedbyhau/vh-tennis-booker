@@ -8,6 +8,8 @@ import {
   ChevronsUpDown,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
+  CircleDashed,
   Clock,
   Copy,
   Download,
@@ -39,6 +41,10 @@ import styles from "./Icon.module.css";
 const DRAWINGS = {
   /** A time set ahead, such as the wake time or a run on schedule. */
   clock: Clock,
+  /** Something the booking lacks. */
+  warn: CircleAlert,
+  /** Something not known yet. */
+  unknown: CircleDashed,
   /** Someone: a customer, who speaks for them, or a run started by hand. */
   person: UserRound,
   /** How to reach someone. */

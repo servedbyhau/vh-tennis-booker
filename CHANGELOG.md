@@ -7,6 +7,9 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A Setup page (`/setup`) takes a new PC through six steps, each checked by the app: the PC kept
+  on, MuMu Player, the machines, the Vinhomes app on each, the accounts, then a dry run and
+  Auto-book. It opens on the first step not done and counts those done.
 - A machine without its MuMu instance says in the Setup when the PC lacks the RAM or the disk
   for one, and its "Make it" button waits (`/api/machines/room`).
 - "Book now" beside "Dry run" in the Setup books for real after a question, from the wake time
@@ -41,6 +44,9 @@ uses [Semantic Versioning](https://semver.org/).
   loads, and a save drops them.
 
 ### Changed
+- The panel beside the ticket is "Settings" ("Cài đặt"), with what is used day to day; keeping
+  the PC on, installing the app and making a machine moved to the Setup page, where switching
+  on a machine without its MuMu instance leads.
 - `GET /api/setup` tells each MuMu instance apart (screen, cores and RAM, the Vinhomes app), the
   app as last seen while the instance is off, and waits around the scheduled run and while a run
   or a task uses MuMu.

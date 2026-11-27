@@ -16,6 +16,7 @@ import {
   getRun,
   getNotifications,
   getSettings,
+  getSetup,
   listEvents,
   listRuns,
   listCustomers,
@@ -37,6 +38,7 @@ export const queryKeys = {
   mumuInstances: ["mumuInstances"] as const,
   notifications: ["notifications"] as const,
   keepOn: ["keepOn"] as const,
+  setup: ["setup"] as const,
   accounts: ["accounts"] as const,
   tickets: ["tickets"] as const,
   cancel: ["cancel"] as const,
@@ -185,6 +187,14 @@ export function useMumuInstances() {
     queryFn: getMumuInstances,
     staleTime: Infinity,
   });
+}
+
+/**
+ * Check the PC and its MuMu instances, again on each mount and focus (the checks ask MuMu, and the
+ * backend refuses them while a run uses it), never retried: a refusal shows at once.
+ */
+export function useSetupReport() {
+  return useQuery({ queryKey: queryKeys.setup, queryFn: getSetup, retry: false });
 }
 
 /** Read whether the PC is kept on while plugged in; Windows is read again on each mount. */

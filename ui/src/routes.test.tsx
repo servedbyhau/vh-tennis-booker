@@ -37,7 +37,7 @@ describe("routes", () => {
   ])("sends the old address %s on to %s", async (path, to) => {
     const router = renderAt(path);
 
-    await screen.findByRole("region", { name: /^(Lịch sử|Thiết lập|Chuẩn bị)/ });
+    await screen.findByRole("region", { name: /^(Lịch sử|Cài đặt|Chuẩn bị)/ });
     const { pathname, search } = router.state.location;
     expect(pathname + search).toBe(to);
     expect(router.state.historyAction).toBe("REPLACE");

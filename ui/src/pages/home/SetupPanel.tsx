@@ -4,13 +4,13 @@ import { machineAt, useMachines } from "../../machines";
 import { AccountPicker } from "./AccountPicker";
 import { DryRun } from "./DryRun";
 import styles from "./SetupPanel.module.css";
-import { AppInstallRow } from "./AppInstall";
-import { DailyRow, KeepOnRow, MachineRow, NotifyRow } from "./SetupSwitches";
+import { DailyRow, MachineRow, NotifyRow } from "./SetupSwitches";
 
 /**
- * The panel beside the ticket: what holds for every machine (the daily booking and the result
- * notification), then the machine shown (whether the runs book with it, and the account it
- * books with), and the dry run at the foot.
+ * The Settings beside the ticket, what is used day to day: what holds for every machine (the
+ * daily booking and the result notification), then the machine shown (whether the runs book with
+ * it, and the account it books with), and the dry run at the foot. What a new PC needs once is
+ * on the Setup page.
  */
 export function SetupPanel({ machine }: { machine: number }) {
   const { t } = useTranslation();
@@ -28,8 +28,6 @@ export function SetupPanel({ machine }: { machine: number }) {
           <div className={styles.card}>
             <DailyRow schedule={overview.data.schedule} running={running} />
             <NotifyRow />
-            <KeepOnRow />
-            <AppInstallRow running={running} />
           </div>
         )}
         {shown.mumuIndex !== null && (

@@ -24,6 +24,7 @@
   "nav": {
     "label": "Trang",
     "booking": "Đặt sân",
+    "setup": "Thiết lập",
     "management": "Quản lý"
   },
   "pages": {
@@ -299,7 +300,7 @@
       }
     },
     "panel": {
-      "setup": "Thiết lập"
+      "setup": "Cài đặt"
     },
     "setup": {
       "daily": {
@@ -376,6 +377,55 @@
           "5": "Đang có một lần chạy khác. Hãy chờ nó xong rồi thử lại.",
           "other": "Không tạo được máy ảo."
         }
+      }
+    },
+    "setupPage": {
+      "title": "Thiết lập",
+      "progress": "{{done}}/{{total}} bước xong",
+      "check": "Kiểm tra lại",
+      "checking": "Đang kiểm tra…",
+      "steps": "Các bước",
+      "stepOf": "Bước {{number}}/{{total}}",
+      "done": "Xong",
+      "todo": "Cần làm",
+      "previous": "Bước trước",
+      "next": "Bước tiếp",
+      "finish": "Xong, về Đặt sân",
+      "power": {
+        "title": "Giữ máy luôn chạy",
+        "why": "05:45 máy tự thức và chạy tới khi đặt xong."
+      },
+      "mumu": {
+        "title": "MuMu Player",
+        "why": "Bạn tự cài MuMu Player; còn lại app làm.",
+        "found": "Đã có MuMu Player",
+        "missing": "Chưa có MuMu Player",
+        "how": "Tải ở mumuplayer.com, cài mặc định, rồi bấm Kiểm tra lại."
+      },
+      "machines": {
+        "title": "Máy ảo",
+        "why": "Mỗi máy ảo đặt sân bằng một tài khoản.",
+        "ready": "2 nhân · 2 GB · 540×1600",
+        "later": "Tự chỉnh 2 nhân, 2 GB, 540×1600 khi chạy",
+        "off": "đang tắt",
+        "first": "MuMu chưa có máy ảo nào"
+      },
+      "app": {
+        "title": "App Vinhomes",
+        "why": "Chọn file APK hoặc XAPK; app kiểm tra chữ ký rồi cài vào mọi máy ảo.",
+        "ok": "Đã có app",
+        "missing": "Chưa có app",
+        "unknown": "Chưa biết · mở máy để kiểm tra"
+      },
+      "accounts": {
+        "title": "Tài khoản",
+        "why": "Đăng nhập app trong máy ảo lần đầu, rồi chọn tài khoản cho máy.",
+        "none": "Chưa chọn tài khoản",
+        "choose": "Chọn ở Đặt sân"
+      },
+      "daily": {
+        "title": "Chạy thử và Tự đặt",
+        "why": "Chạy thử không đặt thật; xong thì bật Tự đặt."
       }
     },
     "notFound": {

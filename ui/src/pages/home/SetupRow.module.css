@@ -22,6 +22,16 @@
   color: var(--color-muted);
 }
 
+/* What the Setup page checked: right in the stamp's blue, to do in the failed colour. */
+.ok .icon {
+  background: var(--color-stamp);
+  color: var(--color-on-ink);
+}
+
+.bad .icon {
+  color: var(--color-failed);
+}
+
 .text {
   flex: 1 1 auto;
   min-width: 0;

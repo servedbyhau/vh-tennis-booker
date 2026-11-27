@@ -27,6 +27,7 @@ export function AppInstallRow({ running }: { running: boolean }) {
   useEffect(() => {
     if (ended) {
       void cache.invalidateQueries({ queryKey: queryKeys.overview });
+      void cache.invalidateQueries({ queryKey: queryKeys.setup });
     }
   }, [ended, cache]);
 
