@@ -16,6 +16,9 @@ from court_booker.notify import (
     failure_reason,
     format_notification,
     format_quota_warning,
+    format_ticket_caption,
+    format_zalo_report,
+    format_zalo_test,
     send_windows,
 )
 from court_booker.runner import RoundResult
@@ -380,3 +383,39 @@ def test_the_quota_warning_names_the_sport_in_its_language():
 
     assert body("en").startswith("Pickleball: 1/8 left in Nov 2026")
     assert body("vi").startswith("Sân Pickleball còn 1/8")
+
+
+def test_the_zalo_report_names_whose_account_it_booked_with():
+    text = format_zalo_report("Đặt sân 30/11: 1/1 thành công", "✅ 17:00 - 18:00 · S6", "An · BON")
+
+    assert text.splitlines() == [
+        "Đặt sân 30/11: 1/1 thành công",
+        "👤 An · BON",
+        "✅ 17:00 - 18:00 · S6",
+    ]
+    assert format_zalo_report("Title", "line") == "Title\nline"
+
+
+@pytest.mark.parametrize(
+    ("language", "lines"),
+    [
+        ("vi", ["👤 An · BON", "S6 · 30/11 · 17:00 - 18:00", "Mã vé 1234567"]),
+        ("en", ["👤 An · BON", "S6 · 30 Nov · 17:00 - 18:00", "Ticket 1234567"]),
+        ("fr", ["👤 An · BON", "S6 · 30/11 · 17:00 - 18:00", "Mã vé 1234567"]),
+    ],
+)
+def test_a_ticket_s_caption_says_whose_and_when(language, lines):
+    caption = format_ticket_caption(
+        code="1234567",
+        court="S6 - Sân tennis",
+        play_date=date(2026, 11, 30),
+        slot="17:00 - 18:00",
+        holder="An · BON",
+        language=language,
+    )
+    assert caption.splitlines() == lines
+
+
+def test_the_zalo_test_message_is_in_the_saved_language():
+    assert format_zalo_test("vi").startswith("Court Booker đã kết nối.")
+    assert format_zalo_test("en").startswith("Court Booker is linked.")

@@ -1772,6 +1772,218 @@
         }
       }
     },
+    "/api/zalo": {
+      "get": {
+        "tags": [
+          "zalo"
+        ],
+        "summary": "Read Zalo",
+        "description": "Read whether runs send to Zalo, and to whom.",
+        "operationId": "read_zalo_api_zalo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZaloState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "zalo"
+        ],
+        "summary": "Switch Zalo",
+        "description": "Switch sending to Zalo on or off; it applies from the next run.",
+        "operationId": "switch_zalo_api_zalo_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZaloSwitch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZaloState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "zalo"
+        ],
+        "summary": "Unlink Zalo",
+        "description": "Forget the bot and the chat; nothing is sent to Zalo until linked again.",
+        "operationId": "unlink_zalo_api_zalo_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/zalo/link": {
+      "post": {
+        "tags": [
+          "zalo"
+        ],
+        "summary": "Link Zalo",
+        "description": "Link the bot of ``token`` to whoever wrote to it last, and switch sending on.\n\nWaits up to :data:`WAIT_FOR_MESSAGE` for a message to the bot, then sends one back in the\nsaved language; only a link that sent it is saved. A token Zalo does not know answers\n400 ``zalo_token``, no message 409 ``zalo_no_message``, any other failure 503 ``zalo``.",
+        "operationId": "link_zalo_api_zalo_link_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZaloLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZaloState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/zalo/test": {
+      "post": {
+        "tags": [
+          "zalo"
+        ],
+        "summary": "Test Zalo",
+        "description": "Send a sample message to the linked chat, whether sending is on or not.\n\nWithout a link 409 ``zalo_unlinked``; a message Zalo did not take 503 ``zalo``.",
+        "operationId": "test_zalo_api_zalo_test_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Invalid request values, one line per value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error with a stable code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/setup": {
       "get": {
         "tags": [
@@ -4341,6 +4553,68 @@
         ],
         "title": "Ticket",
         "description": "One ticket of an account, as the app's history page last showed it."
+      },
+      "ZaloLinkRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 8,
+            "title": "Token"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "ZaloLinkRequest",
+        "description": "The token of the user's bot, as the Zalo Bot Creator gave it."
+      },
+      "ZaloState": {
+        "properties": {
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linked",
+          "enabled"
+        ],
+        "title": "ZaloState",
+        "description": "Whether a run's outcome and tickets go to Zalo, and to whom."
+      },
+      "ZaloSwitch": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "ZaloSwitch",
+        "description": "Sending to Zalo on or off."
       }
     }
   }

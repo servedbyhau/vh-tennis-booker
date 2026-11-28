@@ -115,6 +115,17 @@ def closed_mumu(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def zalo_offline(monkeypatch):
+    """Fail any request to Zalo that a test did not stand in for: no test reaches the network."""
+    from court_booker import zalo
+
+    def post(url, body, content_type, timeout):
+        raise AssertionError("a test reached for Zalo")
+
+    monkeypatch.setattr(zalo, "http_post", post)
+
+
+@pytest.fixture(autouse=True)
 def windows_notifications(monkeypatch):
     """Record the notifications a run would show as ``(title, body)``; no test runs PowerShell."""
     from court_booker import cli

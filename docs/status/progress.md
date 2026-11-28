@@ -39,7 +39,8 @@ Last updated: 2026-11-27.
   a file (signature pinned), Book now and a missed start run late, the dry run only from
   06:05 to 21:00, the RAM warning for a new machine (installed RAM read), `dry_run_passed` and
   Telegram removed, the Setup page and its count in the header. The installed app is at #344.
-  Open: Setup first in the header, the open button moved to the Setup's machines.
+  #345 (Setup first in the header, the open button in the Setup's machines) merged.
+  Open: results and tickets on Zalo (`feat/zalo-send`).
 - Tried on real machines: the ticket reading on three accounts, the account check and a forced change
   of account on one. Not yet: either after a real 06:00 booking, a change between two different
   accounts, a changed phone number, whose account a run is of.

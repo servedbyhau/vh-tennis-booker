@@ -20,6 +20,7 @@ from court_booker.errors import (
 )
 from court_booker.keep_on import PowerPlanError
 from court_booker.new_machine import NoRoomError
+from court_booker.zalo import NoMessageError, ZaloError, ZaloTokenError
 
 
 class NotFoundError(CourtBookerError):
@@ -36,6 +37,10 @@ class NoMachineError(CourtBookerError):
 
 class TicketCancelledError(CourtBookerError):
     """The ticket is cancelled already."""
+
+
+class ZaloUnlinkedError(CourtBookerError):
+    """No Zalo bot is linked, so there is nothing to send with."""
 
 
 class InvalidSettingsError(CourtBookerError):
@@ -66,6 +71,9 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (NoMachineError, 409, "no_machine"),
     (TicketCancelledError, 409, "ticket_cancelled"),
     (NoRoomError, 409, "no_room"),
+    (NoMessageError, 409, "zalo_no_message"),
+    (ZaloUnlinkedError, 409, "zalo_unlinked"),
+    (ZaloTokenError, 400, "zalo_token"),
     (RequestError, 400, "bad_request"),
     (DeviceError, 503, "device"),
     (AppNotReadyError, 503, "app_not_ready"),
@@ -73,6 +81,7 @@ _STATUSES: tuple[tuple[type[CourtBookerError], int, str], ...] = (
     (NotificationError, 503, "notification"),
     (PowerPlanError, 503, "power"),
     (CredentialError, 503, "credentials"),
+    (ZaloError, 503, "zalo"),
 )
 """First match wins: HTTP status and code per error class."""
 
