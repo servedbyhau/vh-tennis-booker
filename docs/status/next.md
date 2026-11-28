@@ -2,7 +2,7 @@
 
 The plan of the one task to do next; rewrite it when that task is done.
 
-Last updated: 2026-11-27.
+Last updated: 2026-11-28.
 
 ## Start of a session
 
@@ -17,25 +17,27 @@ Since 2026-11-25 each 06:00 run logs "Opening: ..." on each machine (`opening.py
 asked for 5-7 days of it before deciding whether the first tap should wait until the PC clock
 (and so Android's) has passed 06:00 too: the "chỉ nhận đăng ký từ 06:00" notice showed on about
 half the days, costing 0.5-1 s. Compare, per day, Android's offset, the first tap by Android's
-clock and the attempt that opened the calendar.
+clock and the attempt that opened the calendar. Seen so far: the notice showed exactly on the
+days Android's clock was behind NTP (27/11: -0.23 s, all three machines, calendar after 0.53 s
+instead of 0.07-0.26 s).
 
-## Next task: the Setup page
+## Next task: results and tickets on Zalo
 
-Asked by the user on 2026-11-27 so a new PC needs only MuMu Player, the Vinhomes file and the
-app: a page that takes it through six steps, each checked (drawn and agreed first; short words,
-icons where needed). Three stacked branches: the checks per MuMu instance (`feat/setup-report`,
-#342), the page with the panel beside the ticket renamed Settings (`feat/setup-page`; a machine
-switched on without its MuMu instance leads to the page), then the count of the steps left in
-the header and a line on the booking page. Merge in order, install `develop` (not from 05:45 to
-06:05), the user tries it; then a release.
+Asked by the user on 2026-11-28, through their own Zalo Bot (the official way for one person:
+Zalo OA and ZNS are for businesses, personal-account libraries risk a ban). First the user's own
+chat (they forward to customers); sending straight to each customer, who writes to the bot
+once, may follow. Two stacked branches: sending and the routes (`feat/zalo-send`), then the
+Settings row that links the bot (`feat/zalo-settings`). Not known from the docs, to try for
+real: whether the bot may still write after a night or days without a message from the user
+(error 422), and the free plan's monthly quota (3,000 messages and 50 people per bot by
+third-party pages). Then a release with the Setup page (installed since #344).
 
 Decided with the user on 2026-11-23: a run never changes the account by itself (a login at 05:46
 could cost the booking, a customer's phone may be logged out, two accounts may share an
 apartment's quota); with one left and two slots, the app books the first and refuses the second.
 Sharing the bookings out over a customer's accounts belongs with the schedule.
 
-Put off by the user: the days each machine books on (a schedule), and sending results and tickets
-over Zalo.
+Put off by the user: the days each machine books on (a schedule).
 
 ## After that
 

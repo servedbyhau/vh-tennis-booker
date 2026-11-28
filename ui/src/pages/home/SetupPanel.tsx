@@ -5,10 +5,11 @@ import { AccountPicker } from "./AccountPicker";
 import { DryRun } from "./DryRun";
 import styles from "./SetupPanel.module.css";
 import { DailyRow, MachineRow, NotifyRow } from "./SetupSwitches";
+import { ZaloRow } from "./ZaloRow";
 
 /**
  * The Settings beside the ticket, what is used day to day: what holds for every machine (the
- * daily booking and the result notification), then the machine shown (whether the runs book with
+ * daily booking, the result notification and Zalo), then the machine shown (whether the runs book with
  * it, and the account it books with), and the dry run at the foot. What a new PC needs once is
  * on the Setup page.
  */
@@ -28,6 +29,7 @@ export function SetupPanel({ machine }: { machine: number }) {
           <div className={styles.card}>
             <DailyRow schedule={overview.data.schedule} running={running} />
             <NotifyRow />
+            <ZaloRow />
           </div>
         )}
         {shown.mumuIndex !== null && (

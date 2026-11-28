@@ -312,6 +312,24 @@
         "times": "{{start}} mỗi sáng, máy thức {{wake}}"
       },
       "notify": "Thông báo kết quả",
+      "zalo": {
+        "title": "Gửi về Zalo",
+        "off": "Kết quả và ảnh vé, qua bot Zalo của bạn",
+        "to": "Gửi cho {{name}}",
+        "sent": "Đã gửi tin thử cho {{name}}",
+        "link": "Kết nối",
+        "linking": "Đang tìm tin nhắn…",
+        "cancel": "Huỷ",
+        "step1": "Trong Zalo, mở mini app Zalo Bot Creator và tạo bot. Zalo gửi token cho bạn.",
+        "step2": "Nhắn một tin bất kỳ cho bot đó.",
+        "step3": "Dán token vào đây rồi bấm Kết nối.",
+        "token": "Token của bot",
+        "test": "Gửi tin thử qua Zalo",
+        "unlink": "Bỏ kết nối Zalo",
+        "ask": "Bỏ kết nối? Muốn nối lại cần token.",
+        "yes": "Bỏ",
+        "no": "Giữ"
+      },
       "keepOn": {
         "title": "Giữ máy luôn chạy",
         "on": "Khi cắm sạc: không ngủ, không ngủ đông, gập máy vẫn chạy; màn hình tắt sau 5 phút",
@@ -696,6 +714,10 @@
     "unreachable": "Không kết nối được phần chạy nền của Court Booker.",
     "http": "Phần chạy nền trả lời không như mong đợi.",
     "no_room": "Máy tính không đủ RAM (mỗi máy ảo cần 2 GB, Windows giữ 4 GB) hoặc ổ đĩa (khoảng 9 GB) để thêm một máy ảo.",
+    "zalo_token": "Zalo không biết bot nào có token này. Chép lại token Zalo đã gửi cho bạn.",
+    "zalo_no_message": "Chưa thấy tin nhắn nào gửi cho bot. Nhắn một tin cho bot rồi bấm Kết nối lại.",
+    "zalo_unlinked": "Chưa kết nối bot Zalo.",
+    "zalo": "Zalo chưa nhận tin. Kiểm tra mạng rồi thử lại.",
     "power": "Không đổi được cài đặt nguồn điện của Windows. Xem nhật ký trong thư mục logs."
   },
   "days": {

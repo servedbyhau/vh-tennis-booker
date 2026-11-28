@@ -22,6 +22,7 @@ import type {
   Step,
   TaskState,
   Ticket,
+  ZaloState,
   paths,
 } from "./types";
 
@@ -295,6 +296,31 @@ export function getNotifications(): Promise<NotificationSettings> {
 /** Save the notification settings; they apply from the next run. */
 export function saveNotifications(settings: NotificationSettings): Promise<NotificationSettings> {
   return call(client.PUT("/api/notifications", { body: settings }));
+}
+
+/** Read whether runs send to Zalo, and the name of the chat they send to. */
+export function getZalo(): Promise<ZaloState> {
+  return call(client.GET("/api/zalo"));
+}
+
+/** Link the bot of `token` to whoever wrote to it last; the backend waits for a message. */
+export function linkZalo(token: string): Promise<ZaloState> {
+  return call(client.POST("/api/zalo/link", { body: { token } }));
+}
+
+/** Switch sending to Zalo on or off. */
+export function switchZalo(enabled: boolean): Promise<ZaloState> {
+  return call(client.PUT("/api/zalo", { body: { enabled } }));
+}
+
+/** Forget the bot and the chat. */
+export function unlinkZalo(): Promise<void> {
+  return call(client.DELETE("/api/zalo"));
+}
+
+/** Send a sample message to the linked chat. */
+export function testZalo(): Promise<void> {
+  return call(client.POST("/api/zalo/test"));
 }
 
 /** Switch the daily schedule on (needs a passed dry run) or off. */

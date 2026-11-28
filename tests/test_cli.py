@@ -1071,6 +1071,8 @@ class StepClock:
 class OtherRuns:
     """A history in which another machine books for the first ``looks`` looks."""
 
+    holder = None
+
     def __init__(self, looks):
         self.looks = looks
         self.saved = []
@@ -1165,3 +1167,63 @@ def test_a_quota_too_short_for_the_next_run_is_told(
     if warned:
         body = windows_notifications[-1][1]
         assert body.startswith("Sân Tennis còn 1/8 của tháng 10/2026, mà đã chọn 2 khung giờ")
+
+
+@pytest.fixture
+def zalo_sent(monkeypatch, saved_logins):
+    """A linked Zalo bot; what a run would send there, as ``("report", text)`` or pictures."""
+    from court_booker.zalo import Chat, Link, save_link
+
+    save_link(saved_logins, Link("1234:token", Chat("chat-1", "Hậu")))
+    sent = []
+    monkeypatch.setattr(cli, "send_report", lambda link, text: sent.append(("report", text)))
+    monkeypatch.setattr(
+        cli, "send_tickets", lambda link, pictures: sent.append(("tickets", pictures))
+    )
+    return sent
+
+
+def test_a_real_run_sends_its_outcome_to_zalo(monkeypatch, tmp_path, zalo_sent):
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)])
+
+    assert zalo_sent == [("report", "Đặt sân 10/10: 1/1 thành công\n✅ 18:00 - 19:00 · S10")]
+
+
+def test_a_dry_run_sends_nothing_to_zalo(monkeypatch, tmp_path, zalo_sent, windows_notifications):
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)], args=("--dry-run",))
+
+    assert zalo_sent == []
+    assert len(windows_notifications) == 1
+
+
+def test_zalo_follows_its_switch_not_the_windows_one(
+    monkeypatch, tmp_path, zalo_sent, windows_notifications
+):
+    path = tmp_path / "missing.toml"
+    path.write_text("windows_notification = false\n", encoding="utf-8")
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)])
+    assert (len(zalo_sent), windows_notifications) == (1, [])
+
+    path.write_text("zalo_notification = false\n", encoding="utf-8")
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)])
+    assert (len(zalo_sent), len(windows_notifications)) == (1, 1)
+
+
+def test_nothing_goes_to_zalo_without_a_link(monkeypatch, tmp_path):
+    sent = []
+    monkeypatch.setattr(cli, "send_report", lambda link, text: sent.append(text))
+
+    run_cli(monkeypatch, tmp_path, [("18:00 - 19:00", True)])
+
+    assert sent == []
+
+
+def test_the_tickets_booked_go_to_zalo_with_their_pictures(
+    monkeypatch, tmp_path, reader, data_home, zalo_sent
+):
+    run_with_booker(monkeypatch, tmp_path, BOOKED)
+
+    assert [kind for kind, _ in zalo_sent] == ["report", "tickets"]
+    ((picture, caption),) = zalo_sent[1][1]
+    assert picture == data_home / "tickets" / "1234567.png"
+    assert caption.splitlines() == ["S6 · 10/10 · 18:00 - 19:00", "Mã vé 1234567"]

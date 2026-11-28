@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Language } from "../i18n";
-import type { AccountChange, CustomerFields, NewAccount } from "./types";
+import type { AccountChange, CustomerFields, NewAccount, ZaloState } from "./types";
 import {
   addAccount,
   addCustomer,
@@ -25,6 +25,10 @@ import {
   switchKeepOn,
   switchSchedule,
   importCustomers,
+  linkZalo,
+  switchZalo,
+  testZalo,
+  unlinkZalo,
 } from "./endpoints";
 import { queryKeys } from "./queries";
 
@@ -143,6 +147,45 @@ export function useSaveNotifications() {
       await cache.invalidateQueries({ queryKey: ["events"] });
     },
   });
+}
+
+/** Link the user's Zalo bot, or switch sending there on or off; the activity log shows it. */
+function useZaloChange<Variables>(change: (variables: Variables) => Promise<ZaloState>) {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: change,
+    onSuccess: async (state) => {
+      cache.setQueryData(queryKeys.zalo, state);
+      await cache.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
+
+/** Link the bot of a token to whoever wrote to it last. */
+export function useLinkZalo() {
+  return useZaloChange(linkZalo);
+}
+
+/** Switch sending to Zalo on or off. */
+export function useSwitchZalo() {
+  return useZaloChange(switchZalo);
+}
+
+/** Forget the bot; the state is read again, whatever came of it. */
+export function useUnlinkZalo() {
+  const cache = useQueryClient();
+  return useMutation({
+    mutationFn: unlinkZalo,
+    onSettled: async () => {
+      await cache.invalidateQueries({ queryKey: queryKeys.zalo });
+      await cache.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
+
+/** Send a sample message to the linked chat. */
+export function useTestZalo() {
+  return useMutation({ mutationFn: testZalo });
 }
 
 /**

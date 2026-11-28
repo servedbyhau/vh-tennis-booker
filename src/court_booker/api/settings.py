@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["settings"])
 
-HIDDEN = ("windows_notification", "notification_language")
-"""Config keys these routes neither show nor change: the Windows notification is not a booking
-setting (its own routes have it)."""
+HIDDEN = ("windows_notification", "notification_language", "zalo_notification")
+"""Config keys these routes neither show nor change: the notifications are not booking settings
+(their own routes have them)."""
 
 
 class LabelSettings(BaseModel):

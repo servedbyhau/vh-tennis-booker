@@ -62,6 +62,7 @@ _WRITTEN_WHEN_CHANGED = (
     "open_retry_seconds",
     "windows_notification",
     "notification_language",
+    "zalo_notification",
     "instances",
     "sport",
     "subdivision",
@@ -191,7 +192,11 @@ class Config:
     windows_notification: bool = True
     """Show the outcome of every run, dry runs too, as a Windows notification."""
     notification_language: str = "vi"
-    """Language of the Windows notification, one of :data:`NOTIFICATION_LANGUAGES`."""
+    """Language of the Windows notification and the Zalo messages, one of
+    :data:`NOTIFICATION_LANGUAGES`."""
+    zalo_notification: bool = True
+    """Send a real run's outcome and its tickets' pictures to the user's Zalo, once a bot is
+    linked (:mod:`court_booker.zalo`; without a link nothing is sent)."""
     next_month_xy: tuple[float, float] = (0.930, 0.122)
     """Fallback tap position (screen ratio) when the next-month button has no label."""
     prev_month_xy: tuple[float, float] = (0.807, 0.122)

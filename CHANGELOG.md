@@ -7,6 +7,11 @@ uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A real run sends its outcome and the picture of each ticket it booked to the user's Zalo,
+  through their own Zalo Bot, once linked (`/api/zalo`, `zalo_notification`); the bot's token
+  stays in Windows Credential Manager.
+- "Send to Zalo" in the Settings links the bot from its token, in three short steps, then sends
+  a test message, unlinks after a question and switches sending off.
 - A Setup page (`/setup`) takes a new PC through six steps, each checked by the app: the PC kept
   on, MuMu Player, the machines, the Vinhomes app on each, the accounts, then a dry run and
   Auto-book. It opens on the first step not done and counts those done.

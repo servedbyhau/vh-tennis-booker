@@ -15,6 +15,7 @@ import {
   getOverview,
   getRun,
   getNotifications,
+  getZalo,
   getSettings,
   getSetup,
   listEvents,
@@ -37,6 +38,7 @@ export const queryKeys = {
   settings: ["settings"] as const,
   mumuInstances: ["mumuInstances"] as const,
   notifications: ["notifications"] as const,
+  zalo: ["zalo"] as const,
   keepOn: ["keepOn"] as const,
   setup: ["setup"] as const,
   accounts: ["accounts"] as const,
@@ -218,6 +220,11 @@ export function useKeepOn() {
 /** Read the notification settings. */
 export function useNotifications() {
   return useQuery({ queryKey: queryKeys.notifications, queryFn: getNotifications });
+}
+
+/** Read whether runs send to Zalo, and to whom. */
+export function useZalo() {
+  return useQuery({ queryKey: queryKeys.zalo, queryFn: getZalo });
 }
 
 /** Read the subdivision each MuMu instance's account told last. */

@@ -23,6 +23,7 @@ from court_booker.api import (
     status,
     tasks,
     tickets,
+    zalo,
 )
 from court_booker.api.context import AppContext
 from court_booker.api.errors import Problem, add_error_handlers
@@ -72,6 +73,7 @@ def create_app(context: AppContext, ui_folder: Path | None = None) -> FastAPI:
         accounts,
         customers,
         notifications,
+        zalo,
         setup,
         keep_on,
         schedule,

@@ -568,6 +568,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/zalo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Zalo
+         * @description Read whether runs send to Zalo, and to whom.
+         */
+        get: operations["read_zalo_api_zalo_get"];
+        /**
+         * Switch Zalo
+         * @description Switch sending to Zalo on or off; it applies from the next run.
+         */
+        put: operations["switch_zalo_api_zalo_put"];
+        post?: never;
+        /**
+         * Unlink Zalo
+         * @description Forget the bot and the chat; nothing is sent to Zalo until linked again.
+         */
+        delete: operations["unlink_zalo_api_zalo_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zalo/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Zalo
+         * @description Link the bot of ``token`` to whoever wrote to it last, and switch sending on.
+         *
+         *     Waits up to :data:`WAIT_FOR_MESSAGE` for a message to the bot, then sends one back in the
+         *     saved language; only a link that sent it is saved. A token Zalo does not know answers
+         *     400 ``zalo_token``, no message 409 ``zalo_no_message``, any other failure 503 ``zalo``.
+         */
+        post: operations["link_zalo_api_zalo_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zalo/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Zalo
+         * @description Send a sample message to the linked chat, whether sending is on or not.
+         *
+         *     Without a link 409 ``zalo_unlinked``; a message Zalo did not take 503 ``zalo``.
+         */
+        post: operations["test_zalo_api_zalo_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/setup": {
         parameters: {
             query?: never;
@@ -1586,6 +1660,34 @@ export interface components {
             sent_at: string | null;
             /** Machine */
             machine: number | null;
+        };
+        /**
+         * ZaloLinkRequest
+         * @description The token of the user's bot, as the Zalo Bot Creator gave it.
+         */
+        ZaloLinkRequest: {
+            /** Token */
+            token: string;
+        };
+        /**
+         * ZaloState
+         * @description Whether a run's outcome and tickets go to Zalo, and to whom.
+         */
+        ZaloState: {
+            /** Linked */
+            linked: boolean;
+            /** Name */
+            name?: string | null;
+            /** Enabled */
+            enabled: boolean;
+        };
+        /**
+         * ZaloSwitch
+         * @description Sending to Zalo on or off.
+         */
+        ZaloSwitch: {
+            /** Enabled */
+            enabled: boolean;
         };
     };
     responses: never;
@@ -2823,6 +2925,200 @@ export interface operations {
         };
     };
     test_notification_api_notifications_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    read_zalo_api_zalo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZaloState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    switch_zalo_api_zalo_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZaloSwitch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZaloState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unlink_zalo_api_zalo_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    link_zalo_api_zalo_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZaloLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZaloState"];
+                };
+            };
+            /** @description Invalid request values, one line per value */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An error with a stable code */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    test_zalo_api_zalo_test_post: {
         parameters: {
             query?: never;
             header?: never;

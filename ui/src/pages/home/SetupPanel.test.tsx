@@ -291,3 +291,64 @@ describe("SetupPanel book now", () => {
     expect(button).toHaveAttribute("title", expect.stringMatching(/đến 21:00/));
   });
 });
+
+describe("SetupPanel Zalo", () => {
+  const LINKED = { linked: true, name: "Hậu", enabled: true };
+
+  it("links a bot from its token, once someone wrote to it", async () => {
+    const { panel, fetch } = await openSetup({
+      extra: {
+        "GET /api/zalo": reply({ linked: false, name: null, enabled: true }),
+        "POST /api/zalo/link": reply(LINKED),
+      },
+    });
+    fireEvent.click(await panel.findByRole("button", { name: "Kết nối" }));
+    const form = within(panel.getByRole("form", { name: "Gửi về Zalo" }));
+    expect(form.getByText(/^Nhắn một tin bất kỳ cho bot/)).toBeVisible();
+    expect(form.getByRole("button", { name: "Kết nối" })).toBeDisabled();
+
+    fireEvent.change(form.getByLabelText("Token của bot"), { target: { value: " 1234:abc-xyz " } });
+    fireEvent.click(form.getByRole("button", { name: "Kết nối" }));
+
+    expect(await panel.findByText("Gửi cho Hậu")).toBeVisible();
+    expect(await bodies(fetch, "POST /api/zalo/link")).toEqual([{ token: "1234:abc-xyz" }]);
+  });
+
+  it("says why a link failed", async () => {
+    const { panel } = await openSetup({
+      extra: {
+        "GET /api/zalo": reply({ linked: false, name: null, enabled: true }),
+        "POST /api/zalo/link": reply({ error: "zalo_no_message", detail: "none" }, 409),
+      },
+    });
+    fireEvent.click(await panel.findByRole("button", { name: "Kết nối" }));
+    const form = within(panel.getByRole("form", { name: "Gửi về Zalo" }));
+    fireEvent.change(form.getByLabelText("Token của bot"), { target: { value: "1234:abc-xyz" } });
+    fireEvent.click(form.getByRole("button", { name: "Kết nối" }));
+
+    expect(await form.findByRole("alert")).toHaveTextContent(/^Chưa thấy tin nhắn nào gửi cho bot/);
+  });
+
+  it("switches sending off, sends a test, and unlinks after a question", async () => {
+    const { panel, fetch } = await openSetup({
+      extra: {
+        "GET /api/zalo": reply(LINKED),
+        "PUT /api/zalo": reply({ ...LINKED, enabled: false }),
+        "POST /api/zalo/test": { status: 204, body: null },
+        "DELETE /api/zalo": { status: 204, body: null },
+      },
+    });
+    fireEvent.click(await panel.findByRole("switch", { name: "Gửi về Zalo" }));
+    await waitFor(() => expect(requestsTo(fetch, "PUT /api/zalo")).toBe(1));
+    expect(await bodies(fetch, "PUT /api/zalo")).toEqual([{ enabled: false }]);
+
+    fireEvent.click(panel.getByRole("button", { name: "Gửi tin thử qua Zalo" }));
+    expect(await panel.findByText("Đã gửi tin thử cho Hậu")).toBeVisible();
+
+    fireEvent.click(panel.getByRole("button", { name: "Bỏ kết nối Zalo" }));
+    expect(panel.getByText("Bỏ kết nối? Muốn nối lại cần token.")).toBeVisible();
+    expect(requestsTo(fetch, "DELETE /api/zalo")).toBe(0);
+    fireEvent.click(panel.getByRole("button", { name: "Bỏ" }));
+    await waitFor(() => expect(requestsTo(fetch, "DELETE /api/zalo")).toBe(1));
+  });
+});

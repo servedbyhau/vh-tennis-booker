@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, NoReturn
@@ -37,6 +38,8 @@ from court_booker.logging_setup import LOGGER_NAME, add_file_handler, configure_
 from court_booker.notify import (
     format_notification,
     format_quota_warning,
+    format_ticket_caption,
+    format_zalo_report,
     send_windows,
 )
 from court_booker.paths import data_folder
@@ -44,7 +47,8 @@ from court_booker.power import keep_awake
 from court_booker.quota import AFTER, MONTH_LIMIT, Quota, next_short, read_quota
 from court_booker.ready import AUTO_DRIVER, DRIVERS, Supervisor
 from court_booker.runner import RoundResult, run_booking
-from court_booker.tickets import TicketReader, Wanted, forget_expired
+from court_booker.tickets import Ticket, TicketReader, Wanted, forget_expired
+from court_booker.zalo import Link, read_link, send_report, send_tickets
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -309,6 +313,7 @@ def read_tickets(
                 booker.config.mumu_index, found.tickets, found.photos, datetime.now()
             )
             report(EventKind.TICKETS_SAVED, tickets=len(found.tickets), photos=len(found.photos))
+        send_ticket_pictures(booker.config, found.tickets, found.photos, folder, history.holder)
     try:
         quota = read_quota(booker, play_date, AFTER, report)
     except DeviceNotRespondingError:
@@ -318,6 +323,52 @@ def read_tickets(
         return
     if quota is not None:
         warn_short_quota(booker.config, quota, history.holder, instance)
+
+
+def holder_name(holder: Holder | None) -> str | None:
+    """Return whose account a run books with, as the user reads it: ``customer · account``."""
+    return None if holder is None else f"{holder.customer} · {holder.account}"
+
+
+def zalo_link(config: Config) -> Link | None:
+    """Return the user's Zalo link when sending there is on; a failure only logs."""
+    if not config.zalo_notification:
+        return None
+    try:
+        return read_link(credentials.default_store())
+    except Exception:  # reporting never costs anything
+        logger.warning("Zalo link not read", exc_info=True)
+        return None
+
+
+def send_ticket_pictures(
+    config: Config,
+    tickets: Sequence[Ticket],
+    photos: Mapping[str, str],
+    folder: Path,
+    holder: Holder | None,
+) -> None:
+    """Send the picture of each ticket just booked to the user's Zalo, if linked."""
+    if not photos:
+        return
+    link = zalo_link(config)
+    if link is None:
+        return
+    pictures = []
+    for ticket in tickets:
+        name = photos.get(ticket.code)
+        if name is None:
+            continue
+        caption = format_ticket_caption(
+            code=ticket.code,
+            court=ticket.court,
+            play_date=date.fromisoformat(ticket.play_date),
+            slot=ticket.slot,
+            holder=holder_name(holder),
+            language=config.notification_language,
+        )
+        pictures.append((folder / name, caption))
+    send_tickets(link, pictures)
 
 
 def warn_short_quota(
@@ -346,7 +397,7 @@ def warn_short_quota(
             left=left,
             limit=MONTH_LIMIT,
             slots=len(config.slots),
-            account=None if holder is None else f"{holder.customer} · {holder.account}",
+            account=holder_name(holder),
             language=config.notification_language,
             instance=instance,
             sport=config.sport,
@@ -384,7 +435,7 @@ class AccountSink:
             self.subdivision = event.data.get("subdivision")
 
 
-def notify_windows(
+def notify_outcome(
     config: Config,
     results: list[RoundResult],
     error: str | None,
@@ -395,9 +446,15 @@ def notify_windows(
     instance: int | None = None,
     account: str | None = None,
     repairs: int = 0,
+    holder: Holder | None = None,
 ) -> None:
-    """Show the outcome as a Windows notification if it is on; a failure only logs."""
-    if not config.windows_notification:
+    """Show the outcome as a Windows notification and send it to Zalo, each if it is on.
+
+    Only a real run goes to Zalo, with whose account it booked with (``holder``); a dry run is
+    watched at the PC. A failure only logs.
+    """
+    link = None if dry_run else zalo_link(config)
+    if not config.windows_notification and link is None:
         return
     try:
         title, body = format_notification(
@@ -412,9 +469,16 @@ def notify_windows(
             account=account,
             repairs=repairs,
         )
-        send_windows(title, body)
     except Exception:  # reporting never costs a booking
-        logger.warning("Windows notification not shown", exc_info=True)
+        logger.warning("Notification not written", exc_info=True)
+        return
+    if config.windows_notification:
+        try:
+            send_windows(title, body)
+        except Exception:  # reporting never costs a booking
+            logger.warning("Windows notification not shown", exc_info=True)
+    if link is not None:
+        send_report(link, format_zalo_report(title, body, holder_name(holder)))
 
 
 def setup_main(argv: list[str]) -> int:
@@ -665,7 +729,7 @@ def main(argv: list[str] | None = None) -> int:
     if off_day:
         pass  # nothing was booked or tried: nothing to tell
     if not off_day:
-        notify_windows(
+        notify_outcome(
             shown,
             results,
             error,
@@ -675,6 +739,7 @@ def main(argv: list[str] | None = None) -> int:
             instance=instance,
             account=account.subdivision,
             repairs=0 if supervisor is None else supervisor.repairs,
+            holder=None if history is None else history.holder,
         )
     tickets_froze = False
     if tickets and clock is not None and history is not None:
