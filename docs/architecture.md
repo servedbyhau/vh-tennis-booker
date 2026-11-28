@@ -483,7 +483,10 @@ After a route, model or catalog change: `python tools/export_openapi.py` (writes
   its subdivision, sport, court and up to two slots, saved on each press;
   or `LiveTicket` while a booking or a dry run goes on: one ticket per run of `running.runs`,
   named "MuMu N" when several instances book side by side) and `SetupPanel` ("Cài đặt",
-  Settings) beside it: `SetupSwitches.tsx` (the daily booking, the result notification and, for
+  Settings) beside it: `SetupSwitches.tsx` (the daily booking, the result notification, then
+  `ZaloRow.tsx`: a button that opens the steps to link a bot and its token field, waiting on
+  `POST /api/zalo/link`; once linked, the chat's name, a test message, unlinking after a question
+  and its switch; and, for
   a machine beside the first, its own, `PUT /api/instances/{mumu_index}`; switched on while its
   MuMu instance is not on the PC, it leads to `/setup?step=machines` instead; the first and the
   last locked while a run goes on), the account of the machine chosen on the ticket, which `HomePage` holds, and the dry run

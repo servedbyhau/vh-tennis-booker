@@ -191,11 +191,17 @@ Management**. On the booking page:
   over, so writing them takes nothing from the booking.
 - **Cài đặt / Settings** on the right, what is used day to day: the daily switch (it creates
   or removes the Windows task; a dry run is not needed first), the Windows notification,
-  whether the machine shown books (switching on one whose MuMu instance is not on the PC yet
+  **Gửi về Zalo / Send to Zalo** (see below), whether the machine shown books (switching on one whose MuMu instance is not on the PC yet
   leads to the Setup page, where it is made), the account it books with (its phone number and
   name), picked by customer first, then by phone number, a dry run and **Book now**. Before booking, a run reads the phone number logged in on the machine's Vinhomes app,
   and logs out and in if it is not the chosen account's, trying the password once; a machine
   that cannot be sure books nothing.
+- **Gửi về Zalo / Send to Zalo**: after each real run, its outcome and the picture of each ticket
+  booked (whose account, court, day, slot and code) come to your Zalo, to forward to customers.
+  It goes through a bot of your own, free: in Zalo open the **Zalo Bot Creator** mini app,
+  create a bot (Zalo sends you its token), send the bot any message, then press **Kết nối /
+  Link** and paste the token. The bot writes back at once; the row then names the chat, with a
+  test message, unlinking and its switch. The token stays in Windows Credential Manager.
 - **A tab per machine** on top of the ticket, one for each MuMu instance on the PC, three at
   least: the others (each logged in to another account) book alongside the first once their
   switch in the Setup is on.

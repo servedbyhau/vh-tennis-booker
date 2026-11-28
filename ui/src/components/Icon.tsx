@@ -20,6 +20,7 @@ import {
   Lock,
   RotateCw,
   Search,
+  Send,
   MonitorSmartphone,
   Pencil,
   Phone,
@@ -63,6 +64,8 @@ const DRAWINGS = {
   alarm: AlarmClock,
   /** The Windows notification. */
   bell: Bell,
+  /** A message sent to Zalo. */
+  send: Send,
   /** The Vinhomes app installed from a file. */
   install: HardDriveDownload,
   /** A file to choose and send. */

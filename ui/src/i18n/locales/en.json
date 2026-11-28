@@ -312,6 +312,24 @@
         "times": "Daily at {{start}}, PC wakes {{wake}}"
       },
       "notify": "Result notifications",
+      "zalo": {
+        "title": "Send to Zalo",
+        "off": "Results and ticket pictures, through your Zalo bot",
+        "to": "Sends to {{name}}",
+        "sent": "Test message sent to {{name}}",
+        "link": "Link",
+        "linking": "Looking for your message…",
+        "cancel": "Cancel",
+        "step1": "In Zalo, open the Zalo Bot Creator mini app and create a bot. Zalo sends you its token.",
+        "step2": "Send the bot any message.",
+        "step3": "Paste the token here and press Link.",
+        "token": "The bot's token",
+        "test": "Send a test message to Zalo",
+        "unlink": "Unlink Zalo",
+        "ask": "Unlink? Linking again needs the token.",
+        "yes": "Unlink",
+        "no": "Keep"
+      },
       "keepOn": {
         "title": "Keep the PC on",
         "on": "Plugged in: no sleep, no hibernation, closing the lid does nothing; the screen turns off after 5 minutes",
@@ -696,6 +714,10 @@
     "unreachable": "Court Booker's background service cannot be reached.",
     "http": "The background service gave an unexpected answer.",
     "no_room": "This PC lacks the RAM (2 GB a MuMu instance, 4 GB for Windows) or the disk (about 9 GB) for another MuMu instance.",
+    "zalo_token": "Zalo knows no bot with this token. Copy again the token Zalo sent you.",
+    "zalo_no_message": "No message to the bot yet. Send the bot a message, then press Link again.",
+    "zalo_unlinked": "No Zalo bot is linked.",
+    "zalo": "Zalo did not take the message. Check the network and try again.",
     "power": "The Windows power settings could not be changed. The log folder tells why."
   },
   "days": {
