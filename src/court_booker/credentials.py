@@ -7,7 +7,8 @@ attached to a machine by saving it as that instance's. Each login lives in Windo
 Credential Manager as a generic credential, encrypted for the signed-in Windows user, who
 also runs the daily task. It is never written to ``config.toml``, a log, the history or an
 answer of the backend; the backend only tells whether one is saved, with the phone number
-masked.
+masked. The link to the user's Zalo bot (:mod:`court_booker.zalo`) is kept there too, under
+:data:`ZALO`.
 """
 
 from __future__ import annotations
@@ -32,6 +33,8 @@ MAX_INDEX = 63
 """The highest MuMu instance a login is kept for."""
 Key = Union[int, str]
 """Whose login: a MuMu instance, by its index, or a customer's account, by its id."""
+ZALO = "zalo"
+"""The key of the Zalo link: the chat as the user name, the bot's token in the secret."""
 MAX_PASSWORD = 128
 """Longest password kept; the vault holds up to 2560 bytes."""
 
@@ -68,6 +71,8 @@ def target(key: Key) -> str:
     """
     home = os.environ.get(HOME_ENV)
     app = APP if not home else f"{APP}-{zlib.crc32(home.encode('utf-8')):08x}"
+    if key == ZALO:
+        return f"{app}/{ZALO}"
     owner = f"mumu-{key}" if isinstance(key, int) else f"account-{key}"
     return TARGET.format(app=app, owner=owner)
 
@@ -157,7 +162,7 @@ class WindowsVault:
         credential = _CREDENTIAL(
             Type=_CRED_TYPE_GENERIC,
             TargetName=target(key),
-            Comment="Court Booker: a login of the Vinhomes app",
+            Comment="Court Booker: a login of the Vinhomes app, or the Zalo bot",
             CredentialBlobSize=len(secret),
             CredentialBlob=ctypes.cast(blob, ctypes.POINTER(ctypes.c_ubyte)),
             Persist=_CRED_PERSIST_LOCAL_MACHINE,

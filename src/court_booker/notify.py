@@ -1,4 +1,4 @@
-"""Report the outcome of a run: a Windows notification."""
+"""Report the outcome of a run: a Windows notification, and its words for Zalo."""
 
 from __future__ import annotations
 
@@ -65,6 +65,8 @@ TEXTS = {
         " {slots} khung giờ. Đổi tài khoản trong Thiết lập.",
         "test_title": "Thông báo thử",
         "test_body": "Court Booker sẽ báo kết quả ở đây sau mỗi lượt đặt sân.",
+        "zalo_test": "Court Booker đã kết nối. Kết quả mỗi lần đặt sân và ảnh vé sẽ gửi về đây.",
+        "ticket_code": "Mã vé {code}",
     },
     "en": {
         "title": "Courts for {day}: {outcome}",
@@ -79,6 +81,8 @@ TEXTS = {
         " Choose another account in the Setup.",
         "test_title": "Test notification",
         "test_body": "Court Booker will report here after every booking run.",
+        "zalo_test": "Court Booker is linked. Each booking and its tickets will come here.",
+        "ticket_code": "Ticket {code}",
     },
 }
 """Words of the notification, per language of the app's interface."""
@@ -223,12 +227,7 @@ def format_notification(
         outcome = texts["booked"].format(booked=booked, total=len(results))
     else:
         outcome = texts["not_booked"]
-    day = (
-        f"{target.day}/{target.month}"
-        if language == DEFAULT_LANGUAGE
-        else f"{target.day} {_MONTHS[target.month - 1]}"
-    )
-    title = texts["title"].format(day=day, outcome=outcome)
+    title = texts["title"].format(day=_day(target, language), outcome=outcome)
     if dry_run:
         title += texts["dry_run"]
     if instance is not None:
@@ -286,6 +285,47 @@ def format_quota_warning(
         slots=slots,
     )
     return title, body
+
+
+def _day(day: date, language: str) -> str:
+    """Return ``day`` as the notification writes it: ``30/11``, or ``30 Nov`` in English."""
+    if language == DEFAULT_LANGUAGE:
+        return f"{day.day}/{day.month}"
+    return f"{day.day} {_MONTHS[day.month - 1]}"
+
+
+def format_zalo_report(title: str, body: str, holder: str | None = None) -> str:
+    """Return a run's Zalo message: the notification's title, whose account, then its lines."""
+    lines = [title]
+    if holder:
+        lines.append(f"👤 {holder}")
+    if body:
+        lines.append(body)
+    return "\n".join(lines)
+
+
+def format_ticket_caption(
+    *,
+    code: str,
+    court: str,
+    play_date: date,
+    slot: str,
+    holder: str | None = None,
+    language: str = DEFAULT_LANGUAGE,
+) -> str:
+    """Return the caption of a ticket's picture: whose, the court, day and slot, its code."""
+    if language not in TEXTS:  # the config is not validated when loaded
+        language = DEFAULT_LANGUAGE
+    texts = TEXTS[language]
+    lines = [f"👤 {holder}"] if holder else []
+    lines.append(f"{court_name(court)} · {_day(play_date, language)} · {slot}")
+    lines.append(texts["ticket_code"].format(code=code))
+    return "\n".join(lines)
+
+
+def format_zalo_test(language: str = DEFAULT_LANGUAGE) -> str:
+    """Return the message sent to Zalo once a bot is linked, and on request."""
+    return TEXTS.get(language, TEXTS[DEFAULT_LANGUAGE])["zalo_test"]
 
 
 def format_test_notification(language: str = DEFAULT_LANGUAGE) -> tuple[str, str]:

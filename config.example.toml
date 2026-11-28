@@ -27,9 +27,12 @@ open_retry_seconds = 15             # keep reloading while the date or slot is n
 warm_up_seconds = 60                # wait on the home screen; open the utilities list this early
 log_dir = "logs"                    # daily log files, next to this file; "" disables
 
-# A Windows notification after every run, dry runs too; language "vi" or "en".
+# A Windows notification after every run, dry runs too; language "vi" or "en" (Zalo too).
 windows_notification = true
 notification_language = "vi"
+# A real run's outcome and its tickets' pictures on Zalo, once a bot is linked in the app's
+# Settings (the bot's token stays in Windows Credential Manager, never in this file).
+zalo_notification = true
 
 # Fallback points for the unlabelled calendar month buttons, as fractions of screen size:
 # the middle of each button (measured at 540x1600). The driver clicks the button there.

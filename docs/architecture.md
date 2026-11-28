@@ -15,7 +15,9 @@ Details live in the docstrings; this page says where things are and what must st
   lock, connects the device and runs the rounds. Errors map to exit codes (`RequestError` 2,
   `DeviceError` 3, `AppNotReadyError` 4, `LockHeldError` 5, Ctrl+C 130; a failed round 1). On
   every path it logs the summary, records the run, sends the
-  Windows notification (`notify.py`; a failure only logs a warning). After a real run with at
+  Windows notification (`notify.py`) and, for a real run, the same words to the user's Zalo
+  (`zalo.py`), with whose account it booked with (a failure of either only logs a warning).
+  After a real run with at
   least one round, `close_emulator` shuts MuMu down.
 - Other MuMu instances (`[[instances]]` in the config, each with its own account and its own
   `mumu_index`, `slots`, `subdivision`, `sport`, `court`, `venue_keyword`;
@@ -204,6 +206,16 @@ Details live in the docstrings; this page says where things are and what must st
   generic credential `CourtBooker/vinhomes/mumu-N`, kept for this Windows user on this PC,
   whom the daily task runs as); in memory where Windows is missing. `Login`'s repr hides the
   password. The run reads its own instance's (`cli` → `run_booking(login_for=...)`).
+  The link to the user's Zalo bot is kept there too (`ZALO`, `CourtBooker/zalo`).
+- `zalo.py`: the user's own Zalo Bot (bot.zapps.me, free; the token from the "Zalo Bot Creator"
+  mini app). Zalo lets a bot write only to someone who wrote to it, so linking reads who wrote
+  to the bot last (`getUpdates`, waiting up to 10 s), writes back, and only then keeps the token
+  and that chat together in the vault (`Link`; the token never in a log, the config or an
+  answer, and no address of the Bot API is logged, as each holds it). After a real run each
+  process sends its outcome (`send_report`), and after the tickets the picture of each one it
+  booked with a caption (`send_tickets`: whose account, court, day, slot, code); a failure
+  skips that message only. `zalo_notification` switches it off; tests never reach the network
+  (`tests/conftest.py`).
 - `prepare()` makes sure of the account (`check_account`) when a login is saved for the machine:
   it opens the account tab, reads the phone number, and logs out and in with the saved login
   if it is another one, once a run; then the number must be right (`WrongAccountError`, not
@@ -386,6 +398,7 @@ values 422 `invalid_request`.
 | `GET /api/mumu-instances` | The MuMu instances MuMuManager knows, lowest first (`emulator.instance_indexes`); empty when it is not found or fails |
 | `PUT /api/instances/{mumu_index}` | A machine beside the first on or off: adds its `[[instances]]` table (taking every setting from the top) or removes it; no `enabled` key, which an older runner would refuse |
 | `GET`/`PUT /api/notifications`, `POST .../test` | The Windows notification's switch and language; a sample notification |
+| `GET`/`PUT`/`DELETE /api/zalo`, `POST .../link`, `POST .../test` | Whether runs send to Zalo and the name of the chat (never the token), the switch, forgetting the link; linking a bot's token to whoever wrote to it last (400 `zalo_token`, 409 `zalo_no_message`, 503 `zalo`), a sample message (409 `zalo_unlinked`) |
 | `GET`/`PUT /api/keep-on` | Whether the PC is kept on while plugged in (`keep_on.py`), and whether it has Modern Standby; `PUT` switches it, 503 `power` when `powercfg` fails |
 | `GET /api/setup` | What the PC has: MuMu Player, wake timers, and each MuMu instance's screen, cores and RAM, and app; nothing is changed (auto setup is the command line's). 409 `lock_held` around the scheduled run and while a run or a task uses MuMu |
 | `GET`/`PUT /api/schedule` | The task: state and times; switching on needs none and allows wake timers. Never switch it on from a development backend: the task would run the development Python |
